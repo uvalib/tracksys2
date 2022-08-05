@@ -1,0 +1,22 @@
+html, body {
+   margin: 0;
+   padding: 0;
+   background-color: var(--uvalib-blue-alt-darkest);
+}
+#app {
+   font-family: "franklin-gothic-urw", arial, sans-serif;
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+   text-align: center;
+   color: var(--color-primary-text);
+   margin: 0;
+   padding: 0;
+   background: white;
+}
+
+h2 {
+   color: var(--uvalib-brand-orange);
+   margin: 20px 0;
+   font-weight: 700;
+   position: relative;
+}

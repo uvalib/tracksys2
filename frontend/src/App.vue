@@ -1,0 +1,128 @@
+<template>
+   <div class="header" role="banner" id="uva-header">
+      <div class="main-header">
+         <div class="library-link">
+            <a target="_blank" href="https://library.virginia.edu">
+               <UvaLibraryLogo />
+            </a>
+         </div>
+         <div class="site-link">
+            <router-link to="/">Tracksys</router-link>
+            <p class="version">v{{ systemStore.version }}</p>
+         </div>
+      </div>
+      <div class="user-banner" v-if="userStore.jwt">
+         <div class="user-wrap">
+            <label>Signed in as:</label><span class="user">{{ userStore.signedInUser }}</span>
+         </div>
+         <span class="signout" @click="signout">Sign out</span>
+      </div>
+   </div>
+   <router-view />
+   <ErrorMessage v-if="systemStore.error != ''" />
+   <WaitSpinner v-if="systemStore.working" :overlay="true" message="Please wait..." />
+   <ScrollToTop />
+</template>
+
+<script setup>
+import UvaLibraryLogo from "@/components/UvaLibraryLogo.vue"
+import ScrollToTop from "@/components/ScrollToTop.vue"
+import {useSystemStore} from "@/stores/system"
+import {useUserStore} from "@/stores/user"
+import { useRouter } from 'vue-router'
+import { onMounted } from 'vue'
+import WaitSpinner from "./components/WaitSpinner.vue";
+
+const systemStore = useSystemStore()
+const userStore = useUserStore()
+const router = useRouter()
+
+function signout() {
+   userStore.signout()
+   router.push("signedout")
+}
+
+onMounted( async () => {
+   await systemStore.getConfig()
+})
+
+</script>
+
+<style scoped lang="scss">
+div.header {
+   background-color: var(--uvalib-brand-blue);
+   color: white;
+   text-align: left;
+   position: relative;
+   box-sizing: border-box;
+   .main-header {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      align-content: stretch;
+      align-items: center;
+      padding: 1vw 20px 5px 10px;
+   }
+   .user-banner {
+      text-align: right;
+      padding: 0;
+      font-size: 0.8em;
+      margin: 10px 0 0 0;
+      padding: 10px;
+      background-color: var(--uvalib-blue-alt-darkest);
+      .user-wrap {
+         margin-bottom: 5px;
+         label {
+            font-weight: bold;
+            margin-right: 5px;
+         }
+         .user {
+            font-weight: 100;
+         }
+      }
+      .signout {
+         display: inline-block;
+         margin-left: 10px;
+         cursor: pointer;
+         border: 1px solid var(--uvalib-brand-blue-light);
+         padding: 2px 9px;
+         border-radius: 3px;
+         background: var(--uvalib-brand-blue-light);
+         &:hover {
+            background: var(--uvalib-brand-blue-lighter);
+         }
+      }
+   }
+}
+a {
+   color: var(--uvalib-blue-alt-dark);
+   font-weight: 500;
+   text-decoration: none;
+   &:hover {
+      text-decoration: underline;
+   }
+}
+p.version {
+   margin: 5px 0 0 0;
+   font-size: 0.5em;
+   text-align: right;
+}
+div.library-link {
+   width: 220px;
+   order: 0;
+   flex: 0 1 auto;
+   align-self: flex-start;
+}
+div.site-link {
+   order: 0;
+   font-size: 1.5em;
+   a {
+      color: white;
+      text-decoration: none;
+      &:hover {
+         text-decoration: underline;
+      }
+   }
+}
+</style>
