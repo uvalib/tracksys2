@@ -4,7 +4,22 @@
 #
 
 # run the server
-cd bin; ./tracksys2
+umask 0002
+cd bin; ./tracksys2                \
+   -jwtkey $TRACKSYS_JWT_KEY       \
+   -reports $REPORTING_SERVICE_URL \
+   -projects $PROJECTS_SERVICE_URL \
+   -virgo $VIRGO_URL               \
+   -iiifman $IIIFMAN_SERVICE_URL   \
+   -iiif $IIIF_SERVICE_URL         \
+   -curio $CURIO_SERVICE_URL       \
+   -sirsi $SIRSI_URL               \
+   -pdf $PDF_SERVICE_URL           \
+   -dbhost $DBHOST                 \
+   -dbport $DBPORT                 \
+   -dbname $DBNAME                 \
+   -dbuser $DBUSER                 \
+   -dbpass $DBPASS
 
 # return the status
 exit $?
