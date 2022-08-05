@@ -17,16 +17,24 @@ import (
 	"gorm.io/gorm"
 )
 
+type externalSystems struct {
+	IIIFMan  string
+	IIIF     string
+	Reports  string
+	Projects string
+	Curio    string
+	Sirsi    string
+	PDF      string
+}
+
 // serviceContext contains common data used by all handlers
 type serviceContext struct {
-	Version     string
-	HTTPClient  *http.Client
-	DB          *gorm.DB
-	SMTP        smtpConfig
-	JWTKey      string
-	ReportsURL  string
-	ProjectsURL string
-	DevAuthUser string
+	Version         string
+	HTTPClient      *http.Client
+	DB              *gorm.DB
+	JWTKey          string
+	ExternalSystems externalSystems
+	DevAuthUser     string
 }
 
 // RequestError contains http status code and message for a failed HTTP request
@@ -38,8 +46,15 @@ type RequestError struct {
 // InitializeService sets up the service context for all API handlers
 func initializeService(version string, cfg *configData) *serviceContext {
 	ctx := serviceContext{Version: version,
-		ProjectsURL: cfg.projectsURL,
-		ReportsURL:  cfg.reportsURL,
+		ExternalSystems: externalSystems{
+			IIIFMan:  cfg.iiifManifestURL,
+			IIIF:     cfg.iiifURL,
+			Reports:  cfg.reportsURL,
+			Projects: cfg.projectsURL,
+			Curio:    cfg.curioURL,
+			Sirsi:    cfg.sirsiURL,
+			PDF:      cfg.pdfURL,
+		},
 		JWTKey:      cfg.jwtKey,
 		DevAuthUser: cfg.devAuthUser}
 
@@ -81,8 +96,17 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		Version     string `json:"version"`
 		ReportsURL  string `json:"reportsURL"`
 		ProjectsURL string `json:"projectsURL"`
+		IiifURL     string `json:"iiifURL"`
+		CurioURL    string `json:"curioURL"`
+		PdfURL      string `json:"pdfURL"`
 	}
-	resp := cfgData{Version: Version, ReportsURL: svc.ReportsURL, ProjectsURL: svc.ProjectsURL}
+	resp := cfgData{Version: Version,
+		CurioURL:    svc.ExternalSystems.Curio,
+		IiifURL:     svc.ExternalSystems.IIIF,
+		ReportsURL:  svc.ExternalSystems.Reports,
+		PdfURL:      svc.ExternalSystems.PDF,
+		ProjectsURL: svc.ExternalSystems.Projects,
+	}
 	c.JSON(http.StatusOK, resp)
 }
 

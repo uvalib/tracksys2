@@ -13,23 +13,19 @@ type dbConfig struct {
 	Name string
 }
 
-type smtpConfig struct {
-	Host     string
-	Port     int
-	User     string
-	Pass     string
-	Sender   string
-	fakeSMTP bool
-}
-
 type configData struct {
-	port        int
-	db          dbConfig
-	smtp        smtpConfig
-	reportsURL  string
-	projectsURL string
-	devAuthUser string
-	jwtKey      string
+	port            int
+	db              dbConfig
+	virgoURL        string
+	reportsURL      string
+	projectsURL     string
+	iiifManifestURL string
+	iiifURL         string
+	curioURL        string
+	sirsiURL        string
+	pdfURL          string
+	devAuthUser     string
+	jwtKey          string
 }
 
 func getConfiguration() *configData {
@@ -37,7 +33,13 @@ func getConfiguration() *configData {
 	flag.IntVar(&config.port, "port", 8080, "Port to offer service on (default 8085)")
 	flag.StringVar(&config.jwtKey, "jwtkey", "", "JWT signature key")
 	flag.StringVar(&config.reportsURL, "reports", "https://dpg-reporting.lib.virginia.edu", "DPG reports URL")
-	flag.StringVar(&config.projectsURL, "projects", "https://dpg-imaging.lib.virginia.edu/", "DPG projects URL")
+	flag.StringVar(&config.projectsURL, "projects", "https://dpg-imaging.lib.virginia.edu", "DPG projects URL")
+	flag.StringVar(&config.virgoURL, "virgo", "https://search.lib.virgina.edu", "Virgo URL")
+	flag.StringVar(&config.iiifManifestURL, "iiifman", "https://iiifman.lib.virginia.edu", "IIIF manifest URL")
+	flag.StringVar(&config.iiifURL, "iiif", "https://iiif.lib.virginia.edu/iiif", "IIIF URL")
+	flag.StringVar(&config.curioURL, "curio", "https://curio.lib.virginia.edu", "Curio URL")
+	flag.StringVar(&config.sirsiURL, "sirsi", "https://ils.lib.virginia.edu/uhtbin", "Sirsi metadata URL")
+	flag.StringVar(&config.pdfURL, "pdf", "https://pdfservice.lib.virginia.edu/pdf", "PDF service URL")
 
 	// DB connection params
 	flag.StringVar(&config.db.Host, "dbhost", "", "Database host")
@@ -45,14 +47,6 @@ func getConfiguration() *configData {
 	flag.StringVar(&config.db.Name, "dbname", "", "Database name")
 	flag.StringVar(&config.db.User, "dbuser", "", "Database user")
 	flag.StringVar(&config.db.Pass, "dbpass", "", "Database password")
-
-	// SMTP settings
-	flag.StringVar(&config.smtp.Host, "smtphost", "", "SMTP Host")
-	flag.IntVar(&config.smtp.Port, "smtpport", 0, "SMTP Port")
-	flag.StringVar(&config.smtp.User, "smtpuser", "", "SMTP User")
-	flag.StringVar(&config.smtp.Pass, "smtppass", "", "SMTP Password")
-	flag.StringVar(&config.smtp.Sender, "smtpsender", "digitalservices@virginia.edu", "SMTP sender email")
-	flag.BoolVar(&config.smtp.fakeSMTP, "stubsmtp", false, "Log email insted of sending (dev mode)")
 
 	// dev user
 	flag.StringVar(&config.devAuthUser, "devuser", "", "Authorized computing id for dev")
@@ -78,6 +72,12 @@ func getConfiguration() *configData {
 	log.Printf("[CONFIG] port          = [%d]", config.port)
 	log.Printf("[CONFIG] reports       = [%s]", config.reportsURL)
 	log.Printf("[CONFIG] projects      = [%s]", config.projectsURL)
+	log.Printf("[CONFIG] virgo         = [%s]", config.virgoURL)
+	log.Printf("[CONFIG] sirsi         = [%s]", config.sirsiURL)
+	log.Printf("[CONFIG] iiifman       = [%s]", config.iiifManifestURL)
+	log.Printf("[CONFIG] iiif          = [%s]", config.iiifURL)
+	log.Printf("[CONFIG] curio         = [%s]", config.curioURL)
+	log.Printf("[CONFIG] pdf           = [%s]", config.pdfURL)
 	log.Printf("[CONFIG] dbuser        = [%s]", config.db.User)
 	log.Printf("[CONFIG] dbhost        = [%s]", config.db.Host)
 	log.Printf("[CONFIG] dbport        = [%d]", config.db.Port)
