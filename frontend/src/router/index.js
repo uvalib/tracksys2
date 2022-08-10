@@ -16,6 +16,11 @@ const router = createRouter({
       component: HomeView
     },
     {
+      path: '/jobs',
+      name: 'jobs',
+      component: () => import('../views/JobStatus.vue')
+    },
+    {
       path: '/signedout',
       name: 'signedout',
       component: SignedOut

@@ -7,7 +7,7 @@ export const useSystemStore = defineStore('system', {
 		version: "unknown",
 		error: "",
       reportsURL: "",
-      projectsURL: ""
+      projectsURL: "",
 	}),
 	getters: {
 	},

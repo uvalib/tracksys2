@@ -12,11 +12,9 @@
          </div>
       </div>
       <div class="user-banner" v-if="userStore.jwt">
-         <div class="user-wrap">
-            <label>Signed in as:</label><span class="user">{{ userStore.signedInUser }}</span>
-         </div>
-         <span class="signout" @click="signout">Sign out</span>
+         <label>Signed in as:</label><span class="user">{{ userStore.signedInUser }}</span>
       </div>
+      <MenuBar v-if="userStore.jwt" />
    </div>
    <router-view />
    <ErrorMessage v-if="systemStore.error != ''" />
@@ -27,20 +25,21 @@
 <script setup>
 import UvaLibraryLogo from "@/components/UvaLibraryLogo.vue"
 import ScrollToTop from "@/components/ScrollToTop.vue"
+import MenuBar from "@/components/MenuBar.vue"
 import {useSystemStore} from "@/stores/system"
 import {useUserStore} from "@/stores/user"
-import { useRouter } from 'vue-router'
+// import { useRouter } from 'vue-router'
 import { onMounted } from 'vue'
 import WaitSpinner from "./components/WaitSpinner.vue";
 
 const systemStore = useSystemStore()
 const userStore = useUserStore()
-const router = useRouter()
+// const router = useRouter()
 
-function signout() {
-   userStore.signout()
-   router.push("signedout")
-}
+// function signout() {
+//    userStore.signout()
+//    router.push("signedout")
+// }
 
 onMounted( async () => {
    await systemStore.getConfig()
@@ -69,7 +68,7 @@ div.header {
       padding: 0;
       font-size: 0.8em;
       margin: 10px 0 0 0;
-      padding: 10px;
+      padding: 10px 10px 0 10px;
       background-color: var(--uvalib-blue-alt-darkest);
       .user-wrap {
          margin-bottom: 5px;
