@@ -2,14 +2,14 @@
 </script>
 
 <template>
-   <h2>Job Statuses</h2>
-   <div class="job-status">
+   <h2>Job Status Log</h2>
+   <div class="log">
 
    </div>
 </template>
 
 <style scoped labg="scss">
-   .job-status {
+   .log {
       min-height: 600px;
    }
 </style>

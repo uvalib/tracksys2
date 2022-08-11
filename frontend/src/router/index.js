@@ -18,7 +18,12 @@ const router = createRouter({
     {
       path: '/jobs',
       name: 'jobs',
-      component: () => import('../views/JobStatus.vue')
+      component: () => import('../views/JobStatusList.vue')
+    },
+    {
+      path: '/jobs/:id',
+      name: 'joblog',
+      component: () => import('../views/JobStatusLog.vue')
     },
     {
       path: '/signedout',

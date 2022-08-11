@@ -28,18 +28,11 @@ import ScrollToTop from "@/components/ScrollToTop.vue"
 import MenuBar from "@/components/MenuBar.vue"
 import {useSystemStore} from "@/stores/system"
 import {useUserStore} from "@/stores/user"
-// import { useRouter } from 'vue-router'
 import { onMounted } from 'vue'
 import WaitSpinner from "./components/WaitSpinner.vue";
 
 const systemStore = useSystemStore()
 const userStore = useUserStore()
-// const router = useRouter()
-
-// function signout() {
-//    userStore.signout()
-//    router.push("signedout")
-// }
 
 onMounted( async () => {
    await systemStore.getConfig()
@@ -62,6 +55,9 @@ div.header {
       align-content: stretch;
       align-items: center;
       padding: 1vw 20px 5px 10px;
+      a {
+         color: white !important;
+      }
    }
    .user-banner {
       text-align: right;

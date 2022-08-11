@@ -19,9 +19,14 @@ app.component("ErrorMessage", ErrorMessage)
 app.component("DPGButton", DPGButton)
 app.component("ConfirmModal", ConfirmModal)
 
+import Vue3EasyDataTable from 'vue3-easy-data-table'
+import 'vue3-easy-data-table/dist/style.css'
+app.component('EasyDataTable', Vue3EasyDataTable)
+
+// Styles
 import '@fortawesome/fontawesome-free/css/all.css'
 import './assets/styles/forms.scss'
-import './assets/styles/main.css'
+import './assets/styles/main.scss'
 import './assets/styles/uva-colors.css'
 
 app.mount('#app')

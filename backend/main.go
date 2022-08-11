@@ -32,6 +32,8 @@ func main() {
 	router.GET("/authenticate", svc.authenticate)
 	api := router.Group("/api")
 	{
+		api.GET("/jobs", svc.getJobStatuses)
+		api.GET("/jobs/:id", svc.getJobDetails)
 		api.GET("/config", svc.getConfig)
 	}
 
