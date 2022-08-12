@@ -22,8 +22,8 @@ const router = createRouter({
     },
     {
       path: '/jobs/:id',
-      name: 'joblog',
-      component: () => import('../views/JobStatusLog.vue')
+      name: 'jobdetail',
+      component: () => import('../views/JobStatusDetails.vue')
     },
     {
       path: '/signedout',
