@@ -63,7 +63,7 @@ div.header {
       text-align: right;
       padding: 0;
       font-size: 0.8em;
-      margin: 10px 0 0 0;
+      margin: 10px 0;
       padding: 10px 10px 0 10px;
       background-color: var(--uvalib-blue-alt-darkest);
       .user-wrap {
@@ -74,18 +74,6 @@ div.header {
          }
          .user {
             font-weight: 100;
-         }
-      }
-      .signout {
-         display: inline-block;
-         margin-left: 10px;
-         cursor: pointer;
-         border: 1px solid var(--uvalib-brand-blue-light);
-         padding: 2px 9px;
-         border-radius: 3px;
-         background: var(--uvalib-brand-blue-light);
-         &:hover {
-            background: var(--uvalib-brand-blue-lighter);
          }
       }
    }

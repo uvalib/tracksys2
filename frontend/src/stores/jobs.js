@@ -9,8 +9,8 @@ export const useJobsStore = defineStore('jobs', {
       totalJobs: 0,
       details: {status: "",  error: "", events: []},
       searchOpts: {
-         page: 1,
-         rowsPerPage: 30,
+         start: 0,
+         limit: 30,
          sortBy: 'startedAt',
          sortType: 'desc',
       }
@@ -21,19 +21,27 @@ export const useJobsStore = defineStore('jobs', {
       getJobs() {
          const system = useSystemStore()
          system.working = true
-         let url = `/api/jobs?page=${this.searchOpts.page}&limit=${this.searchOpts.rowsPerPage}`
+         let url = `/api/jobs?start=${this.searchOpts.start}&limit=${this.searchOpts.limit}`
          axios.get( url ).then(response => {
             this.jobs = []
             response.data.jobs.forEach( js => {
+               let obj = `${js.originatorType} ${js.originatorID}`
+               if (!js.originatorType) {
+                  obj = "None"
+               }
+               let finished = "N/A"
+               if (js.finishedAt ) {
+                  finished = dayjs(js.finishedAt).format("YYYY-MM-DD hh:mm A")
+               }
                this.jobs.push({
                   id: js.id,
                   name: js.name,
-                  associatedObject: `${js.originatorType} ${js.originatorID}`,
+                  associatedObject: obj,
                   status: js.status,
                   warnings: js.failures,
                   error: js.error,
                   startedAt: dayjs(js.startedAt).format("YYYY-MM-DD hh:mm A"),
-                  finishedAt: dayjs(js.finishedAt).format("YYYY-MM-DD hh:mm A"),
+                  finishedAt: finished,
                })
             })
             this.totalJobs = response.data.total

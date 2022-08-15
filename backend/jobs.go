@@ -32,21 +32,17 @@ type jobStatus struct {
 }
 
 func (svc *serviceContext) getJobStatuses(c *gin.Context) {
-	page, _ := strconv.Atoi(c.Query("page"))
-	if page == 0 {
-		page = 1
-	}
+	startIndex, _ := strconv.Atoi(c.Query("start"))
 	pageSize, _ := strconv.Atoi(c.Query("limit"))
 	if pageSize == 0 {
 		pageSize = 30
 	}
-	offset := (page - 1) * pageSize
-	log.Printf("INFO: get job %d statuses starting from offset %d", pageSize, offset)
+	log.Printf("INFO: get job %d statuses starting from offset %d", pageSize, startIndex)
 	var total int64
 	svc.DB.Table("job_statuses").Count(&total)
 
 	var jobs []jobStatus
-	err := svc.DB.Offset(offset).Limit(pageSize).Order("started_at desc").Find(&jobs).Error
+	err := svc.DB.Offset(startIndex).Limit(pageSize).Order("started_at desc").Find(&jobs).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get job statuses: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
