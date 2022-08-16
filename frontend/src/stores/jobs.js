@@ -11,8 +11,6 @@ export const useJobsStore = defineStore('jobs', {
       searchOpts: {
          start: 0,
          limit: 30,
-         sortBy: 'startedAt',
-         sortType: 'desc',
       }
 	}),
 	getters: {
@@ -69,5 +67,20 @@ export const useJobsStore = defineStore('jobs', {
             system.setError(e)
          })
       },
+      deleteJobs( delIDs ) {
+         const system = useSystemStore()
+         system.working = true
+         axios.delete(`/api/jobs/`, {data: {jobs: delIDs}}).then(response => {
+            response.data.jobs.forEach( jobID => {
+               let idx = this.jobs.findIndex( j => j.id == jobID)
+               if (idx >= 0) {
+                  this.jobs.splice(idx, 1);
+               }
+            })
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      }
 	}
 })

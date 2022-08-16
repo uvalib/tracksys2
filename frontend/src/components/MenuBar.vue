@@ -34,7 +34,6 @@ onMounted(() => {
             {label: "Reports", url: systemStore.reportsURL, target: "_blank"},
          ]}
       ]
-      console.log(items.value)
    }, 50)
 })
 </script>
@@ -47,7 +46,7 @@ onMounted(() => {
 .signout {
    cursor: pointer;
    padding: 0.5rem;
-   margin: 0;
+   margin: 0 10px 0 0;
    &:hover {
       text-decoration: underline;
       background: #e9ecef;

@@ -1,6 +1,10 @@
 <template>
+   <ConfirmDialog position="top"/>
    <h2>Job Statuses</h2>
    <div class="job-status">
+      <div class="toolbar">
+         <DPGButton label="Delete selected" :disabled="!selectedJobs"  class="p-button-secondary" @click="deletAllClicked"/>
+      </div>
       <DataTable :value="jobsStore.jobs" ref="jobsTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll"
          :lazy="true" :paginator="true" @page="onPage($event)" :rowClass="rowClass"
@@ -17,9 +21,10 @@
          <Column field="warnings" header="Warnings"></Column>
          <Column field="startedAt" header="Started"></Column>
          <Column field="finishedAt" header="Finished"></Column>
-         <Column header="">
+         <Column header="" class="row-acts">
             <template #body="slotProps">
-               <router-link :to="`/jobs/${slotProps.data.id}`">View Log</router-link>
+               <router-link :to="`/jobs/${slotProps.data.id}`">View</router-link>
+               <DPGButton label="Delete"  class="p-button-text" @click="deleteJob(slotProps.data.id)"/>
             </template>
          </Column>
       </DataTable>
@@ -31,11 +36,38 @@ import { onMounted, ref} from 'vue'
 import { useJobsStore } from '@/stores/jobs'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import { useConfirm } from "primevue/useconfirm"
 
 const jobsStore = useJobsStore()
+const confirm = useConfirm()
 
 const selectedJobs = ref()
 const selectAll = ref(false)
+
+function deletAllClicked() {
+   confirm.require({
+      message: 'Are you sure you want delete the selected job status records? All data will be lost. This cannot be reversed.',
+      header: 'Confirm Delete All',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: () => {
+         let payload = []
+         selectedJobs.value.forEach( j => payload.push(j.id))
+         jobsStore.deleteJobs( payload )
+      }
+   })
+}
+function deleteJob(id) {
+   confirm.require({
+      message: 'Are you sure you want delete this job status?',
+      header: 'Confirm Delete All',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: () => {
+         jobsStore.deleteJobs( [id] )
+      }
+   })
+}
 
 function rowClass(rowData) {
    if (rowData.status ==  "failure"){
@@ -82,18 +114,38 @@ onMounted(() => {
       min-height: 600px;
       text-align: left;
       padding: 0 25px;
+      .toolbar {
+         padding: 10px 0;
+         font-size: 0.8em;
+      }
       .p-datatable {
          font-size: 0.85em;
          :deep(td), :deep(th) {
             padding: 10px;
          }
+         :deep(.row-acts) {
+            text-align: center;
+            padding: 0;
+            a {
+               display: inline-block;
+               margin-right: 15px;
+            };
+         }
       }
       :deep(.error-row) {
          background-color: #944 !important;
          color: #fff;
+         .row-acts {
+            a, button.p-button-text {
+               color: #fff !important;
+            }
+         }
          &:hover {
             background-color: #a44 !important;
          }
+      }
+      :deep(tr.p-highlight.error-row) {
+         color: white !important;
       }
       :deep(.running-row)  {
          background-color: var(--uvalib-blue-alt-light) !important;

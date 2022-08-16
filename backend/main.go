@@ -33,6 +33,7 @@ func main() {
 	api := router.Group("/api")
 	{
 		api.GET("/jobs", svc.getJobStatuses)
+		api.DELETE("/jobs", svc.deleteJobStatuses)
 		api.GET("/jobs/:id", svc.getJobDetails)
 		api.GET("/config", svc.getConfig)
 	}

@@ -79,3 +79,24 @@ func (svc *serviceContext) getJobDetails(c *gin.Context) {
 	out := resp{Status: js.Status, Error: js.Error, Events: js.Events}
 	c.JSON(http.StatusOK, out)
 }
+
+func (svc *serviceContext) deleteJobStatuses(c *gin.Context) {
+	type delJobRequest struct {
+		Jobs []uint64 `json:"jobs"`
+	}
+	var delReq delJobRequest
+	err := c.BindJSON(&delReq)
+	if err != nil {
+		log.Printf("ERROR: invalid delete jobs request: %s", err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = svc.DB.Delete(jobStatus{}, delReq.Jobs).Error
+	if err != nil {
+		log.Printf("ERROR: unable to delete jobs %v: %s", delReq.Jobs, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, delReq)
+}

@@ -76,6 +76,12 @@ onMounted(() => {
          .info {
             color: #629bff;
          }
+         .error {
+            color: #CB9B43;
+         }
+         .fatal {
+            color: #EE4444;
+         }
       }
    }
 </style>
