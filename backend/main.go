@@ -32,10 +32,14 @@ func main() {
 	router.GET("/authenticate", svc.authenticate)
 	api := router.Group("/api")
 	{
+		api.GET("/config", svc.getConfig)
+
 		api.GET("/jobs", svc.getJobStatuses)
 		api.DELETE("/jobs", svc.deleteJobStatuses)
 		api.GET("/jobs/:id", svc.getJobDetails)
-		api.GET("/config", svc.getConfig)
+
+		api.GET("/staff", svc.getStaff)
+
 	}
 
 	// Note: in dev mode, this is never actually used. The front end is served

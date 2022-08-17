@@ -8,7 +8,7 @@
    </div>
 </template>
 
-<style scoped labg="scss">
+<style scoped lang="scss">
    .equipment {
       min-height: 600px;
    }

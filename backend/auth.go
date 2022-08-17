@@ -11,22 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type staffMember struct {
-	ID          uint   `json:"id"`
-	ComputingID string `json:"computingID"`
-	FirstName   string `json:"firstName"`
-	LastName    string `json:"lastName"`
-	Role        uint   `json:"role"`
-}
-
-func (sm *staffMember) roleString() string {
-	roles := []string{"admin", "supervisor", "student", "viewer"}
-	if sm.Role < 0 || sm.Role > uint(len(roles)-1) {
-		return "viewer"
-	}
-	return roles[sm.Role]
-}
-
 type jwtClaims struct {
 	UserID    uint   `json:"userID"`
 	ComputeID string `json:"computeID"`
