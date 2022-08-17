@@ -1,4 +1,24 @@
 .p-overflow-hidden {
+   .p-dialog.error {
+      width: 500px;
+      .p-dialog-header {
+         padding: 5px 10px;
+         background: var( --uvalib-red-darker);
+         .p-dialog-title {
+            font-size: 1em;
+            color: white;
+         }
+         .p-dialog-header-close-icon {
+            color: white;
+         }
+      }
+      .p-dialog-content {
+         padding: 15px;
+      }
+      .p-dialog-footer {
+         padding: 15px 15px 20px 15px;
+      }
+   }
    .p-dialog.p-confirm-dialog {
       max-width: 500px;
       .p-dialog-header {

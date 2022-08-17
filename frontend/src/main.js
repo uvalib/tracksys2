@@ -9,12 +9,6 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 
-// Global component registration. All components can use these without import
-import WaitSpinner from "@/components/WaitSpinner.vue"
-import ErrorMessage from "@/components/ErrorMessage.vue"
-app.component("WaitSpinner", WaitSpinner)
-app.component("ErrorMessage", ErrorMessage)
-
 // Styles
 import '@fortawesome/fontawesome-free/css/all.css'
 import './assets/styles/forms.scss'

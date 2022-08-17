@@ -6,6 +6,7 @@ export const useSystemStore = defineStore('system', {
       working: false,
 		version: "unknown",
 		error: "",
+      showError: false,
       reportsURL: "",
       projectsURL: "",
 	}),
@@ -14,6 +15,7 @@ export const useSystemStore = defineStore('system', {
 	actions: {
       setError( e ) {
          this.error = e
+         this.showError = true
          this.working = false
       },
       getConfig() {

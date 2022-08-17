@@ -17,7 +17,12 @@
       <MenuBar v-if="userStore.jwt" />
    </div>
    <router-view />
-   <ErrorMessage v-if="systemStore.error != ''" />
+   <Dialog v-model:visible="systemStore.showError" :modal="true" header="System Error" @hide="errorClosed()" class="error">
+      {{systemStore.error}}
+      <template #footer>
+         <DPGButton label="OK" autofocus class="p-button-secondary" @click="errorClosed()"/>
+      </template>
+   </Dialog>
    <WaitSpinner v-if="systemStore.working" :overlay="true" message="Please wait..." />
    <ScrollToTop />
 </template>
@@ -26,13 +31,19 @@
 import UvaLibraryLogo from "@/components/UvaLibraryLogo.vue"
 import ScrollToTop from "@/components/ScrollToTop.vue"
 import MenuBar from "@/components/MenuBar.vue"
-import {useSystemStore} from "@/stores/system"
-import {useUserStore} from "@/stores/user"
+import WaitSpinner from "@/components/WaitSpinner.vue"
+import { useSystemStore } from "@/stores/system"
+import { useUserStore } from "@/stores/user"
 import { onMounted } from 'vue'
-import WaitSpinner from "./components/WaitSpinner.vue";
+import Dialog from 'primevue/dialog'
 
 const systemStore = useSystemStore()
 const userStore = useUserStore()
+
+function errorClosed() {
+   systemStore.setError("")
+   systemStore.showError = false
+}
 
 onMounted( async () => {
    await systemStore.getConfig()

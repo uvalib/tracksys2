@@ -3,7 +3,7 @@
    <h2>Job Statuses</h2>
    <div class="job-status">
       <div class="toolbar">
-         <DPGButton label="Delete selected" :disabled="!selectedJobs"  class="p-button-secondary" @click="deletAllClicked"/>
+         <DPGButton label="Delete selected" :disabled="selectedJobs.length == 0"  class="p-button-secondary" @click="deletAllClicked"/>
       </div>
       <DataTable :value="jobsStore.jobs" ref="jobsTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll"
@@ -41,7 +41,7 @@ import { useConfirm } from "primevue/useconfirm"
 const jobsStore = useJobsStore()
 const confirm = useConfirm()
 
-const selectedJobs = ref()
+const selectedJobs = ref([])
 const selectAll = ref(false)
 
 function deletAllClicked() {
