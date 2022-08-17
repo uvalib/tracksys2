@@ -26,6 +26,21 @@ const router = createRouter({
       component: () => import('../views/JobStatusDetails.vue')
     },
     {
+      path: '/equipment',
+      name: 'equipment',
+      component: () => import('../views/DigitizationEquipment.vue')
+    },
+    {
+      path: '/staff',
+      name: 'staff',
+      component: () => import('../views/StaffMembers.vue')
+    },
+    {
+      path: '/customers',
+      name: 'customers',
+      component: () => import('../views/CustomerList.vue')
+    },
+    {
       path: '/signedout',
       name: 'signedout',
       component: SignedOut
