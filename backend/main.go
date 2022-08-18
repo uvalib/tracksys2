@@ -39,6 +39,7 @@ func main() {
 		api.GET("/jobs/:id", svc.getJobDetails)
 
 		api.GET("/staff", svc.getStaff)
+		api.POST("/staff", svc.addOrUpdateStaff)
 
 	}
 

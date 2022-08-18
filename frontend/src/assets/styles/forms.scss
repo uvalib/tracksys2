@@ -14,7 +14,7 @@ input[type=time],
 input[type=url],
 input[type=week],
 select,
-.v4-form-input {
+.dpg-form-input {
    padding: 0.5em 0.6em;
    display: inline-block;
    border: 1px solid #ccc;
@@ -26,15 +26,16 @@ select,
    box-sizing: border-box;
    box-shadow: none;
    margin-bottom: 0.3em;
+   width: 100%;
 }
 
-button.v4-form-input {
+button.dpg-form-input {
    @include base-button();
 }
 
 .formkit-outer[data-type="radio"] {
    margin-top: 20px;
-   .v4-form-help {
+   .dpg-form-help {
       margin: 5px 0 20px 5px;
    }
    fieldset {
@@ -57,7 +58,7 @@ button.v4-form-input {
             }
          }
       }
-      .v4-form-label  {
+      .dpg-form-label  {
          display: inline-block;
          margin: 0 20px 0 5px;
       }
@@ -80,20 +81,20 @@ span.req-label {
    color: var(--uvalib-text);
 }
 
-.v4-form-help {
+.dpg-form-help {
    margin: 5px 0;
    font-size: 0.9em;
    color: var(--uvalib-grey);
 }
 
-.v4-form-invalid {
+.dpg-form-invalid {
    list-style: none;
    padding: 0;
    margin: 5px 0;
    color: var(--uvalib-red-emergency);
 }
 
-.v4-form-label {
+.dpg-form-label {
    display: flex;
    flex-flow: row nowrap;
    justify-content: flex-start;
@@ -104,6 +105,6 @@ span.req-label {
    font-weight: normal;
 }
 
-.v4-form-input {
+.dpg-form-input {
    width: 100%
 }
