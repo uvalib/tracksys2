@@ -68,7 +68,7 @@ func (svc *serviceContext) getStaff(c *gin.Context) {
 	}
 	sortOrder := c.Query("order")
 	if sortOrder == "" {
-		sortBy = "asc"
+		sortOrder = "asc"
 	}
 	fieldMap := map[string]string{"lastName": "last_name", "email": "email", "computingID": "computing_id"}
 	sortField := fieldMap[sortBy]
@@ -90,7 +90,7 @@ func (svc *serviceContext) getStaff(c *gin.Context) {
 	countQ.Count(&total)
 
 	var staff []staffMember
-	mainQ := svc.DB.Debug().Offset(startIndex).Where("last_name <> ?", "")
+	mainQ := svc.DB.Offset(startIndex).Where("last_name <> ?", "")
 	if queryStr != "" {
 		mainQ.Where(qObj)
 	}
