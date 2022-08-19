@@ -45,20 +45,110 @@
             </div>
          </template>
       </DataTable>
+       <Dialog v-model:visible="showEdit" :style="{width: '500px'}" header="Customer Details" :modal="true" position="top">
+         <FormKit type="form" id="customer-detail" :actions="false" @submit="submitChanges">
+            <TabView>
+               <TabPanel header="Customer">
+                  <FormKit label="Last Name" type="text" v-model="customerDetails.lastName" validation="required" autofocus />
+                  <FormKit label="First Name" type="text" v-model="customerDetails.firstName" validation="required" />
+                  <FormKit label="Email" type="email" v-model="customerDetails.email" validation="required" />
+                  <FormKit label="Acedemic Status" type="select" v-model="customerDetails.academicStatus" :options="academicStatuses" required/>
+               </TabPanel>
+               <TabPanel header="Primary Address">
+                  <div v-if="customerDetails.addresses.length == 0">
+                     <p>No primary address is defined for this customer.</p>
+                     <DPGButton label="Add Primary Address" @click="addAddress('primary')"/>
+                  </div>
+                  <template v-else>
+                     <FormKit label="Addresss 1" type="text" v-model="customerDetails.addresses[0].address1" validation="required" />
+                     <FormKit label="Addresss 2" type="text" v-model="customerDetails.addresses[0].address2" />
+                     <FormKit label="City" type="text" v-model="customerDetails.addresses[0].city" validation="required" />
+                     <div class="two-col">
+                        <FormKit label="State" type="text" v-model="customerDetails.addresses[0].state" outer-class="state"/>
+                        <FormKit label="Zip" type="text" v-model="customerDetails.addresses[0].zip" />
+                     </div>
+                     <div class="two-col">
+                        <FormKit label="Country" type="text" v-model="customerDetails.addresses[0].country" validation="required" outer-class="state"/>
+                        <FormKit label="Phone" type="text" v-model="customerDetails.addresses[0].phone" />
+                     </div>
+                  </template>
+               </TabPanel>
+               <TabPanel header="Billing Address">
+                  <div v-if="customerDetails.addresses.length == 0">
+                     <p>No primary nor billing address is defined for this customer. Please add a primary address.</p>
+                  </div>
+                   <div v-else-if="customerDetails.addresses.length == 1">
+                     <p>No billing address is defined for this customer.</p>
+                     <DPGButton label="Add Billing Address" @click="addAddress('billable_address')"/>
+                  </div>
+                  <template v-else>
+                     <FormKit label="Addresss 1" type="text" v-model="customerDetails.addresses[1].address1" validation="required" />
+                     <FormKit label="Addresss 2" type="text" v-model="customerDetails.addresses[1].address2" />
+                     <FormKit label="City" type="text" v-model="customerDetails.addresses[1].city" validation="required" />
+                     <div class="two-col">
+                        <FormKit label="State" type="text" v-model="customerDetails.addresses[1].state" outer-class="state"/>
+                        <FormKit label="Zip" type="text" v-model="customerDetails.addresses[1].zip" />
+                     </div>
+                     <div class="two-col">
+                        <FormKit label="Country" type="text" v-model="customerDetails.addresses[1].country" validation="required" outer-class="state"/>
+                        <FormKit label="Phone" type="text" v-model="customerDetails.addresses[1].phone" />
+                     </div>
+                  </template>
+               </TabPanel>
+            </TabView>
+               <div class="form-controls">
+                  <FormKit type="button" label="Cancel" wrapper-class="cancel-button" @click="showEdit = false" />
+                  <FormKit type="submit" label="Save" wrapper-class="submit-button" />
+               </div>
+         </FormKit>
+      </Dialog>
    </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useCustomersStore } from '@/stores/customers'
+import { useSystemStore } from '@/stores/system'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
+import Dialog from 'primevue/dialog'
+import TabView from 'primevue/tabview'
+import TabPanel from 'primevue/tabpanel'
 
 const customersStore = useCustomersStore()
+const systemStore = useSystemStore()
 
 const filter = ref("")
 const expandedRows = ref([])
+const showEdit = ref(false)
+const customerDetails = ref({
+   lastName: "",
+   firstName: "",
+   academicStatusID: 0,
+   academicStatus: {id: 0},
+   email: "",
+   addresses: [],
+   id: 0
+})
+
+const academicStatuses = computed(() => {
+   let out = []
+   systemStore.academicStatuses.forEach( i => {
+      out.push( {label: i.name, value: {id: i.id, name: i.name}} )
+   })
+   return out
+})
+
+function submitChanges() {
+   customersStore.addOrUpdateCustomer(customerDetails.value)
+   showEdit.value = false
+}
+
+function addAddress( addrType ) {
+   let newAddr = {address1: "", address2: "", city: "", state: "", zip: "", country: "", phone: "", addressType: addrType}
+   customerDetails.value.addresses.push(newAddr)
+}
 
 function formattedAddress(data) {
    let out = data.address1
@@ -70,7 +160,21 @@ function formattedAddress(data) {
 }
 
 function addCustomer() {
-   console.log("ADD CUSTOMER")
+   customerDetails.value = {
+      lastName: "",
+      firstName: "",
+      academicStatusID: 0,
+      academicStatus: {id: 0},
+      email: "",
+      addresses: [],
+      id: 0
+   }
+   showEdit.value = true
+}
+
+function edit(data) {
+   customerDetails.value = {...data} // clone the data so edits dont change the store
+   showEdit.value = true
 }
 
 function onPage(event) {
@@ -129,6 +233,37 @@ onMounted(() => {
             font-weight: bold;
             margin: 5px 0;
          }
+      }
+   }
+}
+
+#customer-detail {
+   .two-col {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      :deep(.formkit-outer) {
+         flex-grow: 1;
+      }
+      :deep(.formkit-outer.state) {
+         margin-right: 15px;
+      }
+   }
+   .form-controls {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-end;
+      margin-top: 5px;
+      text-align: right;
+      padding: 10px 0;
+      :deep(.cancel-button button) {
+         @include base-button();
+         width: auto;
+         margin-right: 10px;
+      }
+      :deep(.submit-button button) {
+         @include primary-button();
+         width: auto;
       }
    }
 }

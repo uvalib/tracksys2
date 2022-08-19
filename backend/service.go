@@ -93,12 +93,15 @@ func initializeService(version string, cfg *configData) *serviceContext {
 func (svc *serviceContext) getConfig(c *gin.Context) {
 	log.Printf("INFO: get service configuration")
 	type cfgData struct {
-		Version     string `json:"version"`
-		ReportsURL  string `json:"reportsURL"`
-		ProjectsURL string `json:"projectsURL"`
-		IiifURL     string `json:"iiifURL"`
-		CurioURL    string `json:"curioURL"`
-		PdfURL      string `json:"pdfURL"`
+		Version                string `json:"version"`
+		ReportsURL             string `json:"reportsURL"`
+		ProjectsURL            string `json:"projectsURL"`
+		IiifURL                string `json:"iiifURL"`
+		CurioURL               string `json:"curioURL"`
+		PdfURL                 string `json:"pdfURL"`
+		ControlledVocabularies struct {
+			AcademicStatuses []academicStatus `json:"academicStatuses"`
+		} `json:"controlledVocabularies"`
 	}
 	resp := cfgData{Version: Version,
 		CurioURL:    svc.ExternalSystems.Curio,
@@ -106,6 +109,14 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		ReportsURL:  svc.ExternalSystems.Reports,
 		PdfURL:      svc.ExternalSystems.PDF,
 		ProjectsURL: svc.ExternalSystems.Projects,
+	}
+
+	log.Printf("INFO: load academic statuses")
+	dbResp := svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.AcademicStatuses)
+	if dbResp.Error != nil {
+		log.Printf("ERROR: unable to get academic statuses: %s", dbResp.Error.Error())
+		c.String(http.StatusInternalServerError, dbResp.Error.Error())
+		return
 	}
 	c.JSON(http.StatusOK, resp)
 }

@@ -157,20 +157,20 @@ onMounted(() => {
       }
    }
 }
-   .staff {
-      min-height: 600px;
-      text-align: left;
-      padding: 0 25px 25px 25px;
-      .filter-controls {
-         display: flex;
-         flex-flow: row wrap;
-         justify-content: space-between;
-         button.p-button-secondary.p-button {
-            margin-left: 5px;
-         }
-      }
-      :deep(.row-acts) {
-         text-align: center;
+.staff {
+   min-height: 600px;
+   text-align: left;
+   padding: 0 25px 25px 25px;
+   .filter-controls {
+      display: flex;
+      flex-flow: row wrap;
+      justify-content: space-between;
+      button.p-button-secondary.p-button {
+         margin-left: 5px;
       }
    }
+   :deep(.row-acts) {
+      text-align: center;
+   }
+}
 </style>

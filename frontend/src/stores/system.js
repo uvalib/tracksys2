@@ -9,6 +9,7 @@ export const useSystemStore = defineStore('system', {
       showError: false,
       reportsURL: "",
       projectsURL: "",
+      academicStatuses: []
 	}),
 	getters: {
 	},
@@ -24,6 +25,7 @@ export const useSystemStore = defineStore('system', {
             this.version = response.data.version
             this.reportsURL = response.data.reportsURL
             this.projectsURL = response.data.projectsURL
+            this.academicStatuses = response.data.controlledVocabularies.academicStatuses
             this.working = false
          }).catch( e => {
             this.error =  e
