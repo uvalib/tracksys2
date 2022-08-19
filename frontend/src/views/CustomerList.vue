@@ -6,6 +6,7 @@
          :lazy="true" :paginator="true" @page="onPage($event)"
          sortField="lastName" :sortOrder="1" @sort="onSort($event)"
          :rows="customersStore.searchOpts.limit" :totalRecords="customersStore.total"
+         v-model:expandedRows="expandedRows"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
          :rowsPerPageOptions="[10,30,100]"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
@@ -22,6 +23,7 @@
                </span>
             </div>
          </template>
+         <Column :expander="true" headerStyle="width: 3rem" />
          <Column field="lastName" header="Last Name" :sortable="true"/>
          <Column field="firstName" header="First Name"/>
          <Column field="email" header="Email" :sortable="true"/>
@@ -31,6 +33,17 @@
                <DPGButton label="Edit" class="p-button-text"  @click="edit(slotProps.data)" />
             </template>
          </Column>
+         <template #expansion="slotProps">
+            <div class="address-data">
+               <div v-for="(address,idx) in slotProps.data.addresses" class="address" :key="`customer${slotProps.data}-addr${idx}`">
+                  <div v-if="address.addressType=='primary'" class="addr-type">Primary Address</div>
+                  <div v-else class="addr-type">Billing Address</div>
+                  <div>{{slotProps.data.firstName}} {{slotProps.data.lastName}}</div>
+                  <div>{{formattedAddress(address)}}</div>
+                   <div>{{address.phone}}</div>
+               </div>
+            </div>
+         </template>
       </DataTable>
    </div>
 </template>
@@ -45,9 +58,19 @@ import InputText from 'primevue/inputtext'
 const customersStore = useCustomersStore()
 
 const filter = ref("")
+const expandedRows = ref([])
+
+function formattedAddress(data) {
+   let out = data.address1
+   if (data.address2) {
+      out += ` ${data.address2}`
+   }
+   out += `, ${data.city} ${data.state} ${data.zip}, ${data.country}`
+   return  out
+}
 
 function addCustomer() {
-   // console.log("ADD CUSTOMER")
+   console.log("ADD CUSTOMER")
 }
 
 function onPage(event) {
@@ -94,6 +117,19 @@ onMounted(() => {
    }
    :deep(.row-acts) {
       text-align: center;
+   }
+   .address-data {
+      padding: 10px 0 0px 3rem;
+      .address {
+         margin-bottom: 20px;
+         div {
+            margin: 5px 0;
+         }
+         .addr-type {
+            font-weight: bold;
+            margin: 5px 0;
+         }
+      }
    }
 }
 </style>
