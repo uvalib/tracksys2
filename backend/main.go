@@ -37,9 +37,13 @@ func main() {
 		api.GET("/customers", svc.getCustomers)
 		api.POST("/customers", svc.addOrUpdateCustomer)
 
+		api.GET("/metadata", svc.getMetadata)
+
 		api.GET("/jobs", svc.getJobStatuses)
 		api.DELETE("/jobs", svc.deleteJobStatuses)
 		api.GET("/jobs/:id", svc.getJobDetails)
+
+		api.GET("/search", svc.searchRequest)
 
 		api.GET("/staff", svc.getStaff)
 		api.POST("/staff", svc.addOrUpdateStaff)

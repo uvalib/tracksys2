@@ -43,6 +43,12 @@ type RequestError struct {
 	Message    string
 }
 
+type agency struct {
+	ID          uint64 `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 // InitializeService sets up the service context for all API handlers
 func initializeService(version string, cfg *configData) *serviceContext {
 	ctx := serviceContext{Version: version,
@@ -101,6 +107,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		PdfURL                 string `json:"pdfURL"`
 		ControlledVocabularies struct {
 			AcademicStatuses []academicStatus `json:"academicStatuses"`
+			Agencies         []agency         `json:"agencies"`
 		} `json:"controlledVocabularies"`
 	}
 	resp := cfgData{Version: Version,
@@ -112,10 +119,18 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 	}
 
 	log.Printf("INFO: load academic statuses")
-	dbResp := svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.AcademicStatuses)
-	if dbResp.Error != nil {
-		log.Printf("ERROR: unable to get academic statuses: %s", dbResp.Error.Error())
-		c.String(http.StatusInternalServerError, dbResp.Error.Error())
+	err := svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.AcademicStatuses).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get academic statuses: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: load agencies")
+	err = svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.Agencies).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get agencies: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, resp)

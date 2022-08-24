@@ -27,7 +27,7 @@ function signOut() {
 onMounted(() => {
    setTimeout( () => {
       items.value = [
-         {label: "Dashboard", to: "/"},
+         {label: "Home", to: "/"},
          {label: "Job Statuses", to: "/jobs"},
          {label: "Digitization", items: [
             {label: "Equipment", to: '/equipment'},
@@ -40,7 +40,7 @@ onMounted(() => {
             {label: "Customers", to: "/customers"},
          ]}
       ]
-   }, 50)
+   }, 500)
 })
 </script>
 
