@@ -61,52 +61,88 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		c.String(http.StatusBadRequest, "invalid search scope")
 		return
 	}
-	log.Printf("INFO: search %s for [%s]", scope, qStr)
-	hitLimit := 25
-
+	field := c.Query("field")
+	if field == "" {
+		field = "all"
+	}
+	log.Printf("INFO: search %s.%s for [%s]", scope, field, qStr)
+	hitLimit := 30
 	resp := searchResults{MasterFiles: make([]masterFileHit, 0), Metadata: make([]metadataHit, 0), Orders: make([]orderHit, 0)}
+
 	if scope == "all" || scope == "masterfiles" {
-		searchQ := svc.DB.Debug().Table("master_files").
-			Where(
+		searchQ := svc.DB.Table("master_files")
+		if field == "all" {
+			searchQ = searchQ.Where(
 				svc.DB.Where("master_files.id=?", qStr).Or("pid=?", qStr).
 					Or("filename like ?", matchStart).Or("title like ?", matchAny).
 					Or("description like ?", matchAny),
 			)
+		} else if field == "pid" {
+			searchQ = searchQ.Where("pid=?", qStr)
+		} else if field == "title" || field == "description" || field == "filename" {
+			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
+		} else if field == "tag" {
+			searchQ = searchQ.
+				Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
+				Joins("left outer join tags t on mt.tag_id = t.id").
+				Where("t.tag like ?", matchAny)
+		}
 		err := searchQ.Limit(hitLimit).Find(&resp.MasterFiles).Error
 		if err != nil {
 			log.Printf("ERROR: masterfile search failed: %s", err.Error())
 		}
 	}
 
-	// tags join
-	// Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
-	// Joins("left outer join tags t on mt.tag_id = t.id").
-	//Or("t.tag=?", qStr).
-
 	if scope == "all" || scope == "metadata" {
-		err := svc.DB.Debug().Table("metadata").
-			Where(
+		searchQ := svc.DB.Table("metadata")
+		if field == "all" {
+			searchQ = searchQ.Where(
 				svc.DB.Where("id=?", qStr).Or("pid=?", qStr).Or("title like ?", matchAny).
 					Or("barcode=?", qStr).Or("catalog_key=?", qStr).Or("call_number like ?", matchStart).
 					Or("creator_name like ?", matchAny),
-			).
-			Limit(hitLimit).Find(&resp.Metadata).Error
+			).Limit(hitLimit)
+		} else {
+			if field == "title" || field == "creator_name" {
+				searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny).Limit(hitLimit)
+			} else if field == "call_number" {
+				searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchStart).Limit(hitLimit)
+			} else {
+				searchQ = searchQ.Where(fmt.Sprintf("%s=?", field), qStr).Limit(hitLimit)
+			}
+		}
+		err := searchQ.Limit(hitLimit).Find(&resp.Metadata).Error
 		if err != nil {
 			log.Printf("ERROR: metadata search failed: %s", err.Error())
 		}
 	}
 
 	if scope == "all" || scope == "orders" {
-		err := svc.DB.Debug().Table("orders").Preload("Customer").Preload("Agency").
-			Joins("inner join customers on customer_id = customers.id").
-			Joins("left outer join agencies on agency_id = agencies.id").
-			Joins("left outer join units on units.order_id = orders.id").
-			Where(
-				svc.DB.Where("orders.id=?", qStr).Or("units.id=?", qStr).
-					Or("customers.last_name like ?", matchStart).Or("agencies.name=?", qStr).
-					Or("orders.staff_notes like ?", matchAny).Or("orders.special_instructions like ?", matchAny),
-			).
-			Limit(hitLimit).Find(&resp.Orders).Error
+		searchQ := svc.DB.Table("orders").Preload("Customer").Preload("Agency")
+		if field == "all" {
+			searchQ = searchQ.
+				Joins("inner join customers on customer_id = customers.id").
+				Joins("left outer join agencies on agency_id = agencies.id").
+				Joins("left outer join units on units.order_id = orders.id").
+				Where(
+					svc.DB.Where("orders.id=?", qStr).Or("units.id=?", qStr).
+						Or("customers.last_name like ?", matchStart).Or("agencies.name=?", qStr).
+						Or("orders.staff_notes like ?", matchAny).Or("orders.special_instructions like ?", matchAny),
+				)
+		} else if field == "id" {
+			searchQ = searchQ.Where("id=?", qStr)
+		} else if field == "unit_id" {
+			searchQ = searchQ.Joins("left outer join units on units.order_id = orders.id").
+				Where("units.id=?", qStr)
+		} else if field == "last_name" {
+			searchQ = searchQ.Joins("inner join customers on customer_id = customers.id").
+				Where("customers.last_name like ?", matchStart)
+		} else if field == "agency" {
+			searchQ = searchQ.Joins("left outer join agencies on agency_id = agencies.id").
+				Where("agencies.name like ?", matchAny)
+		} else {
+			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
+		}
+		err := searchQ.Limit(hitLimit).Find(&resp.Orders).Error
 		if err != nil {
 			log.Printf("ERROR: order search failed: %s", err.Error())
 		}

@@ -8,10 +8,11 @@
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       >
          <Column field="id" header="ID"  :sortable="true"/>
+         <Column field="pid" header="PID" class="nowrap" :sortable="true"/>
          <Column field="type" header="Type" :sortable="true"/>
          <Column field="title" header="Title"  :sortable="true"/>
          <Column field="creatorName" header="Creator Name" :sortable="true"/>
-         <Column field="barcode" header="Barcode"  :sortable="true"/>
+         <Column field="barcode" header="Barcode" class="nowrap" :sortable="true"/>
          <Column field="callNumber" header="Call Number" class="nowrap" :sortable="true"/>
          <Column field="catalogKey" header="Catalog Key" class="nowrap" :sortable="true"/>
       </DataTable>
@@ -31,7 +32,7 @@
          </Column>
          <Column field="agency.name" header="Agency" class="nowrap" :sortable="true"/>
          <Column field="title" header="Order Title" :sortable="true"/>
-         <Column field="staffNotes" header="Staff Notes" />
+         <Column field="notes" header="Staff Notes" />
          <Column field="specialInstructions" header="Special Instructions" />
       </DataTable>
    </TabPanel>
@@ -43,7 +44,7 @@
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       >
          <Column field="id" header="ID" :sortable="true"/>
-         <Column field="pid" header="ID" :sortable="true"/>
+         <Column field="pid" header="PID" class="nowrap" :sortable="true" />
          <Column field="filename" header="Filename" :sortable="true"/>
          <Column field="title" header="Title" :sortable="true"/>
          <Column field="description" header="Description" />

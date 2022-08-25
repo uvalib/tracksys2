@@ -29,7 +29,11 @@ export const useSearchStore = defineStore('search', {
          this.masterFiles = []
          this.metadata = []
          this.orders = []
-         axios.get(`/api/search?scope=${this.scope}&q=${encodeURIComponent(this.query)}`).then(response => {
+         let url = `/api/search?scope=${this.scope}&q=${encodeURIComponent(this.query)}`
+         if (this.field != "all" ) {
+            url += `&field=${this.field}`
+         }
+         axios.get(url).then(response => {
             this.masterFiles = response.data.masterFiles
             this.metadata = response.data.metadata
             this.orders = response.data.orders
