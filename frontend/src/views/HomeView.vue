@@ -1,10 +1,12 @@
 <template>
    <div class="home">
+      <h2>Search</h2>
       <FormKit type="form" id="global-search" :actions="false" @submit="doSearch">
-         <span>Search</span>
-         <FormKit type="select" label="" v-model="searchStore.scope"
-            :options="{ all: 'Everything', orders: 'Orders', masterfiles: 'Master Files', metadata: 'Metadata' }"
+         <FormKit type="select" label="" v-model="searchStore.scope" outer-class="select-wrap"
+            :options="{ all: 'All items', orders: 'Orders', masterfiles: 'Master Files', metadata: 'Metadata'}"
          />
+         <FormKit type="select" label="" v-model="searchStore.field" :options="scopeFields"
+             outer-class="select-wrap" :disabled="searchStore.scope=='all'"/>
          <FormKit label="" type="search" placeholder="Find Tracksys items..." v-model="searchStore.query" outer-class="searchbar" />
          <FormKit type="submit" label="Search" wrapper-class="submit-button" />
       </FormKit>
@@ -16,9 +18,20 @@
 import { useSearchStore } from '../stores/search'
 import { useSystemStore } from '../stores/system'
 import SearchResults from '@/components/SearchResults.vue'
+import { computed } from 'vue'
 
 const searchStore = useSearchStore()
 const systemStore = useSystemStore()
+
+const scopeFields = computed( () => {
+   let scope = searchStore.scope
+   let allFields = searchStore.searchFields
+   let fields = allFields[scope]
+   if (fields) {
+      return fields
+   }
+   return [{label: 'All fields', value: "all"}]
+})
 
 function doSearch() {
    if (searchStore.query.length > 0) {
@@ -29,7 +42,7 @@ function doSearch() {
 
 <style scoped lang="scss">
    .home {
-      padding-top: 50px;
+      padding-top: 10px;
       padding-bottom: 50px;
       min-height:600px;
       :deep(#global-search) {
@@ -42,19 +55,25 @@ function doSearch() {
          span  {
             font-weight: bold;
             display: inline-block;
-            margin-right: 10px;
          }
          .searchbar {
             flex-grow: 1;
-            margin: 0 5px;
+            margin: 0;
+            input {
+               margin: 0;
+            }
          }
          .submit-button button {
             @include primary-button();
             font-size: 0.95em;
-         padding: 6px 15px;
+            padding: 6px 15px;
+            margin-left: 10px;
          }
-         .dpg-form-input {
-            margin-bottom: 0 !important;
+         .formkit-outer.select-wrap {
+            margin: 0 10px 0 0;
+            select {
+               margin: 0;
+            }
          }
       }
    }

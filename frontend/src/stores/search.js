@@ -6,9 +6,11 @@ export const useSearchStore = defineStore('search', {
 	state: () => ({
       query: "",
       scope: "all",
+      field: "all",
       masterFiles: [],
       metadata: [],
-      orders: []
+      orders: [],
+      searchFields: {}
 	}),
 	getters: {
       hasResults: state => {
@@ -18,6 +20,9 @@ export const useSearchStore = defineStore('search', {
       }
 	},
 	actions: {
+      setGlobalSearchFields( data ) {
+         this.searchFields = data
+      },
       globalSearch() {
          const system = useSystemStore()
          system.working = true

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import { useSearchStore } from './search'
 
 export const useSystemStore = defineStore('system', {
 	state: () => ({
@@ -26,6 +27,8 @@ export const useSystemStore = defineStore('system', {
             this.reportsURL = response.data.reportsURL
             this.projectsURL = response.data.projectsURL
             this.academicStatuses = response.data.controlledVocabularies.academicStatuses
+            const searchStore = useSearchStore()
+            searchStore.setGlobalSearchFields(response.data.searchFields)
             this.working = false
          }).catch( e => {
             this.error =  e

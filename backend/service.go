@@ -98,6 +98,11 @@ func initializeService(version string, cfg *configData) *serviceContext {
 
 func (svc *serviceContext) getConfig(c *gin.Context) {
 	log.Printf("INFO: get service configuration")
+	type searchField struct {
+		Field string `json:"value"`
+		Label string `json:"label"`
+	}
+
 	type cfgData struct {
 		Version                string `json:"version"`
 		ReportsURL             string `json:"reportsURL"`
@@ -109,6 +114,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 			AcademicStatuses []academicStatus `json:"academicStatuses"`
 			Agencies         []agency         `json:"agencies"`
 		} `json:"controlledVocabularies"`
+		SearchFields map[string][]searchField `json:"searchFields"`
 	}
 	resp := cfgData{Version: Version,
 		CurioURL:    svc.ExternalSystems.Curio,
@@ -133,6 +139,41 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	log.Printf("INFO: define global search fields")
+	resp.SearchFields = map[string][]searchField{
+		"all": {searchField{Field: "all", Label: "All fields"}},
+		"masterfiles": {
+			searchField{Field: "all", Label: "All fields"},
+			searchField{Field: "pid", Label: "PID"},
+			searchField{Field: "filename", Label: "Filename"},
+			searchField{Field: "title", Label: "Title"},
+			searchField{Field: "description", Label: "Description"},
+			searchField{Field: "tag", Label: "Tag"},
+			searchField{Field: "box", Label: "Box"},
+			searchField{Field: "folder", Label: "Folder"},
+		},
+		"metadata": {
+			searchField{Field: "all", Label: "All fields"},
+			searchField{Field: "pid", Label: "PID"},
+			searchField{Field: "title", Label: "Title"},
+			searchField{Field: "barcode", Label: "Barcode"},
+			searchField{Field: "call_number", Label: "Call number"},
+			searchField{Field: "catalog_key", Label: "Catalog key"},
+			searchField{Field: "creator_name", Label: "Creator name"},
+		},
+		"orders": {
+			searchField{Field: "all", Label: "All fields"},
+			searchField{Field: "id", Label: "Order ID"},
+			searchField{Field: "unit_id", Label: "Unit ID"},
+			searchField{Field: "order_title", Label: "Title"},
+			searchField{Field: "customer.last_name", Label: "Customer last name"},
+			searchField{Field: "agency.name", Label: "Agency"},
+			searchField{Field: "staff_notes", Label: "Staff notes"},
+			searchField{Field: "special_instructions", Label: "Special instructions"},
+		},
+	}
+
 	c.JSON(http.StatusOK, resp)
 }
 
