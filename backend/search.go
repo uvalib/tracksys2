@@ -85,7 +85,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			searchQ = searchQ.
 				Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
 				Joins("left outer join tags t on mt.tag_id = t.id").
-				Where("t.tag like ?", matchAny)
+				Where("t.tag=?", qStr)
 		}
 		err := searchQ.Limit(hitLimit).Find(&resp.MasterFiles).Error
 		if err != nil {
