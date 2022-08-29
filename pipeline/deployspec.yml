@@ -7,7 +7,7 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      golang: 1.18
+      golang: 1.x
 
   pre_build:
     commands:
