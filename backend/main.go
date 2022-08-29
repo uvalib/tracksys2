@@ -39,6 +39,8 @@ func main() {
 
 		api.GET("/metadata", svc.getMetadata)
 
+		api.GET("/orders", svc.getOrders)
+
 		api.GET("/jobs", svc.getJobStatuses)
 		api.DELETE("/jobs", svc.deleteJobStatuses)
 		api.GET("/jobs/:id", svc.getJobDetails)

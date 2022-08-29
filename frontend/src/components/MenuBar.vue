@@ -28,6 +28,7 @@ onMounted(() => {
    setTimeout( () => {
       items.value = [
          {label: "Home", to: "/"},
+         {label: "Orders", to: "/orders"},
          {label: "Job Statuses", to: "/jobs"},
          {label: "Digitization", items: [
             {label: "Equipment", to: '/equipment'},
