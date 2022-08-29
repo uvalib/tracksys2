@@ -1,6 +1,11 @@
 <template>
    <h2>Orders</h2>
    <div class="orders">
+      <div class="toolbar">
+         <label for="orders-filter">Filter:</label>
+         <Dropdown id="orders-filter" v-model="ordersStore.searchOpts.filter" @change="filterChanged"
+            :options="filters" optionLabel="name" optionValue="code" />
+      </div>
       <DataTable :value="ordersStore.orders" ref="ordersTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll"
          sortField="id" :sortOrder="1" @sort="onSort($event)"
@@ -40,12 +45,24 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useOrdersStore } from '@/stores/orders'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import Dropdown from 'primevue/dropdown'
 
 const ordersStore = useOrdersStore()
+
+const filters = ref([
+   {name: "Active", code: "active"},
+   {name: "Await Approval", code: "await"},
+   {name: "Deferred", code: "deferred"},
+   {name: "Complete", code: "complete"},
+   {name: "Canceled", code: "canceled"},
+   {name: "Due Today", code: "due_today"},
+   {name: "Due within a Week", code: "due_week"},
+   {name: "Overdue", code: "overdue"}
+])
 
 function displayStatus( id) {
    if (id == "await_fee") {
@@ -53,10 +70,15 @@ function displayStatus( id) {
    }
    return id.charAt(0).toUpperCase() + id.slice(1)
 }
+
+function filterChanged() {
+    ordersStore.getOrders()
+}
+
 function onPage(event) {
    ordersStore.searchOpts.start = event.first
    ordersStore.searchOpts.limit = event.rows
-   ordersStore.getJobs()
+
 }
 
 function onSort(event) {
@@ -79,6 +101,15 @@ onMounted(() => {
       text-align: left;
       padding: 0 25px;
 
+      .toolbar {
+         padding: 10px 0;
+         label {
+            font-weight: bold;
+            margin-right: 5px;
+            display: inline-block;
+         }
+      }
+
       .p-datatable {
          font-size: 0.85em;
          span.status {
@@ -93,6 +124,9 @@ onMounted(() => {
          }
          span.status.await_fee {
             background: var(--uvalib-grey-dark);
+         }
+         span.status.completed {
+            background: var( --uvalib-brand-blue-light);
          }
          span.status.canceled {
             background: var(--uvalib-red-darker);

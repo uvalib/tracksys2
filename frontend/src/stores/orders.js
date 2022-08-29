@@ -22,7 +22,7 @@ export const useOrdersStore = defineStore('orders', {
          const system = useSystemStore()
          system.working = true
          let so = this.searchOpts
-         let url = `/api/orders?start=${so.start}&limit=${so.limit}&by=${so.sortField}&order=${so.sortOrder}`
+         let url = `/api/orders?filter=${so.filter}&start=${so.start}&limit=${so.limit}&by=${so.sortField}&order=${so.sortOrder}`
          axios.get( url ).then(response => {
             this.orders = []
             response.data.orders.forEach( js => {

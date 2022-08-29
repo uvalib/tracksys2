@@ -73,9 +73,32 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 		sortField = "unit_count"
 	}
 	orderStr := fmt.Sprintf("%s %s", sortField, sortOrder)
-	log.Printf("INFO: sorting %s", orderStr)
 	log.Printf("INFO: get %d %s orders starting from offset %d order %s", pageSize, filter, startIndex, orderStr)
-	filterQ := svc.DB.Table("orders").Where("order_status!=? and order_status!=?", "canceled", "completed")
+
+	filterQ := svc.DB.Table("orders")
+
+	dateNow := time.Now().Format("2006-01-02")
+	if filter == "active" {
+		filterQ = filterQ.Where("order_status!=? and order_status!=?", "canceled", "completed")
+	} else if filter == "await" {
+		filterQ = filterQ.Where("order_status=? or order_status=?", "requested", "await_fee")
+	} else if filter == "deferred" {
+		filterQ = filterQ.Where("order_status=?", "deferred")
+	} else if filter == "canceled" {
+		filterQ = filterQ.Where("order_status=?", "canceled")
+	} else if filter == "complete" {
+		filterQ = filterQ.Where("order_status=?", "completed")
+	} else if filter == "due_today" {
+		filterQ = filterQ.Where("date_due=?", dateNow).
+			Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled")
+	} else if filter == "due_week" {
+		dateWeek := time.Now().AddDate(0, 0, 7).Format("2006-01-02")
+		filterQ = filterQ.Where("date_due>=?", dateNow).Where("date_due<=?", dateWeek).
+			Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled")
+	} else if filter == "overdue" {
+		filterQ = filterQ.Where("date_due<?", dateNow).
+			Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled")
+	}
 
 	var total int64
 	filterQ.Count(&total)
