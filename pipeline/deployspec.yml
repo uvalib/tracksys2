@@ -4,14 +4,10 @@
 
 version: 0.2
 
-#env:
-#  variables:
-
 phases:
   install:
     runtime-versions:
-      golang: 1.15
-#    commands:
+      golang: 1.18
 
   pre_build:
     commands:
@@ -22,9 +18,6 @@ phases:
     commands:
       - $CODEBUILD_SRC_DIR/build-deploy-scripts/tracksys2/deploy.ksh "aws-cicd" development $latest_build
       - sh $CODEBUILD_SRC_DIR/pipeline/wait_for_version.sh $TC_ENDPOINT $latest_build 300
-
-#  post_build:
-#    commands:
 
 #
 # end of file
