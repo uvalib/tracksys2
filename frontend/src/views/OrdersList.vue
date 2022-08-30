@@ -98,7 +98,7 @@ function getOrders() {
 function onPage(event) {
    ordersStore.searchOpts.start = event.first
    ordersStore.searchOpts.limit = event.rows
-
+   ordersStore.getOrders()
 }
 
 function onSort(event) {
