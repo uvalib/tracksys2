@@ -43,6 +43,7 @@ func (orderHit) TableName() string {
 }
 
 type searchResults struct {
+	Components  []component     `json:"components"`
 	MasterFiles []masterFileHit `json:"masterFiles"`
 	Metadata    []metadataHit   `json:"metadata"`
 	Orders      []orderHit      `json:"orders"`
@@ -56,7 +57,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	if scope == "" {
 		scope = "all"
 	}
-	if scope != "all" && scope != "masterfiles" && scope != "metadata" && scope != "orders" {
+	if scope != "all" && scope != "masterfiles" && scope != "metadata" && scope != "orders" && scope != "components" {
 		log.Printf("ERROR: invalid search scope %s specified", scope)
 		c.String(http.StatusBadRequest, "invalid search scope")
 		return
@@ -68,6 +69,25 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	log.Printf("INFO: search %s.%s for [%s]", scope, field, qStr)
 	hitLimit := 30
 	resp := searchResults{MasterFiles: make([]masterFileHit, 0), Metadata: make([]metadataHit, 0), Orders: make([]orderHit, 0)}
+
+	if scope == "all" || scope == "components" {
+		searchQ := svc.DB.Table("components")
+		if field == "all" {
+			searchQ = searchQ.Where(
+				svc.DB.Where("components.id=?", qStr).Or("pid=?", qStr).
+					Or("title like ?", matchAny).Or("label like ?", matchAny).Or("content_desc like ?", matchAny).
+					Or("date like ?", matchAny).Or("ead_id_att=?", qStr),
+			)
+		} else if field == "id" || field == "pid" || field == "ead_id_att" {
+			searchQ = searchQ.Where(fmt.Sprintf("%s=?", field), qStr)
+		} else {
+			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
+		}
+		err := searchQ.Limit(hitLimit).Find(&resp.Components).Error
+		if err != nil {
+			log.Printf("ERROR: component search failed: %s", err.Error())
+		}
+	}
 
 	if scope == "all" || scope == "masterfiles" {
 		searchQ := svc.DB.Table("master_files")
@@ -81,11 +101,6 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			searchQ = searchQ.Where("pid=?", qStr)
 		} else if field == "title" || field == "description" || field == "filename" {
 			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
-		} else if field == "tag" {
-			searchQ = searchQ.
-				Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
-				Joins("left outer join tags t on mt.tag_id = t.id").
-				Where("t.tag=?", qStr)
 		}
 		err := searchQ.Limit(hitLimit).Find(&resp.MasterFiles).Error
 		if err != nil {

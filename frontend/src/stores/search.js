@@ -7,6 +7,7 @@ export const useSearchStore = defineStore('search', {
       query: "",
       scope: "all",
       field: "all",
+      components: [],
       masterFiles: [],
       metadata: [],
       orders: [],
@@ -16,7 +17,8 @@ export const useSearchStore = defineStore('search', {
       hasResults: state => {
          return (state.masterFiles && state.masterFiles.length > 0) ||
             (state.metadata && state.metadata.length > 0) ||
-            (state.orders && state.orders.length > 0)
+            (state.orders && state.orders.length > 0) ||
+            (state.components && state.components.length > 0)
       }
 	},
 	actions: {
@@ -34,6 +36,7 @@ export const useSearchStore = defineStore('search', {
             url += `&field=${this.field}`
          }
          axios.get(url).then(response => {
+            this.components = response.data.components
             this.masterFiles = response.data.masterFiles
             this.metadata = response.data.metadata
             this.orders = response.data.orders

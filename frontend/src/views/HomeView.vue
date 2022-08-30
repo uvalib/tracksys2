@@ -2,8 +2,8 @@
    <div class="home">
       <h2>Search</h2>
       <FormKit type="form" id="global-search" :actions="false" @submit="doSearch">
-         <FormKit type="select" label="" v-model="searchStore.scope" outer-class="select-wrap"
-            :options="{ all: 'All items', orders: 'Orders', masterfiles: 'Master Files', metadata: 'Metadata'}"
+         <FormKit type="select" label="" v-model="searchStore.scope" outer-class="select-wrap" @change="scopeChanged"
+            :options="{ all: 'All items', orders: 'Orders', masterfiles: 'Master Files', metadata: 'Metadata', components: 'Components'}"
          />
          <FormKit type="select" label="" v-model="searchStore.field" :options="scopeFields"
              outer-class="select-wrap" :disabled="searchStore.scope=='all'"/>
@@ -32,6 +32,10 @@ const scopeFields = computed( () => {
    }
    return [{label: 'All fields', value: "all"}]
 })
+
+function scopeChanged() {
+   searchStore.field = "all"
+}
 
 function doSearch() {
    if (searchStore.query.length > 0) {
