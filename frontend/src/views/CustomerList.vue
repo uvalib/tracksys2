@@ -1,6 +1,16 @@
 <template>
    <h2>Customers</h2>
    <div class="customers">
+      <div class="filter-controls">
+         <DPGButton label="Add" @click="addCustomer()"/>
+         <span>
+            <span class="p-input-icon-right">
+               <i class="pi pi-search" />
+               <InputText v-model="filter" placeholder="Customer Search" @input="applyFilter()"/>
+            </span>
+            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
+         </span>
+      </div>
       <DataTable :value="customersStore.customers" ref="customerTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
          :lazy="true" :paginator="true" @page="onPage($event)"
@@ -11,18 +21,6 @@
          :rowsPerPageOptions="[10,30,100]"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
-         <template #header>
-            <div class="filter-controls">
-               <DPGButton label="Add" @click="addCustomer()"/>
-               <span>
-                  <span class="p-input-icon-right">
-                     <i class="pi pi-search" />
-                     <InputText v-model="filter" placeholder="Customer Search" @input="applyFilter()"/>
-                  </span>
-                  <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
-               </span>
-            </div>
-         </template>
          <Column :expander="true" headerStyle="width: 3rem" />
          <Column field="lastName" header="Last Name" :sortable="true"/>
          <Column field="firstName" header="First Name"/>
@@ -212,6 +210,7 @@ onMounted(() => {
    text-align: left;
    padding: 0 25px 25px 25px;
    .filter-controls {
+      padding: 10px 0;
       display: flex;
       flex-flow: row wrap;
       justify-content: space-between;

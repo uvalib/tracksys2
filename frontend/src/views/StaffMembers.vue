@@ -1,6 +1,16 @@
 <template>
    <h2>Staff Members</h2>
    <div class="staff">
+      <div class="filter-controls">
+         <DPGButton label="Add" @click="addStaff()"/>
+         <span>
+            <span class="p-input-icon-right">
+               <i class="pi pi-search" />
+               <InputText v-model="filter" placeholder="Staff Search" @input="applyFilter()"/>
+            </span>
+            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
+         </span>
+      </div>
       <DataTable :value="staffStore.staff" ref="staffTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
          :lazy="true" :paginator="true" @page="onPage($event)"
@@ -10,18 +20,6 @@
          :rowsPerPageOptions="[10,30,100]"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
-         <template #header>
-            <div class="filter-controls">
-               <DPGButton label="Add" @click="addStaff()"/>
-               <span>
-                  <span class="p-input-icon-right">
-                     <i class="pi pi-search" />
-                     <InputText v-model="filter" placeholder="Staff Search" @input="applyFilter()"/>
-                  </span>
-                  <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
-               </span>
-            </div>
-         </template>
          <Column field="lastName" header="Last Name" :sortable="true"/>
          <Column field="firstName" header="First Name"/>
          <Column field="computingID" header="UVA Computing ID" :sortable="true"/>
@@ -165,6 +163,7 @@ onMounted(() => {
       display: flex;
       flex-flow: row wrap;
       justify-content: space-between;
+       padding: 10px 0;
       button.p-button-secondary.p-button {
          margin-left: 5px;
       }

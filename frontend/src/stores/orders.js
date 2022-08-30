@@ -13,6 +13,7 @@ export const useOrdersStore = defineStore('orders', {
          filter: "active",
          sortField: "id",
          sortOrder: "desc",
+         query: "",
       }
 	}),
 	getters: {
@@ -23,6 +24,9 @@ export const useOrdersStore = defineStore('orders', {
          system.working = true
          let so = this.searchOpts
          let url = `/api/orders?filter=${so.filter}&start=${so.start}&limit=${so.limit}&by=${so.sortField}&order=${so.sortOrder}`
+         if ( so.query != "") {
+            url += `&q=${encodeURIComponent(so.query)}`
+         }
          axios.get( url ).then(response => {
             this.orders = []
             response.data.orders.forEach( js => {

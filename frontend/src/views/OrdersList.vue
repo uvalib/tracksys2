@@ -2,13 +2,22 @@
    <h2>Orders</h2>
    <div class="orders">
       <div class="toolbar">
-         <label for="orders-filter">Filter:</label>
-         <Dropdown id="orders-filter" v-model="ordersStore.searchOpts.filter" @change="filterChanged"
-            :options="filters" optionLabel="name" optionValue="code" />
+         <span>
+            <label for="orders-filter">Filter:</label>
+            <Dropdown id="orders-filter" v-model="ordersStore.searchOpts.filter" @change="getOrders()"
+               :options="filters" optionLabel="name" optionValue="code" />
+         </span>
+         <span>
+            <span class="p-input-icon-right">
+               <i class="pi pi-search" />
+               <InputText v-model="ordersStore.searchOpts.query" placeholder="Orders Search" @input="queryOrders()"/>
+            </span>
+            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
+         </span>
       </div>
       <DataTable :value="ordersStore.orders" ref="ordersTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll"
-         sortField="id" :sortOrder="1" @sort="onSort($event)"
+         sortField="id" :sortOrder="-1" @sort="onSort($event)"
          :lazy="true" :paginator="true" @page="onPage($event)"
          :rows="ordersStore.searchOpts.limit" :totalRecords="ordersStore.total"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
@@ -25,12 +34,11 @@
          <Column field="dateDue" header="Date Due" :sortable="true" class="nowrap" />
          <Column field="title" header="Title" :sortable="true" />
          <Column field="unitCount" header="Units" :sortable="true" />
+         <Column field="masterFileCount" header="Master Files" :sortable="true" />
          <Column field="fee" header="Fee" :sortable="true" />
          <Column field="lastName" header="Customer" class="nowrap" >
             <template #body="slotProps">
-               <router-link :to="`/customers/${slotProps.data.customer.id}`">
-                  {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
-               </router-link>
+               {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
             </template>
          </Column>
          <Column field="agency.name" header="Agency" />
@@ -50,6 +58,7 @@ import { useOrdersStore } from '@/stores/orders'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
+import InputText from 'primevue/inputtext'
 
 const ordersStore = useOrdersStore()
 
@@ -71,8 +80,19 @@ function displayStatus( id) {
    return id.charAt(0).toUpperCase() + id.slice(1)
 }
 
-function filterChanged() {
-    ordersStore.getOrders()
+function clearSearch() {
+   ordersStore.searchOpts.query = ""
+   ordersStore.getOrders()
+}
+
+function queryOrders() {
+   if (ordersStore.searchOpts.query.length > 3) {
+      ordersStore.getOrders()
+   }
+}
+
+function getOrders() {
+   ordersStore.getOrders()
 }
 
 function onPage(event) {
@@ -103,10 +123,16 @@ onMounted(() => {
 
       .toolbar {
          padding: 10px 0;
+         display: flex;
+         flex-flow: row nowrap;
+         justify-content: space-between;
          label {
             font-weight: bold;
             margin-right: 5px;
             display: inline-block;
+         }
+         button.p-button {
+            margin-left: 5px;
          }
       }
 
