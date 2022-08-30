@@ -1,10 +1,10 @@
 <template>
 <TabView class="results">
-   <TabPanel :header="`Orders (${searchStore.orders.length})`"  v-if="searchStore.scope=='all' || searchStore.scope=='orders'">
-      <div v-if="searchStore.orders.length == 0">
+   <TabPanel :header="`Orders (${searchStore.orders.total})`"  v-if="searchStore.scope=='all' || searchStore.scope=='orders'">
+      <div v-if="searchStore.orders.total == 0">
          <h3>No matching orders found</h3>
       </div>
-      <DataTable v-else :value="searchStore.orders" ref="orderHitsTable"
+      <DataTable v-else :value="searchStore.orders.hits" ref="orderHitsTable"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       >
          <Column field="id" header="ID" :sortable="true"/>
@@ -19,11 +19,11 @@
          <Column field="specialInstructions" header="Special Instructions" />
       </DataTable>
    </TabPanel>
-   <TabPanel :header="`Metadata (${searchStore.metadata.length})`" v-if="searchStore.scope=='all' || searchStore.scope=='metadata'">
-      <div v-if="searchStore.metadata.length == 0">
+   <TabPanel :header="`Metadata (${searchStore.metadata.total})`" v-if="searchStore.scope=='all' || searchStore.scope=='metadata'">
+      <div v-if="searchStore.metadata.total == 0">
          <h3>No matching metadata records found</h3>
       </div>
-      <DataTable v-else :value="searchStore.metadata" ref="metadataHitsTable"
+      <DataTable v-else :value="searchStore.metadata.hits" ref="metadataHitsTable"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       >
          <Column field="id" header="ID"  :sortable="true"/>
@@ -36,11 +36,11 @@
          <Column field="catalogKey" header="Catalog Key" class="nowrap" :sortable="true"/>
       </DataTable>
    </TabPanel>
-   <TabPanel :header="`Master Files (${searchStore.masterFiles.length})`"  v-if="searchStore.scope=='all' || searchStore.scope=='masterfiles'">
-      <div v-if="searchStore.masterFiles.length == 0">
+   <TabPanel :header="`Master Files (${searchStore.masterFiles.total})`"  v-if="searchStore.scope=='all' || searchStore.scope=='masterfiles'">
+      <div v-if="searchStore.masterFiles.total == 0">
          <h3>No matching master files found</h3>
       </div>
-      <DataTable v-else :value="searchStore.masterFiles" ref="masterFileHitsTable"
+      <DataTable v-else :value="searchStore.masterFiles.hits" ref="masterFileHitsTable"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       >
          <Column field="id" header="ID" :sortable="true"/>
@@ -50,11 +50,11 @@
          <Column field="description" header="Description" />
       </DataTable>
    </TabPanel>
-   <TabPanel :header="`Components (${searchStore.components.length})`"  v-if="searchStore.scope=='all' || searchStore.scope=='components'">
-      <div v-if="searchStore.components.length == 0">
+   <TabPanel :header="`Components (${searchStore.components.total})`"  v-if="searchStore.scope=='all' || searchStore.scope=='components'">
+      <div v-if="searchStore.components.total == 0">
          <h3>No matching components found</h3>
       </div>
-      <DataTable v-else :value="searchStore.components" ref="componentHitsTable"
+      <DataTable v-else :value="searchStore.components.hits" ref="componentHitsTable"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       >
          <Column field="id" header="ID" :sortable="true"/>

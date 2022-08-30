@@ -42,11 +42,28 @@ func (orderHit) TableName() string {
 	return "orders"
 }
 
+type componentResp struct {
+	Total int64       `json:"total"`
+	Hits  []component `json:"hits"`
+}
+type metadataResp struct {
+	Total int64         `json:"total"`
+	Hits  []metadataHit `json:"hits"`
+}
+type masterFileResp struct {
+	Total int64           `json:"total"`
+	Hits  []masterFileHit `json:"hits"`
+}
+type orderResp struct {
+	Total int64      `json:"total"`
+	Hits  []orderHit `json:"hits"`
+}
+
 type searchResults struct {
-	Components  []component     `json:"components"`
-	MasterFiles []masterFileHit `json:"masterFiles"`
-	Metadata    []metadataHit   `json:"metadata"`
-	Orders      []orderHit      `json:"orders"`
+	Components  componentResp  `json:"components"`
+	MasterFiles masterFileResp `json:"masterFiles"`
+	Metadata    metadataResp   `json:"metadata"`
+	Orders      orderResp      `json:"orders"`
 }
 
 func (svc *serviceContext) searchRequest(c *gin.Context) {
@@ -68,7 +85,11 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	}
 	log.Printf("INFO: search %s.%s for [%s]", scope, field, qStr)
 	hitLimit := 30
-	resp := searchResults{MasterFiles: make([]masterFileHit, 0), Metadata: make([]metadataHit, 0), Orders: make([]orderHit, 0)}
+	resp := searchResults{
+		Components:  componentResp{Hits: make([]component, 0)},
+		MasterFiles: masterFileResp{Hits: make([]masterFileHit, 0)},
+		Metadata:    metadataResp{Hits: make([]metadataHit, 0)},
+		Orders:      orderResp{Hits: make([]orderHit, 0)}}
 
 	if scope == "all" || scope == "components" {
 		searchQ := svc.DB.Table("components")
@@ -83,7 +104,8 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		} else {
 			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
 		}
-		err := searchQ.Limit(hitLimit).Find(&resp.Components).Error
+		searchQ.Count(&resp.Components.Total)
+		err := searchQ.Limit(hitLimit).Find(&resp.Components.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: component search failed: %s", err.Error())
 		}
@@ -102,7 +124,8 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		} else if field == "title" || field == "description" || field == "filename" {
 			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
 		}
-		err := searchQ.Limit(hitLimit).Find(&resp.MasterFiles).Error
+		searchQ.Count(&resp.MasterFiles.Total)
+		err := searchQ.Limit(hitLimit).Find(&resp.MasterFiles.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: masterfile search failed: %s", err.Error())
 		}
@@ -125,14 +148,16 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 				searchQ = searchQ.Where(fmt.Sprintf("%s=?", field), qStr).Limit(hitLimit)
 			}
 		}
-		err := searchQ.Limit(hitLimit).Find(&resp.Metadata).Error
+
+		searchQ.Count(&resp.Metadata.Total)
+		err := searchQ.Limit(hitLimit).Find(&resp.Metadata.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: metadata search failed: %s", err.Error())
 		}
 	}
 
 	if scope == "all" || scope == "orders" {
-		searchQ := svc.DB.Table("orders").Preload("Customer").Preload("Agency")
+		searchQ := svc.DB.Table("orders")
 		if field == "all" {
 			searchQ = searchQ.
 				Joins("inner join customers on customer_id = customers.id").
@@ -157,7 +182,8 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		} else {
 			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
 		}
-		err := searchQ.Limit(hitLimit).Find(&resp.Orders).Error
+		searchQ.Count(&resp.Orders.Total)
+		err := searchQ.Preload("Customer").Preload("Agency").Limit(hitLimit).Find(&resp.Orders.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: order search failed: %s", err.Error())
 		}
