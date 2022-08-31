@@ -85,7 +85,7 @@ function rowClass(rowData) {
 function onPage(event) {
    jobsStore.searchOpts.start = event.first
    jobsStore.searchOpts.limit = event.rows
-   jobsStore.getJobs()
+   // jobsStore.getJobs()
 }
 
 function onRowSelect() {

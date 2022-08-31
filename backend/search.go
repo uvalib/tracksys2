@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -70,6 +71,11 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	qStr := c.Query("q")
 	matchStart := fmt.Sprintf("%s%%", qStr)
 	matchAny := fmt.Sprintf("%%%s%%", qStr)
+	startIndex, _ := strconv.Atoi(c.Query("start"))
+	pageSize, _ := strconv.Atoi(c.Query("limit"))
+	if pageSize == 0 {
+		pageSize = 30
+	}
 	scope := c.Query("scope")
 	if scope == "" {
 		scope = "all"
@@ -83,8 +89,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	if field == "" {
 		field = "all"
 	}
-	log.Printf("INFO: search %s.%s for [%s]", scope, field, qStr)
-	hitLimit := 30
+	log.Printf("INFO: search %s.%s for [%s] starting from %d limit %d", scope, field, qStr, startIndex, pageSize)
 	resp := searchResults{
 		Components:  componentResp{Hits: make([]component, 0)},
 		MasterFiles: masterFileResp{Hits: make([]masterFileHit, 0)},
@@ -105,7 +110,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
 		}
 		searchQ.Count(&resp.Components.Total)
-		err := searchQ.Limit(hitLimit).Find(&resp.Components.Hits).Error
+		err := searchQ.Offset(startIndex).Limit(pageSize).Find(&resp.Components.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: component search failed: %s", err.Error())
 		}
@@ -123,9 +128,25 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			searchQ = searchQ.Where("pid=?", qStr)
 		} else if field == "title" || field == "description" || field == "filename" {
 			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
+		} else if field == "tag" {
+			searchQ = searchQ.
+				Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
+				Joins("left outer join tags t on mt.tag_id = t.id").
+				Where("t.tag=?", qStr)
+		}
+		if field == "box" || field == "folder" {
+			searchQ = searchQ.
+				Joins("left outer join master_file_locations ml on ml.master_file_id = master_files.id").
+				Joins("left outer join locations l on ml.location_id = l.id")
+			if field == "box" {
+				searchQ = searchQ.Where("l.container_id=?", qStr)
+			}
+			if field == "folder" {
+				searchQ = searchQ.Where("l.folder_id=?", qStr)
+			}
 		}
 		searchQ.Count(&resp.MasterFiles.Total)
-		err := searchQ.Limit(hitLimit).Find(&resp.MasterFiles.Hits).Error
+		err := searchQ.Offset(startIndex).Limit(pageSize).Find(&resp.MasterFiles.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: masterfile search failed: %s", err.Error())
 		}
@@ -138,19 +159,19 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 				svc.DB.Where("id=?", qStr).Or("pid=?", qStr).Or("title like ?", matchAny).
 					Or("barcode=?", qStr).Or("catalog_key=?", qStr).Or("call_number like ?", matchStart).
 					Or("creator_name like ?", matchAny),
-			).Limit(hitLimit)
+			)
 		} else {
 			if field == "title" || field == "creator_name" {
-				searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny).Limit(hitLimit)
+				searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
 			} else if field == "call_number" {
-				searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchStart).Limit(hitLimit)
+				searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchStart)
 			} else {
-				searchQ = searchQ.Where(fmt.Sprintf("%s=?", field), qStr).Limit(hitLimit)
+				searchQ = searchQ.Where(fmt.Sprintf("%s=?", field), qStr)
 			}
 		}
 
 		searchQ.Count(&resp.Metadata.Total)
-		err := searchQ.Limit(hitLimit).Find(&resp.Metadata.Hits).Error
+		err := searchQ.Offset(startIndex).Limit(pageSize).Find(&resp.Metadata.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: metadata search failed: %s", err.Error())
 		}
@@ -183,7 +204,9 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
 		}
 		searchQ.Count(&resp.Orders.Total)
-		err := searchQ.Preload("Customer").Preload("Agency").Limit(hitLimit).Find(&resp.Orders.Hits).Error
+		err := searchQ.Preload("Customer").Preload("Agency").Group("orders.id").
+			Offset(startIndex).Limit(pageSize).
+			Find(&resp.Orders.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: order search failed: %s", err.Error())
 		}

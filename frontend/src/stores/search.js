@@ -39,7 +39,7 @@ export const useSearchStore = defineStore('search', {
          sortOrder: "desc",
          hits: [],
       },
-      searchFields: {}
+      searchFields: {},
 	}),
 	getters: {
       hasResults: state => {
@@ -74,29 +74,53 @@ export const useSearchStore = defineStore('search', {
          this.metadata.hits = []
 
          this.orders.start = 0
-         this.orderslimit = 30
-         this.orderstotal = 0
-         this.orderssortField = "id"
-         this.orderssortOrder = "desc"
-         this.ordershits = []
+         this.orders.limit = 30
+         this.orders.total = 0
+         this.orders.sortField = "id"
+         this.orders.sortOrder = "desc"
+         this.orders.hits = []
       },
-      globalSearch() {
+      executeSearch(searchOrigin) {
          const system = useSystemStore()
          system.working = true
-         this.resetResults()
-         let url = `/api/search?scope=${this.scope}&q=${encodeURIComponent(this.query)}`
+         let tgtScope = this.scope
+         if (searchOrigin != "all") {
+            tgtScope = searchOrigin
+         }
+         let url = `/api/search?scope=${tgtScope}&q=${encodeURIComponent(this.query)}`
          if (this.field != "all" ) {
             url += `&field=${this.field}`
          }
+
+         if (searchOrigin == "components") {
+            url += `&start=${this.components.start}&limit=${this.components.limit}`
+         } else if (searchOrigin == "masterfiles") {
+            url += `&start=${this.masterFiles.start}&limit=${this.masterFiles.limit}`
+         } else if (searchOrigin == "metadata") {
+            url += `&start=${this.metadata.start}&limit=${this.metadata.limit}`
+         } else if (searchOrigin == "orders") {
+            url += `&start=${this.orders.start}&limit=${this.orders.limit}`
+         } else {
+            this.resetResults()
+         }
+
          axios.get(url).then(response => {
-            this.components.hits = response.data.components.hits
-            this.components.total = response.data.components.total
-            this.masterFiles.hits = response.data.masterFiles.hits
-            this.masterFiles.total = response.data.masterFiles.total
-            this.metadata.hits = response.data.metadata.hits
-            this.metadata.total = response.data.metadata.total
-            this.orders.hits = response.data.orders.hits
-            this.orders.total = response.data.orders.total
+            if (searchOrigin == "components" || searchOrigin == "all") {
+               this.components.hits = response.data.components.hits
+               this.components.total = response.data.components.total
+            }
+            if (searchOrigin == "masterfiles" || searchOrigin == "all") {
+               this.masterFiles.hits = response.data.masterFiles.hits
+               this.masterFiles.total = response.data.masterFiles.total
+            }
+            if (searchOrigin == "metadata" || searchOrigin == "all") {
+               this.metadata.hits = response.data.metadata.hits
+               this.metadata.total = response.data.metadata.total
+            }
+            if (searchOrigin == "orders" || searchOrigin == "all") {
+               this.orders.hits = response.data.orders.hits
+               this.orders.total = response.data.orders.total
+            }
             system.working = false
          }).catch( e => {
             system.setError(e)

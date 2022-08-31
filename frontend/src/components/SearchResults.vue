@@ -1,82 +1,31 @@
 <template>
 <TabView class="results">
    <TabPanel :header="`Orders (${searchStore.orders.total})`"  v-if="searchStore.scope=='all' || searchStore.scope=='orders'">
-      <div v-if="searchStore.orders.total == 0">
-         <h3>No matching orders found</h3>
-      </div>
-      <DataTable v-else :value="searchStore.orders.hits" ref="orderHitsTable"
-         stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-      >
-         <Column field="id" header="ID" :sortable="true"/>
-         <Column header="Customer" class="nowrap">
-            <template #body="slotProps">
-              {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
-            </template>
-         </Column>
-         <Column field="agency.name" header="Agency" class="nowrap" :sortable="true"/>
-         <Column field="title" header="Order Title" :sortable="true"/>
-         <Column field="notes" header="Staff Notes" />
-         <Column field="specialInstructions" header="Special Instructions" />
-      </DataTable>
+      <OrdersResults />
    </TabPanel>
    <TabPanel :header="`Metadata (${searchStore.metadata.total})`" v-if="searchStore.scope=='all' || searchStore.scope=='metadata'">
-      <div v-if="searchStore.metadata.total == 0">
-         <h3>No matching metadata records found</h3>
-      </div>
-      <DataTable v-else :value="searchStore.metadata.hits" ref="metadataHitsTable"
-         stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-      >
-         <Column field="id" header="ID"  :sortable="true"/>
-         <Column field="pid" header="PID" class="nowrap" :sortable="true"/>
-         <Column field="type" header="Type" :sortable="true"/>
-         <Column field="title" header="Title"  :sortable="true"/>
-         <Column field="creatorName" header="Creator Name" :sortable="true"/>
-         <Column field="barcode" header="Barcode" class="nowrap" :sortable="true"/>
-         <Column field="callNumber" header="Call Number" class="nowrap" :sortable="true"/>
-         <Column field="catalogKey" header="Catalog Key" class="nowrap" :sortable="true"/>
-      </DataTable>
+      <MetadataResults />
    </TabPanel>
    <TabPanel :header="`Master Files (${searchStore.masterFiles.total})`"  v-if="searchStore.scope=='all' || searchStore.scope=='masterfiles'">
-      <div v-if="searchStore.masterFiles.total == 0">
-         <h3>No matching master files found</h3>
-      </div>
-      <DataTable v-else :value="searchStore.masterFiles.hits" ref="masterFileHitsTable"
-         stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-      >
-         <Column field="id" header="ID" :sortable="true"/>
-         <Column field="pid" header="PID" class="nowrap" :sortable="true" />
-         <Column field="filename" header="Filename" :sortable="true"/>
-         <Column field="title" header="Title" :sortable="true"/>
-         <Column field="description" header="Description" />
-      </DataTable>
+      <MasterFilesResults />
    </TabPanel>
    <TabPanel :header="`Components (${searchStore.components.total})`"  v-if="searchStore.scope=='all' || searchStore.scope=='components'">
-      <div v-if="searchStore.components.total == 0">
-         <h3>No matching components found</h3>
-      </div>
-      <DataTable v-else :value="searchStore.components.hits" ref="componentHitsTable"
-         stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-      >
-         <Column field="id" header="ID" :sortable="true"/>
-         <Column field="pid" header="PID" :sortable="true" class="nowrap"/>
-         <Column field="title" header="Title" :sortable="true"/>
-         <Column field="label" header="Label" :sortable="true"/>
-         <Column field="description" header="Content Description"/>
-         <Column field="date" header="Date" :sortable="true" class="nowrap"/>
-         <Column field="eadID" header="Finding Aide" :sortable="true" class="nowrap"/>
-      </DataTable>
+      <ComponentsResults />
    </TabPanel>
 </TabView>
 </template>
 
 <script setup>
 import { useSearchStore } from '../stores/search'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
+import MetadataResults from './results/MetadataResults.vue'
+import OrdersResults from './results/OrdersResults.vue'
+import MasterFilesResults from './results/MasterFilesResults.vue'
+import ComponentsResults from './results/ComponentsResults.vue'
 
 const searchStore = useSearchStore()
+
 </script>
 
 <stype scoped lang="scss">

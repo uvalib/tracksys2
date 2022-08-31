@@ -159,9 +159,9 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 			searchField{Field: "filename", Label: "Filename"},
 			searchField{Field: "title", Label: "Title"},
 			searchField{Field: "description", Label: "Description"},
-			// searchField{Field: "tag", Label: "Tag"},
-			// searchField{Field: "box", Label: "Box"},
-			// searchField{Field: "folder", Label: "Folder"},
+			searchField{Field: "tag", Label: "Tag"},
+			searchField{Field: "box", Label: "Box"},
+			searchField{Field: "folder", Label: "Folder"},
 		},
 		"metadata": {
 			searchField{Field: "all", Label: "All fields"},

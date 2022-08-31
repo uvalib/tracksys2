@@ -10,18 +10,16 @@
          <FormKit label="" type="search" placeholder="Find Tracksys items..." v-model="searchStore.query" outer-class="searchbar" />
          <FormKit type="submit" label="Search" wrapper-class="submit-button" />
       </FormKit>
-      <SearchResults v-if="searchStore.hasResults && !systemStore.working"/>
+      <SearchResults v-if="searchStore.hasResults"/>
    </div>
 </template>
 
 <script setup>
 import { useSearchStore } from '../stores/search'
-import { useSystemStore } from '../stores/system'
 import SearchResults from '@/components/SearchResults.vue'
 import { computed } from 'vue'
 
 const searchStore = useSearchStore()
-const systemStore = useSystemStore()
 
 const scopeFields = computed( () => {
    let scope = searchStore.scope
@@ -39,7 +37,7 @@ function scopeChanged() {
 
 function doSearch() {
    if (searchStore.query.length > 0) {
-      searchStore.globalSearch()
+      searchStore.executeSearch("all")
    }
 }
 </script>
