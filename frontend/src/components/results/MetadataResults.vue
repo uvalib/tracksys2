@@ -19,7 +19,6 @@
    <DataTable v-else :value="searchStore.metadata.hits" ref="metadataTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll"
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :globalFilterFields="['type']"
       :lazy="true" :paginator="true" @page="onMetadataPage($event)"
       :rows="searchStore.metadata.limit" :totalRecords="searchStore.metadata.total"
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"

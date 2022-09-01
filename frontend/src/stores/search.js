@@ -13,6 +13,7 @@ export const useSearchStore = defineStore('search', {
          limit: 30,
          total: 0,
          hits: [],
+         filters: []
       },
       masterFiles: {
          start: 0,
@@ -33,6 +34,7 @@ export const useSearchStore = defineStore('search', {
          limit: 30,
          total: 0,
          hits: [],
+         filters: []
       },
       searchFields: {},
 	}),
@@ -79,21 +81,29 @@ export const useSearchStore = defineStore('search', {
             url += `&field=${this.field}`
          }
 
+         let tgtFilters = null
          if (searchOrigin == "components") {
             url += `&start=${this.components.start}&limit=${this.components.limit}`
+            tgtFilters = this.components.filters
          } else if (searchOrigin == "masterfiles") {
             url += `&start=${this.masterFiles.start}&limit=${this.masterFiles.limit}`
+            tgtFilters = this.masterFiles.filters
          } else if (searchOrigin == "metadata") {
             url += `&start=${this.metadata.start}&limit=${this.metadata.limit}`
-            if (this.metadata.filters.length > 0) {
-               let params = []
-               this.metadata.filters.forEach( fv => params.push(`{"filter":"${fv.field}|${fv.match}|${encodeURIComponent(fv.value)}"}`) )
-               url += `&filters=[${params.join(",")}]`
-            }
+            tgtFilters = this.metadata.filters
          } else if (searchOrigin == "orders") {
             url += `&start=${this.orders.start}&limit=${this.orders.limit}`
+            tgtFilters = this.orders.filters
          } else {
             this.resetResults()
+         }
+
+         if (tgtFilters != null) {
+            if (tgtFilters.length > 0) {
+               let params = []
+               tgtFilters.forEach( fv => params.push(`{"filter":"${fv.field}|${fv.match}|${encodeURIComponent(fv.value)}"}`) )
+               url += `&filters=[${params.join(",")}]`
+            }
          }
 
          axios.get(url).then(response => {
