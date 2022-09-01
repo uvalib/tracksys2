@@ -1,15 +1,15 @@
 <template>
 <TabView class="results">
-   <TabPanel :header="`Orders (${searchStore.orders.total})`"  v-if="searchStore.scope=='all' || searchStore.scope=='orders'">
+   <TabPanel :header="`Orders`" v-if="searchStore.scope=='all' || searchStore.scope=='orders'">
       <OrdersResults />
    </TabPanel>
-   <TabPanel :header="`Metadata (${searchStore.metadata.total})`" v-if="searchStore.scope=='all' || searchStore.scope=='metadata'">
+   <TabPanel :header="`Metadata`" v-if="searchStore.scope=='all' || searchStore.scope=='metadata'">
       <MetadataResults />
    </TabPanel>
-   <TabPanel :header="`Master Files (${searchStore.masterFiles.total})`"  v-if="searchStore.scope=='all' || searchStore.scope=='masterfiles'">
+   <TabPanel :header="`Master Files`" v-if="searchStore.scope=='all' || searchStore.scope=='masterfiles'">
       <MasterFilesResults />
    </TabPanel>
-   <TabPanel :header="`Components (${searchStore.components.total})`"  v-if="searchStore.scope=='all' || searchStore.scope=='components'">
+   <TabPanel :header="`Components`"  v-if="searchStore.scope=='all' || searchStore.scope=='components'">
       <ComponentsResults />
    </TabPanel>
 </TabView>

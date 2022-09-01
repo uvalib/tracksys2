@@ -1,12 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type masterFileHit struct {
@@ -67,6 +70,10 @@ type searchResults struct {
 	Orders      orderResp      `json:"orders"`
 }
 
+type filterData struct {
+	Filter string `json:"filter"`
+}
+
 func (svc *serviceContext) searchRequest(c *gin.Context) {
 	qStr := c.Query("q")
 	matchStart := fmt.Sprintf("%s%%", qStr)
@@ -90,12 +97,48 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		field = "all"
 	}
 	log.Printf("INFO: search %s.%s for [%s] starting from %d limit %d", scope, field, qStr, startIndex, pageSize)
+
+	// extract filters into json structs
+	filterStr := c.Query("filters")
+	var filterQ *gorm.DB
+	if filterStr != "" {
+		filters := make([]filterData, 0)
+		err := json.Unmarshal([]byte(filterStr), &filters)
+		if err != nil {
+			log.Printf("ERROR: unable to parse filters %s: %s", filterStr, err.Error())
+			c.String(http.StatusBadRequest, "invalid filters")
+			return
+		}
+		log.Printf("INFO: filters: %+v", filters)
+		for idx, f := range filters {
+			bits := strings.Split(f.Filter, "|")
+			tgtField := bits[0]
+			tgtVal := bits[2]
+			op := "="
+			if bits[1] == "contains" {
+				tgtVal = fmt.Sprintf("%%%s%%", tgtVal)
+				op = "like"
+			} else if bits[1] == "startsWith" {
+				tgtVal = fmt.Sprintf("%s%%", tgtVal)
+				op = "like"
+			}
+			if idx == 0 {
+				filterQ = svc.DB.Where(fmt.Sprintf("%s %s ?", tgtField, op), tgtVal)
+			} else {
+				filterQ = filterQ.Where(fmt.Sprintf("%s %s ?", tgtField, op), tgtVal)
+			}
+		}
+	}
+
+	// init empty results
 	resp := searchResults{
 		Components:  componentResp{Hits: make([]component, 0)},
 		MasterFiles: masterFileResp{Hits: make([]masterFileHit, 0)},
 		Metadata:    metadataResp{Hits: make([]metadataHit, 0)},
-		Orders:      orderResp{Hits: make([]orderHit, 0)}}
+		Orders:      orderResp{Hits: make([]orderHit, 0)},
+	}
 
+	// query each type of object individually: components, master files, metadata and orders. Aggregate rresults in response struct
 	if scope == "all" || scope == "components" {
 		searchQ := svc.DB.Table("components")
 		if field == "all" {
@@ -109,6 +152,11 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		} else {
 			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
 		}
+
+		if filterQ != nil {
+			searchQ = searchQ.Where(filterQ)
+		}
+
 		searchQ.Count(&resp.Components.Total)
 		err := searchQ.Offset(startIndex).Limit(pageSize).Find(&resp.Components.Hits).Error
 		if err != nil {
@@ -145,6 +193,11 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 				searchQ = searchQ.Where("l.folder_id=?", qStr)
 			}
 		}
+
+		if filterQ != nil {
+			searchQ = searchQ.Where(filterQ)
+		}
+
 		searchQ.Count(&resp.MasterFiles.Total)
 		err := searchQ.Offset(startIndex).Limit(pageSize).Find(&resp.MasterFiles.Hits).Error
 		if err != nil {
@@ -168,6 +221,10 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			} else {
 				searchQ = searchQ.Where(fmt.Sprintf("%s=?", field), qStr)
 			}
+		}
+
+		if filterQ != nil {
+			searchQ = searchQ.Where(filterQ)
 		}
 
 		searchQ.Count(&resp.Metadata.Total)
@@ -203,6 +260,11 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		} else {
 			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
 		}
+
+		if filterQ != nil {
+			searchQ = searchQ.Where(filterQ)
+		}
+
 		searchQ.Count(&resp.Orders.Total)
 		err := searchQ.Preload("Customer").Preload("Agency").Group("orders.id").
 			Offset(startIndex).Limit(pageSize).

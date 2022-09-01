@@ -10,7 +10,7 @@
          <FormKit label="" type="search" placeholder="Find Tracksys items..." v-model="searchStore.query" outer-class="searchbar" />
          <FormKit type="submit" label="Search" wrapper-class="submit-button" />
       </FormKit>
-      <SearchResults v-if="searchStore.hasResults"/>
+      <SearchResults v-if="searchStore.searched" />
    </div>
 </template>
 

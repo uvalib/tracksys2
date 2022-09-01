@@ -7,36 +7,31 @@ export const useSearchStore = defineStore('search', {
       query: "",
       scope: "all",
       field: "all",
+      searched: false,
       components: {
          start: 0,
          limit: 30,
          total: 0,
-         sortField: "id",
-         sortOrder: "desc",
          hits: [],
       },
       masterFiles: {
          start: 0,
          limit: 30,
          total: 0,
-         sortField: "id",
-         sortOrder: "desc",
          hits: [],
+         filters: []
       },
       metadata: {
          start: 0,
          limit: 30,
          total: 0,
-         sortField: "id",
-         sortOrder: "desc",
          hits: [],
+         filters: []
       },
       orders: {
          start: 0,
          limit: 30,
          total: 0,
-         sortField: "id",
-         sortOrder: "desc",
          hits: [],
       },
       searchFields: {},
@@ -55,29 +50,21 @@ export const useSearchStore = defineStore('search', {
          this.components.start = 0
          this.components.limit = 30
          this.components.total = 0
-         this.components.sortField = "id"
-         this.components.sortOrder = "desc"
          this.components.hits = []
 
          this.masterFiles.start = 0
          this.masterFiles.limit = 30
          this.masterFiles.total = 0
-         this.masterFiles.sortField = "id"
-         this.masterFiles.sortOrder = "desc"
          this.masterFiles.hits = []
 
          this.metadata.start = 0
          this.metadata.limit = 30
          this.metadata.total = 0
-         this.metadata.sortField = "id"
-         this.metadata.sortOrder = "desc"
          this.metadata.hits = []
 
          this.orders.start = 0
          this.orders.limit = 30
          this.orders.total = 0
-         this.orders.sortField = "id"
-         this.orders.sortOrder = "desc"
          this.orders.hits = []
       },
       executeSearch(searchOrigin) {
@@ -98,6 +85,11 @@ export const useSearchStore = defineStore('search', {
             url += `&start=${this.masterFiles.start}&limit=${this.masterFiles.limit}`
          } else if (searchOrigin == "metadata") {
             url += `&start=${this.metadata.start}&limit=${this.metadata.limit}`
+            if (this.metadata.filters.length > 0) {
+               let params = []
+               this.metadata.filters.forEach( fv => params.push(`{"filter":"${fv.field}|${fv.match}|${encodeURIComponent(fv.value)}"}`) )
+               url += `&filters=[${params.join(",")}]`
+            }
          } else if (searchOrigin == "orders") {
             url += `&start=${this.orders.start}&limit=${this.orders.limit}`
          } else {
@@ -122,6 +114,7 @@ export const useSearchStore = defineStore('search', {
                this.orders.total = response.data.orders.total
             }
             system.working = false
+            this.searched = true
          }).catch( e => {
             system.setError(e)
          })

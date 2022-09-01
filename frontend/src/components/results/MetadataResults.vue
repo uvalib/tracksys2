@@ -1,9 +1,25 @@
 <template>
+   <div v-if="hasFilter" class="filters">
+      <div class="filter-head">Filters</div>
+      <div class="content">
+            <ul>
+               <li v-for="(vf,idx) in selectedFilters" :key="`mdfilter=${idx}`">
+                  <label>{{vf.filter}}:</label>
+                  <span>{{vf.value}}</span>
+               </li>
+            </ul>
+         <div class="filter-acts">
+            <DPGButton label="Clear all" class="p-button-secondary" @click="clearFilters()"/>
+         </div>
+      </div>
+   </div>
    <div v-if="searchStore.metadata.total == 0">
       <h3>No matching metadata records found</h3>
    </div>
    <DataTable v-else :value="searchStore.metadata.hits" ref="metadataTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll"
+      v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
+      :globalFilterFields="['type']"
       :lazy="true" :paginator="true" @page="onMetadataPage($event)"
       :rows="searchStore.metadata.limit" :totalRecords="searchStore.metadata.total"
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
@@ -12,21 +28,84 @@
    >
       <Column field="id" header="ID" />
       <Column field="pid" header="PID" class="nowrap"/>
-      <Column field="type" header="Type"/>
-      <Column field="title" header="Title" />
-      <Column field="creatorName" header="Creator Name"/>
-      <Column field="barcode" header="Barcode" class="nowrap"/>
-      <Column field="callNumber" header="Call Number" class="nowrap"/>
-      <Column field="catalogKey" header="Catalog Key" class="nowrap"/>
+      <Column field="type" header="Type" filterField="type" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <Dropdown v-model="filterModel.value" :options="mdTypes" optionLabel="name" optionValue="code" placeholder="Select a type" />
+         </template>
+      </Column>
+      <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
+         </template>
+      </Column>
+      <Column field="creatorName" header="Creator Name" filterField="creator_name" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <InputText type="text" v-model="filterModel.value" placeholder="Creator name"/>
+         </template>
+      </Column>
+      <Column field="barcode" header="Barcode" class="nowrap" filterField="barcode" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <InputText type="text" v-model="filterModel.value" placeholder="Barcode"/>
+         </template>
+      </Column>
+      <Column field="callNumber" header="Call Number" class="nowrap" filterField="call_number" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <InputText type="text" v-model="filterModel.value" placeholder="Call number"/>
+         </template>
+      </Column>
+      <Column field="catalogKey" header="Catalog Key" class="nowrap" filterField="catalog_key" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <InputText type="text" v-model="filterModel.value" placeholder="Catalog key"/>
+         </template>
+      </Column>
    </DataTable>
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
 import { useSearchStore } from '../../stores/search'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import Dropdown from 'primevue/dropdown'
+import InputText from 'primevue/inputtext'
+import {FilterMatchMode} from 'primevue/api'
 
 const searchStore = useSearchStore()
+
+const filters = ref( {
+    'type': {value: null, matchMode: FilterMatchMode.EQUALS},
+    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
+    'creator_name': {value: null, matchMode: FilterMatchMode.CONTAINS},
+    'barcode': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
+    'call_number': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
+    'catalog_key': {value: null, matchMode: FilterMatchMode.STARTS_WITH}
+})
+const mdTypes = ref([
+   {name: "SirsiMetadata", code: "SirsiMetadata"},
+   {name: "XmlMetadata", code: "XmlMetadata"},
+   {name: "ExternalMetadata", code: "ExternalMetadata"},
+])
+
+const selectedFilters = computed(() => {
+   let out = []
+   Object.entries(filters.value).forEach(([key, data]) => {
+      if (data.value && data.value != "") {
+         out.push( {filter: key, value: data.value})
+      }
+   })
+   return out
+})
+
+const hasFilter = computed(() => {
+   let idx = Object.values(filters.value).findIndex( fv => fv.value && fv.value != "")
+   return idx >= 0
+})
+
+function clearFilters() {
+   Object.values(filters.value).forEach( fv => fv.value = null )
+   searchStore.metadata.filters = []
+   searchStore.executeSearch("metadata")
+}
 
 function onMetadataPage(event) {
    searchStore.metadata.start = event.first
@@ -34,9 +113,49 @@ function onMetadataPage(event) {
    searchStore.executeSearch("metadata")
 }
 
+function onFilter(event) {
+   searchStore.metadata.filters = []
+   Object.entries(event.filters).forEach(([key, data]) => {
+      if (data.value && data.value != "") {
+         searchStore.metadata.filters.push({field: key, match: data.matchMode, value: data.value})
+      }
+   })
+   searchStore.executeSearch("metadata")
+}
+
 </script>
 
 <stype scoped lang="scss">
+div.filters {
+   text-align: left;
+   border: 1px solid #e9ecef;
+   margin-bottom: 15px;
+   div.filter-head {
+      padding: 5px 10px;
+      font-size: 1em;
+      background: var(--uvalib-grey-lightest);
+      border-bottom: 1px solid #e9ecef;
+   }
+   ul {
+      list-style: none;
+      margin: 10px;
+      padding: 5px 10px;
+      label {
+         font-weight: bold;
+         display: inline-block;
+         margin-right: 10px;
+      }
+   }
+   .content {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+   }
+   .filter-acts {
+      padding: 10px;
+      font-size: 0.85em;
+   }
+}
 .results {
    margin: 20px;
    font-size: 0.9em;
