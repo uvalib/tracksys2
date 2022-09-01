@@ -3,7 +3,7 @@
       <div class="filter-head">Filters</div>
       <div class="content">
             <ul>
-               <li v-for="(vf,idx) in selectedFilters" :key="`mdfilter=${idx}`">
+               <li v-for="(vf,idx) in selectedFilters" :key="`mf-filter=${idx}`">
                   <label>{{vf.filter}}:</label>
                   <span>{{vf.value}}</span>
                </li>
@@ -103,6 +103,36 @@ function onPage(event) {
       white-space: nowrap;
    }
    th, td {
+      font-size: 0.85em;
+   }
+}
+div.filters {
+   text-align: left;
+   border: 1px solid #e9ecef;
+   margin-bottom: 15px;
+   div.filter-head {
+      padding: 5px 10px;
+      font-size: 1em;
+      background: var(--uvalib-grey-lightest);
+      border-bottom: 1px solid #e9ecef;
+   }
+   ul {
+      list-style: none;
+      margin: 10px;
+      padding: 5px 10px;
+      label {
+         font-weight: bold;
+         display: inline-block;
+         margin-right: 10px;
+      }
+   }
+   .content {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+   }
+   .filter-acts {
+      padding: 10px;
       font-size: 0.85em;
    }
 }

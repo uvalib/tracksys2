@@ -10,7 +10,8 @@ export const useSystemStore = defineStore('system', {
       showError: false,
       reportsURL: "",
       projectsURL: "",
-      academicStatuses: []
+      academicStatuses: [],
+      agencies: []
 	}),
 	getters: {
 	},
@@ -27,6 +28,7 @@ export const useSystemStore = defineStore('system', {
             this.reportsURL = response.data.reportsURL
             this.projectsURL = response.data.projectsURL
             this.academicStatuses = response.data.controlledVocabularies.academicStatuses
+            this.agencies = response.data.controlledVocabularies.agencies
             const searchStore = useSearchStore()
             searchStore.setGlobalSearchFields(response.data.searchFields)
             this.working = false
