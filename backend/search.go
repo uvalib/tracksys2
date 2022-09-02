@@ -172,8 +172,8 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 					Or("filename like ?", matchStart).Or("title like ?", matchAny).
 					Or("description like ?", matchAny),
 			)
-		} else if field == "pid" {
-			searchQ = searchQ.Where("pid=?", qStr)
+		} else if field == "pid" || field == "id" {
+			searchQ = searchQ.Where(fmt.Sprintf("%s=?", field), qStr)
 		} else if field == "title" || field == "description" || field == "filename" {
 			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
 		} else if field == "tag" {
@@ -234,7 +234,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		}
 	}
 
-	if scope == "all" || scope == "orders" {
+	if (scope == "all" || scope == "orders") && field != "pid" {
 		searchQ := svc.DB.Table("orders")
 		if field == "all" {
 			searchQ = searchQ.
