@@ -5,8 +5,7 @@
          <FormKit type="select" label="" v-model="searchStore.scope" outer-class="select-wrap" @change="scopeChanged"
             :options="{ all: 'All items', orders: 'Orders', masterfiles: 'Master Files', metadata: 'Metadata', components: 'Components'}"
          />
-         <FormKit type="select" label="" v-model="searchStore.field" :options="scopeFields"
-             outer-class="select-wrap" :disabled="searchStore.scope=='all'"/>
+         <FormKit type="select" label="" v-model="searchStore.field" :options="scopeFields" outer-class="select-wrap"/>
          <FormKit label="" type="search" placeholder="Find Tracksys items..." v-model="searchStore.query" outer-class="searchbar" />
          <FormKit type="submit" label="Search" wrapper-class="submit-button" />
       </FormKit>

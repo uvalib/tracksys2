@@ -142,7 +142,11 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 
 	log.Printf("INFO: define global search fields")
 	resp.SearchFields = map[string][]searchField{
-		"all": {searchField{Field: "all", Label: "All fields"}},
+		"all": {
+			searchField{Field: "all", Label: "All fields"},
+			searchField{Field: "pid", Label: "PID"},
+			searchField{Field: "title", Label: "Title"},
+		},
 		"components": {
 			searchField{Field: "all", Label: "All fields"},
 			searchField{Field: "pid", Label: "PID"},
@@ -151,7 +155,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 			searchField{Field: "content_desc", Label: "Description"},
 			searchField{Field: "date", Label: "Date"},
 			searchField{Field: "barcode", Label: "Barcode"},
-			searchField{Field: "ead_id_att", Label: "Finding Aide"},
+			searchField{Field: "ead_id_att", Label: "Finding Aid"},
 		},
 		"masterfiles": {
 			searchField{Field: "all", Label: "All fields"},
