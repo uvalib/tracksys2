@@ -64,7 +64,10 @@ import { useSearchStore } from '../../stores/search'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
+import { useRoute, useRouter } from 'vue-router'
 
+const route = useRoute()
+const router = useRouter()
 const searchStore = useSearchStore()
 
 const filters = ref( {
@@ -93,6 +96,9 @@ const hasFilter = computed(() => {
 function clearFilters() {
    Object.values(filters.value).forEach( fv => fv.value = null )
    searchStore.orders.filters = []
+   let query = Object.assign({}, route.query)
+   delete query.filters
+   router.push({query})
    searchStore.executeSearch("orders")
 }
 

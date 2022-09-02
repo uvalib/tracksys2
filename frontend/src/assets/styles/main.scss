@@ -22,10 +22,10 @@ html, body {
    }
    h2 {
       margin: 0;
-      font-weight: normal;
+      font-weight: bold;
       position: relative;
       text-align: center;
       padding: 20px 10px;
-      color: black;
+      color: var(--uvalib-brand-orange);
    }
 }

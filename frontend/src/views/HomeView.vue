@@ -15,13 +15,17 @@
 
 <script setup>
 import { useSearchStore } from '../stores/search'
-import SearchResults from '@/components/SearchResults.vue'
-import { computed } from 'vue'
+import SearchResults from '@/components/results/SearchResults.vue'
+import { computed, onBeforeMount } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const searchStore = useSearchStore()
+const route = useRoute()
+const router = useRouter()
 
 const scopeFields = computed( () => {
    let scope = searchStore.scope
+   console.log("new scope "+scope)
    let allFields = searchStore.searchFields
    let fields = allFields[scope]
    if (fields) {
@@ -30,12 +34,48 @@ const scopeFields = computed( () => {
    return [{label: 'All fields', value: "all"}]
 })
 
+
+onBeforeMount( () => {
+   let paramsDetected = false
+   if ( route.query.q ) {
+      searchStore.query = route.query.q
+      paramsDetected = true
+   }
+   if ( route.query.scope ) {
+      searchStore.scope = route.query.scope
+      paramsDetected = true
+      if ( route.query.filters ) {
+         searchStore.setFilter(route.query.scope, route.query.filters)
+      }
+   }
+   if ( route.query.field ) {
+      searchStore.field = route.query.field
+      paramsDetected = true
+   }
+
+   if (paramsDetected) {
+      searchStore.executeSearch(route.query.scope)
+   }
+})
+
 function scopeChanged() {
    searchStore.field = "all"
 }
 
 function doSearch() {
    if (searchStore.query.length > 0) {
+      let query = Object.assign({}, route.query)
+      query.q = searchStore.query
+      delete query.scope
+      if (searchStore.scope != "all") {
+         query.scope = searchStore.scope
+      }
+      delete query.field
+      if (searchStore.field != "all") {
+         query.field = searchStore.field
+      }
+      router.push({query})
+
       searchStore.executeSearch("all")
    }
 }

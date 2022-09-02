@@ -34,7 +34,7 @@ import MenuBar from "@/components/MenuBar.vue"
 import WaitSpinner from "@/components/WaitSpinner.vue"
 import { useSystemStore } from "@/stores/system"
 import { useUserStore } from "@/stores/user"
-import { onMounted } from 'vue'
+import { onBeforeMount } from 'vue'
 import Dialog from 'primevue/dialog'
 
 const systemStore = useSystemStore()
@@ -45,7 +45,7 @@ function errorClosed() {
    systemStore.showError = false
 }
 
-onMounted( async () => {
+onBeforeMount( async () => {
    await systemStore.getConfig()
 })
 

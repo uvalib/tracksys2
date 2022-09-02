@@ -14,34 +14,43 @@
       </div>
    </div>
    <TabView class="results">
-      <TabPanel :header="`Orders`">
+      <TabPanel :header="`Orders`" v-if="searchStore.orders.hits.length > 0">
          <OrdersResults />
       </TabPanel>
-      <TabPanel :header="`Metadata`">
+      <TabPanel :header="`Metadata`" v-if="searchStore.metadata.hits.length > 0">
          <MetadataResults />
       </TabPanel>
-      <TabPanel :header="`Master Files`">
+      <TabPanel :header="`Master Files`" v-if="searchStore.masterFiles.hits.length > 0">
          <MasterFilesResults />
       </TabPanel>
-      <TabPanel :header="`Components`">
+      <TabPanel :header="`Components`" v-if="searchStore.components.length > 0">
          <ComponentsResults />
       </TabPanel>
    </TabView>
 </template>
 
 <script setup>
-import { useSearchStore } from '../stores/search'
+import { useSearchStore } from '@/stores/search'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
-import MetadataResults from './results/MetadataResults.vue'
-import OrdersResults from './results/OrdersResults.vue'
-import MasterFilesResults from './results/MasterFilesResults.vue'
-import ComponentsResults from './results/ComponentsResults.vue'
+import MetadataResults from './MetadataResults.vue'
+import OrdersResults from './OrdersResults.vue'
+import MasterFilesResults from './MasterFilesResults.vue'
+import ComponentsResults from './ComponentsResults.vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const searchStore = useSearchStore()
+const route = useRoute()
+const router = useRouter()
 
 function resetSearch() {
    searchStore.$reset()
+   let query = Object.assign({}, route.query)
+   delete query.q
+   delete query.scope
+   delete query.field
+   delete query.filters
+   router.push({query})
 }
 
 </script>

@@ -21,9 +21,8 @@ export const useSystemStore = defineStore('system', {
          this.showError = true
          this.working = false
       },
-      getConfig() {
-         this.working = true
-         axios.get("/api/config").then(response => {
+      async getConfig() {
+         return axios.get("/api/config").then(response => {
             this.version = response.data.version
             this.reportsURL = response.data.reportsURL
             this.projectsURL = response.data.projectsURL
@@ -31,7 +30,6 @@ export const useSystemStore = defineStore('system', {
             this.agencies = response.data.controlledVocabularies.agencies
             const searchStore = useSearchStore()
             searchStore.setGlobalSearchFields(response.data.searchFields)
-            this.working = false
          }).catch( e => {
             this.error =  e
             this.working = false

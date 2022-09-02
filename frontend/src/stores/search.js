@@ -42,6 +42,28 @@ export const useSearchStore = defineStore('search', {
       hasResults: state => {
          return state.masterFiles.total > 0 || state.metadata.total > 0 ||
             state.orders.total > 0 || state.components.total > 0
+      },
+      filtersAsQueryParam: state => {
+         return (searchOrigin) => {
+            let tgtFilters = null
+            if (searchOrigin == "components") {
+               tgtFilters = state.components.filters
+            } else if (searchOrigin == "masterfiles") {
+               tgtFilters = state.masterFiles.filters
+            } else if (searchOrigin == "metadata") {
+               tgtFilters = state.metadata.filters
+            } else if (searchOrigin == "orders") {
+               tgtFilters = state.orders.filters
+            } else {
+               return ""
+            }
+            if (tgtFilters != null && tgtFilters.length > 0) {
+               let params = []
+               tgtFilters.forEach( fv => params.push(`{"filter":"${fv.field}|${fv.match}|${encodeURIComponent(fv.value)}"}`) )
+               return `[${params.join(",")}]`
+            }
+            return ""
+         }
       }
 	},
 	actions: {
@@ -69,7 +91,26 @@ export const useSearchStore = defineStore('search', {
          this.orders.total = 0
          this.orders.hits = []
       },
+      setFilter( scope, filterQueryParm) {
+         let parsedFilters = []
+         let filterObj = JSON.parse(filterQueryParm)
+         filterObj.forEach( f => {
+            let bits = f.filter.split("|") // ex: title|contains|charlottesville
+            parsedFilters.push({field: bits[0].trim(), match: bits[1].trim(), value: bits[2].trim()})
+         })
+         if (scope == "components") {
+            this.components.filters = parsedFilters
+         } else if (scope == "masterfiles") {
+            this.masterFiles.filters = parsedFilters
+         } else if (scope == "metadata") {
+            this.metadata.filters = parsedFilters
+         } else if (scope == "orders") {
+            this.orders.filters = parsedFilters
+         }
+         console.log(this.metadata.filters)
+      },
       executeSearch(searchOrigin) {
+         console.log("SEARCH!!")
          const system = useSystemStore()
          system.working = true
          let tgtScope = this.scope
@@ -81,29 +122,21 @@ export const useSearchStore = defineStore('search', {
             url += `&field=${this.field}`
          }
 
-         let tgtFilters = null
          if (searchOrigin == "components") {
             url += `&start=${this.components.start}&limit=${this.components.limit}`
-            tgtFilters = this.components.filters
          } else if (searchOrigin == "masterfiles") {
             url += `&start=${this.masterFiles.start}&limit=${this.masterFiles.limit}`
-            tgtFilters = this.masterFiles.filters
          } else if (searchOrigin == "metadata") {
             url += `&start=${this.metadata.start}&limit=${this.metadata.limit}`
-            tgtFilters = this.metadata.filters
          } else if (searchOrigin == "orders") {
             url += `&start=${this.orders.start}&limit=${this.orders.limit}`
-            tgtFilters = this.orders.filters
          } else {
             this.resetResults()
          }
 
-         if (tgtFilters != null) {
-            if (tgtFilters.length > 0) {
-               let params = []
-               tgtFilters.forEach( fv => params.push(`{"filter":"${fv.field}|${fv.match}|${encodeURIComponent(fv.value)}"}`) )
-               url += `&filters=[${params.join(",")}]`
-            }
+         let filterParam = this.filtersAsQueryParam(searchOrigin)
+         if ( filterParam != "") {
+            url += `&filters=${filterParam}`
          }
 
          axios.get(url).then(response => {
