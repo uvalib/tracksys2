@@ -83,7 +83,7 @@ const filters = ref( {
     'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
     'creator_name': {value: null, matchMode: FilterMatchMode.CONTAINS},
     'barcode': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
-    'call_number': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
+    'call_number': {value: null, matchMode: FilterMatchMode.CONTAINS},
     'catalog_key': {value: null, matchMode: FilterMatchMode.STARTS_WITH}
 })
 const mdTypes = ref([

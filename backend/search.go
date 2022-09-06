@@ -209,14 +209,12 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		if field == "all" {
 			searchQ = searchQ.Where(
 				svc.DB.Where("id=?", qStr).Or("pid=?", qStr).Or("title like ?", matchAny).
-					Or("barcode=?", qStr).Or("catalog_key=?", qStr).Or("call_number like ?", matchStart).
+					Or("barcode=?", qStr).Or("catalog_key=?", qStr).Or("call_number like ?", matchAny).
 					Or("creator_name like ?", matchAny),
 			)
 		} else {
-			if field == "title" || field == "creator_name" {
+			if field == "title" || field == "creator_name" || field == "call_number" {
 				searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
-			} else if field == "call_number" {
-				searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchStart)
 			} else {
 				searchQ = searchQ.Where(fmt.Sprintf("%s=?", field), qStr)
 			}
