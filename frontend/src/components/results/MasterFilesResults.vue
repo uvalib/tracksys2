@@ -29,7 +29,7 @@
       <Column field="pid" header="PID" class="nowrap" />
       <Column field="unitID" header="Unit ID" class="nowrap" filterField="unit_id" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
+            <InputText type="text" v-model="filterModel.value" placeholder="Unit ID"/>
          </template>
       </Column>
       <Column field="filename" header="Filename"/>
