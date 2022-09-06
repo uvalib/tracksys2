@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -24,14 +25,16 @@ type masterFileHit struct {
 }
 
 type metadataHit struct {
-	ID          uint64 `json:"id"`
-	PID         string `gorm:"column:pid" json:"pid"`
-	Type        string `json:"type"`
-	Title       string `json:"title"`
-	CallNumber  string `json:"callNumber"`
-	Barcode     string `json:"barcode"`
-	CatalogKey  string `json:"catalogKey"`
-	CreatorName string `json:"creatorName"`
+	ID           uint64     `json:"id"`
+	PID          string     `gorm:"column:pid" json:"pid"`
+	Type         string     `json:"type"`
+	Title        string     `json:"title"`
+	CallNumber   string     `json:"callNumber"`
+	Barcode      string     `json:"barcode"`
+	CatalogKey   string     `json:"catalogKey"`
+	CreatorName  string     `json:"creatorName"`
+	DateDlIngest *time.Time `gorm:"column:date_dl_ingest" json:"-"`
+	VirgoURL     string     `gorm:"-" json:"virgoURL"`
 }
 
 type orderHit struct {
@@ -54,8 +57,8 @@ type componentResp struct {
 	Hits  []component `json:"hits"`
 }
 type metadataResp struct {
-	Total int64         `json:"total"`
-	Hits  []metadataHit `json:"hits"`
+	Total int64          `json:"total"`
+	Hits  []*metadataHit `json:"hits"`
 }
 type masterFileResp struct {
 	Total int64            `json:"total"`
@@ -137,7 +140,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	resp := searchResults{
 		Components:  componentResp{Hits: make([]component, 0)},
 		MasterFiles: masterFileResp{Hits: make([]*masterFileHit, 0)},
-		Metadata:    metadataResp{Hits: make([]metadataHit, 0)},
+		Metadata:    metadataResp{Hits: make([]*metadataHit, 0)},
 		Orders:      orderResp{Hits: make([]orderHit, 0)},
 	}
 
@@ -227,6 +230,11 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		err := searchQ.Offset(startIndex).Limit(pageSize).Find(&resp.Metadata.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: metadata search failed: %s", err.Error())
+		}
+		for _, md := range resp.Metadata.Hits {
+			if md.DateDlIngest != nil {
+				md.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, md.CatalogKey)
+			}
 		}
 	}
 

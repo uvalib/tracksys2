@@ -56,6 +56,10 @@
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Catalog key"/>
          </template>
+         <template #body="slotProps">
+            <div>{{slotProps.data.catalogKey}}</div>
+            <div v-if="slotProps.data.virgoURL"><a :href="slotProps.data.virgoURL" target="_blank">VIRGO</a></div>
+         </template>
       </Column>
    </DataTable>
 </template>

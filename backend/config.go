@@ -34,7 +34,7 @@ func getConfiguration() *configData {
 	flag.StringVar(&config.jwtKey, "jwtkey", "", "JWT signature key")
 	flag.StringVar(&config.reportsURL, "reports", "https://dpg-reporting.lib.virginia.edu", "DPG reports URL")
 	flag.StringVar(&config.projectsURL, "projects", "https://dpg-imaging.lib.virginia.edu", "DPG projects URL")
-	flag.StringVar(&config.virgoURL, "virgo", "https://search.lib.virgina.edu", "Virgo URL")
+	flag.StringVar(&config.virgoURL, "virgo", "https://search.lib.virginia.edu", "Virgo URL")
 	flag.StringVar(&config.iiifManifestURL, "iiifman", "https://iiifman.lib.virginia.edu", "IIIF manifest URL")
 	flag.StringVar(&config.iiifURL, "iiif", "https://iiif.lib.virginia.edu/iiif", "IIIF URL")
 	flag.StringVar(&config.curioURL, "curio", "https://curio.lib.virginia.edu", "Curio URL")

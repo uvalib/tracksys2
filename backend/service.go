@@ -25,6 +25,7 @@ type externalSystems struct {
 	Curio    string
 	Sirsi    string
 	PDF      string
+	Virgo    string
 }
 
 // serviceContext contains common data used by all handlers
@@ -60,6 +61,7 @@ func initializeService(version string, cfg *configData) *serviceContext {
 			Curio:    cfg.curioURL,
 			Sirsi:    cfg.sirsiURL,
 			PDF:      cfg.pdfURL,
+			Virgo:    cfg.virgoURL,
 		},
 		JWTKey:      cfg.jwtKey,
 		DevAuthUser: cfg.devAuthUser}
