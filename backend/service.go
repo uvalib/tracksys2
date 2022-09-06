@@ -161,12 +161,11 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		"masterfiles": {
 			searchField{Field: "all", Label: "All fields"},
 			searchField{Field: "pid", Label: "PID"},
+			searchField{Field: "unit_id", Label: "Unit ID"},
 			searchField{Field: "filename", Label: "Filename"},
 			searchField{Field: "title", Label: "Title"},
 			searchField{Field: "description", Label: "Description"},
 			searchField{Field: "tag", Label: "Tag"},
-			searchField{Field: "box", Label: "Box"},
-			searchField{Field: "folder", Label: "Folder"},
 		},
 		"metadata": {
 			searchField{Field: "all", Label: "All fields"},
@@ -180,7 +179,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		"orders": {
 			searchField{Field: "all", Label: "All fields"},
 			searchField{Field: "id", Label: "Order ID"},
-			searchField{Field: "unit_id", Label: "Unit ID"},
 			searchField{Field: "order_title", Label: "Title"},
 			searchField{Field: "last_name", Label: "Customer last name"},
 			searchField{Field: "agency", Label: "Agency"},

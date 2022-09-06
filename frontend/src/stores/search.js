@@ -91,6 +91,13 @@ export const useSearchStore = defineStore('search', {
          this.orders.total = 0
          this.orders.hits = []
       },
+      resetSearch() {
+         this.query = ""
+         this.scope = "all"
+         this.field = "all"
+         this.searched = false
+         this.resetResults()
+      },
       setFilter( scope, filterQueryParm) {
          let parsedFilters = []
          let filterObj = JSON.parse(filterQueryParm)
@@ -107,10 +114,8 @@ export const useSearchStore = defineStore('search', {
          } else if (scope == "orders") {
             this.orders.filters = parsedFilters
          }
-         console.log(this.metadata.filters)
       },
       executeSearch(searchOrigin) {
-         console.log("SEARCH!!")
          const system = useSystemStore()
          system.working = true
          let tgtScope = this.scope

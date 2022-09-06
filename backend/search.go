@@ -13,11 +13,14 @@ import (
 )
 
 type masterFileHit struct {
-	ID          uint64 `json:"id"`
-	PID         string `gorm:"column:pid" json:"pid"`
-	Filename    string `json:"filename"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	ID           uint64 `json:"id"`
+	PID          string `gorm:"column:pid" json:"pid"`
+	UnitID       uint64 `json:"unitID"`
+	Filename     string `json:"filename"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	ThumbnailURL string `gorm:"-" json:"thumbnailURL"`
+	ImageURL     string `gorm:"-" json:"imageURL"`
 }
 
 type metadataHit struct {
@@ -55,8 +58,8 @@ type metadataResp struct {
 	Hits  []metadataHit `json:"hits"`
 }
 type masterFileResp struct {
-	Total int64           `json:"total"`
-	Hits  []masterFileHit `json:"hits"`
+	Total int64            `json:"total"`
+	Hits  []*masterFileHit `json:"hits"`
 }
 type orderResp struct {
 	Total int64      `json:"total"`
@@ -133,7 +136,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	// init empty results
 	resp := searchResults{
 		Components:  componentResp{Hits: make([]component, 0)},
-		MasterFiles: masterFileResp{Hits: make([]masterFileHit, 0)},
+		MasterFiles: masterFileResp{Hits: make([]*masterFileHit, 0)},
 		Metadata:    metadataResp{Hits: make([]metadataHit, 0)},
 		Orders:      orderResp{Hits: make([]orderHit, 0)},
 	}
@@ -168,11 +171,11 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		searchQ := svc.DB.Table("master_files")
 		if field == "all" {
 			searchQ = searchQ.Where(
-				svc.DB.Where("master_files.id=?", qStr).Or("pid=?", qStr).
-					Or("filename like ?", matchStart).Or("title like ?", matchAny).
+				svc.DB.Where("master_files.id=?", qStr).Or("pid=?", qStr).Or("unit_id=?", qStr).
+					Or("filename like ?", matchAny).Or("title like ?", matchAny).
 					Or("description like ?", matchAny),
 			)
-		} else if field == "pid" || field == "id" {
+		} else if field == "pid" || field == "id" || field == "unit_id" {
 			searchQ = searchQ.Where(fmt.Sprintf("%s=?", field), qStr)
 		} else if field == "title" || field == "description" || field == "filename" {
 			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
@@ -180,18 +183,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			searchQ = searchQ.
 				Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
 				Joins("left outer join tags t on mt.tag_id = t.id").
-				Where("t.tag=?", qStr)
-		}
-		if field == "box" || field == "folder" {
-			searchQ = searchQ.
-				Joins("left outer join master_file_locations ml on ml.master_file_id = master_files.id").
-				Joins("left outer join locations l on ml.location_id = l.id")
-			if field == "box" {
-				searchQ = searchQ.Where("l.container_id=?", qStr)
-			}
-			if field == "folder" {
-				searchQ = searchQ.Where("l.folder_id=?", qStr)
-			}
+				Where("t.tag like ?", matchAny)
 		}
 
 		if filterQ != nil {
@@ -199,9 +191,13 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		}
 
 		searchQ.Count(&resp.MasterFiles.Total)
-		err := searchQ.Offset(startIndex).Limit(pageSize).Find(&resp.MasterFiles.Hits).Error
+		err := searchQ.Debug().Offset(startIndex).Limit(pageSize).Find(&resp.MasterFiles.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: masterfile search failed: %s", err.Error())
+		}
+		for _, mf := range resp.MasterFiles.Hits {
+			mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
+			mf.ImageURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
 		}
 	}
 
@@ -240,17 +236,13 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			searchQ = searchQ.
 				Joins("inner join customers on customer_id = customers.id").
 				Joins("left outer join agencies on agency_id = agencies.id").
-				Joins("left outer join units on units.order_id = orders.id").
 				Where(
-					svc.DB.Where("orders.id=?", qStr).Or("units.id=?", qStr).
-						Or("customers.last_name like ?", matchStart).Or("agencies.name=?", qStr).
+					svc.DB.Where("orders.id=?", qStr).
+						Or("customers.last_name like ?", matchStart).Or("agencies.name like ?", matchStart).
 						Or("orders.staff_notes like ?", matchAny).Or("orders.special_instructions like ?", matchAny),
 				)
 		} else if field == "id" {
 			searchQ = searchQ.Where("id=?", qStr)
-		} else if field == "unit_id" {
-			searchQ = searchQ.Joins("left outer join units on units.order_id = orders.id").
-				Where("units.id=?", qStr)
 		} else if field == "last_name" {
 			searchQ = searchQ.Joins("inner join customers on customer_id = customers.id").
 				Where("customers.last_name like ?", matchStart)
@@ -266,7 +258,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		}
 
 		searchQ.Count(&resp.Orders.Total)
-		err := searchQ.Preload("Customer").Preload("Agency").Group("orders.id").
+		err := searchQ.Preload("Customer").Preload("Agency").
 			Offset(startIndex).Limit(pageSize).
 			Find(&resp.Orders.Hits).Error
 		if err != nil {

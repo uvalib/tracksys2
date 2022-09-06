@@ -27,6 +27,11 @@
    >
       <Column field="id" header="ID"/>
       <Column field="pid" header="PID" class="nowrap" />
+      <Column field="unitID" header="Unit ID" class="nowrap" filterField="unit_id" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
+         </template>
+      </Column>
       <Column field="filename" header="Filename"/>
       <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
@@ -38,11 +43,18 @@
             <InputText type="text" v-model="filterModel.value" placeholder="Description"/>
          </template>
       </Column>
+      <Column field="thumbnailURL" header="Thumb">
+         <template #body="slotProps">
+            <a :href="slotProps.data.imageURL" target="_blank">
+               <img :src="slotProps.data.thumbnailURL" />
+            </a>
+         </template>
+      </Column>
    </DataTable>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useSearchStore } from '../../stores/search'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -55,8 +67,9 @@ const router = useRouter()
 const searchStore = useSearchStore()
 
 const filters = ref( {
-    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
-    'description': {value: null, matchMode: FilterMatchMode.CONTAINS},
+   'unit_id': {value: null, matchMode: FilterMatchMode.EQUALS},
+   'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
+   'description': {value: null, matchMode: FilterMatchMode.CONTAINS},
 })
 
 const selectedFilters = computed(() => {
@@ -72,6 +85,12 @@ const selectedFilters = computed(() => {
 const hasFilter = computed(() => {
    let idx = Object.values(filters.value).findIndex( fv => fv.value && fv.value != "")
    return idx >= 0
+})
+
+onMounted(() =>{
+   searchStore.masterFiles.filters.forEach( fv => {
+      filters.value[fv.field].value = fv.value
+   })
 })
 
 function clearFilters() {
@@ -90,6 +109,10 @@ function onFilter(event) {
          searchStore.masterFiles.filters.push({field: key, match: data.matchMode, value: data.value})
       }
    })
+   let query = Object.assign({}, route.query)
+   query.filters = searchStore.filtersAsQueryParam("masterfiles")
+   query.scope = "masterfiles"
+   router.push({query})
    searchStore.executeSearch("masterfiles")
 }
 

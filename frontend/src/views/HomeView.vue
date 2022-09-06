@@ -25,7 +25,6 @@ const router = useRouter()
 
 const scopeFields = computed( () => {
    let scope = searchStore.scope
-   console.log("new scope "+scope)
    let allFields = searchStore.searchFields
    let fields = allFields[scope]
    if (fields) {
@@ -41,6 +40,8 @@ onBeforeMount( () => {
       searchStore.query = route.query.q
       paramsDetected = true
    }
+
+   searchStore.scope = "all"
    if ( route.query.scope ) {
       searchStore.scope = route.query.scope
       paramsDetected = true
@@ -54,7 +55,7 @@ onBeforeMount( () => {
    }
 
    if (paramsDetected) {
-      searchStore.executeSearch(route.query.scope)
+      searchStore.executeSearch(searchStore.scope)
    }
 })
 

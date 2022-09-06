@@ -58,7 +58,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { FilterMatchMode } from 'primevue/api'
 import { useSearchStore } from '../../stores/search'
 import DataTable from 'primevue/datatable'
@@ -93,6 +93,12 @@ const hasFilter = computed(() => {
    return idx >= 0
 })
 
+onMounted(() =>{
+   searchStore.orders.filters.forEach( fv => {
+      filters.value[fv.field].value = fv.value
+   })
+})
+
 function clearFilters() {
    Object.values(filters.value).forEach( fv => fv.value = null )
    searchStore.orders.filters = []
@@ -109,6 +115,10 @@ function onFilter(event) {
          searchStore.orders.filters.push({field: key, match: data.matchMode, value: data.value})
       }
    })
+   let query = Object.assign({}, route.query)
+   query.filters = searchStore.filtersAsQueryParam("orders")
+   query.scope = "orders"
+   router.push({query})
    searchStore.executeSearch("orders")
 }
 

@@ -23,7 +23,7 @@
       <TabPanel :header="`Master Files`" v-if="searchStore.masterFiles.hits.length > 0">
          <MasterFilesResults />
       </TabPanel>
-      <TabPanel :header="`Components`" v-if="searchStore.components.length > 0">
+      <TabPanel :header="`Components`" v-if="searchStore.components.hits.length > 0">
          <ComponentsResults />
       </TabPanel>
    </TabView>
@@ -44,7 +44,7 @@ const route = useRoute()
 const router = useRouter()
 
 function resetSearch() {
-   searchStore.$reset()
+   searchStore.resetSearch()
    let query = Object.assign({}, route.query)
    delete query.q
    delete query.scope
