@@ -17,7 +17,7 @@
       </div>
       <DataTable :value="ordersStore.orders" ref="ordersTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll"
-         sortField="id" :sortOrder="-1" @sort="onSort($event)"
+         :sortField="ordersStore.searchOpts.sortField" :sortOrder="sortOrder" @sort="onSort($event)"
          :lazy="true" :paginator="true" @page="onPage($event)"
          :rows="ordersStore.searchOpts.limit" :totalRecords="ordersStore.total"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
@@ -53,13 +53,16 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onBeforeMount, onMounted, ref, computed } from 'vue'
 import { useOrdersStore } from '@/stores/orders'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
+import { useRoute, useRouter } from 'vue-router'
 
+const route = useRoute()
+const router = useRouter()
 const ordersStore = useOrdersStore()
 
 const filters = ref([
@@ -73,6 +76,29 @@ const filters = ref([
    {name: "Overdue", code: "overdue"}
 ])
 
+const sortOrder = computed(() => {
+   if (ordersStore.searchOpts.sortOrder == "desc") {
+      return -1
+   }
+   return 1
+})
+
+onBeforeMount( () => {
+   if ( route.query.q ) {
+      ordersStore.searchOpts.query = route.query.q
+   }
+   if ( route.query.filter ) {
+      ordersStore.searchOpts.filter = route.query.filter
+   }
+   if ( route.query.sort  ) {
+      let bits = route.query.sort.split(" ")
+      ordersStore.searchOpts.sortField = bits[0].trim()
+      ordersStore.searchOpts.sortOrder = bits[1].trim()
+   }
+})
+
+
+
 function displayStatus( id) {
    if (id == "await_fee") {
       return "Await Fee"
@@ -82,16 +108,28 @@ function displayStatus( id) {
 
 function clearSearch() {
    ordersStore.searchOpts.query = ""
-   ordersStore.getOrders()
+   getOrders()
 }
 
 function queryOrders() {
    if (ordersStore.searchOpts.query.length > 3) {
-      ordersStore.getOrders()
+      getOrders()
    }
 }
 
+function setQueryParams() {
+   let query = Object.assign({}, route.query)
+   delete query.q
+   if (ordersStore.searchOpts.query) {
+      query.q = ordersStore.searchOpts.query
+   }
+   query.filter = ordersStore.searchOpts.filter
+   query.sort = `${ordersStore.searchOpts.sortField} ${ordersStore.searchOpts.sortOrder}`
+   router.push({query})
+}
+
 function getOrders() {
+   setQueryParams()
    ordersStore.getOrders()
 }
 
@@ -107,7 +145,7 @@ function onSort(event) {
    if (event.sortOrder == -1) {
       ordersStore.searchOpts.sortOrder = "desc"
    }
-   ordersStore.getOrders( )
+   getOrders( )
 }
 
 onMounted(() => {
