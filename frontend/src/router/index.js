@@ -26,6 +26,11 @@ const router = createRouter({
       component: () => import('../views/JobStatusDetails.vue')
     },
     {
+      path: '/masterfiles/:id',
+      name: 'masterfile',
+      component: () => import('../views/MasterFileDetails.vue')
+    },
+    {
       path: '/orders',
       name: 'order',
       component: () => import('../views/OrdersList.vue')

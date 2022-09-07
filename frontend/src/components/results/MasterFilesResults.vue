@@ -50,6 +50,11 @@
             </a>
          </template>
       </Column>
+      <Column header="" class="row-acts nowrap">
+         <template #body="slotProps">
+            <router-link :to="`/masterfiles/${slotProps.data.id}`">View details</router-link>
+         </template>
+      </Column>
    </DataTable>
 </template>
 
@@ -163,6 +168,18 @@ div.filters {
    .filter-acts {
       padding: 10px;
       font-size: 0.85em;
+   }
+   :deep(td.nowrap) {
+      white-space: nowrap;
+   }
+   :deep(.row-acts) {
+      text-align: center;
+      padding: 0;
+      a {
+         display: inline-block;
+         margin: 0;
+         padding: 5px 10px;
+      };
    }
 }
 </stype>
