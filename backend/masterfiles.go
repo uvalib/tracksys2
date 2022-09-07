@@ -71,7 +71,7 @@ type masterFile struct {
 	Tags              []*tag        `gorm:"many2many:master_file_tags" json:"tags"`
 	Filesize          int64         `json:"filesize"`
 	MD5               string        `gorm:"column:md5" json:"md5"`
-	OriginalMfID      *int64        `gorm:"column:original_mf_id" json:"originalID"`
+	OriginalMfID      int64         `gorm:"column:original_mf_id" json:"originalID"`
 	DateArchived      *time.Time    `json:"dateArchived"`
 	DeaccessionedAt   *time.Time    `json:"deaccessionedAt"`
 	DeaccessionedByID *int64        `gorm:"column:deaccessioned_by_id" json:"-"`
@@ -103,7 +103,18 @@ func (svc *serviceContext) getMasterFile(c *gin.Context) {
 		ViewerURL  string     `json:"viewerURL"`
 	}
 	out := mfResp{MasterFile: mf}
-	out.ThumbURL = fmt.Sprintf("%s/%s/full/!240,385/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
+
+	mfPID := mf.PID
+	if mf.OriginalMfID > 0 {
+		var originalMF masterFile
+		err := svc.DB.Find(&originalMF, mf.OriginalMfID).Error
+		if err != nil {
+			log.Printf("ERROR: unbale to get original masterfile %d for clone %d: %s", mf.OriginalMfID, mf.ID, err.Error())
+		}
+		mfPID = originalMF.PID
+	}
+
+	out.ThumbURL = fmt.Sprintf("%s/%s/full/!240,385/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
 	pagePart := strings.Split(mf.Filename, "_")[1]
 	pageNum, _ := strconv.Atoi(strings.Split(pagePart, ".")[0])
 	if mf.DateDlIngest != nil {

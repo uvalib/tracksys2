@@ -43,6 +43,10 @@
                <dt>Component ID</dt>
                <dd v-if="masterFiles.details.componentID"><router-link :to="`/units/${masterFiles.details.componentID}`">{{masterFiles.details.componentID}}</router-link></dd>
                <dd v-else><span class="empty">N/A</span></dd>
+               <template v-if="masterFiles.details.originalID > 0">
+                  <dt>Cloned from</dt>
+                  <dd><router-link :to="`/masterfiles/${masterFiles.details.originalID}`">{{masterFiles.details.originalID}}</router-link></dd>
+               </template>
             </dl>
          </Panel>
       </div>
@@ -111,7 +115,7 @@
 import { onBeforeMount, computed } from 'vue'
 import { useMasterFilesStore } from '@/stores/masterfiles'
 import { useSystemStore } from '@/stores/system'
-import { useRoute } from 'vue-router'
+import { useRoute,onBeforeRouteUpdate } from 'vue-router'
 import Panel from 'primevue/panel'
 import dayjs from 'dayjs'
 
@@ -123,6 +127,11 @@ const tagList = computed( () => {
    let out = []
    masterFiles.details.tags.forEach( t => out.push(t.tag))
    return out.join(", ")
+})
+
+onBeforeRouteUpdate( async (to) => {
+   let mfID = to.params.id
+   masterFiles.getDetails(mfID)
 })
 
 onBeforeMount(() => {
