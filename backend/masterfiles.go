@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -102,10 +104,18 @@ func (svc *serviceContext) getMasterFile(c *gin.Context) {
 	}
 	out := mfResp{MasterFile: mf}
 	out.ThumbURL = fmt.Sprintf("%s/%s/full/!240,385/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
+	pagePart := strings.Split(mf.Filename, "_")[1]
+	pageNum, _ := strconv.Atoi(strings.Split(pagePart, ".")[0])
 	if mf.DateDlIngest != nil {
 		out.ViewerURL = fmt.Sprintf("%s/view/%s", svc.ExternalSystems.Curio, mf.Metadata.PID)
+		if pageNum > 0 {
+			out.ViewerURL += fmt.Sprintf("?page=%d", pageNum)
+		}
 	} else {
 		out.ViewerURL = fmt.Sprintf("%s/view/%s?unit=%d", svc.ExternalSystems.Curio, mf.Metadata.PID, mf.UnitID)
+		if pageNum > 0 {
+			out.ViewerURL += fmt.Sprintf("&page=%d", pageNum)
+		}
 	}
 
 	err = svc.DB.Debug().Table("units").Select("order_id").Where("id=?", mf.UnitID).Find(&out.OrderID).Error
