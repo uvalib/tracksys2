@@ -13,7 +13,6 @@ cd bin; ./tracksys2                \
    -iiifman $IIIFMAN_SERVICE_URL   \
    -iiif $IIIF_SERVICE_URL         \
    -curio $CURIO_SERVICE_URL       \
-   -sirsi $SIRSI_URL               \
    -jobs $JOBS_URL                 \
    -apollo $APOLLO_URL             \
    -pdf $PDF_SERVICE_URL           \
