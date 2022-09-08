@@ -2,6 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"encoding/xml"
+	"fmt"
+	"log"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -82,6 +87,102 @@ type metadataVersion struct {
 	Comment       string `json:"comment"`
 }
 
-func (svc *serviceContext) getMetadata(c *gin.Context) {
+type internalMetadata struct {
+	Title            string `json:"title"`
+	CallNumber       string `json:"callNumber"`
+	CreatorName      string `json:"creatorName"`
+	CreatorType      string `json:"creatorType"`
+	Year             string `json:"year"`
+	PublicationPlace string `json:"publicationPlace"`
+	Location         string `json:"location"`
+	PreviewURL       string `json:"previewURL"`
+	ObjectURL        string `json:"objectURL"`
+}
 
+type uvaMAP struct {
+	Doc struct {
+		Field []struct {
+			Text   string `xml:",chardata"`
+			Name   string `xml:"name,attr"`
+			Type   string `xml:"type,attr"`
+			Access string `xml:"access,attr"`
+		} `xml:"field"`
+	} `xml:"doc"`
+}
+
+func (svc *serviceContext) getMetadata(c *gin.Context) {
+	mdID := c.Param("id")
+	log.Printf("INFO: get metadata %s details", mdID)
+
+	var md metadata
+	err := svc.DB.Preload("UseRight").Preload("OCRHint").
+		Preload("AvailabilityPolicy").Preload("ExternalSystem").Find(&md, mdID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to load metadata %s: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	type mdResp struct {
+		Metadata metadata          `json:"metadata"`
+		Extended *internalMetadata `json:"details"`
+		Error    string            `json:"error"`
+	}
+	out := mdResp{Metadata: md}
+	if md.Type == "SirsiMetadata" || md.Type == "XmlMetadata" {
+		ext, err := svc.getUVAMapData(md.PID)
+		if err != nil {
+			log.Printf("ERROR: unable to get extended metadata for sirsi/cml %s: %s", md.PID, err.Error())
+			out.Error = err.Error()
+		} else {
+			out.Extended = ext
+		}
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
+func (svc *serviceContext) getUVAMapData(pid string) (*internalMetadata, error) {
+	url := fmt.Sprintf("%s/api/metadata/%s?type=uvamap", svc.ExternalSystems.TSAPI, pid)
+	resp, err := svc.getRequest(url)
+	if err != nil {
+		return nil, fmt.Errorf("%d %s", err.StatusCode, err.Message)
+	}
+	var uvamap uvaMAP
+	parseErr := xml.Unmarshal(resp, &uvamap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse uvamp response: %s", parseErr.Error())
+	}
+	var detail internalMetadata
+	for _, f := range uvamap.Doc.Field {
+		switch f.Name {
+		case "displayTitle":
+			detail.Title = f.Text
+		case "callNumber":
+			detail.CallNumber = f.Text
+		case "creator":
+			detail.CreatorName = f.Text
+			detail.CreatorType = f.Type
+		case "keyDate":
+			detail.Year = f.Text
+		case "physLocation":
+			detail.Location = f.Text
+		case "pubProdDistPlace":
+			if detail.PublicationPlace == "" {
+				detail.PublicationPlace = f.Text
+			} else {
+				joined := fmt.Sprintf("%s, %s", f.Text, detail.PublicationPlace)
+				detail.PublicationPlace = joined
+			}
+		case "uri":
+			if f.Access == "raw object" {
+				detail.ObjectURL = f.Text
+			} else if f.Access == "preview" {
+				url := strings.Replace(f.Text, "!125,200", "!240,385", 1)
+				detail.PreviewURL = url
+			}
+		}
+	}
+
+	return &detail, nil
 }

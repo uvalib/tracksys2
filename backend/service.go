@@ -23,9 +23,11 @@ type externalSystems struct {
 	Reports  string
 	Projects string
 	Curio    string
-	Sirsi    string
+	Apollo   string
+	Jobs     string
 	PDF      string
 	Virgo    string
+	TSAPI    string
 }
 
 // serviceContext contains common data used by all handlers
@@ -59,9 +61,11 @@ func initializeService(version string, cfg *configData) *serviceContext {
 			Reports:  cfg.reportsURL,
 			Projects: cfg.projectsURL,
 			Curio:    cfg.curioURL,
-			Sirsi:    cfg.sirsiURL,
+			Apollo:   cfg.apolloURL,
 			PDF:      cfg.pdfURL,
 			Virgo:    cfg.virgoURL,
+			TSAPI:    cfg.tracksysAPIURL,
+			Jobs:     cfg.jobsURL,
 		},
 		JWTKey:      cfg.jwtKey,
 		DevAuthUser: cfg.devAuthUser}

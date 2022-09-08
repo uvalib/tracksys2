@@ -21,9 +21,12 @@ type configData struct {
 	projectsURL     string
 	iiifManifestURL string
 	iiifURL         string
+	jobsURL         string
+	apolloURL       string
+	jstorURL        string
 	curioURL        string
-	sirsiURL        string
 	pdfURL          string
+	tracksysAPIURL  string
 	devAuthUser     string
 	jwtKey          string
 }
@@ -38,8 +41,10 @@ func getConfiguration() *configData {
 	flag.StringVar(&config.iiifManifestURL, "iiifman", "https://iiifman.lib.virginia.edu", "IIIF manifest URL")
 	flag.StringVar(&config.iiifURL, "iiif", "https://iiif.lib.virginia.edu/iiif", "IIIF URL")
 	flag.StringVar(&config.curioURL, "curio", "https://curio.lib.virginia.edu", "Curio URL")
-	flag.StringVar(&config.sirsiURL, "sirsi", "https://ils.lib.virginia.edu/uhtbin", "Sirsi metadata URL")
 	flag.StringVar(&config.pdfURL, "pdf", "https://pdfservice.lib.virginia.edu/pdf", "PDF service URL")
+	flag.StringVar(&config.tracksysAPIURL, "tsapi", "https://tracksys-api-ws.internal.lib.virginia.edu", "URL for TrackSys API")
+	flag.StringVar(&config.jobsURL, "jobs", "http://dockerprod1.lib.virginia.edu:8710", "URL for job processing")
+	flag.StringVar(&config.apolloURL, "apollo", "https://apollo.lib.virginia.edu", "URL for Apollo")
 
 	// DB connection params
 	flag.StringVar(&config.db.Host, "dbhost", "", "Database host")
@@ -73,7 +78,8 @@ func getConfiguration() *configData {
 	log.Printf("[CONFIG] reports       = [%s]", config.reportsURL)
 	log.Printf("[CONFIG] projects      = [%s]", config.projectsURL)
 	log.Printf("[CONFIG] virgo         = [%s]", config.virgoURL)
-	log.Printf("[CONFIG] sirsi         = [%s]", config.sirsiURL)
+	log.Printf("[CONFIG] jobs          = [%s]", config.jobsURL)
+	log.Printf("[CONFIG] apollo        = [%s]", config.apolloURL)
 	log.Printf("[CONFIG] iiifman       = [%s]", config.iiifManifestURL)
 	log.Printf("[CONFIG] iiif          = [%s]", config.iiifURL)
 	log.Printf("[CONFIG] curio         = [%s]", config.curioURL)
