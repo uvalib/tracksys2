@@ -52,6 +52,11 @@
             <InputText type="text" v-model="filterModel.value" placeholder="Finding aid"/>
          </template>
       </Column>
+      <Column header="" class="row-acts nowrap">
+         <template #body="slotProps">
+            <router-link :to="`/components/${slotProps.data.id}`">View details</router-link>
+         </template>
+      </Column>
    </DataTable>
 </template>
 

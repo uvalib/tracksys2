@@ -45,7 +45,7 @@
 
          <Column header="" class="row-acts">
             <template #body="slotProps">
-               <router-link :to="`/orders/${slotProps.data.id}`">View</router-link>
+               <router-link :to="`/orders/${slotProps.data.id}`">View Details</router-link>
             </template>
          </Column>
       </DataTable>

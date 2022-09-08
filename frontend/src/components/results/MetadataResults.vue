@@ -61,6 +61,11 @@
             <div v-if="slotProps.data.virgoURL"><a :href="slotProps.data.virgoURL" target="_blank">VIRGO</a></div>
          </template>
       </Column>
+      <Column header="" class="row-acts nowrap">
+         <template #body="slotProps">
+            <router-link :to="`/metadata/${slotProps.data.id}`">View details</router-link>
+         </template>
+      </Column>
    </DataTable>
 </template>
 

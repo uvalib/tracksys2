@@ -31,9 +31,29 @@ const router = createRouter({
       component: () => import('../views/MasterFileDetails.vue')
     },
     {
+      path: '/metadata/:id',
+      name: 'metadata',
+      component: () => import('../views/MetadataDetails.vue')
+    },
+    {
       path: '/orders',
       name: 'order',
       component: () => import('../views/OrdersList.vue')
+    },
+    {
+      path: '/orders/:id',
+      name: 'orderdetails',
+      component: () => import('../views/OrderDetails.vue')
+    },
+    {
+      path: '/units/:id',
+      name: 'unit',
+      component: () => import('../views/UnitDetails.vue')
+    },
+    {
+      path: '/components/:id',
+      name: 'component',
+      component: () => import('../views/ComponentDetails.vue')
     },
     {
       path: '/equipment',
