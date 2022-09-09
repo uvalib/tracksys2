@@ -23,10 +23,10 @@
                <DataDisplay label="PID" :value="metadataStore.dl.pid"/>
                <DataDisplay label="In Digital Library?" :value="formatBoolean(metadataStore.dl.inDL)"/>
                <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.dl.inDPLA)"/>
-               <DataDisplay label="Right Statement" :value="metadataStore.dl.useRight.name"/>
+               <DataDisplay label="Right Statement" :value="useRight"/>
                <DataDisplay label="Rights Rationale" :value="metadataStore.dl.useRightRationale"/>
                <DataDisplay label="Creator Death Date" :value="metadataStore.dl.creatorDeathDate"/>
-               <DataDisplay label="Availability Policy" :value="metadataStore.dl.availability.name"/>
+               <DataDisplay label="Availability Policy" :value="availabilityPolicy"/>
                <DataDisplay label="Collection Facet" :value="metadataStore.dl.collectionFacet"/>
                <DataDisplay label="Date DL Ingest" :value="formatDate(metadataStore.dl.dateDLIngest)"/>
                <DataDisplay label="Date DL Update" :value="formatDate(metadataStore.dl.dateDLUpdate)"/>
@@ -35,17 +35,11 @@
          <Panel header="Administrative Information">
             <dl>
                <DataDisplay label="Manuscript/Unpublished Item?" :value="formatBoolean(metadataStore.other.isManuscript)"/>
-               <DataDisplay label="OCR Hint" :value="metadataStore.other.ocrHint.name"/>
-               <DataDisplay label="OCR Language Hint" :value="metadataStore.other.ocrHLanguage"/>
-               <DataDisplay label="Preservation Tier" :value="metadataStore.other.preservationTier.name"/>
+               <DataDisplay label="OCR Hint" :value="ocrHint"/>
+               <DataDisplay label="OCR Language Hint" :value="metadataStore.other.ocrLanguageHint"/>
+               <DataDisplay label="Preservation Tier" :value="preservationTier"/>
             </dl>
          </Panel>
-
-<!-- Ocr Hint	Modern Font
-Ocr Language Hint	eng
-Date Created	February 17, 2022 13:47
-Checked Out?	No
-Preservation Tier -->
       </div>
       <div v-if="metadataStore.thumbURL" class="thumb">
          <a :href="metadataStore.viewerURL" target="_blank">
@@ -56,7 +50,7 @@ Preservation Tier -->
 </template>
 
 <script setup>
-import { onBeforeMount } from 'vue'
+import { onBeforeMount, computed } from 'vue'
 import { useRoute, onBeforeRouteUpdate } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useMetadataStore } from '@/stores/metadata'
@@ -67,6 +61,34 @@ import dayjs from 'dayjs'
 const route = useRoute()
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
+
+const availabilityPolicy = computed(() => {
+   if ( metadataStore.dl.availability ) {
+      return metadataStore.dl.availability.name
+   }
+   return ""
+})
+
+const preservationTier = computed(() => {
+   if ( metadataStore.other.preservationTier ) {
+      return metadataStore.other.preservationTier.name
+   }
+   return ""
+})
+
+const ocrHint = computed(() => {
+   if ( metadataStore.other.ocrHint ) {
+      return metadataStore.other.ocrHint.name
+   }
+   return ""
+})
+
+const useRight = computed(() => {
+   if (metadataStore.dl.useRight ) {
+      return metadataStore.dl.useRight.name
+   }
+   return ""
+})
 
 onBeforeRouteUpdate(async (to) => {
    let mdID = to.params.id

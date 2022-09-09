@@ -32,7 +32,7 @@ export const useMetadataStore = defineStore('metadata', {
          parentID: 0,
          isManuscript: false,
          ocrHint: null,
-         ocrLanguage: "",
+         ocrLanguageHint: "",
          preservationTier: null,
       },
       thumbURL: "",
@@ -88,7 +88,7 @@ export const useMetadataStore = defineStore('metadata', {
             this.other.parentID = response.data.metadata.parentID
             this.other.isManuscript = response.data.metadata.isManuscript
             this.other.ocrHint = response.data.metadata.ocrHint
-            this.other.ocrLanguage = response.data.metadata.ocrLanguageHint
+            this.other.ocrLanguageHint = response.data.metadata.ocrLanguageHint
             this.other.preservationTier = response.data.metadata.preservationTier
 
             system.working = false
