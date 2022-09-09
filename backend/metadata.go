@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/xml"
 	"fmt"
 	"log"
@@ -42,49 +41,57 @@ type useRight struct {
 	Name           string `json:"name"`
 	URI            string `json:"uri"`
 	Statement      string `json:"statement"`
-	CommercialUse  bool   `json:"commercial_use"`
-	EducationalUse bool   `json:"educational_use"`
+	CommercialUse  bool   `json:"commercialUse"`
+	EducationalUse bool   `json:"educationalUse"`
 	Modifications  bool   `json:"modifications"`
 }
 
 type externalSystem struct {
 	ID        uint   `json:"id"`
 	Name      string `json:"name"`
-	PublicURL string `json:"public_url"`
-	APIURL    string `gorm:"column:api_url" jjson:"api_url"`
+	PublicURL string `json:"publicURL"`
+	APIURL    string `gorm:"column:api_url" jjson:"apiURL"`
+}
+
+type preservationTier struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type metadata struct {
 	ID                   int64              `json:"id"`
 	PID                  string             `gorm:"column:pid" json:"pid"`
 	Type                 string             `json:"type"`
+	ParentMetadataID     uint64             `gorm:"column:parent_metadata_id" json:"parentID"`
 	Title                string             `json:"title"`
-	Barcode              string             `json:"barcode,omitempty"`
-	CallNumber           string             `json:"call_number,omitempty"`
-	CatalogKey           string             `json:"catalog_key,omitempty"`
-	CreatorName          string             `json:"creator_name"`
-	DescMetadata         string             `json:"desc_metadata,omitempty"`
-	CollectionFacet      string             `json:"collection_facet,omitempty"`
+	Barcode              string             `json:"barcode"`
+	CallNumber           string             `json:"callNumber"`
+	CatalogKey           string             `json:"catalogKey"`
+	CreatorName          string             `json:"creatorName"`
+	CreatorDeathDate     uint64             `json:"creatorDeathDate"`
+	DescMetadata         string             `json:"descMetadata"`
+	CollectionFacet      string             `json:"collectionFacet"`
 	UseRightID           uint               `json:"-"`
-	UseRight             useRight           `gorm:"foreignKey:UseRightID" json:"use_right"`
-	OCRHintID            uint               `json:"-"`
-	OCRHint              ocrHint            `gorm:"foreignKey:OCRHintID" json:"ocr_hint"`
+	UseRight             useRight           `gorm:"foreignKey:UseRightID" json:"useRight"`
+	UseRightRationale    string             `json:"useRightRationale"`
+	OCRHintID            *uint              `json:"-"`
+	OCRHint              *ocrHint           `gorm:"foreignKey:OCRHintID" json:"ocrHint"`
 	OCRLanguageHint      string             `json:"ocrLanguageHint"`
 	AvailabilityPolicyID uint               `json:"-"`
-	AvailabilityPolicy   availabilityPolicy `gorm:"foreignKey:AvailabilityPolicyID" json:"availability_policy"`
-	ExternalSystemID     uint               `json:"-"`
-	ExternalSystem       externalSystem     `gorm:"foreignKey:ExternalSystemID" json:"external_system"`
-	DateDLIngest         sql.NullTime       `gorm:"date_dl_ingest" json:"date_dl_ingest"`
-	UpdatedAt            sql.NullTime       `json:"updated_at"`
-}
-
-type metadataVersion struct {
-	ID            int64  `json:"id"`
-	MetadataID    int64  `json:"metadata_id"`
-	StaffMemberID int64  `json:"staff_member_id"`
-	DescMetadata  string `json:"desc_metadata"`
-	VersionTag    string `json:"version_tag"`
-	Comment       string `json:"comment"`
+	AvailabilityPolicy   availabilityPolicy `gorm:"foreignKey:AvailabilityPolicyID" json:"availability"`
+	ExternalSystemID     *uint              `json:"-"`
+	ExternalSystem       *externalSystem    `gorm:"foreignKey:ExternalSystemID" json:"externalSystem"`
+	SupplementalSystemID *uint              `json:"-"`
+	SupplementalSystem   *externalSystem    `gorm:"foreignKey:SupplementalSystemID" json:"supplementalSystem"`
+	PreservationTierID   uint               `json:"-"`
+	PreservationTier     preservationTier   `gorm:"foreignKey:PreservationTierID" json:"preservationTier"`
+	DPLA                 bool               `gorm:"column:dpla" json:"dpla"`
+	IsManuscript         bool               `json:"isManuscript"`
+	DateDLIngest         *time.Time         `gorm:"date_dl_ingest" json:"dateDLIngest"`
+	DateDLUpdate         *time.Time         `gorm:"date_dl_update" json:"dateDLUpdate"`
+	CreatedAt            *time.Time         `json:"-"`
+	UpdatedAt            *time.Time         `json:"-"`
 }
 
 type internalMetadata struct {
@@ -115,8 +122,9 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 	log.Printf("INFO: get metadata %s details", mdID)
 
 	var md metadata
-	err := svc.DB.Preload("UseRight").Preload("OCRHint").
-		Preload("AvailabilityPolicy").Preload("ExternalSystem").Find(&md, mdID).Error
+	err := svc.DB.Preload("UseRight").Preload("OCRHint").Preload("AvailabilityPolicy").
+		Preload("ExternalSystem").Preload("SupplementalSystem").
+		Preload("PreservationTier").Find(&md, mdID).Error
 	if err != nil {
 		log.Printf("ERROR: unable to load metadata %s: %s", mdID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -126,16 +134,20 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 	type mdResp struct {
 		Metadata metadata          `json:"metadata"`
 		Extended *internalMetadata `json:"details"`
+		VirgoURL string            `json:"virgoURL"`
 		Error    string            `json:"error"`
 	}
 	out := mdResp{Metadata: md}
 	if md.Type == "SirsiMetadata" || md.Type == "XmlMetadata" {
-		ext, err := svc.getUVAMapData(md.PID)
+		parsedDetail, err := svc.getUVAMapData(md.PID)
 		if err != nil {
 			log.Printf("ERROR: unable to get extended metadata for sirsi/cml %s: %s", md.PID, err.Error())
 			out.Error = err.Error()
 		} else {
-			out.Extended = ext
+			out.Extended = parsedDetail
+			if md.DateDLIngest != nil {
+				out.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, md.CatalogKey)
+			}
 		}
 	}
 
