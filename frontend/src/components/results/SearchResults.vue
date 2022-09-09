@@ -3,10 +3,18 @@
       <div class="title">Search summary</div>
       <div class="content">
          <table>
-            <tr><td class="label">Orders:</td><td class="count">{{searchStore.orders.total}} matches</td></tr>
-            <tr><td class="label">Metadata:</td><td class="count">{{searchStore.metadata.total}} matches</td></tr>
-            <tr><td class="label">Master Files:</td><td class="count">{{searchStore.masterFiles.total}} matches</td></tr>
-            <tr><td class="label">Components:</td><td class="count">{{searchStore.components.total}} matches</td></tr>
+            <tr v-if="searchStore.scope=='all' || searchStore.scope=='orders'">
+               <td class="label">Orders:</td><td class="count">{{searchStore.orders.total}} matches</td>
+            </tr>
+            <tr v-if="searchStore.scope=='all' || searchStore.scope=='metadata'">
+               <td class="label">Metadata:</td><td class="count">{{searchStore.metadata.total}} matches</td>
+            </tr>
+            <tr v-if="searchStore.scope=='all' || searchStore.scope=='masterfiles'">
+               <td class="label">Master Files:</td><td class="count">{{searchStore.masterFiles.total}} matches</td>
+            </tr>
+            <tr v-if="searchStore.scope=='all' || searchStore.scope=='components'">
+               <td class="label">Components:</td><td class="count">{{searchStore.components.total}} matches</td>
+            </tr>
          </table>
          <div class="actions">
             <DPGButton label="Reset search" class="p-button-secondary" @click="resetSearch()"/>

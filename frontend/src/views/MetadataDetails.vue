@@ -15,6 +15,11 @@
             <DataDisplay label="Year" :value="metadataStore.detail.year"/>
             <DataDisplay label="Place of Publication" :value="metadataStore.detail.publicationPlace"/>
             <DataDisplay label="Location" :value="metadataStore.detail.location"/>
+
+            <DataDisplay label="Manuscript/Unpublished Item?" :value="formatBoolean(metadataStore.other.isManuscript)"/>
+            <DataDisplay label="OCR Hint" :value="ocrHint"/>
+            <DataDisplay label="OCR Language Hint" :value="metadataStore.other.ocrLanguageHint"/>
+            <DataDisplay label="Preservation Tier" :value="preservationTier"/>
          </dl>
       </Panel>
       <div class="right">
@@ -32,20 +37,19 @@
                <DataDisplay label="Date DL Update" :value="formatDate(metadataStore.dl.dateDLUpdate)"/>
             </dl>
          </Panel>
-         <Panel header="Administrative Information">
-            <dl>
-               <DataDisplay label="Manuscript/Unpublished Item?" :value="formatBoolean(metadataStore.other.isManuscript)"/>
-               <DataDisplay label="OCR Hint" :value="ocrHint"/>
-               <DataDisplay label="OCR Language Hint" :value="metadataStore.other.ocrLanguageHint"/>
-               <DataDisplay label="Preservation Tier" :value="preservationTier"/>
-            </dl>
-         </Panel>
       </div>
       <div v-if="metadataStore.thumbURL" class="thumb">
          <a :href="metadataStore.viewerURL" target="_blank">
             <img :src="metadataStore.thumbURL" />
          </a>
       </div>
+   </div>
+   <div class="more-detail">
+      <Accordion v-if="metadataStore.detail.type=='XmlMetadata'">
+         <AccordionTab header="XML Metadata">
+            <pre>{{metadataStore.detail.xmlMetadata}}</pre>
+         </AccordionTab>
+      </Accordion>
    </div>
 </template>
 
@@ -55,6 +59,8 @@ import { useRoute, onBeforeRouteUpdate } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useMetadataStore } from '@/stores/metadata'
 import Panel from 'primevue/panel'
+import Accordion from 'primevue/accordion';
+import AccordionTab from 'primevue/accordiontab'
 import DataDisplay from '../components/DataDisplay.vue'
 import dayjs from 'dayjs'
 
@@ -115,6 +121,10 @@ function formatDate( date ) {
 </script>
 
 <style scoped lang="scss">
+   .more-detail {
+      padding: 0 25px 25px 25px;
+      text-align: left;
+   }
 .details {
    padding:  0 25px 10px 25px;
    display: flex;

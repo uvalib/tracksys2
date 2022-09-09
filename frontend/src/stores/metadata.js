@@ -15,6 +15,7 @@ export const useMetadataStore = defineStore('metadata', {
          year: "",
          publicationPlace: "",
          location: "",
+         xmlMetadata: ""
       },
       dl: {
          pid: "",
@@ -68,6 +69,7 @@ export const useMetadataStore = defineStore('metadata', {
                this.thumbURL = response.data.details.previewURL
                this.viewerURL = response.data.details.objectURL
                this.virgoURL = response.data.virgoURL
+               this.detail.xmlMetadata = response.data.metadata.descMetadata
             }
 
             // DL info
