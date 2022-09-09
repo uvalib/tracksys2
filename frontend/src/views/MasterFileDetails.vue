@@ -4,98 +4,59 @@
       <div class="left">
          <Panel header="General Information">
             <dl>
-               <dt>PID</dt>
-               <dd>{{masterFiles.details.pid}}</dd>
-               <dt>Filename</dt>
-               <dd>{{masterFiles.details.filename}}</dd>
-               <dt v-if="masterFiles.details.title">Title</dt>
-               <dd v-else><span class="empty">Empty</span></dd>
-               <dd>{{masterFiles.details.title}}</dd>
-               <dt>Description</dt>
-               <dd v-if="masterFiles.details.description">{{masterFiles.details.description}}</dd>
-               <dd v-else><span class="empty">Empty</span></dd>
-               <dt>Date Archived</dt>
-               <dd v-if="masterFiles.details.dateArchived">{{dayjs(masterFiles.details.dateArchived).format("YYYY-MM-DD")}}</dd>
-               <dd v-else><span class="empty">N/A</span></dd>
-               <dt>Date DL Ingest</dt>
-               <dd v-if="masterFiles.details.dateDLIngest">{{dayjs(masterFiles.details.dateDLIngest).format("YYYY-MM-DD")}}</dd>
-               <dd v-else><span class="empty">N/A</span></dd>
-               <dt>Date DL Update</dt>
-               <dd v-if="masterFiles.details.dateDLUpdate">{{dayjs(masterFiles.details.dateDLUpdate).format("YYYY-MM-DD")}}</dd>
-               <dd v-else><span class="empty">N/A</span></dd>
-               <dt>Tags</dt>
-               <dd v-if="masterFiles.details.length > 0">{{tagList}}</dd>
-               <dd v-else><span class="empty">N/A</span></dd>
+               <DataDisplay label="PID" :value="masterFiles.details.pid" />
+               <DataDisplay label="Filename" :value="masterFiles.details.filename" />
+               <DataDisplay label="Title" :value="masterFiles.details.title" />
+               <DataDisplay label="Description" :value="masterFiles.details.description" />
+               <DataDisplay label="Date Archived" :value="formatDate(masterFiles.details.dateArchived)" blankValue="N/A" />
+               <DataDisplay label="Date DL Ingest" :value="formatDate(masterFiles.details.dateDLIngest)" blankValue="N/A" />
+               <DataDisplay label="Date DL Update" :value="formatDate(masterFiles.details.dateDLUpdate)" blankValue="N/A" />
+               <DataDisplay label="Tags" :value="tagList" blankValue="N/A" />
             </dl>
          </Panel>
          <Panel header="Related Information">
             <dl>
-               <dt>Metadata</dt>
-               <dd>
+               <DataDisplay label="Metadata" :value="masterFiles.details.metadata.id">
                   <router-link :to="`/metadata/${masterFiles.details.metadata.id}`">
                      {{masterFiles.details.metadata.pid}}: {{masterFiles.details.metadata.title}}
                   </router-link>
-               </dd>
-               <dt>Unit ID</dt>
-               <dd><router-link :to="`/units/${masterFiles.details.unitID}`">{{masterFiles.details.unitID}}</router-link></dd>
-               <dt>Order ID</dt>
-               <dd><router-link :to="`/orders/${masterFiles.orderID}`">{{masterFiles.orderID}}</router-link></dd>
-               <dt>Component ID</dt>
-               <dd v-if="masterFiles.details.componentID"><router-link :to="`/units/${masterFiles.details.componentID}`">{{masterFiles.details.componentID}}</router-link></dd>
-               <dd v-else><span class="empty">N/A</span></dd>
-               <template v-if="masterFiles.details.originalID > 0">
-                  <dt>Cloned from</dt>
-                  <dd><router-link :to="`/masterfiles/${masterFiles.details.originalID}`">{{masterFiles.details.originalID}}</router-link></dd>
-               </template>
+               </DataDisplay>
+               <DataDisplay label="Unit ID" :value="masterFiles.details.unitID">
+                  <router-link :to="`/units/${masterFiles.details.unitID}`">{{masterFiles.details.unitID}}</router-link>
+               </DataDisplay>
+               <DataDisplay label="Order ID" :value="masterFiles.orderID">
+                  <router-link :to="`/orders/${masterFiles.orderID}`">{{masterFiles.orderID}}</router-link>
+               </DataDisplay>
+               <DataDisplay label="Component ID" :value="masterFiles.details.componentID">
+                  <router-link :to="`/components/${masterFiles.details.componentID}`">{{masterFiles.details.componentID}}</router-link>
+               </DataDisplay>
+               <DataDisplay v-if="masterFiles.details.originalID>0" label="Cloned From" :value="masterFiles.details.originalID">
+                  <router-link :to="`/masterfiles/${masterFiles.details.originalID}`">{{masterFiles.details.originalID}}</router-link>
+               </DataDisplay>
             </dl>
          </Panel>
       </div>
       <Panel header="Technical Information">
          <dl>
-            <dt>MD5</dt>
-            <dd v-if="masterFiles.details.md5">{{masterFiles.details.md5}}</dd>
-            <dd v-else><span class="empty">Empty</span></dd>
-            <dt>Filesize</dt>
-            <dd>{{masterFiles.details.filesize}}</dd>
-            <dt>Image format</dt>
-            <dd>{{masterFiles.details.techMetadata.imageFormat}}</dd>
-            <dt>Height x Width</dt>
-            <dd>{{masterFiles.details.techMetadata.height}} x {{masterFiles.details.techMetadata.width}}</dd>
-            <dt>Resolution</dt>
-            <dd>{{masterFiles.details.techMetadata.resolution}}</dd>
-            <dt>Depth</dt>
-            <dd>{{masterFiles.details.techMetadata.depth}}</dd>
-            <dt>Compression</dt>
-            <dd>{{masterFiles.details.techMetadata.compression}}</dd>
-            <dt>Color space</dt>
-            <dd>{{masterFiles.details.techMetadata.colorSpace}}</dd>
-            <dt>Color profile</dt>
-            <dd v-if="masterFiles.details.techMetadata.colorProfile">{{masterFiles.details.techMetadata.colorProfile}}</dd>
-            <dd v-else><span class="empty">Empty</span></dd>
-            <dt>Equipment</dt>
-            <dd v-if="masterFiles.details.techMetadata.equipment">{{masterFiles.details.techMetadata.equipment}}</dd>
-            <dd v-else><span class="empty">Empty</span></dd>
-            <dt>Model</dt>
-            <dd v-if="masterFiles.details.techMetadata.model">{{masterFiles.details.techMetadata.model}}</dd>
-            <dd v-else><span class="empty">Empty</span></dd>
-            <dt>ISO</dt>
-            <dd v-if="masterFiles.details.techMetadata.iso">{{masterFiles.details.techMetadata.iso}}</dd>
-            <dd v-else><span class="empty">Empty</span></dd>
-            <dt>Exposure bias</dt>
-            <dd v-if="masterFiles.details.techMetadata.exposureBias">{{masterFiles.details.techMetadata.exposureBias}}</dd>
-            <dd v-else><span class="empty">Empty</span></dd>
-            <dt>Exposure time</dt>
-            <dd v-if="masterFiles.details.techMetadata.exposureTime">{{masterFiles.details.techMetadata.exposureTime}}</dd>
-            <dd v-else><span class="empty">Empty</span></dd>
-            <dt>Aperture</dt>
-            <dd v-if="masterFiles.details.techMetadata.aperture">{{masterFiles.details.techMetadata.aperture}}</dd>
-            <dd v-else><span class="empty">Empty</span></dd>
-            <dt>Focal length</dt>
-            <dd v-if="masterFiles.details.techMetadata.focalLength">{{masterFiles.details.techMetadata.focalLength}}</dd>
-            <dd v-else><span class="empty">Empty</span></dd>
-            <dt>Software</dt>
-            <dd v-if="masterFiles.details.techMetadata.software">{{masterFiles.details.techMetadata.software}}</dd>
-            <dd v-else><span class="empty">Empty</span></dd>
+            <DataDisplay label="MD5" :value="masterFiles.details.md5" />
+            <DataDisplay label="Filesize" :value="masterFiles.details.filesize" />
+            <DataDisplay label="Format" :value="masterFiles.details.techMetadata.imageFormat" />
+            <DataDisplay label="Height x Width" :value="masterFiles.details.techMetadata.height">
+               {{masterFiles.details.techMetadata.height}} x {{masterFiles.details.techMetadata.width}}
+            </DataDisplay>
+            <DataDisplay label="Resolution" :value="masterFiles.details.techMetadata.resolution" />
+            <DataDisplay label="Depth" :value="masterFiles.details.techMetadata.depth" />
+            <DataDisplay label="Compression" :value="masterFiles.details.techMetadata.compression" />
+            <DataDisplay label="Color Space" :value="masterFiles.details.techMetadata.colorSpace" />
+            <DataDisplay label="Color Profile" :value="masterFiles.details.techMetadata.colorProfile" />
+            <DataDisplay label="Equipment" :value="masterFiles.details.techMetadata.equipment" />
+            <DataDisplay label="Model" :value="masterFiles.details.techMetadata.model" />
+            <DataDisplay label="ISO" :value="masterFiles.details.techMetadata.iso" />
+            <DataDisplay label="Exposure Bias" :value="masterFiles.details.techMetadata.exposureBias" />
+            <DataDisplay label="Exposure Time" :value="masterFiles.details.techMetadata.exposureTime" />
+            <DataDisplay label="Aperture" :value="masterFiles.details.techMetadata.aperture" />
+            <DataDisplay label="Focal Length" :value="masterFiles.details.techMetadata.focalLength" />
+            <DataDisplay label="Software" :value="masterFiles.details.techMetadata.software" />
          </dl>
       </Panel>
       <div class="thumb">
@@ -118,6 +79,8 @@ import { useSystemStore } from '@/stores/system'
 import { useRoute,onBeforeRouteUpdate } from 'vue-router'
 import Panel from 'primevue/panel'
 import dayjs from 'dayjs'
+import DataDisplay from '../components/DataDisplay.vue'
+
 
 const route = useRoute()
 const masterFiles = useMasterFilesStore()
@@ -138,6 +101,13 @@ onBeforeMount(() => {
    let mfID = route.params.id
    masterFiles.getDetails(mfID)
 })
+
+function formatDate( date ) {
+   if (date) {
+      return dayjs(date).format("YYYY-MM-DD")
+   }
+   return ""
+}
 </script>
 
 <style scoped lang="scss">
@@ -146,6 +116,9 @@ onBeforeMount(() => {
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
+   .left {
+      flex-grow: 1;
+   }
    :deep(div.p-panel) {
       margin: 10px;
       flex-grow: 1;
