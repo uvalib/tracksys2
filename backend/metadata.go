@@ -159,7 +159,7 @@ func (svc *serviceContext) getMetadataRelatedItems(c *gin.Context) {
 	log.Printf("INFO: get related units and orders for metadata %s", mdID)
 
 	var units []unit
-	err := svc.DB.Where("metadata_id=?", mdID).Preload("IntendedUse").
+	err := svc.DB.Debug().Where("metadata_id=?", mdID).Preload("IntendedUse").
 		Preload("Order").Preload("Order.Customer").Preload("Order.Agency").
 		Find(&units).Error
 	if err != nil {

@@ -4,15 +4,17 @@
    </div>
    <DataTable v-else :value="props.orders" ref="relatedOrdersTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-      :lazy="false" :paginator="false"
+      :lazy="false" :paginator="true" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
+      paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
+      currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >
-      <Column field="id" header="ID"/>
-      <Column header="Customer" class="nowrap">
+      <Column field="id" header="ID" :sortable="true"/>
+      <Column  field="customer.lastName" header="Customer" class="nowrap" :sortable="true">
          <template #body="slotProps">
             {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
          </template>
       </Column>
-      <Column field="agency.name" header="Agency" class="nowrap" />
+      <Column field="agency.name" header="Agency" class="nowrap" :sortable="true"/>
       <Column field="title" header="Order Title" />
       <Column field="notes" header="Staff Notes" />
       <Column field="specialInstructions" header="Special Instructions" />

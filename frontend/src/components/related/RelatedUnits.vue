@@ -4,10 +4,11 @@
    </div>
    <DataTable v-else :value="props.units" ref="relatedUnitsTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-      :lazy="false" :paginator="true" :rows="30"
+      :lazy="false" :paginator="true" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
+      currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >
-      <Column field="id" header="ID"/>
+      <Column field="id" header="ID" :sortable="true"/>
       <Column field="intendedUse" header="Intended Use"/>
       <Column header="Date Patron Deliverables Ready">
          <template #body="slotProps">
@@ -30,7 +31,7 @@
             {{formatBoolean(slotProps.data.reorder)}}
          </template>
       </Column>
-      <Column field="masterFilesCount" header="Master Files Count"/>
+      <Column field="masterFilesCount" header="Master Files Count" :sortable="true"/>
       <Column header="" class="row-acts nowrap">
          <template #body="slotProps">
             <router-link :to="`/units/${slotProps.data.id}`">View details</router-link>
