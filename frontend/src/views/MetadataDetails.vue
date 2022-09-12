@@ -47,7 +47,7 @@
    <div class="more-detail">
       <Accordion v-if="metadataStore.detail.type=='XmlMetadata'">
          <AccordionTab header="XML Metadata">
-            <pre>{{metadataStore.detail.xmlMetadata}}</pre>
+            <pre class="xml">{{metadataStore.detail.xmlMetadata}}</pre>
          </AccordionTab>
       </Accordion>
    </div>
@@ -124,6 +124,18 @@ function formatDate( date ) {
    .more-detail {
       padding: 0 25px 25px 25px;
       text-align: left;
+      .xml {
+         font-weight: normal;
+         font-size: 0.85em;
+         padding: 10px;
+         margin: 0;
+         border-top: 0;
+         white-space: pre-wrap;       /* Since CSS 2.1 */
+         white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+         white-space: -pre-wrap;      /* Opera 4-6 */
+         white-space: -o-pre-wrap;    /* Opera 7 */
+         word-wrap: break-word;       /* Internet Explorer 5.5+ */
+      }
    }
 .details {
    padding:  0 25px 10px 25px;
