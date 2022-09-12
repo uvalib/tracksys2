@@ -64,6 +64,7 @@ type masterFile struct {
 	Metadata          metadata      `gorm:"foreignKey:MetadataID" json:"metadata"`
 	ImageTechMeta     imageTechMeta `gorm:"foreignKey:MasterFileID" json:"techMetadata"`
 	UnitID            int64         `gorm:"column:unit_id" json:"unitID"`
+	Unit              *unit         `gorm:"foreignKey:UnitID" json:"unit,omitempty"`
 	ComponentID       int64         `gorm:"column:component_id" json:"componentID"`
 	Filename          string        `json:"filename"`
 	Title             string        `json:"title"`

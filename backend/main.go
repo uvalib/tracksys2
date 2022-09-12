@@ -40,6 +40,7 @@ func main() {
 		api.GET("/masterfiles/:id", svc.getMasterFile)
 
 		api.GET("/metadata/:id", svc.getMetadata)
+		api.GET("/metadata/:id/related", svc.getMetadataRelatedItems)
 
 		api.GET("/orders", svc.getOrders)
 

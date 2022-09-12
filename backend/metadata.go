@@ -154,6 +154,50 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+func (svc *serviceContext) getMetadataRelatedItems(c *gin.Context) {
+	mdID := c.Param("id")
+	log.Printf("INFO: get related units and orders for metadata %s", mdID)
+
+	var units []unit
+	err := svc.DB.Where("metadata_id=?", mdID).Preload("IntendedUse").
+		Preload("Order").Preload("Order.Customer").Preload("Order.Agency").
+		Find(&units).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get units related to metadata %s: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if len(units) == 0 {
+		// No units but one master file is an indicator that descriptive XML
+		// metadata was created specifically for the master file after initial ingest.
+		// This is usually the case with image collections where each image has its own descriptive metadata.
+		// In this case, there is no direct link from metadata to unit. Must find it by
+		// going through the master file that this metadata describes
+		var mfCnt int64
+		err := svc.DB.Table("master_files").Where("metadata_id=?", mdID).Count(&mfCnt).Error
+		if err != nil {
+			log.Printf("ERROR: unable to get master file count for metadata %s: %s", mdID, err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+		if mfCnt == 1 {
+			var mf masterFile
+			err = svc.DB.Preload("Unit").Preload("Unit.Order").
+				Preload("Unit.Order.Customer").Preload("Unit.Order.Agency").
+				Preload("Unit.IntendedUse").Where("metadata_id=?", mdID).First(&mf).Error
+			if err != nil {
+				log.Printf("ERROR: unabel to get masterfile unit for metadata %s: %s", mdID, err.Error())
+				c.String(http.StatusInternalServerError, err.Error())
+				return
+			}
+			units = append(units, *mf.Unit)
+		}
+	}
+
+	c.JSON(http.StatusOK, units)
+}
+
 func (svc *serviceContext) getUVAMapData(pid string) (*internalMetadata, error) {
 	url := fmt.Sprintf("%s/api/metadata/%s?type=uvamap", svc.ExternalSystems.TSAPI, pid)
 	resp, err := svc.getRequest(url)

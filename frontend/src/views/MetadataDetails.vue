@@ -1,6 +1,11 @@
 <template>
    <h2>Metadata {{route.params.id}}</h2>
    <div class="details" v-if="systemStore.working==false">
+      <div v-if="metadataStore.thumbURL" class="thumb">
+         <a :href="metadataStore.viewerURL" target="_blank">
+            <img :src="metadataStore.thumbURL" />
+         </a>
+      </div>
       <Panel header="General Information">
          <dl>
             <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey">
@@ -38,18 +43,26 @@
             </dl>
          </Panel>
       </div>
-      <div v-if="metadataStore.thumbURL" class="thumb">
-         <a :href="metadataStore.viewerURL" target="_blank">
-            <img :src="metadataStore.thumbURL" />
-         </a>
-      </div>
+
    </div>
-   <div class="more-detail">
+   <div class="more-detail" v-if="systemStore.working==false">
       <Accordion v-if="metadataStore.detail.type=='XmlMetadata'">
          <AccordionTab header="XML Metadata">
             <pre class="xml">{{metadataStore.detail.xmlMetadata}}</pre>
          </AccordionTab>
       </Accordion>
+   </div>
+   <div class="details">
+      <Panel header="Related Information">
+         <TabView class="related">
+            <TabPanel header="Orders">
+               <RelatedOrders :orders="metadataStore.related.orders" />
+            </TabPanel>
+            <TabPanel header="Units">
+               <RelatedUnits :units="metadataStore.related.units" />
+            </TabPanel>
+         </TabView>
+      </Panel>
    </div>
 </template>
 
@@ -62,7 +75,11 @@ import Panel from 'primevue/panel'
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab'
 import DataDisplay from '../components/DataDisplay.vue'
+import TabView from 'primevue/tabview'
+import TabPanel from 'primevue/tabpanel'
 import dayjs from 'dayjs'
+import RelatedOrders from '../components/related/RelatedOrders.vue'
+import RelatedUnits from '../components/related/RelatedUnits.vue'
 
 const route = useRoute()
 const systemStore = useSystemStore()
@@ -99,11 +116,13 @@ const useRight = computed(() => {
 onBeforeRouteUpdate(async (to) => {
    let mdID = to.params.id
    metadataStore.getDetails( mdID )
+   metadataStore.getRelatedItems( mdID )
 })
 
 onBeforeMount(() => {
    let mdID = route.params.id
    metadataStore.getDetails( mdID )
+   metadataStore.getRelatedItems( mdID )
 })
 
 function formatBoolean( flag) {
@@ -122,7 +141,7 @@ function formatDate( date ) {
 
 <style scoped lang="scss">
    .more-detail {
-      padding: 0 25px 25px 25px;
+      padding: 0 35px 10px 35px;
       text-align: left;
       .xml {
          font-weight: normal;
@@ -142,6 +161,9 @@ function formatDate( date ) {
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
+   :deep(p-tabview) {
+      margin: 0 !important;
+   }
    a.virgo {
       display: inline-block;
       margin-left: 10px;

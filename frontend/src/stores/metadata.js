@@ -38,7 +38,11 @@ export const useMetadataStore = defineStore('metadata', {
       },
       thumbURL: "",
       viewerURL: "",
-      virgoURL: ""
+      virgoURL: "",
+      related: {
+         units: [],
+         orders: []
+      }
    }),
 	getters: {
 	},
@@ -97,6 +101,42 @@ export const useMetadataStore = defineStore('metadata', {
          }).catch( e => {
             system.setError(e)
          })
+      },
+
+      getRelatedItems( metadataID ) {
+         const system = useSystemStore()
+         this.related.units = []
+         this.related.orders = []
+         axios.get( `/api/metadata/${metadataID}/related` ).then(response => {
+            let orderIDs = []
+            response.data.forEach( r => {
+               this.related.units.push({
+                  id: r.id,
+                  reorder: r.reorder,
+                  inDL: r.includeInDL,
+                  dateArchived: r.dateArchived,
+                  dateDLDeliverablesReady: r.dateDLDeliverablesReady,
+                  datePatronDeliverablesReady: r.datePatronDeliverablesReady,
+                  intendedUse: r.intendedUse.name,
+                  masterFilesCount: r.masterFilesCount
+               })
+               if (orderIDs.includes(r.order.id) == false ) {
+                  orderIDs.push(r.order.id)
+                  this.related.orders.push({
+                     id: r.order.id,
+                     title: r.order.title,
+                     customer: r.order.customer,
+                     agency: r.order.agency,
+                     staffNotes: r.order.staffNotes,
+                     specialInstructions: r.order.specialInstructions,
+                  })
+               }
+            })
+         }).catch( e => {
+            system.setError(e)
+         })
+
       }
+
    }
 })
