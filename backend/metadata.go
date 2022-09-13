@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"log"
@@ -82,6 +83,7 @@ type metadata struct {
 	AvailabilityPolicy   availabilityPolicy `gorm:"foreignKey:AvailabilityPolicyID" json:"availability"`
 	ExternalSystemID     *uint              `json:"-"`
 	ExternalSystem       *externalSystem    `gorm:"foreignKey:ExternalSystemID" json:"externalSystem"`
+	ExternalURI          string             `gorm:"column:external_uri" json:"externalURI"`
 	SupplementalSystemID *uint              `json:"-"`
 	SupplementalSystem   *externalSystem    `gorm:"foreignKey:SupplementalSystemID" json:"supplementalSystem"`
 	SupplementalURI      string             `json:"supplementalURI"`
@@ -106,6 +108,19 @@ type internalMetadata struct {
 	Location         string `json:"location"`
 	PreviewURL       string `json:"previewURL"`
 	ObjectURL        string `json:"objectURL"`
+}
+
+type asMetadata struct {
+	ID              string `json:"id"`
+	Title           string `json:"title"`
+	CreatedBy       string `json:"created_by"`
+	CreateTime      string `json:"create_time"`
+	Level           string `json:"level"`
+	URL             string `json:"url"`
+	Repo            string `json:"repo"`
+	CollectionTitle string `json:"collection_title"`
+	Language        string `json:"language"`
+	Dates           string `json:"dates"`
 }
 
 type uvaMAP struct {
@@ -134,10 +149,11 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 	}
 
 	type mdResp struct {
-		Metadata metadata          `json:"metadata"`
-		Extended *internalMetadata `json:"details"`
-		VirgoURL string            `json:"virgoURL"`
-		Error    string            `json:"error"`
+		Metadata     metadata          `json:"metadata"`
+		Extended     *internalMetadata `json:"details"`
+		ArchiveSpace *asMetadata       `json:"asDetails"`
+		VirgoURL     string            `json:"virgoURL"`
+		Error        string            `json:"error"`
 	}
 	out := mdResp{Metadata: md}
 	if md.Type == "SirsiMetadata" || md.Type == "XmlMetadata" {
@@ -149,6 +165,22 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 			out.Extended = parsedDetail
 			if md.DateDLIngest != nil {
 				out.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, md.CatalogKey)
+			}
+		}
+	} else {
+		if md.ExternalSystem.Name == "ArchivesSpace" {
+			log.Printf("INFO: get external ArchivesSpace metadata for %s", md.PID)
+			raw, getErr := svc.getRequest(fmt.Sprintf("%s/archivesspace/lookup?pid=%s&uri=%s", svc.ExternalSystems.Jobs, md.PID, md.ExternalURI))
+			if getErr != nil {
+				log.Printf("ERROR: unable to get archivesSpace metadata for %s: %s", md.PID, getErr.Message)
+			} else {
+				var asData asMetadata
+				err := json.Unmarshal(raw, &asData)
+				if err != nil {
+					log.Printf("ERROR: unable to parse AS response for %s: %s", md.PID, err.Error())
+				} else {
+					out.ArchiveSpace = &asData
+				}
 			}
 		}
 	}

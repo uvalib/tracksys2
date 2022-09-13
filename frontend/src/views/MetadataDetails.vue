@@ -8,7 +8,7 @@
          </a>
       </div>
       <Panel header="General Information">
-         <dl>
+         <dl v-if="metadataStore.detail.type != 'ExternalMetadata'">
             <DataDisplay label="Type" :value="metadataStore.detail.type"/>
             <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey">
                <span>{{metadataStore.detail.catalogKey}}</span>
@@ -29,53 +29,67 @@
             <DataDisplay label="OCR Language Hint" :value="metadataStore.other.ocrLanguageHint"/>
             <DataDisplay label="Preservation Tier" :value="preservationTier"/>
          </dl>
+         <dl v-if="metadataStore.detail.externalSystem == 'ArchivesSpace'">
+            <DataDisplay label="Type" :value="metadataStore.detail.externalSystem"/>
+            <DataDisplay label="URL" :value="metadataStore.detail.externalURL"/>
+            <DataDisplay label="Repository" :value="metadataStore.archivesSpace.repo"/>
+            <DataDisplay label="Collection Title" :value="metadataStore.archivesSpace.collectionTitle"/>
+            <DataDisplay label="ID" :value="metadataStore.archivesSpace.id"/>
+            <DataDisplay label="Language" :value="metadataStore.archivesSpace.language"/>
+            <DataDisplay label="Dates" :value="metadataStore.archivesSpace.dates"/>
+            <DataDisplay label="Title" :value="metadataStore.archivesSpace.title"/>
+            <DataDisplay label="Level" :value="metadataStore.archivesSpace.level"/>
+            <DataDisplay label="Created By" :value="metadataStore.archivesSpace.createdBy"/>
+            <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
+         </dl>
       </Panel>
-      <div class="right">
-         <Panel header="Digital Library Information">
-            <dl>
-               <DataDisplay label="PID" :value="metadataStore.dl.pid"/>
-               <DataDisplay label="In Digital Library?" :value="formatBoolean(metadataStore.dl.inDL)"/>
-               <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.dl.inDPLA)"/>
-               <DataDisplay label="Right Statement" :value="useRight"/>
-               <DataDisplay label="Rights Rationale" :value="metadataStore.dl.useRightRationale"/>
-               <DataDisplay label="Creator Death Date" :value="metadataStore.dl.creatorDeathDate"/>
-               <DataDisplay label="Availability Policy" :value="availabilityPolicy"/>
-               <DataDisplay label="Collection ID" :value="metadataStore.dl.collectionFacet"/>
-               <DataDisplay v-if="metadataStore.detail.supplementalURL" label="Supplemental System" :value="metadataStore.detail.supplementalURL">
-                  <a :href="metadataStore.detail.supplementalURL" target="_blank" class="supplemental">
-                     {{metadataStore.detail.supplementalSystem}}<i class="icon fas fa-external-link"></i>
-                  </a>
-               </DataDisplay>
+      <Panel header="Digital Library Information">
+         <dl>
+            <DataDisplay label="PID" :value="metadataStore.dl.pid"/>
+            <DataDisplay label="In Digital Library?" :value="formatBoolean(metadataStore.dl.inDL)"/>
+            <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.dl.inDPLA)"/>
+            <DataDisplay label="Right Statement" :value="useRight"/>
+            <DataDisplay label="Rights Rationale" :value="metadataStore.dl.useRightRationale"/>
+            <DataDisplay label="Creator Death Date" :value="metadataStore.dl.creatorDeathDate"/>
+            <DataDisplay label="Availability Policy" :value="availabilityPolicy"/>
+            <DataDisplay label="Collection ID" :value="metadataStore.dl.collectionFacet"/>
+            <DataDisplay v-if="metadataStore.detail.supplementalURL" label="Supplemental System" :value="metadataStore.detail.supplementalURL">
+               <a :href="metadataStore.detail.supplementalURL" target="_blank" class="supplemental">
+                  {{metadataStore.detail.supplementalSystem}}<i class="icon fas fa-external-link"></i>
+               </a>
+            </DataDisplay>
+            <template v-if="metadataStore.detail.type != 'ExternalMetadata'">
                <DataDisplay :spacer="true"/>
                <DataDisplay label="Date DL Ingest" :value="formatDate(metadataStore.dl.dateDLIngest)"/>
                <DataDisplay label="Date DL Update" :value="formatDate(metadataStore.dl.dateDLUpdate)"/>
-            </dl>
-            <div v-if="canPublish" class="publish">
-               <DPGButton label="Publsh to Virgo" autofocus class="p-button-secondary" @click="publishClicked()"/>
-            </div>
-         </Panel>
-      </div>
-
-   </div>
-   <div class="more-detail" v-if="systemStore.working==false">
-      <Accordion v-if="metadataStore.detail.type=='XmlMetadata'">
-         <AccordionTab header="XML Metadata">
-            <pre class="xml">{{metadataStore.detail.xmlMetadata}}</pre>
-         </AccordionTab>
-      </Accordion>
-   </div>
-   <div class="details">
-      <Panel header="Related Information">
-         <TabView class="related">
-            <TabPanel header="Orders">
-               <RelatedOrders :orders="metadataStore.related.orders" />
-            </TabPanel>
-            <TabPanel header="Units">
-               <RelatedUnits :units="metadataStore.related.units" />
-            </TabPanel>
-         </TabView>
+            </template>
+         </dl>
+         <div v-if="canPublish" class="publish">
+            <DPGButton label="Publsh to Virgo" autofocus class="p-button-secondary" @click="publishClicked()"/>
+         </div>
       </Panel>
    </div>
+   <template v-if="systemStore.working==false">
+      <div class="more-detail">
+         <Accordion v-if="metadataStore.detail.type=='XmlMetadata'">
+            <AccordionTab header="XML Metadata">
+               <pre class="xml">{{metadataStore.detail.xmlMetadata}}</pre>
+            </AccordionTab>
+         </Accordion>
+      </div>
+      <div class="details">
+         <Panel header="Related Information">
+            <TabView class="related">
+               <TabPanel header="Orders">
+                  <RelatedOrders :orders="metadataStore.related.orders" />
+               </TabPanel>
+               <TabPanel header="Units">
+                  <RelatedUnits :units="metadataStore.related.units" />
+               </TabPanel>
+            </TabView>
+         </Panel>
+      </div>
+   </template>
 </template>
 
 <script setup>

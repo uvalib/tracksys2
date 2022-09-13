@@ -31,6 +31,18 @@ export const useMetadataStore = defineStore('metadata', {
          dateDLIngest: null,
          dateDLUpdate: null,
       },
+      archivesSpace: {
+         id: "",
+         title: "",
+         createdBy: "",
+         createDate: null,
+         level: "",
+         URL: "",
+         repo: "",
+         collectionTitle: "",
+         language: "",
+         dates: ""
+      },
       other: {
          parentID: 0,
          isManuscript: false,
@@ -86,6 +98,21 @@ export const useMetadataStore = defineStore('metadata', {
                this.viewerURL = response.data.details.objectURL
                this.virgoURL = response.data.virgoURL
                this.detail.xmlMetadata = response.data.metadata.descMetadata
+            } else  {
+               this.detail.externalSystem = response.data.metadata.externalSystem.name
+               this.detail.externalURL = `${response.data.metadata.externalSystem.publicURL}${response.data.metadata.externalURI}`
+               if (response.data.metadata.externalSystem.name == "ArchivesSpace") {
+                  this.archivesSpace.id = response.data.asDetails.id
+                  this.archivesSpace.title = response.data.asDetails.title
+                  this.archivesSpace.createdBy = response.data.asDetails.created_by
+                  this.archivesSpace.createDate = response.data.asDetails.create_time.split("T")[0]
+                  this.archivesSpace.level = response.data.asDetails.level
+                  this.archivesSpace.URL = response.data.asDetails.url
+                  this.archivesSpace.repo = response.data.asDetails.repo
+                  this.archivesSpace.collectionTitle = response.data.asDetails.collection_title
+                  this.archivesSpace.language = response.data.asDetails.language
+                  this.archivesSpace.dates = response.data.asDetails.dates
+               }
             }
             if (response.data.metadata.supplementalURI) {
                this.detail.supplementalURL = `${response.data.metadata.supplementalSystem.publicURL}/${response.data.metadata.supplementalURI}`
