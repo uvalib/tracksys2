@@ -208,6 +208,7 @@ func (svc *serviceContext) getMetadataRelatedItems(c *gin.Context) {
 		// This is usually the case with image collections where each image has its own descriptive metadata.
 		// In this case, there is no direct link from metadata to unit. Must find it by
 		// going through the master file that this metadata describes
+		log.Printf("INFO: no units directly found for metadata %s; searching master files...", mdID)
 		var mfCnt int64
 		err := svc.DB.Table("master_files").Where("metadata_id=?", mdID).Count(&mfCnt).Error
 		if err != nil {
@@ -215,17 +216,23 @@ func (svc *serviceContext) getMetadataRelatedItems(c *gin.Context) {
 			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
-		if mfCnt == 1 {
-			var mf masterFile
+		log.Printf("INFO: %d master files found that are associated with metadata %s", mfCnt, mdID)
+
+		if mfCnt >= 1 {
+			var mf []masterFile
 			err = svc.DB.Preload("Unit").Preload("Unit.Order").
 				Preload("Unit.Order.Customer").Preload("Unit.Order.Agency").
-				Preload("Unit.IntendedUse").Where("metadata_id=?", mdID).First(&mf).Error
+				Preload("Unit.IntendedUse").Where("metadata_id=?", mdID).
+				Distinct("unit_id").
+				Find(&mf).Error
 			if err != nil {
 				log.Printf("ERROR: unabel to get masterfile unit for metadata %s: %s", mdID, err.Error())
 				c.String(http.StatusInternalServerError, err.Error())
 				return
 			}
-			units = append(units, *mf.Unit)
+			for _, f := range mf {
+				units = append(units, *f.Unit)
+			}
 		}
 	}
 
