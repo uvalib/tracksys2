@@ -84,10 +84,12 @@ type metadata struct {
 	ExternalSystem       *externalSystem    `gorm:"foreignKey:ExternalSystemID" json:"externalSystem"`
 	SupplementalSystemID *uint              `json:"-"`
 	SupplementalSystem   *externalSystem    `gorm:"foreignKey:SupplementalSystemID" json:"supplementalSystem"`
+	SupplementalURI      string             `json:"supplementalURI"`
 	PreservationTierID   uint               `json:"-"`
 	PreservationTier     preservationTier   `gorm:"foreignKey:PreservationTierID" json:"preservationTier"`
 	DPLA                 bool               `gorm:"column:dpla" json:"dpla"`
 	IsManuscript         bool               `json:"isManuscript"`
+	IsPersonalItem       bool               `json:"isPersonalItem"`
 	DateDLIngest         *time.Time         `gorm:"date_dl_ingest" json:"dateDLIngest"`
 	DateDLUpdate         *time.Time         `gorm:"date_dl_update" json:"dateDLUpdate"`
 	CreatedAt            *time.Time         `json:"-"`

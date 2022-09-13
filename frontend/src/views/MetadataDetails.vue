@@ -1,4 +1,5 @@
 <template>
+   <Toast position="top-right" />
    <h2>Metadata {{route.params.id}}</h2>
    <div class="details" v-if="systemStore.working==false">
       <div v-if="metadataStore.thumbURL" class="thumb">
@@ -8,6 +9,7 @@
       </div>
       <Panel header="General Information">
          <dl>
+            <DataDisplay label="Type" :value="metadataStore.detail.type"/>
             <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey">
                <span>{{metadataStore.detail.catalogKey}}</span>
                <a class="virgo" :href="metadataStore.virgoURL" target="_blank">VIRGO<i class="icon fas fa-external-link"></i></a>
@@ -22,6 +24,7 @@
             <DataDisplay label="Location" :value="metadataStore.detail.location"/>
 
             <DataDisplay label="Manuscript/Unpublished Item?" :value="formatBoolean(metadataStore.other.isManuscript)"/>
+            <DataDisplay label="Personal Item?" :value="formatBoolean(metadataStore.other.isPersonalItem)"/>
             <DataDisplay label="OCR Hint" :value="ocrHint"/>
             <DataDisplay label="OCR Language Hint" :value="metadataStore.other.ocrLanguageHint"/>
             <DataDisplay label="Preservation Tier" :value="preservationTier"/>
@@ -37,10 +40,19 @@
                <DataDisplay label="Rights Rationale" :value="metadataStore.dl.useRightRationale"/>
                <DataDisplay label="Creator Death Date" :value="metadataStore.dl.creatorDeathDate"/>
                <DataDisplay label="Availability Policy" :value="availabilityPolicy"/>
-               <DataDisplay label="Collection Facet" :value="metadataStore.dl.collectionFacet"/>
+               <DataDisplay label="Collection ID" :value="metadataStore.dl.collectionFacet"/>
+               <DataDisplay v-if="metadataStore.detail.supplementalURL" label="Supplemental System" :value="metadataStore.detail.supplementalURL">
+                  <a :href="metadataStore.detail.supplementalURL" target="_blank" class="supplemental">
+                     {{metadataStore.detail.supplementalSystem}}<i class="icon fas fa-external-link"></i>
+                  </a>
+               </DataDisplay>
+               <DataDisplay :spacer="true"/>
                <DataDisplay label="Date DL Ingest" :value="formatDate(metadataStore.dl.dateDLIngest)"/>
                <DataDisplay label="Date DL Update" :value="formatDate(metadataStore.dl.dateDLUpdate)"/>
             </dl>
+            <div v-if="canPublish" class="publish">
+               <DPGButton label="Publsh to Virgo" autofocus class="p-button-secondary" @click="publishClicked()"/>
+            </div>
          </Panel>
       </div>
 
@@ -74,6 +86,8 @@ import { useMetadataStore } from '@/stores/metadata'
 import Panel from 'primevue/panel'
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab'
+import Toast from 'primevue/toast'
+import { useToast } from "primevue/usetoast"
 import DataDisplay from '../components/DataDisplay.vue'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
@@ -84,6 +98,24 @@ import RelatedUnits from '../components/related/RelatedUnits.vue'
 const route = useRoute()
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
+const toast = useToast()
+
+const canPublish = computed(() => {
+   if (metadataStore.dl.dateDLIngest) {
+      return true
+   } else {
+      if (metadataStore.detail.type == 'XmlMetadata' || metadataStore.detail.type == 'SirsilMetadata') {
+         let canPub = false
+         metadataStore.related.units.forEach( u => {
+            if (u.inDL)  {
+               canPub = true
+            }
+         })
+         return canPub
+      }
+   }
+   return false
+})
 
 const availabilityPolicy = computed(() => {
    if ( metadataStore.dl.availability ) {
@@ -125,6 +157,11 @@ onBeforeMount(() => {
    metadataStore.getRelatedItems( mdID )
 })
 
+async function publishClicked() {
+   await metadataStore.publish()
+   toast.add({severity:'success', summary: 'Publish Success', detail:'This item has successfully been published to Virgo', life: 3000})
+}
+
 function formatBoolean( flag) {
    if (flag) return "Yes"
    return "No"
@@ -164,13 +201,16 @@ function formatDate( date ) {
    :deep(p-tabview) {
       margin: 0 !important;
    }
-   a.virgo {
+   a.virgo, a.supplemental {
       display: inline-block;
       margin-left: 10px;
       i.icon {
          display: inline-block;
          margin-left: 5px;
       }
+   }
+   a.supplemental {
+      margin-left: 0px;
    }
    .right {
       flex-grow: 1;
@@ -185,6 +225,10 @@ function formatDate( date ) {
    }
    .empty {
       color: #ccc;
+   }
+   .publish {
+      padding: 15px 0 0 0;
+      text-align: right;
    }
 }
 </style>

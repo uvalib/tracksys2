@@ -15,7 +15,9 @@ export const useMetadataStore = defineStore('metadata', {
          year: "",
          publicationPlace: "",
          location: "",
-         xmlMetadata: ""
+         xmlMetadata: "",
+         supplementalURL: "",
+         supplementalSystem: ""
       },
       dl: {
          pid: "",
@@ -32,6 +34,7 @@ export const useMetadataStore = defineStore('metadata', {
       other: {
          parentID: 0,
          isManuscript: false,
+         isPersonalItem: false,
          ocrHint: null,
          ocrLanguageHint: "",
          preservationTier: null,
@@ -47,6 +50,15 @@ export const useMetadataStore = defineStore('metadata', {
 	getters: {
 	},
 	actions: {
+      async publish( ) {
+         const system = useSystemStore()
+         system.working = true
+         return axios.post( `/api/metadata/${this.detail.id}/publish` ).then( () => {
+            this.getDetails(this.detail.id)
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
       getDetails( metadataID ) {
          const system = useSystemStore()
          system.working = true
@@ -75,6 +87,10 @@ export const useMetadataStore = defineStore('metadata', {
                this.virgoURL = response.data.virgoURL
                this.detail.xmlMetadata = response.data.metadata.descMetadata
             }
+            if (response.data.metadata.supplementalURI) {
+               this.detail.supplementalURL = `${response.data.metadata.supplementalSystem.publicURL}/${response.data.metadata.supplementalURI}`
+               this.detail.supplementalSystem = response.data.metadata.supplementalSystem.name
+            }
 
             // DL info
             this.dl.pid = response.data.metadata.pid
@@ -93,6 +109,7 @@ export const useMetadataStore = defineStore('metadata', {
             // admin / other info
             this.other.parentID = response.data.metadata.parentID
             this.other.isManuscript = response.data.metadata.isManuscript
+            this.other.isPersonalItem = response.data.metadata.isPersonalItem
             this.other.ocrHint = response.data.metadata.ocrHint
             this.other.ocrLanguageHint = response.data.metadata.ocrLanguageHint
             this.other.preservationTier = response.data.metadata.preservationTier
