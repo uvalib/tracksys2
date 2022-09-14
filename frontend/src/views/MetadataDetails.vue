@@ -31,7 +31,12 @@
          </dl>
          <dl v-if="metadataStore.detail.externalSystem == 'ArchivesSpace'">
             <DataDisplay label="Type" :value="metadataStore.detail.externalSystem"/>
-            <DataDisplay label="URL" :value="metadataStore.detail.externalURL"/>
+            <DataDisplay label="URL" :value="metadataStore.detail.externalURL">
+               <a class="supplemental" :href="metadataStore.detail.externalURL" target="_blank">
+                  {{metadataStore.detail.externalURL}}
+                  <i class="icon fas fa-external-link"></i>
+               </a>
+            </DataDisplay>
             <DataDisplay label="Repository" :value="metadataStore.archivesSpace.repo"/>
             <DataDisplay label="Collection Title" :value="metadataStore.archivesSpace.collectionTitle"/>
             <DataDisplay label="ID" :value="metadataStore.archivesSpace.id"/>
@@ -41,6 +46,24 @@
             <DataDisplay label="Level" :value="metadataStore.archivesSpace.level"/>
             <DataDisplay label="Created By" :value="metadataStore.archivesSpace.createdBy"/>
             <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
+         </dl>
+         <dl v-if="metadataStore.detail.externalSystem == 'JSTOR Forum'">
+            <DataDisplay label="Type" :value="metadataStore.detail.externalSystem"/>
+            <DataDisplay label="URL" :value="metadataStore.detail.externalURL">
+               <a class="supplemental" :href="metadataStore.detail.externalURL" target="_blank">
+                  {{metadataStore.detail.externalURL}}
+                  <i class="icon fas fa-external-link"></i>
+               </a>
+            </DataDisplay>
+            <DataDisplay label="Collection" :value="metadataStore.jstor.collection"/>
+            <DataDisplay label="Title" :value="metadataStore.jstor.title"/>
+            <DataDisplay label="Description" :value="metadataStore.jstor.desc"/>
+            <DataDisplay label="Creator" :value="metadataStore.jstor.creator"/>
+            <DataDisplay label="Date" :value="metadataStore.jstor.date"/>
+            <DataDisplay label="Width" :value="metadataStore.jstor.width"/>
+            <DataDisplay label="Height" :value="metadataStore.jstor.height"/>
+            <DataDisplay label="Artstor ID" :value="metadataStore.jstor.id"/>
+            <DataDisplay label="Forum ID" :value="metadataStore.jstor.ssid"/>
          </dl>
       </Panel>
       <Panel header="Digital Library Information">
@@ -225,9 +248,6 @@ function formatDate( date ) {
    }
    a.supplemental {
       margin-left: 0px;
-   }
-   .right {
-      flex-grow: 1;
    }
    :deep(div.p-panel) {
       margin: 10px;

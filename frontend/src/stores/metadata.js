@@ -43,6 +43,18 @@ export const useMetadataStore = defineStore('metadata', {
          language: "",
          dates: ""
       },
+      jstor: {
+         id: "",
+         ssid: "",
+         title: "",
+         desc: "",
+         creator: "",
+         date: "",
+         collectionID: "",
+         collection: "",
+         width: 0,
+         height: 0,
+      },
       other: {
          parentID: 0,
          isManuscript: false,
@@ -112,6 +124,8 @@ export const useMetadataStore = defineStore('metadata', {
                   this.archivesSpace.collectionTitle = response.data.asDetails.collection_title
                   this.archivesSpace.language = response.data.asDetails.language
                   this.archivesSpace.dates = response.data.asDetails.dates
+               } else if (response.data.metadata.externalSystem.name == "JSTOR Forum") {
+                  this.jstor = response.data.jstorDetails
                }
             }
             if (response.data.metadata.supplementalURI) {

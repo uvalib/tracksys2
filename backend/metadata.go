@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -123,6 +124,19 @@ type asMetadata struct {
 	Dates           string `json:"dates"`
 }
 
+type jstorMetadata struct {
+	ID           string `json:"id"`
+	SSID         string `json:"ssid"`
+	Title        string `json:"title"`
+	Description  string `json:"desc"`
+	Creator      string `json:"creator"`
+	Date         string `json:"date"`
+	CollectionID string `json:"collectionID"`
+	Collection   string `json:"collection"`
+	Width        int    `json:"width"`
+	Height       int    `json:"height"`
+}
+
 type uvaMAP struct {
 	Doc struct {
 		Field []struct {
@@ -152,6 +166,7 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 		Metadata     metadata          `json:"metadata"`
 		Extended     *internalMetadata `json:"details"`
 		ArchiveSpace *asMetadata       `json:"asDetails"`
+		JSTOR        *jstorMetadata    `json:"jstorDetails"`
 		VirgoURL     string            `json:"virgoURL"`
 		Error        string            `json:"error"`
 	}
@@ -180,6 +195,29 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 					log.Printf("ERROR: unable to parse AS response for %s: %s", md.PID, err.Error())
 				} else {
 					out.ArchiveSpace = &asData
+				}
+			}
+		} else if md.ExternalSystem.Name == "JSTOR Forum" {
+			log.Printf("INFO: get external JSTOR Forum metadata for %s", md.PID)
+			var mfInfo struct {
+				Filename string
+			}
+			err := svc.DB.Table("master_files").Where("metadata_id=?", md.ID).Select("filename").First(&mfInfo).Error
+			if err != nil {
+				log.Printf("ERROR: unable to get master file associated with jstor metadata %s: %s", md.PID, err.Error())
+			} else {
+				tgtFilename := strings.TrimSuffix(mfInfo.Filename, filepath.Ext(mfInfo.Filename))
+				raw, getErr := svc.getRequest(fmt.Sprintf("%s/jstor/lookup?filename=%s", svc.ExternalSystems.Jobs, tgtFilename))
+				if getErr != nil {
+					log.Printf("ERROR: unable to get jstor metadata for %s: %s", md.PID, getErr.Message)
+				} else {
+					var jsData jstorMetadata
+					err := json.Unmarshal(raw, &jsData)
+					if err != nil {
+						log.Printf("ERROR: unable to parse jstor response for %s: %s", md.PID, err.Error())
+					} else {
+						out.JSTOR = &jsData
+					}
 				}
 			}
 		}
