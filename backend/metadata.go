@@ -137,6 +137,39 @@ type jstorMetadata struct {
 	Height       int    `json:"height"`
 }
 
+type apolloMetadata struct {
+	PID                  string `json:"pid"`
+	Type                 string `json:"type"`
+	Title                string `json:"title"`
+	CollectionPID        string `json:"collectionPID"`
+	CollectionTitle      string `json:"collectionTitle"`
+	CollectionBarcode    string `json:"collectionBarcode"`
+	CollectionCatalogKey string `json:"collectionCatalogKey"`
+	ItemURL              string `json:"itemURL"`
+	CollectionURL        string `json:"collectionURL"`
+}
+
+type apolloNode struct {
+	PID  string `json:"pid"`
+	Type struct {
+		Name string `json:"name"`
+	} `json:"type"`
+	Value string `json:"value"`
+}
+
+type apolloContainer struct {
+	PID  string `json:"pid"`
+	Type struct {
+		Name string `json:"name"`
+	} `json:"type"`
+	Children []apolloNode `json:"children"`
+}
+
+type apolloResp struct {
+	Collection apolloContainer `json:"collection"`
+	Item       apolloContainer `json:"item"`
+}
+
 type uvaMAP struct {
 	Doc struct {
 		Field []struct {
@@ -167,6 +200,7 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 		Extended     *internalMetadata `json:"details"`
 		ArchiveSpace *asMetadata       `json:"asDetails"`
 		JSTOR        *jstorMetadata    `json:"jstorDetails"`
+		Apollo       *apolloMetadata   `json:"apolloDetails"`
 		VirgoURL     string            `json:"virgoURL"`
 		Error        string            `json:"error"`
 	}
@@ -218,6 +252,37 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 					} else {
 						out.JSTOR = &jsData
 					}
+				}
+			}
+		} else if md.ExternalSystem.Name == "Apollo" {
+			log.Printf("INFO: get external apollo metadata for %s", md.PID)
+			raw, getErr := svc.getRequest(fmt.Sprintf("%s%s", svc.ExternalSystems.Apollo, md.ExternalURI))
+			if getErr != nil {
+				log.Printf("ERROR: unable to get apollo metadata for %s: %s", md.PID, getErr.Message)
+			} else {
+				var apResp apolloResp
+				err := json.Unmarshal(raw, &apResp)
+				if err != nil {
+					log.Printf("ERROR: unable to parse apollo response for %s: %s", md.PID, err.Error())
+				} else {
+					apollo := apolloMetadata{CollectionPID: apResp.Collection.PID, PID: apResp.Item.PID, Type: apResp.Item.Type.Name}
+					apollo.ItemURL = fmt.Sprintf("%s/collections/%s?item=%s", svc.ExternalSystems.Apollo, apResp.Collection.PID, apResp.Item.PID)
+					apollo.CollectionURL = fmt.Sprintf("%s/collections/%s", svc.ExternalSystems.Apollo, apResp.Collection.PID)
+					for _, c := range apResp.Collection.Children {
+						if c.Type.Name == "title" {
+							apollo.CollectionTitle = c.Value
+						} else if c.Type.Name == "barcode" {
+							apollo.CollectionBarcode = c.Value
+						} else if c.Type.Name == "catalogKey" {
+							apollo.CollectionCatalogKey = c.Value
+						}
+					}
+					for _, c := range apResp.Item.Children {
+						if c.Type.Name == "title" {
+							apollo.Title = c.Value
+						}
+					}
+					out.Apollo = &apollo
 				}
 			}
 		}

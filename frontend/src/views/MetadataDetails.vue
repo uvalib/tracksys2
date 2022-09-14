@@ -23,8 +23,8 @@
             <DataDisplay label="Place of Publication" :value="metadataStore.detail.publicationPlace"/>
             <DataDisplay label="Location" :value="metadataStore.detail.location"/>
 
-            <DataDisplay label="Manuscript/Unpublished Item?" :value="formatBoolean(metadataStore.other.isManuscript)"/>
-            <DataDisplay label="Personal Item?" :value="formatBoolean(metadataStore.other.isPersonalItem)"/>
+            <DataDisplay label="Manuscript/Unpublished Item" :value="formatBoolean(metadataStore.other.isManuscript)"/>
+            <DataDisplay label="Personal Item" :value="formatBoolean(metadataStore.other.isPersonalItem)"/>
             <DataDisplay label="OCR Hint" :value="ocrHint"/>
             <DataDisplay label="OCR Language Hint" :value="metadataStore.other.ocrLanguageHint"/>
             <DataDisplay label="Preservation Tier" :value="preservationTier"/>
@@ -65,11 +65,32 @@
             <DataDisplay label="Artstor ID" :value="metadataStore.jstor.id"/>
             <DataDisplay label="Forum ID" :value="metadataStore.jstor.ssid"/>
          </dl>
+         <dl v-if="metadataStore.detail.externalSystem == 'Apollo'">
+            <DataDisplay label="Type" :value="metadataStore.detail.externalSystem"/>
+            <DataDisplay label="URL" :value="metadataStore.apollo.itemURL">
+               <a class="supplemental" :href="metadataStore.apollo.itemURL" target="_blank">
+                  {{metadataStore.apollo.itemURL}}
+                  <i class="icon fas fa-external-link"></i>
+               </a>
+            </DataDisplay>
+            <DataDisplay label="Collection PID" :value="metadataStore.apollo.collectionPID">
+               <a class="supplemental" :href="metadataStore.apollo.collectionURL" target="_blank">
+                  {{metadataStore.apollo.collectionPID}}
+                  <i class="icon fas fa-external-link"></i>
+               </a>
+            </DataDisplay>
+            <DataDisplay label="Collection Title" :value="metadataStore.apollo.collectionTitle"/>
+            <DataDisplay label="Collection Barcode" :value="metadataStore.apollo.collectionBarcode"/>
+            <DataDisplay label="Collection Catalog Key" :value="metadataStore.apollo.collectionCatalogKey"/>
+            <DataDisplay label="Item PID" :value="metadataStore.apollo.pid"/>
+            <DataDisplay label="Item Type" :value="metadataStore.apollo.type"/>
+            <DataDisplay label="Item Title" :value="metadataStore.apollo.title"/>
+         </dl>
       </Panel>
       <Panel header="Digital Library Information">
          <dl>
             <DataDisplay label="PID" :value="metadataStore.dl.pid"/>
-            <DataDisplay label="In Digital Library?" :value="formatBoolean(metadataStore.dl.inDL)"/>
+            <DataDisplay label="In Digital Library" :value="formatBoolean(metadataStore.dl.inDL)"/>
             <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.dl.inDPLA)"/>
             <DataDisplay label="Right Statement" :value="useRight"/>
             <DataDisplay label="Rights Rationale" :value="metadataStore.dl.useRightRationale"/>

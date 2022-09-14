@@ -1,6 +1,6 @@
 <template>
    <dt v-if="props.spacer" class="spacer"/>
-   <dt v-else>{{props.label}}</dt>
+   <dt v-else>{{props.label}}:</dt>
    <dd v-if="props.spacer"></dd>
    <template v-else>
       <dd v-if="props.value">

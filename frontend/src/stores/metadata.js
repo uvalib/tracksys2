@@ -55,6 +55,17 @@ export const useMetadataStore = defineStore('metadata', {
          width: 0,
          height: 0,
       },
+      apollo: {
+         pid: "",
+         type: "",
+         title: "",
+         collectionPID: "",
+         collectionTitle: "",
+         collectionBarcode: "",
+         collectionCatalogKey: "",
+         itemURL: "",
+         collectionURL: "",
+      },
       other: {
          parentID: 0,
          isManuscript: false,
@@ -126,6 +137,8 @@ export const useMetadataStore = defineStore('metadata', {
                   this.archivesSpace.dates = response.data.asDetails.dates
                } else if (response.data.metadata.externalSystem.name == "JSTOR Forum") {
                   this.jstor = response.data.jstorDetails
+               } else if (response.data.metadata.externalSystem.name == "Apollo") {
+                  this.apollo = response.data.apolloDetails
                }
             }
             if (response.data.metadata.supplementalURI) {
