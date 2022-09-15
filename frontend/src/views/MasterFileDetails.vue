@@ -1,6 +1,11 @@
 <template>
    <h2>Master File {{route.params.id}}</h2>
    <div class="details" v-if="systemStore.working==false">
+      <div class="thumb">
+         <a :href="masterFiles.viewerURL" target="_blank">
+            <img :src="masterFiles.thumbURL" />
+         </a>
+      </div>
       <div class="left">
          <Panel header="General Information">
             <dl>
@@ -16,11 +21,12 @@
          </Panel>
          <Panel header="Related Information">
             <dl>
-               <DataDisplay label="Metadata" :value="masterFiles.details.metadata.id">
+               <DataDisplay v-if="masterFiles.details.metadata" label="Metadata" :value="masterFiles.details.metadata.id">
                   <router-link :to="`/metadata/${masterFiles.details.metadata.id}`">
                      {{masterFiles.details.metadata.pid}}: {{masterFiles.details.metadata.title}}
                   </router-link>
                </DataDisplay>
+               <DataDisplay v-else label="Metadata" value="" />
                <DataDisplay label="Unit ID" :value="masterFiles.details.unitID">
                   <router-link :to="`/units/${masterFiles.details.unitID}`">{{masterFiles.details.unitID}}</router-link>
                </DataDisplay>
@@ -59,11 +65,6 @@
             <DataDisplay label="Software" :value="masterFiles.details.techMetadata.software" />
          </dl>
       </Panel>
-      <div class="thumb">
-         <a :href="masterFiles.viewerURL" target="_blank">
-            <img :src="masterFiles.thumbURL" />
-         </a>
-      </div>
    </div>
    <div class="details" v-if="masterFiles.details.transcription">
       <Panel header="Transcription">
@@ -117,7 +118,10 @@ function formatDate( date ) {
    flex-flow: row wrap;
    justify-content: flex-start;
    .left {
-      flex-grow: 1;
+      display: flex;
+      flex-flow: column;
+      justify-content: flex-start;
+      width: 50%;
    }
    :deep(div.p-panel) {
       margin: 10px;

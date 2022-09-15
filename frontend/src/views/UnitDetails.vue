@@ -21,9 +21,16 @@
       </Panel>
       <Panel header="Digitization Information">
          <dl>
-            <DataDisplay label="Intended Use" :value="detail.intendedUse.name"/>
-            <DataDisplay label="Deliverable Format" :value="detail.intendedUse.deliverableFormat"/>
-            <DataDisplay label="Deliverable Resolution" :value="detail.intendedUse.deliverableResolution"/>
+            <template v-if="detail.intendedUse">
+               <DataDisplay label="Intended Use" :value="detail.intendedUse.name"/>
+               <DataDisplay label="Deliverable Format" :value="detail.intendedUse.deliverableFormat"/>
+               <DataDisplay label="Deliverable Resolution" :value="detail.intendedUse.deliverableResolution"/>
+            </template>
+            <template v-else>
+               <DataDisplay label="Intended Use" value=""/>
+               <DataDisplay label="Deliverable Format" value=""/>
+               <DataDisplay label="Deliverable Resolution" value=""/>
+            </template>
             <DataDisplay label="OCR Master Files" :value="detail.ocrMasterFiles.toString()">
                <span :class="`flag ${detail.ocrMasterFiles.toString()}`">{{displayFlag(detail.ocrMasterFiles)}}</span>
             </DataDisplay>
@@ -82,14 +89,39 @@
          </div>
       </Panel>
    </div>
-   <div class="details" v-if="systemStore.working==false">
+   <div class="details" v-if="systemStore.working==false && unitsStore.masterFiles.length > 0">
       <Panel header="Master Files">
+         <DataTable :value="unitsStore.masterFiles" ref="unitMasterFilesTable" dataKey="id"
+            showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
+            :lazy="false" :paginator="unitsStore.masterFiles.length > 15" :rows="15" :rowsPerPageOptions="[15,30,50,100]"
+            paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
+            currentPageReportTemplate="{first} - {last} of {totalRecords}"
+            v-model:selection="selectedMasterFiles" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
+         >
+            <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
+            <Column field="pid" header="PID"/>
+            <Column field="filename" header="File Name"/>
+            <Column field="title" header="Title"/>
+            <Column field="description" header="Description"/>
+            <Column field="thumbnailURL" header="Thumb" class="thumb">
+               <template #body="slotProps">
+                  <a :href="slotProps.data.viewerURL" target="_blank">
+                     <img :src="slotProps.data.thumbnailURL" />
+                  </a>
+               </template>
+            </Column>
+            <Column header="" class="row-acts nowrap">
+               <template #body="slotProps">
+                  <router-link :to="`/masterfiles/${slotProps.data.id}`">Details</router-link>
+               </template>
+            </Column>
+         </DataTable>
       </Panel>
    </div>
 </template>
 
 <script setup>
-import { onBeforeMount } from 'vue'
+import { onBeforeMount, ref } from 'vue'
 import { useRoute, onBeforeRouteUpdate } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useUnitsStore } from '@/stores/units'
@@ -106,14 +138,19 @@ const unitsStore = useUnitsStore()
 
 const { detail } = storeToRefs(unitsStore)
 
+const selectedMasterFiles = ref([])
+const selectAll = ref(false)
+
 onBeforeRouteUpdate(async (to) => {
    let uID = to.params.id
    unitsStore.getDetails( uID )
+   unitsStore.getMasterFiles(uID)
 })
 
 onBeforeMount(() => {
    let uID = route.params.id
    unitsStore.getDetails( uID )
+   unitsStore.getMasterFiles(uID)
 })
 
 function downloadAttachment(id) {
@@ -126,6 +163,22 @@ function deleteAttachment(id) {
 
 function addAttachmentClicked() {
    alert("not yet implemenetd")
+}
+
+function onRowSelect() {
+   selectAll.value = selectedMasterFiles.value < unitsStore.masterFiles.length
+}
+function onRowUnselect() {
+   selectAll.value  = false
+}
+function onSelectAllChange(event) {
+   selectAll.value = event.checked
+   if (selectAll.value) {
+      selectedMasterFiles.value = unitsStore.masterFiles
+   }
+   else {
+      selectedMasterFiles.value = []
+   }
 }
 
 function displayStatus( id) {
@@ -156,6 +209,10 @@ function formatDate( dateStr ) {
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
+   :deep(td.thumb) {
+      width: 160px !important;
+      text-align: center !important;
+   }
    div.p-panel.p-component.small {
       flex: 25%;
    }

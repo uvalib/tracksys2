@@ -49,6 +49,7 @@ func main() {
 		api.GET("/jobs/:id", svc.getJobDetails)
 
 		api.GET("/units/:id", svc.getUnit)
+		api.GET("/units/:id/masterfiles", svc.getUnitMasterfiles)
 
 		api.GET("/search", svc.searchRequest)
 

@@ -268,7 +268,7 @@ function formatDate( date ) {
    }
    :deep(div.p-panel) {
       margin: 10px;
-      flex: 45%;
+      flex: 40%;
       text-align: left;
    }
    .thumb {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -53,7 +54,7 @@ type unit struct {
 
 func (svc *serviceContext) getUnit(c *gin.Context) {
 	unitID := c.Param("id")
-	log.Printf("INFO: get metadata %s details", unitID)
+	log.Printf("INFO: get unit %s details", unitID)
 	var unitDetail unit
 	err := svc.DB.Preload("IntendedUse").Preload("Attachments").Preload("Metadata").Find(&unitDetail, unitID).Error
 	if err != nil {
@@ -73,4 +74,31 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, unitDetail)
+}
+
+func (svc *serviceContext) getUnitMasterfiles(c *gin.Context) {
+	unitID := c.Param("id")
+	log.Printf("INFO: get unit %s masterfiles", unitID)
+
+	var masterFiles []*masterFile
+	err := svc.DB.Where("unit_id=?", unitID).Preload("Metadata").Order("filename asc").Find(&masterFiles).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get materfiles for unit %s: %s", unitID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	for idx, mf := range masterFiles {
+		mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
+		if mf.MetadataID != nil {
+			mf.ViewerURL = fmt.Sprintf("%s/view/%s?unit=%s", svc.ExternalSystems.Curio, mf.Metadata.PID, unitID)
+			if idx > 0 {
+				mf.ViewerURL += fmt.Sprintf("&page=%d", (idx + 1))
+			}
+		} else {
+			mf.ViewerURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
+		}
+		//
+	}
+	c.JSON(http.StatusOK, masterFiles)
 }

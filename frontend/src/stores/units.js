@@ -20,6 +20,7 @@ export const useUnitsStore = defineStore('units', {
          datePatronDeliverablesReady: "",
          dateDLDeliverablesReady: ""
       },
+      masterFiles: []
    }),
 	getters: {
 	},
@@ -35,12 +36,11 @@ export const useUnitsStore = defineStore('units', {
          })
       },
 
-      getRelatedItems( unitID ) {
+      getMasterFiles( unitID ) {
          const system = useSystemStore()
-         this.related.units = []
-         this.related.orders = []
-         axios.get( `/api/units/${unitID}/related` ).then(response => {
-               console.log(response.data)
+         this.masterFiles = []
+         axios.get( `/api/units/${unitID}/masterfiles` ).then(response => {
+            this.masterFiles = response.data
          }).catch( e => {
             system.setError(e)
          })
