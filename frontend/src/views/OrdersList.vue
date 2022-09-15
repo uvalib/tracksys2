@@ -97,8 +97,6 @@ onBeforeMount( () => {
    }
 })
 
-
-
 function displayStatus( id) {
    if (id == "await_fee") {
       return "Await Fee"
@@ -177,33 +175,9 @@ onMounted(() => {
       .p-datatable {
          font-size: 0.85em;
          span.status {
-            border-radius: 5px;
-            color: white;
-            padding: 2px 15px 4px 15px;
-            box-sizing: border-box;
             width: 100%;
-            display:inline-block;
-            text-align: center;
-            font-weight: bold;
          }
-         span.status.await_fee {
-            background: var(--uvalib-grey-dark);
-         }
-         span.status.completed {
-            background: var( --uvalib-brand-blue-light);
-         }
-         span.status.canceled {
-            background: var(--uvalib-red-darker);
-         }
-         span.status.deferred {
-            background: var(--uvalib-blue-alt-dark);
-         }
-         span.status.approved {
-            background: var(--uvalib-green-dark);
-         }
-         span.status.requested {
-            background: var( --uvalib-brand-orange);
-         }
+         span.sta
          :deep(td.nowrap) {
             white-space: nowrap;
          }

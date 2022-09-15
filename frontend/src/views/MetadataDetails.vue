@@ -262,17 +262,13 @@ function formatDate( date ) {
    a.virgo, a.supplemental {
       display: inline-block;
       margin-left: 10px;
-      i.icon {
-         display: inline-block;
-         margin-left: 5px;
-      }
    }
    a.supplemental {
       margin-left: 0px;
    }
    :deep(div.p-panel) {
       margin: 10px;
-      flex-grow: 1;
+      flex: 45%;
       text-align: left;
    }
    .thumb {
