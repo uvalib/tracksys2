@@ -4,8 +4,29 @@
       <Panel header="General Information">
          <dl>
             <DataDisplay label="Status" :value="detail.status">
-               <span :class="`status ${detail.status}`">{{displayStatus(detail.status)}}</span>
+               <div class="status">
+                  <span :class="`status ${detail.status}`">{{displayStatus(detail.status)}}</span>
+                  <DPGButton icon="pi pi-info-circle" class="p-button-rounded p-button-text"
+                     @click="toggleEvents" aria-haspopup="true" aria-controls="events-panel" />
+               </div>
             </DataDisplay>
+            <OverlayPanel ref="events" id="events-panel" :showCloseIcon="true">
+               <DataTable :value="ordersStore.events" ref="eventsTable" dataKey="id" :lazy="false"
+                  stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+               >
+                  <Column header="Date">
+                     <template #body="slotProps">
+                        {{formatDateTime(slotProps.data.createdAt)}}
+                     </template>
+                  </Column>
+                  <Column header="User">
+                     <template #body="slotProps">
+                        {{slotProps.data.staffMember.firstName}} {{slotProps.data.staffMember.lastName}}
+                     </template>
+                  </Column>
+                  <Column field="details" header="Details" />
+               </DataTable>
+            </OverlayPanel>
             <DataDisplay v-if="detail.status=='completed'" label="Date Completed" :value="formatDateTime(detail.dateCompleted)"/>
             <DataDisplay label="Customer" :value="`${detail.customer.lastName}, ${detail.customer.firstName}`"/>
             <DataDisplay label="Agency" :value="detail.agency.name"/>
@@ -40,7 +61,10 @@
 </template>
 
 <script setup>
-   import Dialog from 'primevue/dialog'
+import Dialog from 'primevue/dialog'
+import OverlayPanel from 'primevue/overlaypanel'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
 import { onBeforeMount, ref } from 'vue'
 import { useRoute, onBeforeRouteUpdate } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
@@ -57,6 +81,11 @@ const ordersStore = useOrdersStore()
 const { detail } = storeToRefs(ordersStore)
 
 const showEmail = ref(false)
+const events = ref(null)
+
+function toggleEvents(e) {
+   events.value.toggle(e)
+}
 
 onBeforeRouteUpdate(async (to) => {
    let orderID = to.params.id
@@ -114,6 +143,14 @@ function emailClosed() {
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
+
+   div.status {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-start;
+      align-items: center;
+      margin-top: -5px;
+   }
 
    :deep(div.p-panel) {
       margin: 10px;

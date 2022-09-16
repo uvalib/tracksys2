@@ -37,7 +37,8 @@ export const useOrdersStore = defineStore('orders', {
          dateFinalizationBegun: "",
          dateFeeEstimateSent: "",
          dateCompleted: "",
-      }
+      },
+      events: [],
 	}),
 	getters: {
 	},
@@ -47,6 +48,7 @@ export const useOrdersStore = defineStore('orders', {
          system.working = true
          axios.get( `/api/orders/${orderID}` ).then(response => {
             this.detail = response.data.order
+            this.events = response.data.events
             system.working = false
          }).catch( e => {
             system.setError(e)

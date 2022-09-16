@@ -36,6 +36,16 @@ type orderItem struct {
 	Converted     bool         `json:"converted"`
 }
 
+type auditEvent struct {
+	ID            int64     `json:"id"`
+	StaffMemberID uint      `json:"-"`
+	StaffMember   customer  `gorm:"foreignKey:StaffMemberID" json:"staffMember"`
+	AuditableID   int64     `json:"-"`
+	AuditableType string    `json:"-"`
+	Details       string    `json:"details"`
+	CreatedAt     time.Time `json:"createdAt"`
+}
+
 type order struct {
 	ID                             int64      `json:"id"`
 	OrderStatus                    string     `json:"status"`
@@ -77,19 +87,24 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 	}
 
 	type oResp struct {
-		Order order       `json:"order"`
-		Units []unit      `json:"units"`
-		Items []orderItem `json:"items"`
+		Order  order        `json:"order"`
+		Units  []unit       `json:"units"`
+		Items  []orderItem  `json:"items"`
+		Events []auditEvent `json:"events"`
 	}
 	out := oResp{Order: oDetail}
 
-	err = svc.DB.Where("order_id=?", oID).Preload("intendedUse").Find(&out.Units).Error
+	err = svc.DB.Where("order_id=?", oID).Preload("IntendedUse").Find(&out.Units).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get units for order %s: %s", oID, err.Error())
 	}
-	err = svc.DB.Where("order_id=?", oID).Preload("intendedUse").Find(&out.Items).Error
+	err = svc.DB.Where("order_id=?", oID).Preload("IntendedUse").Find(&out.Items).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get items for order %s: %s", oID, err.Error())
+	}
+	err = svc.DB.Where("auditable_type=?", "Order").Where("auditable_id=?", oDetail.ID).Preload("StaffMember").Find(&out.Events).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get audit events for order %s: %s", oID, err.Error())
 	}
 
 	c.JSON(http.StatusOK, out)
