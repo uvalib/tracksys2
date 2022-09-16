@@ -43,6 +43,7 @@ func main() {
 		api.GET("/metadata/:id/related", svc.getMetadataRelatedItems)
 
 		api.GET("/orders", svc.getOrders)
+		api.GET("/orders/:id", svc.getOrderDetails)
 
 		api.GET("/jobs", svc.getJobStatuses)
 		api.DELETE("/jobs", svc.deleteJobStatuses)

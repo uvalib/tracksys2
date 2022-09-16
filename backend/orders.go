@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,37 +12,87 @@ import (
 )
 
 type invoice struct {
-	ID          int64
-	OrderID     int64
-	DateInvoice time.Time
-	DateFeePaid *time.Time
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          int64      `json:"id"`
+	OrderID     int64      `json:"-"`
+	DateInvoice time.Time  `json:"invoiceDate"`
+	DateFeePaid *time.Time `json:"dateFeePaid"`
+	CreatedAt   time.Time  `json:"createdAt"`
+	UpdatedAt   time.Time  `json:"-"`
+}
+
+type orderItem struct {
+	ID            int64        `json:"id"`
+	OrderID       int64        `json:"-"`
+	IntendedUseID *int64       `json:"-"`
+	IntendedUse   *intendedUse `gorm:"foreignKey:IntendedUseID" json:"intendedUse"`
+	Title         string       `json:"title"`
+	Description   string       `json:"description"`
+	Pages         string       `json:"pages"`
+	CallNumber    string       `json:"callNumber"`
+	Author        string       `json:"author"`
+	Year          string       `json:"year"`
+	Location      string       `json:"location"`
+	SourceURL     string       `gorm:"column:source_url" json:"sourceURL"`
+	Converted     bool         `json:"converted"`
 }
 
 type order struct {
-	ID                             int64           `json:"id"`
-	OrderStatus                    string          `json:"status"`
-	OrderTitle                     string          `json:"title"`
-	DateDue                        time.Time       `json:"dateDue"`
-	CustomerID                     uint            `json:"-"`
-	Customer                       customer        `gorm:"foreignKey:CustomerID" json:"customer"`
-	AgencyID                       uint            `json:"-"`
-	Agency                         agency          `gorm:"foreignKey:AgencyID" json:"agency"`
-	Fee                            sql.NullFloat64 `json:"fee"`
-	Invoices                       []invoice       `gorm:"foreignKey:OrderID"  json:"invoices"`
-	UnitCount                      int64           `gorm:"unitCount" json:"unitCount"`
-	MasterFileCount                int64           `gorm:"masterFileCount" json:"masterFileCount"`
-	Email                          string          `json:"email"`
-	StaffNotes                     string          `json:"staffNotes"`
-	DateRequestSubmitted           time.Time       `json:"dateSubmitted"`
-	DateOrderApproved              *time.Time      `json:"dateOrderApproved"`
-	DateCustomerNotified           *time.Time      `json:"dateCustomerNotified"`
-	DatePatronDeliverablesComplete *time.Time      `json:"datePatronDeliverablesComplete"`
-	DateArchivingComplete          *time.Time      `json:"dateArchivingComplete"`
-	DateFinalizationBegun          *time.Time      `json:"dateFinalizationBegun"`
-	DateFeeEstimateSentToCustomer  *time.Time      `json:"dateFeeEstimateSent"`
-	UpdatedAt                      time.Time       `json:"-"`
+	ID                             int64      `json:"id"`
+	OrderStatus                    string     `json:"status"`
+	OrderTitle                     string     `json:"title"`
+	DateDue                        time.Time  `json:"dateDue"`
+	CustomerID                     uint       `json:"-"`
+	Customer                       customer   `gorm:"foreignKey:CustomerID" json:"customer"`
+	AgencyID                       uint       `json:"-"`
+	Agency                         agency     `gorm:"foreignKey:AgencyID" json:"agency"`
+	Fee                            *float64   `json:"fee,omitempty"`
+	Invoices                       []invoice  `gorm:"foreignKey:OrderID"  json:"invoices"`
+	UnitCount                      int64      `gorm:"unitCount" json:"unitCount"`
+	MasterFileCount                int64      `gorm:"masterFileCount" json:"masterFileCount"`
+	Email                          string     `json:"email"`
+	StaffNotes                     string     `json:"staffNotes"`
+	SpecialInstructions            string     `json:"specialInstructions"`
+	DateRequestSubmitted           time.Time  `json:"dateSubmitted"`
+	DateOrderApproved              *time.Time `json:"dateApproved"`
+	DateDeferred                   *time.Time `json:"dateDeferred"`
+	DateCanceled                   *time.Time `json:"dateCanceled"`
+	DateCustomerNotified           *time.Time `json:"dateCustomerNotified"`
+	DatePatronDeliverablesComplete *time.Time `json:"datePatronDeliverablesComplete"`
+	DateArchivingComplete          *time.Time `json:"dateArchivingComplete"`
+	DateFinalizationBegun          *time.Time `json:"dateFinalizationBegun"`
+	DateFeeEstimateSentToCustomer  *time.Time `json:"dateFeeEstimateSent"`
+	DateCompleted                  *time.Time `json:"dateCompleted"`
+	UpdatedAt                      time.Time  `json:"-"`
+}
+
+func (svc *serviceContext) getOrderDetails(c *gin.Context) {
+	oID := c.Param("id")
+	log.Printf("INFO: get order %s details", oID)
+	var oDetail order
+	err := svc.DB.Preload("Agency").Preload("Customer").Preload("Invoices").Find(&oDetail, oID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve order %s: %s", oID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	type oResp struct {
+		Order order       `json:"order"`
+		Units []unit      `json:"units"`
+		Items []orderItem `json:"items"`
+	}
+	out := oResp{Order: oDetail}
+
+	err = svc.DB.Where("order_id=?", oID).Preload("intendedUse").Find(&out.Units).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get units for order %s: %s", oID, err.Error())
+	}
+	err = svc.DB.Where("order_id=?", oID).Preload("intendedUse").Find(&out.Items).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get items for order %s: %s", oID, err.Error())
+	}
+
+	c.JSON(http.StatusOK, out)
 }
 
 func (svc *serviceContext) getOrders(c *gin.Context) {

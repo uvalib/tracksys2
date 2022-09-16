@@ -14,11 +14,44 @@ export const useOrdersStore = defineStore('orders', {
          sortField: "id",
          sortOrder: "desc",
          query: "",
+      },
+      detail: {
+         id: 0,
+         status: "",
+         title: "",
+         dateDue: "",
+         customer: null,
+         agency: null,
+         fee: null,
+         invoices: [],
+         email: "",
+         staffNotes: "",
+         specialInstructions: "",
+         dateSubitted: "",
+         dateApproved: "",
+         dateDeferred: "",
+         dateCanceled: "",
+         dateCustomerNotified: "",
+         datePatronDeliverablesComplete: "",
+         dateArchivingComplete: "",
+         dateFinalizationBegun: "",
+         dateFeeEstimateSent: "",
+         dateCompleted: "",
       }
 	}),
 	getters: {
 	},
 	actions: {
+      getOrderDetails(orderID) {
+         const system = useSystemStore()
+         system.working = true
+         axios.get( `/api/orders/${orderID}` ).then(response => {
+            this.detail = response.data.order
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
       getOrders() {
          const system = useSystemStore()
          system.working = true
