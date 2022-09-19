@@ -36,7 +36,7 @@
                <DataDisplay label="Staff Notes" :value="detail.staffNotes"/>
             </dl>
          </Panel>
-         <Panel header="Messages">
+         <Panel header="Messages" v-if="hasMessages">
             <div class="msg" v-if="detail.status== 'requested'">Order is not yet approved.</div>
             <div class="msg" v-if="detail.status== 'deferred'">Order has been deferred.</div>
             <div class="msg" v-if="detail.status== 'await_fee'">Order is awaiting customer fee payment.</div>
@@ -111,7 +111,7 @@ import Dialog from 'primevue/dialog'
 import OverlayPanel from 'primevue/overlaypanel'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import { onBeforeMount, ref } from 'vue'
+import { onBeforeMount, ref, computed } from 'vue'
 import { useRoute, onBeforeRouteUpdate } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useOrdersStore } from '@/stores/orders'
@@ -131,6 +131,13 @@ const { detail } = storeToRefs(ordersStore)
 
 const showEmail = ref(false)
 const events = ref(null)
+
+const hasMessages = computed(() => {
+   console.log(ordersStore.detail.customer)
+   if ( ordersStore.detail.status== 'requested' || ordersStore.detail.status == 'deferred' || ordersStore.detail.status== 'await_fee') return true
+   if ( ordersStore.detail.customer.academicStatusID==1 && !ordersStore.detail.fee) return true
+   return false
+})
 
 function toggleEvents(e) {
    events.value.toggle(e)
