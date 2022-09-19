@@ -23,7 +23,7 @@ export const useOrdersStore = defineStore('orders', {
          customer: null,
          agency: null,
          fee: null,
-         invoices: [],
+         invoice: null,
          email: "",
          staffNotes: "",
          specialInstructions: "",
@@ -39,6 +39,8 @@ export const useOrdersStore = defineStore('orders', {
          dateCompleted: "",
       },
       events: [],
+      showInvoice: false,
+      editInvoice: false
 	}),
 	getters: {
 	},

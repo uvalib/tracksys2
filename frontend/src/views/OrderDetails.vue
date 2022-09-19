@@ -48,7 +48,9 @@
             <DataDisplay label="Date Customer Notified" :value="formatDateTime(detail.dateCustomerNotified)"/>
          </dl>
          <div class="actions">
-            <DPGButton v-if="detail.email" label="View Customer Email" class="p-button-secondary" @click="viewEmailClicked()"/>
+            <DPGButton v-if="detail.email" label="View Customer Email" class="p-button-secondary" @click="viewEmailClicked()" :style="{marginLeft:0}"/>
+            <DPGButton v-if="detail.invoice" label="View Invoice" class="p-button-secondary" @click="viewInvoiceClicked()"/>
+            <DPGButton v-else-if="detail.fee" label="Create Invoice" class="p-button-secondary" @click="createInvoiceClicked()"/>
          </div>
       </Panel>
    </div>
@@ -58,6 +60,7 @@
          <DPGButton label="OK" autofocus class="p-button-secondary" @click="emailClosed()"/>
       </template>
    </Dialog>
+   <InvoiceDialog />
 </template>
 
 <script setup>
@@ -73,6 +76,7 @@ import Panel from 'primevue/panel'
 import DataDisplay from '../components/DataDisplay.vue'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
+import InvoiceDialog from '@/components/order/InvoiceDialog.vue'
 
 const route = useRoute()
 const systemStore = useSystemStore()
@@ -133,6 +137,14 @@ function viewEmailClicked() {
 function emailClosed() {
    showEmail.value = false
 }
+function viewInvoiceClicked() {
+    ordersStore.editInvoice = false
+    ordersStore.showInvoice = true
+}
+function createInvoiceClicked() {
+    ordersStore.editInvoice = true
+    ordersStore.showInvoice = true
+}
 
 
 </script>
@@ -160,6 +172,12 @@ function emailClosed() {
    .actions {
       padding: 15px 0 0 0;
       font-size: 0.8em;
+      display: flex;
+      flex-flow: row wrap;
+      justify-content: flex-start;
+      button.p-button {
+         margin-left: 10px;
+      }
    }
 }
 div.email {

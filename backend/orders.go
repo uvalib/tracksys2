@@ -12,12 +12,18 @@ import (
 )
 
 type invoice struct {
-	ID          int64      `json:"id"`
-	OrderID     int64      `json:"-"`
-	DateInvoice time.Time  `json:"invoiceDate"`
-	DateFeePaid *time.Time `json:"dateFeePaid"`
-	CreatedAt   time.Time  `json:"createdAt"`
-	UpdatedAt   time.Time  `json:"-"`
+	ID                   int64      `json:"id"`
+	OrderID              int64      `json:"-"`
+	DateInvoice          time.Time  `json:"invoiceDate"`
+	DateFeePaid          *time.Time `json:"dateFeePaid"`
+	DateSecondNoticeSent *time.Time `json:"dateNoticeSent"`
+	DateFeeDeclined      *time.Time `json:"dateFeeDeclined"`
+	FeeAmountPaid        int64      `json:"feeAmountPaid"`
+	TransmittalNumber    string     `json:"transmittalNumber"`
+	Notes                string     `json:"notes"`
+	PermanentNonpayment  bool       `json:"permanentNonpayment"`
+	CreatedAt            time.Time  `json:"createdAt"`
+	UpdatedAt            time.Time  `json:"-"`
 }
 
 type orderItem struct {
@@ -56,7 +62,7 @@ type order struct {
 	AgencyID                       uint       `json:"-"`
 	Agency                         agency     `gorm:"foreignKey:AgencyID" json:"agency"`
 	Fee                            *float64   `json:"fee,omitempty"`
-	Invoices                       []invoice  `gorm:"foreignKey:OrderID"  json:"invoices"`
+	Invoice                        *invoice   `gorm:"-"  json:"invoice,omitempty"`
 	UnitCount                      int64      `gorm:"unitCount" json:"unitCount"`
 	MasterFileCount                int64      `gorm:"masterFileCount" json:"masterFileCount"`
 	Email                          string     `json:"email"`
@@ -79,11 +85,19 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 	oID := c.Param("id")
 	log.Printf("INFO: get order %s details", oID)
 	var oDetail order
-	err := svc.DB.Preload("Agency").Preload("Customer").Preload("Invoices").Find(&oDetail, oID).Error
+	err := svc.DB.Preload("Agency").Preload("Customer").Find(&oDetail, oID).Error
 	if err != nil {
 		log.Printf("ERROR: unable to retrieve order %s: %s", oID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
+	}
+
+	var invDetail invoice
+	err = svc.DB.Where("order_id=?", oID).Order("created_at desc").First(&invDetail).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get invoice for order %s: %s", oID, err.Error())
+	} else {
+		oDetail.Invoice = &invDetail
 	}
 
 	type oResp struct {
@@ -93,7 +107,6 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 		Events []auditEvent `json:"events"`
 	}
 	out := oResp{Order: oDetail}
-
 	err = svc.DB.Where("order_id=?", oID).Preload("IntendedUse").Find(&out.Units).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get units for order %s: %s", oID, err.Error())
