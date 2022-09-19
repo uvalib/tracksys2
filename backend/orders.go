@@ -43,13 +43,13 @@ type orderItem struct {
 }
 
 type auditEvent struct {
-	ID            int64     `json:"id"`
-	StaffMemberID uint      `json:"-"`
-	StaffMember   customer  `gorm:"foreignKey:StaffMemberID" json:"staffMember"`
-	AuditableID   int64     `json:"-"`
-	AuditableType string    `json:"-"`
-	Details       string    `json:"details"`
-	CreatedAt     time.Time `json:"createdAt"`
+	ID            int64       `json:"id"`
+	StaffMemberID int64       `json:"-"`
+	StaffMember   staffMember `gorm:"foreignKey:StaffMemberID" json:"staffMember"`
+	AuditableID   int64       `json:"-"`
+	AuditableType string      `json:"-"`
+	Details       string      `json:"details"`
+	CreatedAt     time.Time   `json:"createdAt"`
 }
 
 type order struct {

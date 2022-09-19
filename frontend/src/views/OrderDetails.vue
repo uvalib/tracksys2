@@ -54,6 +54,21 @@
          </div>
       </Panel>
    </div>
+   <div class="details" v-if="ordersStore.items.length> 0">
+      <Panel header="Order Details">
+         <p>The following is all of the raw data submitted by the patron. Use it to create units or discard it. Once all units have been created and the order approved, this data will be deleted.</p>
+         <dl class="items">
+            <DataDisplay label="Intended Use" :value="ordersStore.items[0].intendedUse.name"/>
+            <DataDisplay label="Format" :value="ordersStore.items[0].intendedUse.deliverableFormat"/>
+            <DataDisplay label="Resolution" :value="ordersStore.items[0].intendedUse.deliverableResolution"/>
+         </dl>
+      </Panel>
+   </div>
+   <div class="details" v-if="ordersStore.units.length> 0">
+      <Panel header="Units">
+         <RelatedUnits :units="ordersStore.units" />
+      </Panel>
+   </div>
    <Dialog v-model:visible="showEmail" :modal="true" header="Customer Email" @hide="emailClosed()" :style="{width: '650px'}">
       <div v-html="detail.email" class="email"></div>
       <template #footer>
@@ -77,6 +92,7 @@ import DataDisplay from '../components/DataDisplay.vue'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
 import InvoiceDialog from '@/components/order/InvoiceDialog.vue'
+import RelatedUnits from '../components/related/RelatedUnits.vue'
 
 const route = useRoute()
 const systemStore = useSystemStore()
@@ -150,11 +166,19 @@ function createInvoiceClicked() {
 </script>
 
 <style scoped lang="scss">
+:deep(dl.items) {
+   dd {
+      margin: 0 0 5px 0 !important;
+   }
+}
 .details {
    padding: 0 25px 10px 25px;
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
+   p {
+      margin: 5px;
+   }
 
    div.status {
       display: flex;

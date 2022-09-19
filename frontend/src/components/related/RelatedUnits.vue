@@ -4,12 +4,12 @@
    </div>
    <DataTable v-else :value="props.units" ref="relatedUnitsTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-      :lazy="false" :paginator="true" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
+      :lazy="false" :paginator="props.units.length > 15" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >
       <Column field="id" header="ID" :sortable="true"/>
-      <Column field="intendedUse" header="Intended Use"/>
+      <Column field="intendedUse.name" header="Intended Use"/>
       <Column header="Date Patron Deliverables Ready">
          <template #body="slotProps">
             <span v-if="slotProps.data.datePatronDeliverablesReady">

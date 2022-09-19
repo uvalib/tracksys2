@@ -188,10 +188,8 @@ export const useMetadataStore = defineStore('metadata', {
                   dateArchived: r.dateArchived,
                   dateDLDeliverablesReady: r.dateDLDeliverablesReady,
                   datePatronDeliverablesReady: r.datePatronDeliverablesReady,
-                  masterFilesCount: r.masterFilesCount
-               }
-               if ( r.intendedUse) {
-                  u.intendedUse = r.intendedUse.name
+                  masterFilesCount: r.masterFilesCount,
+                  intendedUse: r.intendedUse
                }
                this.related.units.push(u)
                if (orderIDs.includes(r.order.id) == false ) {

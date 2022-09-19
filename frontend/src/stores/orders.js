@@ -39,6 +39,8 @@ export const useOrdersStore = defineStore('orders', {
          dateCompleted: "",
       },
       events: [],
+      items: [],
+      units: [],
       showInvoice: false,
       editInvoice: false
 	}),
@@ -51,6 +53,8 @@ export const useOrdersStore = defineStore('orders', {
          axios.get( `/api/orders/${orderID}` ).then(response => {
             this.detail = response.data.order
             this.events = response.data.events
+            this.items = response.data.items
+            this.units = response.data.units
             system.working = false
          }).catch( e => {
             system.setError(e)
@@ -74,12 +78,6 @@ export const useOrdersStore = defineStore('orders', {
                }
                if (js.dateArchivingComplete) {
                   js.dateArchivingComplete =  dayjs(js.dateArchivingComplete).format("YYYY-MM-DD")
-               }
-               let fee = js.fee
-               if (fee.Valid) {
-                  js.fee = `$${fee.Float64}`
-               } else {
-                  js.fee = null
                }
                js.customerName = `${js.customer.lastName}, ${js.customer.firstName}`
                this.orders.push(js)
