@@ -16,7 +16,16 @@
       >
          <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
          <Column field="name" header="Job Type"></Column>
-         <Column field="associatedObject" header="Associated Object"></Column>
+         <Column field="associatedObject" header="Associated Object">
+            <template #body="slotProps">
+               <template v-if="getAssociatedObjectLink(slotProps.data.associatedObject)">
+                  <router-link :to="getAssociatedObjectLink(slotProps.data.associatedObject)">{{slotProps.data.associatedObject}}</router-link>
+               </template>
+               <template v-else>
+                  {{slotProps.data.associatedObject}}
+               </template>
+            </template>
+         </Column>
          <Column field="status" header="Status"></Column>
          <Column field="warnings" header="Warnings"></Column>
          <Column field="startedAt" header="Started"></Column>
@@ -24,6 +33,7 @@
          <Column header="" class="row-acts">
             <template #body="slotProps">
                <router-link :to="`/jobs/${slotProps.data.id}`">View</router-link>
+               <span class="sep">|</span>
                <DPGButton label="Delete"  class="p-button-text" @click="deleteJob(slotProps.data.id)"/>
             </template>
          </Column>
@@ -67,6 +77,24 @@ function deleteJob(id) {
          jobsStore.deleteJobs( [id] )
       }
    })
+}
+
+function getAssociatedObjectLink( objName ) {
+   if (objName.split(" ").length != 2) {
+      return ""
+   }
+   let objType = objName.split(" ")[0].toLowerCase().trim()
+   let objID =  objName.split(" ")[1].toLowerCase().trim()
+   if (objType == "unit") {
+      return `/units/${objID}`
+   }
+   if (objType == "order") {
+      return `/orders/${objID}`
+   }
+   if (objType == "metadata") {
+      return `/metadata/${objID}`
+   }
+   return ""
 }
 
 function rowClass(rowData) {
@@ -114,6 +142,10 @@ onMounted(() => {
       min-height: 600px;
       text-align: left;
       padding: 0 25px;
+      .sep {
+         display: inline-block;
+         margin: 0 10px;
+      }
       .toolbar {
          padding: 10px 0;
          font-size: 0.8em;
@@ -128,13 +160,15 @@ onMounted(() => {
             padding: 0;
             a {
                display: inline-block;
-               margin-right: 15px;
             };
          }
       }
       :deep(.error-row) {
          background-color: #944 !important;
          color: #fff;
+         a {
+            color: #fff !important;
+         }
          .row-acts {
             a, button.p-button-text {
                color: #fff !important;

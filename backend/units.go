@@ -89,16 +89,25 @@ func (svc *serviceContext) getUnitMasterfiles(c *gin.Context) {
 	}
 
 	for idx, mf := range masterFiles {
-		mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
+		mfPID := mf.PID
+		if mf.OriginalMfID > 0 {
+			var originalMF masterFile
+			err := svc.DB.Find(&originalMF, mf.OriginalMfID).Error
+			if err != nil {
+				log.Printf("ERROR: unbale to get original masterfile %d for clone %d: %s", mf.OriginalMfID, mf.ID, err.Error())
+			}
+			mfPID = originalMF.PID
+		}
+
+		mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
 		if mf.MetadataID != nil {
 			mf.ViewerURL = fmt.Sprintf("%s/view/%s?unit=%s", svc.ExternalSystems.Curio, mf.Metadata.PID, unitID)
 			if idx > 0 {
 				mf.ViewerURL += fmt.Sprintf("&page=%d", (idx + 1))
 			}
 		} else {
-			mf.ViewerURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
+			mf.ViewerURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
 		}
-		//
 	}
 	c.JSON(http.StatusOK, masterFiles)
 }

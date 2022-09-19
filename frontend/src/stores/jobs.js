@@ -7,7 +7,7 @@ export const useJobsStore = defineStore('jobs', {
 	state: () => ({
       jobs: [],
       totalJobs: 0,
-      details: {status: "",  error: "", events: []},
+      details: {status: "",  error: "", associatedObject:"", events: []},
       searchOpts: {
          start: 0,
          limit: 30,
@@ -62,6 +62,10 @@ export const useJobsStore = defineStore('jobs', {
                   text: evt.text, timeStamp: dayjs(evt.finishedAt).format("YYYY-MM-DD HH:mm:ss")
                })
             })
+            let job = this.jobs.find( j => j.id == jobID)
+            if (job) {
+               this.details.associatedObject = job.associatedObject
+            }
             system.working = false
          }).catch( e => {
             system.setError(e)

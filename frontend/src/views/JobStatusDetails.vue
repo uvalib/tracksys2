@@ -6,6 +6,13 @@
       </template>
       <b class="finished" v-else-if="jobsStore.details.status=='finished'">FINISHED</b>
        <b class="running" v-else>RUNNING...</b>
+       <span>
+         <label>Associated Object:</label>
+         <router-link v-if="getAssociatedObjectLink(jobsStore.details.associatedObject)" :to="getAssociatedObjectLink(jobsStore.details.associatedObject)">
+            {{jobsStore.details.associatedObject}}
+         </router-link>
+         <span v-else></span>
+       </span>
    </div>
    <div class="log">
       <div class="scroller">
@@ -28,6 +35,24 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 const jobsStore = useJobsStore()
 
+function getAssociatedObjectLink( objName ) {
+   if (objName.split(" ").length != 2) {
+      return ""
+   }
+   let objType = objName.split(" ")[0].toLowerCase().trim()
+   let objID =  objName.split(" ")[1].toLowerCase().trim()
+   if (objType == "unit") {
+      return `/units/${objID}`
+   }
+   if (objType == "order") {
+      return `/orders/${objID}`
+   }
+   if (objType == "metadata") {
+      return `/metadata/${objID}`
+   }
+   return ""
+}
+
 onMounted(() => {
    jobsStore.getJobDetails(route.params.id)
 })
@@ -35,8 +60,16 @@ onMounted(() => {
 
 <style scoped lang="scss">
    .status {
-      padding: 0 0 10px 25px;
+      padding: 0 25px 10px 25px;
       text-align: left;
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      label {
+         font-weight: bold;
+         display: inline-block;
+         margin-right: 10px;
+      }
       b {
          display: inline-block;
          margin-right: 10px;
