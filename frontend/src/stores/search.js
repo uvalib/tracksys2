@@ -10,28 +10,28 @@ export const useSearchStore = defineStore('search', {
       searched: false,
       components: {
          start: 0,
-         limit: 30,
+         limit: 15,
          total: 0,
          hits: [],
          filters: []
       },
       masterFiles: {
          start: 0,
-         limit: 30,
+         limit: 15,
          total: 0,
          hits: [],
          filters: []
       },
       metadata: {
          start: 0,
-         limit: 30,
+         limit: 15,
          total: 0,
          hits: [],
          filters: []
       },
       orders: {
          start: 0,
-         limit: 30,
+         limit: 15,
          total: 0,
          hits: [],
          filters: []
@@ -72,24 +72,28 @@ export const useSearchStore = defineStore('search', {
       },
       resetResults() {
          this.components.start = 0
-         this.components.limit = 30
+         this.components.limit = 15
          this.components.total = 0
          this.components.hits = []
+         this.components.filters = []
 
          this.masterFiles.start = 0
-         this.masterFiles.limit = 30
+         this.masterFiles.limit = 15
          this.masterFiles.total = 0
          this.masterFiles.hits = []
+         this.masterFiles.filters = []
 
          this.metadata.start = 0
-         this.metadata.limit = 30
+         this.metadata.limit = 15
          this.metadata.total = 0
          this.metadata.hits = []
+         this.metadata.filters = []
 
          this.orders.start = 0
-         this.orders.limit = 30
+         this.orders.limit = 15
          this.orders.total = 0
          this.orders.hits = []
+         this.orders.filters = []
       },
       resetSearch() {
          this.query = ""
@@ -140,10 +144,12 @@ export const useSearchStore = defineStore('search', {
          }
 
          let filterParam = this.filtersAsQueryParam(searchOrigin)
+         console.log("EXEC SEARCH in "+searchOrigin+ " FILTER "+filterParam)
          if ( filterParam != "") {
             url += `&filters=${filterParam}`
          }
 
+         console.log("SEARCH URL "+url)
          axios.get(url).then(response => {
             if (searchOrigin == "components" || searchOrigin == "all") {
                this.components.hits = response.data.components.hits

@@ -19,12 +19,15 @@
    <DataTable v-else :value="searchStore.components.hits" ref="componentHitsTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="true" @page="onPage($event)"
+      :lazy="true" :paginator="searchStore.components.hits.length > 15" @page="onPage($event)"
       :rows="searchStore.components.limit" :totalRecords="searchStore.components.total"
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      :rowsPerPageOptions="[10,30,100]"
+      :rowsPerPageOptions="[15,30,100]"
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >
+      <template #header>
+         <div class="matches">{{searchStore.components.total}} matches found</div>
+      </template>
       <Column field="id" header="ID"/>
       <Column field="pid" header="PID" class="nowrap"/>
       <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
@@ -142,6 +145,10 @@ function onPage(event) {
    }
    th, td {
       font-size: 0.85em;
+   }
+   .matches {
+      padding: 5px 10px;
+      text-align: center;
    }
 }
 div.filters {

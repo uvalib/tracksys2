@@ -8,6 +8,7 @@
          <FormKit type="select" label="" v-model="searchStore.field" :options="scopeFields" outer-class="select-wrap"/>
          <FormKit label="" type="search" placeholder="Find Tracksys items..." v-model="searchStore.query" outer-class="searchbar" />
          <FormKit type="submit" label="Search" wrapper-class="submit-button" />
+         <FormKit type="button" v-if="searchStore.searched"  label="Reset search" @click="resetSearch()" wrapper-class="reset-button"/>
       </FormKit>
       <SearchResults v-if="searchStore.searched" />
    </div>
@@ -33,23 +34,37 @@ const scopeFields = computed( () => {
    return [{label: 'All fields', value: "all"}]
 })
 
+function resetSearch() {
+   searchStore.resetSearch()
+   let query = Object.assign({}, route.query)
+   delete query.q
+   delete query.scope
+   delete query.field
+   delete query.filters
+   router.push({query})
+}
 
 onBeforeMount( () => {
    let paramsDetected = false
-   if ( route.query.q ) {
+   console.log("BEFORE MOUNT")
+   if ( route.query.q && searchStore.query != route.query.q ) {
       searchStore.query = route.query.q
       paramsDetected = true
    }
 
-   searchStore.scope = "all"
    if ( route.query.scope ) {
-      searchStore.scope = route.query.scope
-      paramsDetected = true
-      if ( route.query.filters ) {
-         searchStore.setFilter(route.query.scope, route.query.filters)
+      if (searchStore.scope != route.query.scope) {
+         searchStore.scope = route.query.scope
+         paramsDetected = true
+         if ( route.query.filters ) {
+            searchStore.setFilter(route.query.scope, route.query.filters)
+         }
       }
+   } else {
+      searchStore.scope = "all"
    }
-   if ( route.query.field ) {
+
+   if ( route.query.field &&  searchStore.field != route.query.field) {
       searchStore.field = route.query.field
       paramsDetected = true
    }
@@ -76,9 +91,17 @@ function doSearch() {
       if (searchStore.field != "all") {
          query.field = searchStore.field
       }
+
+      let filterQP = searchStore.filtersAsQueryParam(searchStore.scope)
+      if (filterQP != "") {
+         query.filters = filterQP
+      } else {
+         delete query.filters
+      }
+
       router.push({query})
 
-      searchStore.executeSearch("all")
+      searchStore.executeSearch(searchStore.scope)
    }
 }
 </script>
@@ -111,6 +134,14 @@ function doSearch() {
             font-size: 0.95em;
             padding: 6px 15px;
             margin-left: 10px;
+            display: inline-block;
+         }
+         .reset-button button {
+            @include base-button();
+            font-size: 0.95em;
+            padding: 6px 15px;
+            margin-left: 20px;
+            display: inline-block;
          }
          .formkit-outer.select-wrap {
             margin: 0 10px 0 0;

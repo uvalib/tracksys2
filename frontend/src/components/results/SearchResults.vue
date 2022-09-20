@@ -1,37 +1,15 @@
 <template>
-   <div class="summary">
-      <div class="title">Search summary</div>
-      <div class="content">
-         <table>
-            <tr v-if="searchStore.scope=='all' || searchStore.scope=='orders'">
-               <td class="label">Orders:</td><td class="count">{{searchStore.orders.total}} matches</td>
-            </tr>
-            <tr v-if="searchStore.scope=='all' || searchStore.scope=='metadata'">
-               <td class="label">Metadata:</td><td class="count">{{searchStore.metadata.total}} matches</td>
-            </tr>
-            <tr v-if="searchStore.scope=='all' || searchStore.scope=='masterfiles'">
-               <td class="label">Master Files:</td><td class="count">{{searchStore.masterFiles.total}} matches</td>
-            </tr>
-            <tr v-if="searchStore.scope=='all' || searchStore.scope=='components'">
-               <td class="label">Components:</td><td class="count">{{searchStore.components.total}} matches</td>
-            </tr>
-         </table>
-         <div class="actions">
-            <DPGButton label="Reset search" class="p-button-secondary" @click="resetSearch()"/>
-         </div>
-      </div>
-   </div>
-   <TabView class="results">
-      <TabPanel :header="`Orders`" v-if="searchStore.orders.hits.length > 0">
+   <TabView class="results" @tabChange="tabChanged()" v-model:activeIndex="activeTab">
+      <TabPanel :header="`Orders`" v-if="searchStore.scope=='all' || searchStore.scope=='orders'" >
          <OrdersResults />
       </TabPanel>
-      <TabPanel :header="`Metadata`" v-if="searchStore.metadata.hits.length > 0">
+      <TabPanel :header="`Metadata`" v-if="searchStore.scope=='all' || searchStore.scope=='metadata'">
          <MetadataResults />
       </TabPanel>
-      <TabPanel :header="`Master Files`" v-if="searchStore.masterFiles.hits.length > 0">
+      <TabPanel :header="`Master Files`" v-if="searchStore.scope=='all' || searchStore.scope=='masterfiles'">
          <MasterFilesResults />
       </TabPanel>
-      <TabPanel :header="`Components`" v-if="searchStore.components.hits.length > 0">
+      <TabPanel :header="`Components`" v-if="searchStore.scope=='all' || searchStore.scope=='components'">
          <ComponentsResults />
       </TabPanel>
    </TabView>
@@ -46,21 +24,26 @@ import OrdersResults from './OrdersResults.vue'
 import MasterFilesResults from './MasterFilesResults.vue'
 import ComponentsResults from './ComponentsResults.vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ref } from 'vue'
 
 const searchStore = useSearchStore()
 const route = useRoute()
 const router = useRouter()
 
-function resetSearch() {
-   searchStore.resetSearch()
+const activeTab = ref(0)
+
+function tabChanged() {
+   let tabs = ['orders', 'metadata', 'masterfiles', 'components']
    let query = Object.assign({}, route.query)
-   delete query.q
-   delete query.scope
-   delete query.field
-   delete query.filters
+   query.scope = tabs[activeTab.value]
+   let fp = searchStore.filtersAsQueryParam(query.scope)
+   if (fp != "") {
+      query.filters = fp
+   } else {
+      delete query.filters
+   }
    router.push({query})
 }
-
 </script>
 
 <stype scoped lang="scss">
