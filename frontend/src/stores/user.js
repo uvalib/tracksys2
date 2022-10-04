@@ -28,6 +28,12 @@ export const useUserStore = defineStore('user', {
       isSupervisor: state => {
          return state.role == "supervisor"
       },
+      isStudent: state => {
+         return state.role == "student"
+      },
+      isViewer: state => {
+         return state.role == "viewer"
+      },
       signedInUser: state => {
          return `${state.firstName} ${state.lastName} (${state.computeID})`
       },

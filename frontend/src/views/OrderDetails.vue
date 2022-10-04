@@ -60,8 +60,20 @@
             <DataDisplay label="Date Patron Deliverables Complete" :value="formatDateTime(detail.datePatronDeliverablesComplete)"/>
             <DataDisplay label="Date Customer Notified" :value="formatDateTime(detail.dateCustomerNotified)"/>
          </dl>
-         <div class="actions">
-            <DPGButton v-if="detail.email" label="View Customer Email" class="p-button-secondary" @click="viewEmailClicked()" :style="{marginLeft:0}"/>
+         <div class="actions" v-if="user.isAdmin || user.isSupervisor">
+            <template v-if="(detail.status == 'approved' || detail.status == 'completed') && ordersStore.hasPatronDeliverables">
+               <template v-if="detail.email">
+                  <DPGButton label="View Customer Email" class="p-button-secondary" @click="viewEmailClicked()" :style="{marginLeft:0}"/>
+                  <DPGButton label="Recreate Email" class="p-button-secondary" @click="recreateEmailClicked()" />
+                  <SendEmailDialog />
+               </template>
+            </template>
+         </div>
+         <div class="actions" v-if="user.isAdmin || user.isSupervisor">
+            <DPGButton label="View Customer PDF" class="p-button-secondary" @click="viewPDFClicked()" />
+            <DPGButton v-if="detail.email" label="Recreate Customer PDF" class="p-button-secondary" @click="recreatePDFClicked()" />
+         </div>
+         <div class="actions" v-if="(user.isAdmin || user.isSupervisor) && (detail.invoice ||detail.fee)">
             <DPGButton v-if="detail.invoice" label="View Invoice" class="p-button-secondary" @click="viewInvoiceClicked()"/>
             <DPGButton v-else-if="detail.fee" label="Create Invoice" class="p-button-secondary" @click="createInvoiceClicked()"/>
          </div>
@@ -121,6 +133,7 @@ import { onBeforeMount, ref, computed } from 'vue'
 import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useOrdersStore } from '@/stores/orders'
+import { useUserStore } from '@/stores/user'
 import Panel from 'primevue/panel'
 import DataDisplay from '../components/DataDisplay.vue'
 import { storeToRefs } from 'pinia'
@@ -128,11 +141,13 @@ import dayjs from 'dayjs'
 import InvoiceDialog from '@/components/order/InvoiceDialog.vue'
 import RelatedUnits from '../components/related/RelatedUnits.vue'
 import Divider from 'primevue/divider'
+import SendEmailDialog from '../components/order/SendEmailDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
 const systemStore = useSystemStore()
 const ordersStore = useOrdersStore()
+const user = useUserStore()
 
 const { detail } = storeToRefs(ordersStore)
 
@@ -163,6 +178,15 @@ onBeforeMount(() => {
    let orderID = route.params.id
    ordersStore.getOrderDetails(orderID)
 })
+function recreateEmailClicked() {
+   ordersStore.recreateEmail()
+}
+function recreatePDFClicked() {
+
+}
+function viewPDFClicked() {
+
+}
 
 function formatFee( fee ) {
    if (fee) {
@@ -282,13 +306,13 @@ div.item {
       text-align: left;
    }
    .actions {
-      padding: 15px 0 0 0;
+      padding: 5px 0;
       font-size: 0.8em;
       display: flex;
       flex-flow: row wrap;
       justify-content: flex-start;
-      button.p-button {
-         margin-left: 10px;
+      :deep(button.p-button) {
+         margin-right: 10px;
       }
    }
 }

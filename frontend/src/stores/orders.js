@@ -45,7 +45,18 @@ export const useOrdersStore = defineStore('orders', {
       editInvoice: false
 	}),
 	getters: {
-	},
+      hasPatronDeliverables: state => {
+         let hasDeliverables = false
+         state.units.some( u=>{
+            /// only units that are NOT for digital collection building can have patron deliverables
+            if (u.intendedUse && u.intendedUse.description != "Digital Collection Building" ) {
+               hasDeliverables = true
+            }
+            return hasDeliverables==true
+         })
+         return hasDeliverables
+      },
+   },
 	actions: {
      async  getOrderDetails(orderID) {
          if ( this.detail.id == orderID ) return
@@ -74,6 +85,31 @@ export const useOrdersStore = defineStore('orders', {
             this.detail.agency = resp.data.agency
             this.detail.customer = resp.data.customer
 
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      async sendEmail( toCustomer, toAlt = false, altAddress = "") {
+         const system = useSystemStore()
+         system.working = true
+         let url = `${system.jobsURL}/orders/${this.detail.id}/email/send`
+         if (toCustomer) {
+            await axios.post( url )
+         }
+         if ( toAlt ) {
+            url = `${url}?alt=${altAddress}`
+            await axios.post( url  )
+         }
+         system.toastMessage("Email Sent", "Order email has been sent to the selected recipients")
+         system.working = false
+      },
+      recreateEmail() {
+         const system = useSystemStore()
+         system.working = true
+         let url = `${system.jobsURL}/orders/${this.detail.id}/email`
+         axios.post( url ).then( () => {
+            system.toastMessage("Email Recreated", "New email generated, but not sent.")
             system.working = false
          }).catch( e => {
             system.setError(e)

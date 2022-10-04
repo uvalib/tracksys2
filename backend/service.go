@@ -116,6 +116,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		IiifURL                string `json:"iiifURL"`
 		CurioURL               string `json:"curioURL"`
 		PdfURL                 string `json:"pdfURL"`
+		JobsURL                string `json:"jobsURL"`
 		ControlledVocabularies struct {
 			AcademicStatuses []academicStatus `json:"academicStatuses"`
 			Agencies         []agency         `json:"agencies"`
@@ -129,6 +130,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		ReportsURL:  svc.ExternalSystems.Reports,
 		PdfURL:      svc.ExternalSystems.PDF,
 		ProjectsURL: svc.ExternalSystems.Projects,
+		JobsURL:     svc.ExternalSystems.Jobs,
 	}
 
 	log.Printf("INFO: load academic statuses")

@@ -1,5 +1,4 @@
 <template>
-   <Toast position="top-right" />
    <h2>Metadata {{route.params.id}}</h2>
    <div class="details" v-if="systemStore.working==false">
       <div v-if="metadataStore.thumbURL" class="thumb">
@@ -144,8 +143,6 @@ import { useMetadataStore } from '@/stores/metadata'
 import Panel from 'primevue/panel'
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab'
-import Toast from 'primevue/toast'
-import { useToast } from "primevue/usetoast"
 import DataDisplay from '../components/DataDisplay.vue'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
@@ -156,7 +153,6 @@ import RelatedUnits from '../components/related/RelatedUnits.vue'
 const route = useRoute()
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
-const toast = useToast()
 
 const canPublish = computed(() => {
    if (metadataStore.dl.dateDLIngest) {
@@ -217,7 +213,7 @@ onBeforeMount(() => {
 
 async function publishClicked() {
    await metadataStore.publish()
-   toast.add({severity:'success', summary: 'Publish Success', detail:'This item has successfully been published to Virgo', life: 3000})
+   systemStore.toastMessage('Publish Success', 'This item has successfully been published to Virgo')
 }
 
 function formatBoolean( flag) {

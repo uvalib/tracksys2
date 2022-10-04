@@ -1,4 +1,5 @@
 <template>
+   <Toast position="top-right" />
    <div class="header" role="banner" id="uva-header">
       <div class="main-header">
          <div class="library-link">
@@ -34,11 +35,21 @@ import MenuBar from "@/components/MenuBar.vue"
 import WaitSpinner from "@/components/WaitSpinner.vue"
 import { useSystemStore } from "@/stores/system"
 import { useUserStore } from "@/stores/user"
-import { onBeforeMount } from 'vue'
+import { onBeforeMount,watch } from 'vue'
 import Dialog from 'primevue/dialog'
+import Toast from 'primevue/toast'
+import { useToast } from "primevue/usetoast"
 
 const systemStore = useSystemStore()
 const userStore = useUserStore()
+const toast = useToast()
+
+watch(() => systemStore.toast.show, (newShow) => {
+   if ( newShow == true) {
+      toast.add({severity:'success', summary:  systemStore.toast.summary, detail:  systemStore.toast.message, life: 5000})
+      systemStore.clearToastMessage()
+   }
+})
 
 function errorClosed() {
    systemStore.setError("")
