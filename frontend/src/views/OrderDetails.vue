@@ -3,7 +3,7 @@
       <span>Order {{route.params.id}}</span>
    </h2>
    <DPGButton label="Edit" class="p-button-secondary edit" @click="editOrder()"/>
-   <div class="details" v-if="systemStore.working==false">
+   <div class="details">
       <div class="left">
          <Panel header="General Information">
             <dl>
@@ -155,9 +155,10 @@ const showEmail = ref(false)
 const events = ref(null)
 
 const hasMessages = computed(() => {
-   console.log(ordersStore.detail.customer)
-   if ( ordersStore.detail.status== 'requested' || ordersStore.detail.status == 'deferred' || ordersStore.detail.status== 'await_fee') return true
-   if ( ordersStore.detail.customer.academicStatusID==1 && !ordersStore.detail.fee) return true
+   if ( ordersStore.detail.id != 0 ) {
+      if ( ordersStore.detail.status== 'requested' || ordersStore.detail.status == 'deferred' || ordersStore.detail.status== 'await_fee') return true
+      if ( ordersStore.detail.customer.academicStatusID==1 && !ordersStore.detail.fee) return true
+   }
    return false
 })
 
@@ -182,10 +183,11 @@ function recreateEmailClicked() {
    ordersStore.recreateEmail()
 }
 function recreatePDFClicked() {
-
+   ordersStore.recreatePDF()
 }
 function viewPDFClicked() {
-
+   let url = `${systemStore.jobsURL}/orders/${ordersStore.detail.id}/pdf`
+   window.open(url)
 }
 
 function formatFee( fee ) {
