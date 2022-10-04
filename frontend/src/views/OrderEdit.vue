@@ -31,6 +31,7 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useOrdersStore } from '@/stores/orders'
 import { useSystemStore } from '@/stores/system'
+import { useCustomersStore } from '@/stores/customers'
 import { onMounted, ref, computed } from 'vue'
 import dayjs from 'dayjs'
 
@@ -38,6 +39,7 @@ const route = useRoute()
 const router = useRouter()
 const ordersStore = useOrdersStore()
 const systemStore = useSystemStore()
+const customersStore = useCustomersStore()
 const edited = ref({
    status: "",
    dateDue: 0,
@@ -58,7 +60,7 @@ const agencies = computed(() => {
 })
 const customers = computed(() => {
    let out = []
-   systemStore.customers.forEach( a => {
+   customersStore.customers.forEach( a => {
       out.push( {label: `${a.lastName}, ${a.firstName}`, value: a.id} )
    })
    return out

@@ -14,7 +14,6 @@ export const useSystemStore = defineStore('system', {
       projectsURL: "",
       academicStatuses: [],
       agencies: [],
-      customers: [],
       toast: {
          summary: "",
          message: "",
@@ -47,7 +46,6 @@ export const useSystemStore = defineStore('system', {
             this.jobsURL = response.data.jobsURL
             this.academicStatuses = response.data.controlledVocabularies.academicStatuses
             this.agencies = response.data.controlledVocabularies.agencies
-            this.customers = response.data.controlledVocabularies.customers
             const searchStore = useSearchStore()
             searchStore.setGlobalSearchFields(response.data.searchFields)
          }).catch( e => {

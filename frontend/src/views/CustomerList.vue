@@ -6,16 +6,17 @@
          <span>
             <span class="p-input-icon-right">
                <i class="pi pi-search" />
-               <InputText v-model="filter" placeholder="Customer Search" @input="applyFilter()"/>
+               <InputText v-model="filter['global'].value" placeholder="Customer Search"/>
             </span>
             <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
          </span>
       </div>
       <DataTable :value="customersStore.customers" ref="customerTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-         :lazy="true" :paginator="true" @page="onPage($event)"
-         sortField="lastName" :sortOrder="1" @sort="onSort($event)"
-         :rows="customersStore.searchOpts.limit" :totalRecords="customersStore.total"
+         :lazy="false" :paginator="true"  v-model:filters="filter"
+         :globalFilterFields="['lastName','email']"
+         sortField="lastName" :sortOrder="1"
+         :rows="10" :totalRecords="customersStore.total"
          v-model:expandedRows="expandedRows"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
          :rowsPerPageOptions="[10,30,100]"
@@ -104,7 +105,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useCustomersStore } from '@/stores/customers'
 import { useSystemStore } from '@/stores/system'
 import DataTable from 'primevue/datatable'
@@ -113,11 +114,12 @@ import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
+import { FilterMatchMode } from 'primevue/api'
 
 const customersStore = useCustomersStore()
 const systemStore = useSystemStore()
 
-const filter = ref("")
+const filter = ref( {'global': {value: null, matchMode: FilterMatchMode.STARTS_WITH}})
 const expandedRows = ref([])
 const showEdit = ref(false)
 const customerDetails = ref({
@@ -175,33 +177,9 @@ function edit(data) {
    showEdit.value = true
 }
 
-function onPage(event) {
-   customersStore.searchOpts.start = event.first
-   customersStore.searchOpts.limit = event.rows
-   customersStore.getCustomers( filter.value  )
-}
-
-function onSort(event) {
-   customersStore.searchOpts.sortField = event.sortField
-   customersStore.searchOpts.sortOrder = "asc"
-   if (event.sortOrder == -1) {
-      customersStore.searchOpts.sortOrder = "desc"
-   }
-   customersStore.getCustomers( filter.value )
-}
-
-function applyFilter() {
-   customersStore.getCustomers( filter.value )
-}
-
 function clearSearch() {
    filter.value = ""
-   customersStore.getCustomers( filter.value )
 }
-
-onMounted(() => {
-   customersStore.getCustomers( filter.value  )
-})
 </script>
 
 <style scoped lang="scss">

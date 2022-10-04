@@ -1,14 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type academicStatus struct {
@@ -98,57 +95,12 @@ func (svc *serviceContext) addOrUpdateCustomer(c *gin.Context) {
 }
 
 func (svc *serviceContext) getCustomers(c *gin.Context) {
-	startIndex, _ := strconv.Atoi(c.Query("start"))
-	pageSize, _ := strconv.Atoi(c.Query("limit"))
-	if pageSize == 0 {
-		pageSize = 30
-	}
-	sortBy := c.Query("by")
-	if sortBy == "" {
-		sortBy = "lastName"
-	}
-	sortOrder := c.Query("order")
-	if sortOrder == "" {
-		sortOrder = "asc"
-	}
-	sortField := "email"
-	if sortBy == "lastName" {
-		sortField = "last_name"
-	}
-	orderStr := fmt.Sprintf("%s %s", sortField, sortOrder)
-	log.Printf("INFO: sorting %s", orderStr)
-
-	queryStr := c.Query("q")
-	var qObj *gorm.DB
-	if queryStr != "" {
-		qObj = svc.DB.Where("last_name like ?", fmt.Sprintf("%s%%", queryStr)).
-			Or("email like ?", fmt.Sprintf("%s%%", queryStr))
-	}
-
-	log.Printf("INFO: get %d customers starting from offset %d sort %s", pageSize, startIndex, orderStr)
-	var total int64
-	countQ := svc.DB.Table("customers")
-	if queryStr != "" {
-		countQ.Where(qObj)
-	}
-	countQ.Count(&total)
-
 	var customers []customer
-	mainQ := svc.DB.Preload("Addresses").Preload("AcademicStatus").Offset(startIndex)
-	if queryStr != "" {
-		mainQ.Where(qObj)
-	}
-	err := mainQ.Order(orderStr).Limit(pageSize).Find(&customers).Error
+	err := svc.DB.Preload("Addresses").Preload("AcademicStatus").Order("last_name asc").Find(&customers).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get customers: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	type resp struct {
-		Customers []customer `json:"customers"`
-		Total     int64      `json:"total"`
-	}
-	out := resp{Customers: customers, Total: total}
-	c.JSON(http.StatusOK, out)
+	c.JSON(http.StatusOK, customers)
 }

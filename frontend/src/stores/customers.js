@@ -6,27 +6,27 @@ export const useCustomersStore = defineStore('customers', {
 	state: () => ({
       customers: [],
       total: 0,
-      searchOpts: {
-         start: 0,
-         limit: 30,
-         sortField: "lastName",
-         sortOrder: "asc",
-      }
 	}),
 	getters: {
+      isExternal: state => {
+         return (customerID) => {
+            console.log("IS "+customerID+" external")
+            let c = state.customers.find( c => c.id == customerID)
+            if ( c ) {
+               console.log("STATUS "+c.academicStatusID)
+               return (c.academicStatusID == 1)
+            }
+            return false
+         }
+      }
 	},
 	actions: {
-      getCustomers( queryStr ) {
+      getCustomers( ) {
          const system = useSystemStore()
          system.working = true
-         let so = this.searchOpts
-         let url = `/api/customers?start=${so.start}&limit=${so.limit}&by=${so.sortField}&order=${so.sortOrder}`
-         if (queryStr != "") {
-            url += `&q=${encodeURIComponent(queryStr)}`
-         }
-         axios.get( url ).then(response => {
-            this.customers = response.data.customers
-            this.total = response.data.total
+         axios.get( `/api/customers` ).then(response => {
+            this.customers = response.data
+            this.total = response.data.length
             system.working = false
          }).catch( e => {
             system.setError(e)

@@ -60,23 +60,27 @@
             <DataDisplay label="Date Patron Deliverables Complete" :value="formatDateTime(detail.datePatronDeliverablesComplete)"/>
             <DataDisplay label="Date Customer Notified" :value="formatDateTime(detail.dateCustomerNotified)"/>
          </dl>
-         <div class="actions" v-if="user.isAdmin || user.isSupervisor">
-            <template v-if="(detail.status == 'approved' || detail.status == 'completed') && ordersStore.hasPatronDeliverables">
-               <template v-if="detail.email">
-                  <DPGButton label="View Customer Email" class="p-button-secondary" @click="viewEmailClicked()" :style="{marginLeft:0}"/>
-                  <DPGButton label="Recreate Email" class="p-button-secondary" @click="recreateEmailClicked()" />
-                  <SendEmailDialog />
-               </template>
-            </template>
-         </div>
-         <div class="actions" v-if="user.isAdmin || user.isSupervisor">
-            <DPGButton label="View Customer PDF" class="p-button-secondary" @click="viewPDFClicked()" />
-            <DPGButton v-if="detail.email" label="Recreate Customer PDF" class="p-button-secondary" @click="recreatePDFClicked()" />
-         </div>
-         <div class="actions" v-if="(user.isAdmin || user.isSupervisor) && (detail.invoice ||detail.fee)">
-            <DPGButton v-if="detail.invoice" label="View Invoice" class="p-button-secondary" @click="viewInvoiceClicked()"/>
-            <DPGButton v-else-if="detail.fee" label="Create Invoice" class="p-button-secondary" @click="createInvoiceClicked()"/>
-         </div>
+         <template v-if="user.isAdmin || user.isSupervisor">
+            <div class="actions" v-if="detail.status != 'completed' && detail.status != 'canceled'">
+               APPROVAL WORKFLOW EXT CUSTOMER {{isExternalCustomer}}
+            </div>
+            <div class="actions" v-if="detail.status == 'await_fee'">
+               FEES WORKFLOW
+            </div>
+            <div class="actions" v-if="(detail.status == 'approved' || detail.status == 'completed') && ordersStore.hasPatronDeliverables && detail.email">
+               <DPGButton label="View Customer Email" class="p-button-secondary" @click="viewEmailClicked()" :style="{marginLeft:0}"/>
+               <DPGButton label="Recreate Email" class="p-button-secondary" @click="recreateEmailClicked()" />
+               <SendEmailDialog />
+            </div>
+            <div class="actions" v-if="ordersStore.hasPatronDeliverables">
+               <DPGButton label="View Customer PDF" class="p-button-secondary" @click="viewPDFClicked()" />
+               <DPGButton v-if="detail.email" label="Recreate Customer PDF" class="p-button-secondary" @click="recreatePDFClicked()" />
+            </div>
+            <div class="actions" v-if="detail.invoice || detail.fee">
+               <DPGButton v-if="detail.invoice" label="View Invoice" class="p-button-secondary" @click="viewInvoiceClicked()"/>
+               <DPGButton v-else-if="detail.fee" label="Create Invoice" class="p-button-secondary" @click="createInvoiceClicked()"/>
+            </div>
+         </template>
       </Panel>
    </div>
    <div class="details" v-if="ordersStore.items.length> 0">
@@ -134,6 +138,7 @@ import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useOrdersStore } from '@/stores/orders'
 import { useUserStore } from '@/stores/user'
+import { useCustomersStore } from '@/stores/customers'
 import Panel from 'primevue/panel'
 import DataDisplay from '../components/DataDisplay.vue'
 import { storeToRefs } from 'pinia'
@@ -148,6 +153,7 @@ const router = useRouter()
 const systemStore = useSystemStore()
 const ordersStore = useOrdersStore()
 const user = useUserStore()
+const customerStore = useCustomersStore()
 
 const { detail } = storeToRefs(ordersStore)
 
@@ -160,6 +166,11 @@ const hasMessages = computed(() => {
       if ( ordersStore.detail.customer.academicStatusID==1 && !ordersStore.detail.fee) return true
    }
    return false
+})
+
+const isExternalCustomer = computed( () => {
+   if (ordersStore.detail.customer == null) return false
+   return customerStore.isExternal(ordersStore.detail.customer.id)
 })
 
 function editOrder() {

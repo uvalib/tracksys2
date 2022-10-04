@@ -277,5 +277,6 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 		return
 	}
 	log.Printf("INFO: order %d updated", oDetail.ID)
+	svc.DB.Preload("Agency").Preload("Customer").Find(&oDetail, orderID)
 	c.JSON(http.StatusOK, oDetail)
 }
