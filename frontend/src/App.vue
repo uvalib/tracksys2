@@ -16,7 +16,7 @@
       </div>
       <MenuBar v-if="userStore.jwt" />
    </div>
-   <router-view />
+   <div class="content"><router-view /></div>
    <Dialog v-model:visible="systemStore.showError" :modal="true" header="System Error" @hide="errorClosed()" class="error">
       {{systemStore.error}}
       <template #footer>
@@ -118,5 +118,8 @@ div.site-link {
          text-decoration: underline;
       }
    }
+}
+div.content {
+   position: relative;
 }
 </style>

@@ -119,6 +119,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		ControlledVocabularies struct {
 			AcademicStatuses []academicStatus `json:"academicStatuses"`
 			Agencies         []agency         `json:"agencies"`
+			Customers        []customer       `json:"customers"`
 		} `json:"controlledVocabularies"`
 		SearchFields map[string][]searchField `json:"searchFields"`
 	}
@@ -142,6 +143,14 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 	err = svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.Agencies).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get agencies: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: load customers")
+	err = svc.DB.Order("last_name asc").Find(&resp.ControlledVocabularies.Customers).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get customers: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}

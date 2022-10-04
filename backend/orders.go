@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -57,12 +58,12 @@ type order struct {
 	OrderStatus                    string     `json:"status"`
 	OrderTitle                     string     `json:"title"`
 	DateDue                        time.Time  `json:"dateDue"`
-	CustomerID                     uint       `json:"-"`
-	Customer                       customer   `gorm:"foreignKey:CustomerID" json:"customer"`
-	AgencyID                       uint       `json:"-"`
-	Agency                         agency     `gorm:"foreignKey:AgencyID" json:"agency"`
+	CustomerID                     *uint      `json:"-"`
+	Customer                       *customer  `gorm:"foreignKey:CustomerID" json:"customer,omitempty"`
+	AgencyID                       *uint      `json:"-"`
+	Agency                         *agency    `gorm:"foreignKey:AgencyID" json:"agency,omitempty"`
 	Fee                            *float64   `json:"fee,omitempty"`
-	Invoice                        *invoice   `gorm:"-"  json:"invoice,omitempty"`
+	Invoice                        *invoice   `gorm:"-" json:"invoice,omitempty"`
 	UnitCount                      int64      `gorm:"unitCount" json:"unitCount"`
 	MasterFileCount                int64      `gorm:"masterFileCount" json:"masterFileCount"`
 	Email                          string     `json:"email"`
@@ -92,10 +93,15 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 		return
 	}
 
+	log.Printf("INFO: lookup invoice for order %d", oDetail.ID)
 	var invDetail invoice
 	err = svc.DB.Where("order_id=?", oID).Order("created_at desc").First(&invDetail).Error
 	if err != nil {
-		log.Printf("ERROR: unable to get invoice for order %s: %s", oID, err.Error())
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("ERROR: unable to get invoice for order %s: %s", oID, err.Error())
+		} else {
+			log.Printf("INFO: no invoice for order %s", oID)
+		}
 	} else {
 		oDetail.Invoice = &invDetail
 	}
@@ -198,7 +204,7 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	var o []*order
 	unitCnt := "(select count(*) from units where order_id=orders.id) as unit_count"
 	mfCnt := "(select count(*) from master_files m inner join units u on u.id=m.unit_id where u.order_id=orders.id) as master_file_count"
-	err := filterQ.Debug().Preload("Agency").Preload("Customer").
+	err := filterQ.Preload("Agency").Preload("Customer").
 		Select("orders.*", unitCnt, mfCnt).
 		Offset(startIndex).Limit(pageSize).Order(orderStr).Find(&o).Error
 	if err != nil {
@@ -214,4 +220,62 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	out := resp{Jobs: o, Total: total}
 
 	c.JSON(http.StatusOK, out)
+}
+
+func (svc *serviceContext) updateOrder(c *gin.Context) {
+	orderID := c.Param("id")
+	log.Printf("INFO: update order %s", orderID)
+	var oDetail order
+	err := svc.DB.Preload("Agency").Preload("Customer").Find(&oDetail, orderID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve order %s: %s", orderID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	var updateRequest struct {
+		Status              string   `json:"status"`
+		DateDue             string   `json:"dateDue"`
+		Title               string   `json:"title"`
+		SpecialInstructions string   `json:"specialInstructions"`
+		StaffNotes          string   `json:"staffNotes"`
+		Fee                 *float64 `json:"fee"`
+		AgencyID            uint     `json:"agencyID"`
+		CustomerID          uint     `json:"customerID"`
+	}
+	err = c.BindJSON(&updateRequest)
+	if err != nil {
+		log.Printf("ERROR: invalid update order %s request: %s", orderID, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	oDetail.OrderStatus = updateRequest.Status
+	oDetail.DateDue, _ = time.Parse("2006-01-02", updateRequest.DateDue)
+	oDetail.OrderTitle = updateRequest.Title
+	oDetail.SpecialInstructions = updateRequest.SpecialInstructions
+	oDetail.StaffNotes = updateRequest.StaffNotes
+	oDetail.Fee = nil
+	if updateRequest.Fee != nil {
+		oDetail.Fee = updateRequest.Fee
+	}
+	oDetail.AgencyID = nil
+	if updateRequest.AgencyID != 0 {
+		svc.DB.Find(&oDetail.Agency, updateRequest.AgencyID)
+		oDetail.AgencyID = &updateRequest.AgencyID
+	}
+	oDetail.CustomerID = nil
+	if updateRequest.CustomerID != 0 {
+		svc.DB.Find(&oDetail.Customer, updateRequest.CustomerID)
+		oDetail.CustomerID = &updateRequest.CustomerID
+	}
+
+	err = svc.DB.Model(&oDetail).Select("OrderStatus", "DateDue", "OrderTitle", "SpecialInstructions", "StaffNotes", "Fee", "AgencyID", "CustomerID").Updates(oDetail).Error
+	if err != nil {
+		log.Printf("ERROR: unable to update order %d: %s", oDetail.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: order %d updated", oDetail.ID)
+	c.JSON(http.StatusOK, oDetail)
 }

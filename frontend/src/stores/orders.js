@@ -47,14 +47,33 @@ export const useOrdersStore = defineStore('orders', {
 	getters: {
 	},
 	actions: {
-      getOrderDetails(orderID) {
+     async  getOrderDetails(orderID) {
+         if ( this.detail.id == orderID ) return
          const system = useSystemStore()
          system.working = true
-         axios.get( `/api/orders/${orderID}` ).then(response => {
+         return axios.get( `/api/orders/${orderID}` ).then(response => {
             this.detail = response.data.order
             this.events = response.data.events
             this.items = response.data.items
             this.units = response.data.units
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      async submitEdit( edit ) {
+         const system = useSystemStore()
+         system.working = true
+         return axios.post( `/api/orders/${this.detail.id}/update`, edit ).then( (resp) => {
+            this.detail.status = resp.data.status
+            this.detail.dateDue = resp.data.dateDue
+            this.detail.title = resp.data.title
+            this.detail.specialInstructions = resp.data.specialInstructions
+            this.detail.staffNotes = resp.data.staffNotes
+            this.detail.fee = resp.data.fee
+            this.detail.agency = resp.data.agency
+            this.detail.customer = resp.data.customer
+
             system.working = false
          }).catch( e => {
             system.setError(e)

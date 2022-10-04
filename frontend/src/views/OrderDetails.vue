@@ -1,5 +1,8 @@
 <template>
-   <h2>Order {{route.params.id}}</h2>
+   <h2>
+      <span>Order {{route.params.id}}</span>
+   </h2>
+   <DPGButton label="Edit" class="p-button-secondary edit" @click="editOrder()"/>
    <div class="details" v-if="systemStore.working==false">
       <div class="left">
          <Panel header="General Information">
@@ -29,8 +32,10 @@
                   </DataTable>
                </OverlayPanel>
                <DataDisplay v-if="detail.status=='completed'" label="Date Completed" :value="formatDateTime(detail.dateCompleted)"/>
-               <DataDisplay label="Customer" :value="`${detail.customer.lastName}, ${detail.customer.firstName}`"/>
-               <DataDisplay label="Agency" :value="detail.agency.name"/>
+               <DataDisplay v-if="detail.customer" label="Customer" :value="`${detail.customer.lastName}, ${detail.customer.firstName}`"/>
+               <DataDisplay v-else label="Customer" value=""/>
+               <DataDisplay v-if="detail.agency" label="Agency" :value="detail.agency.name"/>
+               <DataDisplay v-else label="Agency" value=""/>
                <DataDisplay label="Title" :value="detail.title"/>
                <DataDisplay label="Special Instructions" :value="detail.specialInstructions"/>
                <DataDisplay label="Staff Notes" :value="detail.staffNotes"/>
@@ -106,13 +111,14 @@
    <InvoiceDialog />
 </template>
 
+
 <script setup>
 import Dialog from 'primevue/dialog'
 import OverlayPanel from 'primevue/overlaypanel'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { onBeforeMount, ref, computed } from 'vue'
-import { useRoute, onBeforeRouteUpdate } from 'vue-router'
+import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useOrdersStore } from '@/stores/orders'
 import Panel from 'primevue/panel'
@@ -124,6 +130,7 @@ import RelatedUnits from '../components/related/RelatedUnits.vue'
 import Divider from 'primevue/divider'
 
 const route = useRoute()
+const router = useRouter()
 const systemStore = useSystemStore()
 const ordersStore = useOrdersStore()
 
@@ -138,6 +145,10 @@ const hasMessages = computed(() => {
    if ( ordersStore.detail.customer.academicStatusID==1 && !ordersStore.detail.fee) return true
    return false
 })
+
+function editOrder() {
+   router.push(`/orders/${route.params.id}/edit`)
+}
 
 function toggleEvents(e) {
    events.value.toggle(e)
@@ -177,8 +188,7 @@ function formatDateTime( dateStr ) {
 
 function formatDate( dateStr ) {
    if (dateStr) {
-      let d = dayjs(dateStr)
-      return d.format("YYYY-MM-DD")
+      return dateStr.split("T")[0]
    }
    return ""
 }
@@ -212,6 +222,11 @@ function discardItem(item) {
    dd {
       margin: 0 0 5px 0 !important;
    }
+}
+button.p-button-secondary.edit {
+   position: absolute;
+   right:15px;
+   top: 15px;
 }
 div.item {
    margin: 15px;

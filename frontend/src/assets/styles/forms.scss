@@ -32,6 +32,10 @@ select,
 button.dpg-form-input {
    @include base-button();
 }
+.submit-button button {
+   @include primary-button();
+   width: auto;
+}
 
 .formkit-outer[data-type="radio"] {
    margin-top: 20px;

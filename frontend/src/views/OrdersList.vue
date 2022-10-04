@@ -33,9 +33,14 @@
          <Column field="dateSubmitted" header="Request Submitted" :sortable="true" class="nowrap" />
          <Column field="dateDue" header="Date Due" :sortable="true" class="nowrap" />
          <Column field="title" header="Title" :sortable="true" />
+         <Column field="specialInstructions" header="Special Instructions" />
          <Column field="unitCount" header="Units" :sortable="true" />
          <Column field="masterFileCount" header="Master Files" :sortable="true" />
-         <Column field="fee" header="Fee" :sortable="true" />
+         <Column field="fee" header="Fee" :sortable="true">
+            <template #body="slotProps">
+               <span class="fee" v-if="slotProps.data.fee > 0">${{slotProps.data.fee}}.00</span>
+            </template>
+         </Column>
          <Column field="lastName" header="Customer" class="nowrap" >
             <template #body="slotProps">
                {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
@@ -45,7 +50,7 @@
 
          <Column header="" class="row-acts">
             <template #body="slotProps">
-               <router-link :to="`/orders/${slotProps.data.id}`">View Details</router-link>
+               <router-link :to="`/orders/${slotProps.data.id}`">View</router-link>
             </template>
          </Column>
       </DataTable>
@@ -152,6 +157,9 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+:deep(td.nowrap) {
+   white-space: nowrap;
+}
    .orders {
       min-height: 600px;
       text-align: left;
@@ -178,9 +186,6 @@ onMounted(() => {
             width: 100%;
          }
          span.sta
-         :deep(td.nowrap) {
-            white-space: nowrap;
-         }
          :deep(td), :deep(th) {
             padding: 10px;
          }
