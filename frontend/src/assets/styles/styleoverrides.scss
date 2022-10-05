@@ -79,6 +79,10 @@ button.p-button {
    }
 }
 
+button.p-button.p-disabled {
+   opacity: 0.3;
+}
+
 button.p-button.p-button-secondary {
    background-color: var(--uvalib-grey-lightest);
    border: 1px solid var(--uvalib-grey);

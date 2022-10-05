@@ -46,7 +46,6 @@ function resetSearch() {
 
 onBeforeMount( () => {
    let paramsDetected = false
-   console.log("BEFORE MOUNT")
    if ( route.query.q && searchStore.query != route.query.q ) {
       searchStore.query = route.query.q
       paramsDetected = true

@@ -61,12 +61,20 @@
             <DataDisplay label="Date Customer Notified" :value="formatDateTime(detail.dateCustomerNotified)"/>
          </dl>
          <template v-if="user.isAdmin || user.isSupervisor">
-            <div class="actions" v-if="detail.status != 'completed' && detail.status != 'canceled'">
-               APPROVAL WORKFLOW EXT CUSTOMER {{isExternalCustomer}}
-            </div>
             <div class="actions" v-if="detail.status == 'await_fee'">
                FEES WORKFLOW
             </div>
+            <template v-else>
+               <div class="actions" v-if="detail.status != 'completed' && detail.status != 'canceled'">
+                  <DPGButton v-if="isExternalCustomer" label="Send Fee Estimate" class="p-button-secondary right-pad"
+                     :disabled="isSendFeeDisabled" @click="sendFeeEstimateCllicked()"/>
+                  <DPGButton v-if="detail.status == 'deferred'" label="Resume Order" class="p-button-secondary" @click="resumeOrderClicked()"/>
+                  <DPGButton v-else label="Defer Order" class="p-button-secondary" @click="deferOrderClicked()"/>
+                  <DPGButton label="Approve Order" class="p-button-secondary" :disabled="isApproveDisabled" @click="approveOrderClicked()"/>
+                  <DPGButton label="Cancel Order" class="p-button-secondary" @click="cancelOrderClicked()"/>
+                  <DPGButton label="Complete Order" class="p-button-secondary" :disabled="isCompleteOrderDisabled" @click="completeOrderClicked()"/>
+               </div>
+            </template>
             <div class="actions" v-if="(detail.status == 'approved' || detail.status == 'completed') && ordersStore.hasPatronDeliverables && detail.email">
                <DPGButton label="View Customer Email" class="p-button-secondary" @click="viewEmailClicked()" :style="{marginLeft:0}"/>
                <DPGButton label="Recreate Email" class="p-button-secondary" @click="recreateEmailClicked()" />
@@ -168,6 +176,26 @@ const hasMessages = computed(() => {
    return false
 })
 
+const isCompleteOrderDisabled = computed(() =>{
+   return ordersStore.detail.status != 'approved'
+})
+
+const isApproveDisabled = computed(() =>{
+   if (  ordersStore.detail.status == 'approved' ) return true // already approved; disable
+   if (  ordersStore.hasApprovedUnits == false ) return true // no approved untis; disable
+   if ( isExternalCustomer() && (ordersStore.detail.fee == null || ordersStore.isFeePaid == false)) return true // external unpaid; disable
+   return false
+})
+
+const isSendFeeDisabled = computed(() => {
+   // Only enable send estimate when estimate is populated, fee has not been
+   // sent or paid and status is not deferred/approved
+   let feeDisabled = ordersStore.detail.fee == null || ordersStore.detail.dateFeeEstimateSent != null  ||
+      ordersStore.detail.status == 'deferred' || ordersStore.detail.status == 'approved'
+                       // order.fee_paid?
+   return feeDisabled
+})
+
 const isExternalCustomer = computed( () => {
    if (ordersStore.detail.customer == null) return false
    return customerStore.isExternal(ordersStore.detail.customer.id)
@@ -250,6 +278,25 @@ function createUnitFromItem(item) {
 }
 function discardItem(item) {
    alert("discard "+item.id)
+}
+
+function sendFeeEstimateCllicked() {
+   ordersStore.sendFeeEstimate( user.ID )
+}
+function deferOrderClicked() {
+   //
+}
+function resumeOrderClicked() {
+   //
+}
+function approveOrderClicked() {
+   //
+}
+function cancelOrderClicked() {
+   //
+}
+function completeOrderClicked() {
+   //
 }
 
 </script>

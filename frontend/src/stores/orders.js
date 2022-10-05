@@ -45,6 +45,20 @@ export const useOrdersStore = defineStore('orders', {
       editInvoice: false
 	}),
 	getters: {
+      isFeePaid: state => {
+         if ( state.detail.invoice == null) return false
+         return state.detail.invoice.dateFeePaid != null
+      },
+      hasApprovedUnits: state => {
+         let hasApproved = false
+         state.units.some( u=>{
+            if (u.status == 'approved') {
+               hasApproved = true
+            }
+            return hasApproved==true
+         })
+         return hasApproved
+      },
       hasPatronDeliverables: state => {
          let hasDeliverables = false
          state.units.some( u=>{
@@ -121,6 +135,24 @@ export const useOrdersStore = defineStore('orders', {
          let url = `${system.jobsURL}/orders/${this.detail.id}/pdf`
          await axios.post( url ).then( () => {
             system.toastMessage("PDF Recreated", "Customer PDF has been recreated")
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      sendFeeEstimate( staffID ) {
+         const system = useSystemStore()
+         system.working = true
+         let url = `${system.jobsURL}/orders/${this.detail.id}/fees?staff=${staffID}`
+         axios.post( url ).then( () => {
+            system.toastMessage("A fee estimate email has been sent to the customer")
+            this.detail.status = "await_fee"
+            this.detail.dateFeeEstimateSent = dayjs(new Date()).format("YYYY-MM-DD")
+            let tgtO = this.orders.find( o => o.id == this.detail.id)
+            if (tgtO ) {
+               tgtO.status = "await_fee"
+               tgtO.dateFeeEstimateSent = this.detail.dateFeeEstimateSent
+            }
             system.working = false
          }).catch( e => {
             system.setError(e)

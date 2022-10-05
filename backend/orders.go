@@ -16,9 +16,9 @@ type invoice struct {
 	ID                   int64      `json:"id"`
 	OrderID              int64      `json:"-"`
 	DateInvoice          time.Time  `json:"invoiceDate"`
-	DateFeePaid          *time.Time `json:"dateFeePaid"`
-	DateSecondNoticeSent *time.Time `json:"dateNoticeSent"`
-	DateFeeDeclined      *time.Time `json:"dateFeeDeclined"`
+	DateFeePaid          *time.Time `json:"dateFeePaid,omitempty"`
+	DateSecondNoticeSent *time.Time `json:"dateNoticeSent,omitempty"`
+	DateFeeDeclined      *time.Time `json:"dateFeeDeclined,omitempty"`
 	FeeAmountPaid        int64      `json:"feeAmountPaid"`
 	TransmittalNumber    string     `json:"transmittalNumber"`
 	Notes                string     `json:"notes"`
@@ -234,14 +234,14 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 	}
 
 	var updateRequest struct {
-		Status              string   `json:"status"`
-		DateDue             string   `json:"dateDue"`
-		Title               string   `json:"title"`
-		SpecialInstructions string   `json:"specialInstructions"`
-		StaffNotes          string   `json:"staffNotes"`
-		Fee                 *float64 `json:"fee"`
-		AgencyID            uint     `json:"agencyID"`
-		CustomerID          uint     `json:"customerID"`
+		Status              string  `json:"status"`
+		DateDue             string  `json:"dateDue"`
+		Title               string  `json:"title"`
+		SpecialInstructions string  `json:"specialInstructions"`
+		StaffNotes          string  `json:"staffNotes"`
+		Fee                 *string `json:"fee"`
+		AgencyID            uint    `json:"agencyID"`
+		CustomerID          uint    `json:"customerID"`
 	}
 	err = c.BindJSON(&updateRequest)
 	if err != nil {
@@ -257,7 +257,10 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 	oDetail.StaffNotes = updateRequest.StaffNotes
 	oDetail.Fee = nil
 	if updateRequest.Fee != nil {
-		oDetail.Fee = updateRequest.Fee
+		floatFee, _ := strconv.ParseFloat(*updateRequest.Fee, 64)
+		if floatFee > 0 {
+			oDetail.Fee = &floatFee
+		}
 	}
 	oDetail.AgencyID = nil
 	if updateRequest.AgencyID != 0 {

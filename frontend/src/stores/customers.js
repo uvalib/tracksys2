@@ -10,10 +10,8 @@ export const useCustomersStore = defineStore('customers', {
 	getters: {
       isExternal: state => {
          return (customerID) => {
-            console.log("IS "+customerID+" external")
             let c = state.customers.find( c => c.id == customerID)
             if ( c ) {
-               console.log("STATUS "+c.academicStatusID)
                return (c.academicStatusID == 1)
             }
             return false

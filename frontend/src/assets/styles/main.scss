@@ -4,6 +4,10 @@ body {
    padding: 0;
    background-color: white;
 
+   .right-pad {
+      margin-right: 10px !important;
+   }
+
    #app {
       font-family: "franklin-gothic-urw", arial, sans-serif;
       -webkit-font-smoothing: antialiased;
