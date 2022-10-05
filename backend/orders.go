@@ -13,18 +13,16 @@ import (
 )
 
 type invoice struct {
-	ID                   int64      `json:"id"`
-	OrderID              int64      `json:"-"`
-	DateInvoice          time.Time  `json:"invoiceDate"`
-	DateFeePaid          *time.Time `json:"dateFeePaid,omitempty"`
-	DateSecondNoticeSent *time.Time `json:"dateNoticeSent,omitempty"`
-	DateFeeDeclined      *time.Time `json:"dateFeeDeclined,omitempty"`
-	FeeAmountPaid        int64      `json:"feeAmountPaid"`
-	TransmittalNumber    string     `json:"transmittalNumber"`
-	Notes                string     `json:"notes"`
-	PermanentNonpayment  bool       `json:"permanentNonpayment"`
-	CreatedAt            time.Time  `json:"createdAt"`
-	UpdatedAt            time.Time  `json:"-"`
+	ID                int64      `json:"id"`
+	OrderID           int64      `json:"-"`
+	DateInvoice       time.Time  `json:"invoiceDate"`
+	DateFeePaid       *time.Time `json:"dateFeePaid,omitempty"`
+	DateFeeDeclined   *time.Time `json:"dateFeeDeclined,omitempty"`
+	FeeAmountPaid     *int64     `json:"feeAmountPaid"`
+	TransmittalNumber string     `json:"transmittalNumber"`
+	Notes             string     `json:"notes"`
+	CreatedAt         time.Time  `json:"createdAt"`
+	UpdatedAt         time.Time  `json:"-"`
 }
 
 type orderItem struct {
@@ -220,6 +218,63 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	out := resp{Jobs: o, Total: total}
 
 	c.JSON(http.StatusOK, out)
+}
+
+func (svc *serviceContext) updateInvoice(c *gin.Context) {
+	invoiceID := c.Param("id")
+	log.Printf("INFO: update invoice %s", invoiceID)
+	var inv invoice
+	err := svc.DB.Find(&inv, invoiceID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve invoice %s: %s", invoiceID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	var updateRequest struct {
+		DateFeePaid       string `json:"dateFeePaid"`
+		DateFeeDeclined   string `json:"dateFeeDeclined"`
+		FeeAmountPaid     string `json:"feeAmountPaid"`
+		TransmittalNumber string `json:"transmittalNumber"`
+		Notes             string `json:"notes"`
+	}
+	err = c.BindJSON(&updateRequest)
+	if err != nil {
+		log.Printf("ERROR: invalid update invoice %s request: %s", invoiceID, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	log.Printf("%+v", updateRequest)
+
+	if updateRequest.DateFeePaid != "" {
+		paid, _ := time.Parse("2006-01-02", updateRequest.DateFeePaid)
+		inv.DateFeePaid = &paid
+	} else {
+		inv.DateFeePaid = nil
+	}
+	if updateRequest.DateFeeDeclined != "" {
+		paid, _ := time.Parse("2006-01-02", updateRequest.DateFeeDeclined)
+		inv.DateFeeDeclined = &paid
+	} else {
+		inv.DateFeeDeclined = nil
+	}
+	if updateRequest.FeeAmountPaid != "" {
+		fee, _ := strconv.ParseInt(updateRequest.FeeAmountPaid, 10, 64)
+		inv.FeeAmountPaid = &fee
+	} else {
+		inv.FeeAmountPaid = nil
+	}
+	inv.TransmittalNumber = updateRequest.TransmittalNumber
+	inv.Notes = updateRequest.Notes
+
+	err = svc.DB.Model(&inv).Debug().Select("DateFeePaid", "DateFeeDeclined", "FeeAmountPaid", "PermanentNonPayment", "TransmittalNumber", "Notes").Updates(inv).Error
+	if err != nil {
+		log.Printf("ERROR: unable to update invoice %d: %s", inv.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: order %d updated", inv.ID)
+	c.JSON(http.StatusOK, inv)
 }
 
 func (svc *serviceContext) updateOrder(c *gin.Context) {

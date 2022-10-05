@@ -44,8 +44,12 @@
          <Panel header="Messages" v-if="hasMessages">
             <div class="msg" v-if="detail.status== 'requested'">Order is not yet approved.</div>
             <div class="msg" v-if="detail.status== 'deferred'">Order has been deferred.</div>
-            <div class="msg" v-if="detail.status== 'await_fee'">Order is awaiting customer fee payment.</div>
             <div class="msg" v-if="detail.customer.academicStatusID==1 && !detail.fee">Either enter a fee, defer or cancel this order.</div>
+            <template v-if="detail.status== 'await_fee'">
+               <div class="msg">Order is awaiting customer fee payment.</div>
+               <div class="msg" v-if="ordersStore.isFeePaid == false">Fee payment information must be added to the invoice.</div>
+               <div class="msg" v-if="ordersStore.hasUnitsBeingPrepared">You must approve or cancel units in this order.</div>
+            </template>
          </Panel>
       </div>
       <Panel header="Workflow">
@@ -60,9 +64,11 @@
             <DataDisplay label="Date Patron Deliverables Complete" :value="formatDateTime(detail.datePatronDeliverablesComplete)"/>
             <DataDisplay label="Date Customer Notified" :value="formatDateTime(detail.dateCustomerNotified)"/>
          </dl>
-         <template v-if="user.isAdmin || user.isSupervisor">
+         <div class="acts-wrap" v-if="user.isAdmin || user.isSupervisor">
             <div class="actions" v-if="detail.status == 'await_fee'">
-               FEES WORKFLOW
+               <DPGButton label="Customer Paid Fee" class="p-button-secondary" :disabled="isPaidDisabled"  @click="payFeeClicked()"/>
+               <SendEmailDialog mode="fee" />
+               <DPGButton label="Customer Declines Fee" class="p-button-secondary" @click="declineFeeClicked()"/>
             </div>
             <template v-else>
                <div class="actions" v-if="detail.status != 'completed' && detail.status != 'canceled'">
@@ -78,7 +84,7 @@
             <div class="actions" v-if="(detail.status == 'approved' || detail.status == 'completed') && ordersStore.hasPatronDeliverables && detail.email">
                <DPGButton label="View Customer Email" class="p-button-secondary" @click="viewEmailClicked()" :style="{marginLeft:0}"/>
                <DPGButton label="Recreate Email" class="p-button-secondary" @click="recreateEmailClicked()" />
-               <SendEmailDialog />
+               <SendEmailDialog mode="order" />
             </div>
             <div class="actions" v-if="ordersStore.hasPatronDeliverables">
                <DPGButton label="View Customer PDF" class="p-button-secondary" @click="viewPDFClicked()" />
@@ -88,7 +94,7 @@
                <DPGButton v-if="detail.invoice" label="View Invoice" class="p-button-secondary" @click="viewInvoiceClicked()"/>
                <DPGButton v-else-if="detail.fee" label="Create Invoice" class="p-button-secondary" @click="createInvoiceClicked()"/>
             </div>
-         </template>
+         </div>
       </Panel>
    </div>
    <div class="details" v-if="ordersStore.items.length> 0">
@@ -174,6 +180,10 @@ const hasMessages = computed(() => {
       if ( ordersStore.detail.customer.academicStatusID==1 && !ordersStore.detail.fee) return true
    }
    return false
+})
+
+const isPaidDisabled = computed(() =>{
+   return ordersStore.isFeePaid == false || ordersStore.hasUnitsBeingPrepared
 })
 
 const isCompleteOrderDisabled = computed(() =>{
@@ -343,6 +353,9 @@ div.item {
       margin: 5px;
    }
 
+   dl {
+      margin-bottom: 10px !important;
+   }
    div.status {
       display: flex;
       flex-flow: row nowrap;
@@ -365,14 +378,18 @@ div.item {
       flex: 45%;
       text-align: left;
    }
-   .actions {
-      padding: 5px 0;
-      font-size: 0.8em;
-      display: flex;
-      flex-flow: row wrap;
-      justify-content: flex-start;
-      :deep(button.p-button) {
-         margin-right: 10px;
+   .acts-wrap {
+      border-top: 1px solid var(--uvalib-grey-light);
+      padding-top: 15px;
+      .actions {
+         padding: 5px 0;
+         font-size: 0.8em;
+         display: flex;
+         flex-flow: row wrap;
+         justify-content: flex-start;
+         :deep(button.p-button) {
+            margin-right: 10px;
+         }
       }
    }
 }

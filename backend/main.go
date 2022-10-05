@@ -45,6 +45,7 @@ func main() {
 		api.GET("/orders", svc.getOrders)
 		api.GET("/orders/:id", svc.getOrderDetails)
 		api.POST("/orders/:id/update", svc.updateOrder)
+		api.POST("/invoices/:id/update", svc.updateInvoice)
 
 		api.GET("/jobs", svc.getJobStatuses)
 		api.DELETE("/jobs", svc.deleteJobStatuses)

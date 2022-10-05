@@ -49,6 +49,18 @@ export const useOrdersStore = defineStore('orders', {
          if ( state.detail.invoice == null) return false
          return state.detail.invoice.dateFeePaid != null
       },
+      hasUnitsBeingPrepared: state => {
+         // Returns units belonging to current order that are not ready to proceed with digitization and would prevent an order from being approved.
+         // Only units whose unit_status = 'approved' or 'canceled' are removed from consideration by this method.
+         let beingPrepared = false
+         state.units.some( u=>{
+            if (u.status == 'unapproved' || u.status == 'condition' || u.status == 'copyright') {
+               beingPrepared = true
+            }
+            return beingPrepared==true
+         })
+         return beingPrepared
+      },
       hasApprovedUnits: state => {
          let hasApproved = false
          state.units.some( u=>{
@@ -86,6 +98,23 @@ export const useOrdersStore = defineStore('orders', {
             system.setError(e)
          })
       },
+
+      updateInvoice( edit ) {
+         const system = useSystemStore()
+         system.working = true
+         axios.post( `/api/invoices/${this.detail.invoice.id}/update`, edit ).then( () => {
+            this.detail.invoice.dateFeePaid = edit.dateFeePaid
+            this.detail.invoice.feeAmountPaid = edit.feeAmountPaid
+            this.detail.invoice.dateFeeDeclined = edit.dateFeeDeclined
+            this.detail.invoice.transmittalNumber = edit.transmittalNumber
+            this.detail.invoice.notes = edit.notes
+            system.toastMessage("Invoice Updated", "Order invoice has been updated")
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
       async submitEdit( edit ) {
          const system = useSystemStore()
          system.working = true
@@ -104,6 +133,7 @@ export const useOrdersStore = defineStore('orders', {
             system.setError(e)
          })
       },
+
       async sendEmail( toCustomer, toAlt = false, altAddress = "") {
          const system = useSystemStore()
          system.working = true
@@ -118,6 +148,7 @@ export const useOrdersStore = defineStore('orders', {
          system.toastMessage("Email Sent", "Order email has been sent to the selected recipients")
          system.working = false
       },
+
       recreateEmail() {
          const system = useSystemStore()
          system.working = true
@@ -129,6 +160,7 @@ export const useOrdersStore = defineStore('orders', {
             system.setError(e)
          })
       },
+
       async recreatePDF() {
          const system = useSystemStore()
          system.working = true
@@ -140,7 +172,23 @@ export const useOrdersStore = defineStore('orders', {
             system.setError(e)
          })
       },
-      sendFeeEstimate( staffID ) {
+
+      async resendFeeEstimate( staffID,  toCustomer, toAlt = false, altAddress = "") {
+         const system = useSystemStore()
+         system.working = true
+         let url = `${system.jobsURL}/orders/${this.detail.id}/fees?staff=${staffID}&resend=1`
+         if (toCustomer) {
+            await axios.post( url )
+         }
+         if ( toAlt ) {
+            url = `${url}&alt=${altAddress}`
+            await axios.post( url  )
+         }
+         system.toastMessage("Email Sent", "Fee estimate email has been resent to the selected recipients")
+         system.working = false
+      },
+
+      sendFeeEstimate( staffID) {
          const system = useSystemStore()
          system.working = true
          let url = `${system.jobsURL}/orders/${this.detail.id}/fees?staff=${staffID}`

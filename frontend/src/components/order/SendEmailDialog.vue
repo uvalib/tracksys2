@@ -1,6 +1,6 @@
 <template>
-   <DPGButton @click="show" label="Send Email" class="p-button-secondary"/>
-   <Dialog v-model:visible="isOpen" :modal="true" header="Send Email">
+   <DPGButton @click="show" :label="buttonLabel" class="p-button-secondary"/>
+   <Dialog v-model:visible="isOpen" :modal="true" :header="buttonLabel">
       <div class="choice border">
         <input type="checkbox" v-model="sendToCustomer"/>
         <span>Send to customer email: {{ordersStore.detail.customer.email}}</span>
@@ -19,11 +19,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import {useOrdersStore} from '@/stores/orders'
+import {useUserStore} from '@/stores/user'
 import Dialog from 'primevue/dialog'
 
 const ordersStore = useOrdersStore()
+const user = useUserStore()
+
+const props = defineProps({
+   mode: {
+      type: String,
+      default: "order",
+   },
+})
 
 const isOpen = ref(false)
 const error = ref("")
@@ -31,13 +40,25 @@ const sendToCustomer = ref(true)
 const sendToAlt = ref(false)
 const altEmail = ref("")
 
+const buttonLabel = computed(() => {
+   if (props.mode == "fee") {
+      return "Resend Fee Estimate"
+   }
+   return "Send Email"
+})
+
 function sendClicked() {
    error.value = ""
    if (sendToAlt.value && altEmail.value == "") {
       error.value = "An alternate email address is required."
       return
    }
-   ordersStore.sendEmail(sendToCustomer.value, sendToAlt.value, altEmail.value)
+   if (props.mode == "order") {
+      ordersStore.sendEmail(sendToCustomer.value, sendToAlt.value, altEmail.value)
+   } else {
+      ordersStore.resendFeeEstimate( user.ID, sendToCustomer.value, sendToAlt.value, altEmail.value)
+   }
+   hide()
 }
 
 function hide() {
