@@ -84,7 +84,30 @@ export const useOrdersStore = defineStore('orders', {
       },
    },
 	actions: {
-     async  getOrderDetails(orderID) {
+      clearDetails()  {
+         this.detail.id = 0
+         this.detail.status = ""
+         this.detail.title = ""
+         this.detail.dateDue = ""
+         this.detail.customer = null
+         this.detail.agency = null
+         this.detail.fee = null
+         this.detail.invoice = null
+         this.detail.email = ""
+         this.detail.staffNotes = ""
+         this.detail.specialInstructions = ""
+         this.detail.dateSubitted = ""
+         this.detail.dateApproved = ""
+         this.detail.dateDeferred = ""
+         this.detail.dateCanceled = ""
+         this.detail.dateCustomerNotified = ""
+         this.detail.datePatronDeliverablesComplete = ""
+         this.detail.dateArchivingComplete = ""
+         this.detail.dateFinalizationBegun = ""
+         this.detail.dateFeeEstimateSent = ""
+         this.detail.dateCompleted = ""
+      },
+      async getOrderDetails(orderID) {
          if ( this.detail.id == orderID ) return
          const system = useSystemStore()
          system.working = true
@@ -115,6 +138,24 @@ export const useOrdersStore = defineStore('orders', {
             this.detail.invoice.transmittalNumber = edit.transmittalNumber
             this.detail.invoice.notes = edit.notes
             system.toastMessage("Invoice Updated", "Order invoice has been updated")
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
+      async createOrder( data ) {
+         const system = useSystemStore()
+         system.working = true
+         return axios.post( `/api/orders`, data ).then( (response ) => {
+            this.detail = response.data
+            if (this.detail.fee) {
+               this.detail.fee = `${this.detail.fee}`
+            }
+            if (this.detail.invoice && this.detail.invoice.feeAmountPaid) {
+               this.detail.invoice.feeAmountPaid = `${this.detail.invoice.feeAmountPaid}`
+            }
+            system.toastMessage("Order Created", "Order has been created")
             system.working = false
          }).catch( e => {
             system.setError(e)

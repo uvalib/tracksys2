@@ -1,6 +1,7 @@
 <template>
    <h2>
-      <span>Order {{route.params.id}}</span>
+      <span v-if="route.params.id">Order {{route.params.id}}</span>
+      <span v-else>New Order [{{newOrder}}]</span>
    </h2>
    <div class="edit-form">
       <FormKit type="form" id="customer-detail" :actions="false" @submit="submitChanges">
@@ -14,9 +15,9 @@
          <FormKit label="Staff Notes" type="textarea" rows="5" v-model="edited.staffNotes"/>
          <FormKit label="Fee" type="number" v-model="edited.fee"/>
          <div class="split">
-            <FormKit label="Agency" type="select" v-model="edited.agencyID" :options="agencies"/>
+            <FormKit label="Agency" type="select" v-model="edited.agencyID" :options="agencies" placeholder="Select an agency"/>
             <div class="sep"></div>
-            <FormKit label="Customer" type="select" v-model="edited.customerID" :options="customers"/>
+            <FormKit label="Customer" type="select" v-model="edited.customerID" :options="customers" placeholder="Select a customer" required/>
          </div>
 
          <div class="acts">
@@ -47,9 +48,10 @@ const edited = ref({
    specialInstructions: "",
    staffNotes: "",
    fee: null,
-   agencyID: 0,
-   customerID: 0,
+   agencyID: "",
+   customerID: "",
 })
+const newOrder = ref(false)
 
 const agencies = computed(() => {
    let out = []
@@ -80,7 +82,14 @@ const orderStatuses = computed(() => {
 
 onMounted( async () =>{
    let orderID = route.params.id
-   await ordersStore.getOrderDetails(orderID)
+   console.log(orderID)
+   if (orderID) {
+      newOrder.value = false
+      await ordersStore.getOrderDetails(orderID)
+   } else {
+      ordersStore.clearDetails()
+      newOrder.value = true
+   }
 
    edited.value.status = ordersStore.detail.status
    edited.value.dateDue = dayjs(ordersStore.detail.dateDue).format("YYYY-MM-DD")
@@ -90,9 +99,13 @@ onMounted( async () =>{
    edited.value.fee = ordersStore.detail.fee
    if (ordersStore.detail.agency) {
       edited.value.agencyID = ordersStore.detail.agency.id
+   } else {
+      edited.value.agencyID = ""
    }
    if (ordersStore.detail.customer) {
       edited.value.customerID = ordersStore.detail.customer.id
+   } else {
+      edited.value.customerID = ""
    }
 })
 
@@ -100,9 +113,15 @@ function cancelEdit() {
    router.push(`/orders/${route.params.id}`)
 }
 async function submitChanges() {
-   await ordersStore.submitEdit( edited.value )
+   if ( newOrder.value == true) {
+      console.log("CREATE ORDER")
+      await ordersStore.createOrder( edited.value )
+   } else {
+      console.log("UPDATE ORDER")
+      await ordersStore.submitEdit( edited.value )
+   }
    if (systemStore.showError == false) {
-      router.push(`/orders/${route.params.id}`)
+      router.push(`/orders/${ordersStore.detail.id}`)
    }
 }
 

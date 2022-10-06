@@ -1,5 +1,6 @@
 <template>
    <h2>Orders</h2>
+   <DPGButton label="New Order" class="p-button-secondary create" @click="createOrder()"/>
    <div class="orders">
       <div class="toolbar">
          <span>
@@ -102,6 +103,10 @@ onBeforeMount( () => {
    }
 })
 
+function createOrder() {
+   router.push("/orders/new")
+}
+
 function displayStatus( id) {
    if (id == "await_fee") {
       return "Await Fee"
@@ -159,6 +164,11 @@ onMounted(() => {
 <style scoped lang="scss">
 :deep(td.nowrap) {
    white-space: nowrap;
+}
+button.p-button-secondary.create {
+   position: absolute;
+   right:15px;
+   top: 15px;
 }
    .orders {
       min-height: 600px;

@@ -42,7 +42,7 @@
             </dl>
          </Panel>
          <Panel header="Messages" v-if="hasMessages">
-            <div class="msg" v-if="detail.status== 'requested'">Order is not yet approved.</div>
+            <div class="msg" v-if="detail.status== 'requested'">Order is not yet approved. Units must be added and approved before order can be approved.</div>
             <div class="msg" v-if="detail.status== 'deferred'">Order has been deferred.</div>
             <div class="msg" v-if="detail.customer.academicStatusID==1 && !detail.fee">Either enter a fee, defer or cancel this order.</div>
             <template v-if="detail.status== 'await_fee'">

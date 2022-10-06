@@ -64,8 +64,8 @@ type order struct {
 	Agency                         *agency    `gorm:"foreignKey:AgencyID" json:"agency,omitempty"`
 	Fee                            *float64   `json:"fee,omitempty"`
 	Invoice                        *invoice   `gorm:"-" json:"invoice,omitempty"`
-	UnitCount                      int64      `gorm:"unitCount" json:"unitCount"`
-	MasterFileCount                int64      `gorm:"masterFileCount" json:"masterFileCount"`
+	UnitsCount                     int64      `gorm:"unitCount" json:"unitCount"`
+	MasterFilesCount               int64      `gorm:"masterFileCount" json:"masterFileCount"`
 	Email                          string     `json:"email"`
 	StaffNotes                     string     `json:"staffNotes"`
 	SpecialInstructions            string     `json:"specialInstructions"`
@@ -80,6 +80,47 @@ type order struct {
 	DateFeeEstimateSentToCustomer  *time.Time `json:"dateFeeEstimateSent"`
 	DateCompleted                  *time.Time `json:"dateCompleted"`
 	UpdatedAt                      time.Time  `json:"-"`
+}
+
+type orderRequest struct {
+	Status              string  `json:"status"`
+	DateDue             string  `json:"dateDue"`
+	Title               string  `json:"title"`
+	SpecialInstructions string  `json:"specialInstructions"`
+	StaffNotes          string  `json:"staffNotes"`
+	Fee                 *string `json:"fee"`
+	AgencyID            uint    `json:"agencyID"`
+	CustomerID          uint    `json:"customerID"`
+}
+
+func (svc *serviceContext) createOrder(c *gin.Context) {
+	var req orderRequest
+	err := c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid create order request: %s", err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	dueDate, _ := time.Parse("2006-01-02", req.DateDue)
+	var fee float64
+	if req.Fee != nil {
+		fee, _ = strconv.ParseFloat(*req.Fee, 64)
+	}
+	newOrder := order{OrderStatus: "requested", DateDue: dueDate, OrderTitle: req.Title,
+		SpecialInstructions: req.SpecialInstructions, StaffNotes: req.StaffNotes,
+		AgencyID: &req.AgencyID, CustomerID: &req.CustomerID, DateRequestSubmitted: time.Now()}
+	if fee > 0 {
+		newOrder.Fee = &fee
+	}
+	err = svc.DB.Create(&newOrder).Error
+	if err != nil {
+		log.Printf("ERROR: unable to create new order %+v: %s", req, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: order %d updated", newOrder.ID)
+	svc.DB.Preload("Agency").Preload("Customer").Find(&newOrder, newOrder.ID)
+	c.JSON(http.StatusOK, newOrder)
 }
 
 func (svc *serviceContext) loadOrder(orderID string) (*order, error) {
@@ -482,16 +523,7 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 		return
 	}
 
-	var updateRequest struct {
-		Status              string  `json:"status"`
-		DateDue             string  `json:"dateDue"`
-		Title               string  `json:"title"`
-		SpecialInstructions string  `json:"specialInstructions"`
-		StaffNotes          string  `json:"staffNotes"`
-		Fee                 *string `json:"fee"`
-		AgencyID            uint    `json:"agencyID"`
-		CustomerID          uint    `json:"customerID"`
-	}
+	var updateRequest orderRequest
 	err = c.BindJSON(&updateRequest)
 	if err != nil {
 		log.Printf("ERROR: invalid update order %s request: %s", orderID, err.Error())

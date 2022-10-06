@@ -43,6 +43,7 @@ func main() {
 		api.GET("/metadata/:id/related", svc.getMetadataRelatedItems)
 
 		api.GET("/orders", svc.getOrders)
+		api.POST("/orders", svc.createOrder)
 		api.GET("/orders/:id", svc.getOrderDetails)
 		api.POST("/orders/:id/update", svc.updateOrder)
 		api.POST("/orders/:id/fee/accept", svc.acceptFee)
