@@ -90,6 +90,12 @@ export const useOrdersStore = defineStore('orders', {
          system.working = true
          return axios.get( `/api/orders/${orderID}` ).then(response => {
             this.detail = response.data.order
+            if (this.detail.fee) {
+               this.detail.fee = `${this.detail.fee}`
+            }
+            if (this.detail.invoice && this.detail.invoice.feeAmountPaid) {
+               this.detail.invoice.feeAmountPaid = `${this.detail.invoice.feeAmountPaid}`
+            }
             this.events = response.data.events
             this.items = response.data.items
             this.units = response.data.units
@@ -234,5 +240,43 @@ export const useOrdersStore = defineStore('orders', {
             system.setError(e)
          })
       },
+      async feeAccepted( staffID ) {
+         const system = useSystemStore()
+         system.working = true
+         let url = `/api/orders/${this.detail.id}/fee/accept?staff=${staffID}`
+         axios.post( url ).then( (resp) => {
+            this.detail.dateApproved = resp.data.dateApproved
+            this.detail.status = resp.data.status
+            let tgtO = this.orders.find( o => o.id == this.detail.id)
+            if (tgtO ) {
+               tgtO.status = this.detail.status
+               tgtO.dateApproved = this.detail.dateApproved
+            }
+            this.items = []
+            system.toastMessage("Fee Accepted", "Fee accepted and order approved")
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      async feeDeclined( staffID ) {
+         const system = useSystemStore()
+         system.working = true
+         let url = `/api/orders/${this.detail.id}/fee/decline?staff=${staffID}`
+         axios.post( url ).then( (resp) => {
+            this.detail.dateCanceled = resp.data.dateCanceled
+            this.detail.status = resp.data.status
+            this.detail.invoice.dateFeeDeclined = resp.data.dateCanceled
+            let tgtO = this.orders.find( o => o.id == this.detail.id)
+            if (tgtO ) {
+               tgtO.status = this.detail.status
+               tgtO.dateCanceled = this.detail.dateCanceled
+            }
+            system.toastMessage("Fee Declined", "Fee declined and order canceled")
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      }
 	}
 })

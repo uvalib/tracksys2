@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -47,6 +48,7 @@ type auditEvent struct {
 	StaffMember   staffMember `gorm:"foreignKey:StaffMemberID" json:"staffMember"`
 	AuditableID   int64       `json:"-"`
 	AuditableType string      `json:"-"`
+	Event         uint        `json:"eventID"`
 	Details       string      `json:"details"`
 	CreatedAt     time.Time   `json:"createdAt"`
 }
@@ -80,32 +82,41 @@ type order struct {
 	UpdatedAt                      time.Time  `json:"-"`
 }
 
+func (svc *serviceContext) loadOrder(orderID string) (*order, error) {
+	log.Printf("INFO: load order %s details", orderID)
+	var oDetail order
+	err := svc.DB.Preload("Agency").Preload("Customer").Find(&oDetail, orderID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("INFO: lookup invoice for order %d", oDetail.ID)
+	var invDetail invoice
+	err = svc.DB.Where("order_id=?", orderID).Order("created_at desc").First(&invDetail).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("ERROR: unable to get invoice for order %s: %s", orderID, err.Error())
+		} else {
+			log.Printf("INFO: no invoice for order %s", orderID)
+		}
+	} else {
+		oDetail.Invoice = &invDetail
+	}
+
+	return &oDetail, nil
+}
+
 func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 	oID := c.Param("id")
-	log.Printf("INFO: get order %s details", oID)
-	var oDetail order
-	err := svc.DB.Preload("Agency").Preload("Customer").Find(&oDetail, oID).Error
+	oDetail, err := svc.loadOrder(oID)
 	if err != nil {
 		log.Printf("ERROR: unable to retrieve order %s: %s", oID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	log.Printf("INFO: lookup invoice for order %d", oDetail.ID)
-	var invDetail invoice
-	err = svc.DB.Where("order_id=?", oID).Order("created_at desc").First(&invDetail).Error
-	if err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Printf("ERROR: unable to get invoice for order %s: %s", oID, err.Error())
-		} else {
-			log.Printf("INFO: no invoice for order %s", oID)
-		}
-	} else {
-		oDetail.Invoice = &invDetail
-	}
-
 	type oResp struct {
-		Order  order        `json:"order"`
+		Order  *order       `json:"order"`
 		Units  []unit       `json:"units"`
 		Items  []orderItem  `json:"items"`
 		Events []auditEvent `json:"events"`
@@ -220,6 +231,97 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+func (svc *serviceContext) acceptFee(c *gin.Context) {
+	oID := c.Param("id")
+	staffID := c.Query("staff")
+	if staffID == "" {
+		log.Printf("ERROR: staff param required for fee accept")
+		c.String(http.StatusBadRequest, "staff param is required")
+		return
+	}
+	oDetail, err := svc.loadOrder(oID)
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve order %s: %s", oID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: staff %s accepts fee for order %d", staffID, oDetail.ID)
+	msg := fmt.Sprintf("Status %s to APPROVED because customer accepted fee", strings.ToUpper(oDetail.OrderStatus))
+	svc.addOrderAuditEvent(oDetail, msg, staffID)
+
+	now := time.Now()
+	oDetail.OrderStatus = "approved"
+	oDetail.DateOrderApproved = &now
+	err = svc.DB.Model(oDetail).Select("OrderStatus", "DateOrderApproved").Updates(oDetail).Error
+	if err != nil {
+		log.Printf("ERROR: unable to accept fee for order %d: %s", oDetail.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: order has been accepted; remove all order items")
+	err = svc.DB.Where("order_id=?", oDetail.ID).Delete(orderItem{}).Error
+	if err != nil {
+		log.Printf("ERROR: unable to delete order %s items: %s", oID, err.Error())
+	}
+
+	c.JSON(http.StatusOK, oDetail)
+}
+
+func (svc *serviceContext) addOrderAuditEvent(o *order, msg string, staffIDStr string) {
+	log.Printf("INFO: add audit event %s to order %d", msg, o.ID)
+
+	staffID, _ := strconv.ParseInt(staffIDStr, 10, 64)
+	if staffID > 0 {
+		ae := auditEvent{StaffMemberID: staffID, Event: 0, Details: msg, AuditableID: o.ID, AuditableType: "Order", CreatedAt: time.Now()}
+		err := svc.DB.Create(&ae).Error
+		if err != nil {
+			log.Printf("ERROR: unable to add audit event %+v: %s", ae, err.Error())
+			return
+		}
+	} else {
+		log.Printf("ERROR: invalid staff id for audit event: %s", staffIDStr)
+		return
+	}
+}
+
+func (svc *serviceContext) declineFee(c *gin.Context) {
+	oID := c.Param("id")
+	staffID := c.Query("staff")
+	if staffID == "" {
+		log.Printf("ERROR: staff param required for fee decline")
+		c.String(http.StatusBadRequest, "staff param is required")
+		return
+	}
+	oDetail, err := svc.loadOrder(oID)
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve order %s: %s", oID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: staff %s declines fee for order %d", staffID, oDetail.ID)
+	msg := fmt.Sprintf("Status %s to CANCELED because customer declined fee", strings.ToUpper(oDetail.OrderStatus))
+	svc.addOrderAuditEvent(oDetail, msg, staffID)
+
+	now := time.Now()
+	oDetail.OrderStatus = "canceled"
+	oDetail.DateCanceled = &now
+	err = svc.DB.Model(oDetail).Select("OrderStatus", "DateCanceled").Updates(oDetail).Error
+	if err != nil {
+		log.Printf("ERROR: unable to decline fee for order %d: %s", oDetail.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	oDetail.Invoice.DateFeeDeclined = &now
+	err = svc.DB.Model(oDetail.Invoice).Select("DateFeeDeclined").Updates(oDetail.Invoice).Error
+	if err != nil {
+		log.Printf("ERROR: unable to updated invoice declined time for order %d: %s", oDetail.ID, err.Error())
+	}
+
+	c.JSON(http.StatusOK, oDetail)
+}
+
 func (svc *serviceContext) updateInvoice(c *gin.Context) {
 	invoiceID := c.Param("id")
 	log.Printf("INFO: update invoice %s", invoiceID)
@@ -244,7 +346,6 @@ func (svc *serviceContext) updateInvoice(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	log.Printf("%+v", updateRequest)
 
 	if updateRequest.DateFeePaid != "" {
 		paid, _ := time.Parse("2006-01-02", updateRequest.DateFeePaid)

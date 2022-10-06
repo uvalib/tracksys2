@@ -66,9 +66,9 @@
          </dl>
          <div class="acts-wrap" v-if="user.isAdmin || user.isSupervisor">
             <div class="actions" v-if="detail.status == 'await_fee'">
-               <DPGButton label="Customer Paid Fee" class="p-button-secondary" :disabled="isPaidDisabled"  @click="payFeeClicked()"/>
                <SendEmailDialog mode="fee" />
                <DPGButton label="Customer Declines Fee" class="p-button-secondary" @click="declineFeeClicked()"/>
+               <DPGButton label="Customer Paid Fee" class="p-button-secondary" :disabled="isPaidDisabled"  @click="payFeeClicked()"/>
             </div>
             <template v-else>
                <div class="actions" v-if="detail.status != 'completed' && detail.status != 'canceled'">
@@ -307,6 +307,12 @@ function cancelOrderClicked() {
 }
 function completeOrderClicked() {
    //
+}
+function payFeeClicked() {
+   ordersStore.feeAccepted( user.ID )
+}
+function declineFeeClicked() {
+   ordersStore.feeDeclined( user.ID )
 }
 
 </script>
