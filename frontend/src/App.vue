@@ -1,5 +1,5 @@
 <template>
-   <Toast position="top-right" />
+   <Toast position="top-center" />
    <div class="header" role="banner" id="uva-header">
       <div class="main-header">
          <div class="library-link">

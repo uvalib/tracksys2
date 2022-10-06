@@ -240,7 +240,7 @@ export const useOrdersStore = defineStore('orders', {
             system.setError(e)
          })
       },
-      async feeAccepted( staffID ) {
+      feeAccepted( staffID ) {
          const system = useSystemStore()
          system.working = true
          let url = `/api/orders/${this.detail.id}/fee/accept?staff=${staffID}`
@@ -259,7 +259,7 @@ export const useOrdersStore = defineStore('orders', {
             system.setError(e)
          })
       },
-      async feeDeclined( staffID ) {
+      feeDeclined( staffID ) {
          const system = useSystemStore()
          system.working = true
          let url = `/api/orders/${this.detail.id}/fee/decline?staff=${staffID}`
@@ -273,6 +273,40 @@ export const useOrdersStore = defineStore('orders', {
                tgtO.dateCanceled = this.detail.dateCanceled
             }
             system.toastMessage("Fee Declined", "Fee declined and order canceled")
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      deferOrder( staffID ) {
+         const system = useSystemStore()
+         system.working = true
+         let url = `/api/orders/${this.detail.id}/fee/defer?staff=${staffID}`
+         axios.post( url ).then( (resp) => {
+            this.detail.dateDeferred = resp.data.dateDeferred
+            this.detail.status = resp.data.status
+            let tgtO = this.orders.find( o => o.id == this.detail.id)
+            if (tgtO ) {
+               tgtO.status = this.detail.status
+               tgtO.dateDeferred = this.detail.dateDeferred
+            }
+            system.toastMessage("Order Deferred", "Order has been deferred")
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      resumeOrder( staffID ) {
+         const system = useSystemStore()
+         system.working = true
+         let url = `/api/orders/${this.detail.id}/fee/resume?staff=${staffID}`
+         axios.post( url ).then( (resp) => {
+            this.detail.status = resp.data.status
+            let tgtO = this.orders.find( o => o.id == this.detail.id)
+            if (tgtO ) {
+               tgtO.status = this.detail.status
+            }
+            system.toastMessage("Order Resumed", "Order has been reactivated")
             system.working = false
          }).catch( e => {
             system.setError(e)

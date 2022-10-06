@@ -285,6 +285,68 @@ func (svc *serviceContext) addOrderAuditEvent(o *order, msg string, staffIDStr s
 	}
 }
 
+func (svc *serviceContext) deferOrder(c *gin.Context) {
+	oID := c.Param("id")
+	staffID := c.Query("staff")
+	if staffID == "" {
+		log.Printf("ERROR: staff param required for fee defer")
+		c.String(http.StatusBadRequest, "staff param is required")
+		return
+	}
+	oDetail, err := svc.loadOrder(oID)
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve order %s for defer: %s", oID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: staff %s defers order %d", staffID, oDetail.ID)
+	msg := fmt.Sprintf("Status %s to DEFERRED", strings.ToUpper(oDetail.OrderStatus))
+	svc.addOrderAuditEvent(oDetail, msg, staffID)
+
+	now := time.Now()
+	oDetail.OrderStatus = "deferred"
+	oDetail.DateDeferred = &now
+	err = svc.DB.Model(oDetail).Select("OrderStatus", "DateDeferred").Updates(oDetail).Error
+	if err != nil {
+		log.Printf("ERROR: unable to defer order %d: %s", oDetail.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, oDetail)
+}
+
+func (svc *serviceContext) resumeOrder(c *gin.Context) {
+	oID := c.Param("id")
+	staffID := c.Query("staff")
+	if staffID == "" {
+		log.Printf("ERROR: staff param required for fee defer")
+		c.String(http.StatusBadRequest, "staff param is required")
+		return
+	}
+	oDetail, err := svc.loadOrder(oID)
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve order %s for defer: %s", oID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: staff %s resumes order %d", staffID, oDetail.ID)
+	msg := fmt.Sprintf("Status %s to REQUESTED", strings.ToUpper(oDetail.OrderStatus))
+	oDetail.OrderStatus = "requested"
+	if oDetail.DateOrderApproved != nil {
+		msg = fmt.Sprintf("Status %s to APPROVED", strings.ToUpper(oDetail.OrderStatus))
+		oDetail.OrderStatus = "approved"
+	}
+	svc.addOrderAuditEvent(oDetail, msg, staffID)
+	err = svc.DB.Model(oDetail).Select("OrderStatus").Updates(oDetail).Error
+	if err != nil {
+		log.Printf("ERROR: unable to resume order %d: %s", oDetail.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, oDetail)
+}
+
 func (svc *serviceContext) declineFee(c *gin.Context) {
 	oID := c.Param("id")
 	staffID := c.Query("staff")

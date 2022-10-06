@@ -294,10 +294,10 @@ function sendFeeEstimateCllicked() {
    ordersStore.sendFeeEstimate( user.ID )
 }
 function deferOrderClicked() {
-   //
+   ordersStore.deferOrder( user.ID )
 }
 function resumeOrderClicked() {
-   //
+   ordersStore.resumeOrder( user.ID )
 }
 function approveOrderClicked() {
    //
