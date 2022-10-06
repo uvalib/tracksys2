@@ -278,6 +278,24 @@ export const useOrdersStore = defineStore('orders', {
             system.setError(e)
          })
       },
+      cancelOrder( staffID ) {
+         const system = useSystemStore()
+         system.working = true
+         let url = `/api/orders/${this.detail.id}/fee/cancel?staff=${staffID}`
+         axios.post( url ).then( (resp) => {
+            this.detail.dateCanceled = resp.data.dateCanceled
+            this.detail.status = resp.data.status
+            let tgtO = this.orders.find( o => o.id == this.detail.id)
+            if (tgtO ) {
+               tgtO.status = this.detail.status
+               tgtO.dateCanceled = this.detail.dateCanceled
+            }
+            system.toastMessage("Order Canceled", "Order has been canceled")
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
       deferOrder( staffID ) {
          const system = useSystemStore()
          system.working = true

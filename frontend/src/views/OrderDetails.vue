@@ -303,7 +303,7 @@ function approveOrderClicked() {
    //
 }
 function cancelOrderClicked() {
-   //
+   ordersStore.cancelOrder( user.ID )
 }
 function completeOrderClicked() {
    //
