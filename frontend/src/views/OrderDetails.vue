@@ -41,7 +41,7 @@
                <DataDisplay label="Staff Notes" :value="detail.staffNotes"/>
             </dl>
          </Panel>
-         <Panel header="Messages" v-if="hasMessages">
+         <Panel class="messages" header="Messages" v-if="hasMessages">
             <div class="msg" v-if="detail.status== 'requested'">Order is not yet approved. Units must be added and approved before order can be approved.</div>
             <div class="msg" v-if="detail.status== 'deferred'">Order has been deferred.</div>
             <div class="msg" v-if="detail.customer.academicStatusID==1 && !detail.fee">Either enter a fee, defer or cancel this order.</div>
@@ -127,8 +127,14 @@
          </div>
       </Panel>
    </div>
-   <div class="details" v-if="ordersStore.units.length> 0">
+   <div class="details">
       <Panel header="Units">
+         <template #header v-if="detail.status != 'completed' && detail.status != 'canceled'">
+            <div class="add-header">
+               <span>Units</span>
+               <AddUnitDialog />
+            </div>
+         </template>
          <RelatedUnits :units="ordersStore.units" />
       </Panel>
    </div>
@@ -161,6 +167,7 @@ import InvoiceDialog from '@/components/order/InvoiceDialog.vue'
 import RelatedUnits from '../components/related/RelatedUnits.vue'
 import Divider from 'primevue/divider'
 import SendEmailDialog from '../components/order/SendEmailDialog.vue'
+import AddUnitDialog from '../components/order/AddUnitDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -355,6 +362,16 @@ div.item {
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
+   .add-header {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      align-items: baseline;
+      width: 100%;
+      span {
+         font-weight: 600;
+      }
+   }
    p {
       margin: 5px;
    }
@@ -371,9 +388,12 @@ div.item {
    }
 
    div.left {
-      margin: 10px;
+      margin: 0 10px 10px 10px;
       flex: 45%;
       text-align: left;
+      div.p-panel.messages {
+         margin-top: 25px;
+      }
       .msg {
          margin: 5px 0;
          font-size: 0.9em;

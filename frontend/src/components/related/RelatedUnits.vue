@@ -1,6 +1,6 @@
 <template>
   <div v-if="props.units.length == 0">
-      <h3>No related units found</h3>
+      <h3>No units found</h3>
    </div>
    <DataTable v-else :value="props.units" ref="relatedUnitsTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"

@@ -120,6 +120,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		ControlledVocabularies struct {
 			AcademicStatuses []academicStatus `json:"academicStatuses"`
 			Agencies         []agency         `json:"agencies"`
+			IntendedUses     []intendedUse    `json:"intendedUses"`
 		} `json:"controlledVocabularies"`
 		SearchFields map[string][]searchField `json:"searchFields"`
 	}
@@ -144,6 +145,14 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 	err = svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.Agencies).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get agencies: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: load intended uses")
+	err = svc.DB.Order("description asc").Where("is_approved=?", 1).Find(&resp.ControlledVocabularies.IntendedUses).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get intended uses: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
