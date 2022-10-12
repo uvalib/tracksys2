@@ -163,7 +163,7 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 		Events []auditEvent `json:"events"`
 	}
 	out := oResp{Order: oDetail}
-	err = svc.DB.Where("order_id=?", oID).Preload("IntendedUse").Find(&out.Units).Error
+	err = svc.DB.Where("order_id=?", oID).Preload("IntendedUse").Preload("Metadata").Find(&out.Units).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get units for order %s: %s", oID, err.Error())
 	}
@@ -510,6 +510,85 @@ func (svc *serviceContext) updateInvoice(c *gin.Context) {
 	}
 	log.Printf("INFO: order %d updated", inv.ID)
 	c.JSON(http.StatusOK, inv)
+}
+
+func (svc *serviceContext) addUnitToOrder(c *gin.Context) {
+	orderID := c.Param("id")
+	log.Printf("INFO: add unit order %s", orderID)
+	var addReq struct {
+		ItemID              int64  `json:"itemID"`
+		MetadataID          int64  `json:"metadataID"`
+		IntendedUseID       int64  `json:"intendedUseID"`
+		SourceURL           string `json:"sourceURL"`
+		SpecialInstructions string `json:"specialInstructions"`
+		StaffNotes          string `json:"staffNotes"`
+		CompleteScan        bool   `json:"completeScan"`
+		ThrowAway           bool   `json:"throwAway"`
+		IncludeInDL         bool   `json:"includeInDL"`
+	}
+	err := c.BindJSON(&addReq)
+	if err != nil {
+		log.Printf("ERROR: invalid add unit %s request: %s", orderID, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	log.Printf("INFO: validate order %s before adding unit", orderID)
+	var tgtOrder metadata
+	err = svc.DB.Find(&tgtOrder, orderID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve order %s: %s", orderID, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	log.Printf("INFO: validate metadata %d for new unit in order %s", addReq.MetadataID, orderID)
+	var md metadata
+	err = svc.DB.Find(&md, addReq.MetadataID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve metadata %d for new unit in order %s: %s", addReq.MetadataID, orderID, err.Error())
+		c.String(http.StatusBadRequest, fmt.Sprintf("metadata record %d not found: %s", addReq.MetadataID, err.Error()))
+		return
+	}
+
+	log.Printf("INFO: validate intended use %d for new unit in order %s", addReq.MetadataID, orderID)
+	var iu intendedUse
+	err = svc.DB.Find(&iu, addReq.IntendedUseID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve intended use %d for new unit in order %s: %s", addReq.IntendedUseID, orderID, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var tgtItem *orderItem
+	if addReq.ItemID != 0 {
+		log.Printf("INFO: update order item %d for new unit in order %s", addReq.MetadataID, orderID)
+		err = svc.DB.Find(tgtItem, addReq.ItemID).Error
+		if err != nil {
+			log.Printf("ERROR: unable to retrieve orderItem %d for new unit in order %s: %s", addReq.ItemID, orderID, err.Error())
+			c.String(http.StatusBadRequest, err.Error())
+			return
+		}
+		if tgtItem.Converted == false {
+			tgtItem.Converted = true
+			svc.DB.Model(tgtItem).Select("Converted").Updates(tgtItem)
+		}
+	}
+
+	log.Printf("INFO: create new unit in order %s", orderID)
+	newUnit := unit{UnitStatus: "approved", MetadataID: &md.ID, PatronSourceURL: addReq.SourceURL,
+		SpecialInstructions: addReq.SpecialInstructions, StaffNotes: addReq.StaffNotes, CompleteScan: addReq.CompleteScan,
+		ThrowAway: addReq.ThrowAway, IncludeInDL: addReq.IncludeInDL, CreatedAt: time.Now(), OrderID: tgtOrder.ID,
+		IntendedUseID: &iu.ID, IntendedUse: &iu, Metadata: &md,
+	}
+	err = svc.DB.Create(&newUnit).Error
+	if err != nil {
+		log.Printf("ERROR: unable to create new unit for order %s", orderID)
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, newUnit)
 }
 
 func (svc *serviceContext) updateOrder(c *gin.Context) {

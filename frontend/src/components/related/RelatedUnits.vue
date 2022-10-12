@@ -9,6 +9,7 @@
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >
       <Column field="id" header="ID" :sortable="true"/>
+      <Column field="metadata.title" header="Title" :sortable="true"/>
       <Column field="intendedUse.name" header="Intended Use"/>
       <Column header="Date Patron Deliverables Ready">
          <template #body="slotProps">
@@ -34,7 +35,7 @@
       <Column field="masterFilesCount" header="Master Files Count" :sortable="true"/>
       <Column header="" class="row-acts nowrap">
          <template #body="slotProps">
-            <router-link :to="`/units/${slotProps.data.id}`">View details</router-link>
+            <router-link :to="`/units/${slotProps.data.id}`">View</router-link>
          </template>
       </Column>
    </DataTable>

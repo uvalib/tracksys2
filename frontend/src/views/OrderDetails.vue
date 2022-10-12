@@ -86,7 +86,7 @@
                <DPGButton label="Recreate Email" class="p-button-secondary" @click="recreateEmailClicked()" />
                <SendEmailDialog mode="order" />
             </div>
-            <div class="actions" v-if="ordersStore.hasPatronDeliverables">
+            <div class="actions" v-if="ordersStore.hasPatronDeliverables && (detail.status == 'approved' || detail.status == 'completed')">
                <DPGButton label="View Customer PDF" class="p-button-secondary" @click="viewPDFClicked()" />
                <DPGButton v-if="detail.email" label="Recreate Customer PDF" class="p-button-secondary" @click="recreatePDFClicked()" />
             </div>
@@ -200,7 +200,7 @@ const isCompleteOrderDisabled = computed(() =>{
 const isApproveDisabled = computed(() =>{
    if (  ordersStore.detail.status == 'approved' ) return true // already approved; disable
    if (  ordersStore.hasApprovedUnits == false ) return true // no approved untis; disable
-   if ( isExternalCustomer() && (ordersStore.detail.fee == null || ordersStore.isFeePaid == false)) return true // external unpaid; disable
+   if ( isExternalCustomer.value && (ordersStore.detail.fee == null || ordersStore.isFeePaid == false)) return true // external unpaid; disable
    return false
 })
 

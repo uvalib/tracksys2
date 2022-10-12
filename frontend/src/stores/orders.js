@@ -107,6 +107,30 @@ export const useOrdersStore = defineStore('orders', {
          this.detail.dateFeeEstimateSent = ""
          this.detail.dateCompleted = ""
       },
+      async addUnit( metadataID, unitInfo, itemID=0) {
+         const system = useSystemStore()
+         system.working = true
+         let req = {metadataID: metadataID, intendedUseID: unitInfo.intendedUseID, sourceURL: unitInfo.sourceURL,
+            specialInstructions: unitInfo.specialInstructions, staffNotes: unitInfo.staffNotes,
+            completeScan: unitInfo.completeScan, throwAway: unitInfo.throwAway, includeInDL: unitInfo.includeInDL}
+         if (itemID != 0) {
+            req.ItemID = itemID
+         }
+         return axios.post( `/api/orders/${this.detail.id}/units`, req ).then(response => {
+            console.log(response.data)
+            this.units.push( response.data )
+            if (itemID != 0) {
+               let item = this.items.find( i => i.id == itemID)
+               if ( item ) {
+                  item.converted = true
+               }
+            }
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+
+      },
       async getOrderDetails(orderID) {
          if ( this.detail.id == orderID ) return
          const system = useSystemStore()
