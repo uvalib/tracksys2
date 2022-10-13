@@ -343,10 +343,29 @@ export const useOrdersStore = defineStore('orders', {
             system.setError(e)
          })
       },
+      approveOrder( staffID ) {
+         const system = useSystemStore()
+         system.working = true
+         let url = `/api/orders/${this.detail.id}/approve?staff=${staffID}`
+         axios.post( url ).then( (resp) => {
+            this.detail.dateApproved = resp.data.dateApproved
+            this.detail.status = resp.data.status
+            let tgtO = this.orders.find( o => o.id == this.detail.id)
+            if (tgtO ) {
+               tgtO.status = this.detail.status
+               tgtO.dateApproved = this.detail.dateApproved
+            }
+            this.items = []
+            system.toastMessage("Order Approved", "Order has been approved")
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
       cancelOrder( staffID ) {
          const system = useSystemStore()
          system.working = true
-         let url = `/api/orders/${this.detail.id}/fee/cancel?staff=${staffID}`
+         let url = `/api/orders/${this.detail.id}/cancel?staff=${staffID}`
          axios.post( url ).then( (resp) => {
             this.detail.dateCanceled = resp.data.dateCanceled
             this.detail.status = resp.data.status
@@ -364,7 +383,7 @@ export const useOrdersStore = defineStore('orders', {
       deferOrder( staffID ) {
          const system = useSystemStore()
          system.working = true
-         let url = `/api/orders/${this.detail.id}/fee/defer?staff=${staffID}`
+         let url = `/api/orders/${this.detail.id}/defer?staff=${staffID}`
          axios.post( url ).then( (resp) => {
             this.detail.dateDeferred = resp.data.dateDeferred
             this.detail.status = resp.data.status
@@ -382,7 +401,7 @@ export const useOrdersStore = defineStore('orders', {
       resumeOrder( staffID ) {
          const system = useSystemStore()
          system.working = true
-         let url = `/api/orders/${this.detail.id}/fee/resume?staff=${staffID}`
+         let url = `/api/orders/${this.detail.id}/resume?staff=${staffID}`
          axios.post( url ).then( (resp) => {
             this.detail.status = resp.data.status
             let tgtO = this.orders.find( o => o.id == this.detail.id)

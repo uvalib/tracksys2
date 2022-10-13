@@ -307,7 +307,7 @@ function resumeOrderClicked() {
    ordersStore.resumeOrder( user.ID )
 }
 function approveOrderClicked() {
-   //
+   ordersStore.approveOrder( user.ID )
 }
 function cancelOrderClicked() {
    ordersStore.cancelOrder( user.ID )

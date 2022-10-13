@@ -48,9 +48,10 @@ func main() {
 		api.POST("/orders/:id/update", svc.updateOrder)
 		api.POST("/orders/:id/fee/accept", svc.acceptFee)
 		api.POST("/orders/:id/fee/decline", svc.declineFee)
-		api.POST("/orders/:id/fee/defer", svc.deferOrder)
-		api.POST("/orders/:id/fee/resume", svc.resumeOrder)
-		api.POST("/orders/:id/fee/cancel", svc.cancelOrder)
+		api.POST("/orders/:id/approve", svc.approveOrder)
+		api.POST("/orders/:id/defer", svc.deferOrder)
+		api.POST("/orders/:id/resume", svc.resumeOrder)
+		api.POST("/orders/:id/cancel", svc.cancelOrder)
 		api.POST("/invoices/:id/update", svc.updateInvoice)
 
 		api.GET("/jobs", svc.getJobStatuses)

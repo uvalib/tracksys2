@@ -326,6 +326,43 @@ func (svc *serviceContext) addOrderAuditEvent(o *order, msg string, staffIDStr s
 	}
 }
 
+func (svc *serviceContext) approveOrder(c *gin.Context) {
+	oID := c.Param("id")
+	staffID := c.Query("staff")
+	if staffID == "" {
+		log.Printf("ERROR: staff param required for approve order %s", oID)
+		c.String(http.StatusBadRequest, "staff param is required")
+		return
+	}
+	oDetail, err := svc.loadOrder(oID)
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve order %s for approval: %s", oID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: staff %s approves order %d", staffID, oDetail.ID)
+	msg := fmt.Sprintf("Status %s to APPROVED", strings.ToUpper(oDetail.OrderStatus))
+	svc.addOrderAuditEvent(oDetail, msg, staffID)
+
+	now := time.Now()
+	oDetail.OrderStatus = "approved"
+	oDetail.DateOrderApproved = &now
+	err = svc.DB.Model(oDetail).Select("OrderStatus", "DateOrderApproved").Updates(oDetail).Error
+	if err != nil {
+		log.Printf("ERROR: unable to approve order %d: %s", oDetail.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: remove all order items from approved order %d", oDetail.ID)
+	err = svc.DB.Where("order_id=?", oDetail.ID).Delete(orderItem{}).Error
+	if err != nil {
+		log.Printf("ERROR: unable to delete order %s items: %s", oID, err.Error())
+	}
+
+	c.JSON(http.StatusOK, oDetail)
+}
+
 func (svc *serviceContext) cancelOrder(c *gin.Context) {
 	oID := c.Param("id")
 	staffID := c.Query("staff")
