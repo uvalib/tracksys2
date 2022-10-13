@@ -1,8 +1,8 @@
 <template>
    <h2>Customers</h2>
+   <DPGButton label="Add" class="p-button-secondary create" @click="addCustomer()"/>
    <div class="customers">
       <div class="filter-controls">
-         <DPGButton label="Add" @click="addCustomer()"/>
          <span>
             <span class="p-input-icon-right">
                <i class="pi pi-search" />
@@ -183,6 +183,11 @@ function clearSearch() {
 </script>
 
 <style scoped lang="scss">
+button.p-button-secondary.create {
+   position: absolute;
+   right:15px;
+   top: 15px;
+}
 .customers {
    min-height: 600px;
    text-align: left;
@@ -191,7 +196,7 @@ function clearSearch() {
       padding: 10px 0;
       display: flex;
       flex-flow: row wrap;
-      justify-content: space-between;
+      justify-content: flex-end;
       button.p-button-secondary.p-button {
          margin-left: 5px;
       }

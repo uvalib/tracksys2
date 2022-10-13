@@ -1,6 +1,6 @@
 <template>
+   <h2>Home</h2>
    <div class="home">
-      <h2>Search</h2>
       <FormKit type="form" id="global-search" :actions="false" @submit="doSearch">
          <FormKit type="select" label="" v-model="searchStore.scope" outer-class="select-wrap" @change="scopeChanged"
             :options="{ all: 'All items', orders: 'Orders', masterfiles: 'Master Files', metadata: 'Metadata', components: 'Components'}"
@@ -107,7 +107,7 @@ function doSearch() {
 
 <style scoped lang="scss">
    .home {
-      padding-top: 10px;
+      margin-top: 50px;
       padding-bottom: 50px;
       min-height:600px;
       :deep(#global-search) {

@@ -1,8 +1,8 @@
 <template>
    <h2>Staff Members</h2>
+   <DPGButton label="Add" class="p-button-secondary create" @click="addStaff()"/>
    <div class="staff">
       <div class="filter-controls">
-         <DPGButton label="Add" @click="addStaff()"/>
          <span>
             <span class="p-input-icon-right">
                <i class="pi pi-search" />
@@ -136,6 +136,11 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+button.p-button-secondary.create {
+   position: absolute;
+   right:15px;
+   top: 15px;
+}
 #staff-detail {
    .form-controls {
       display: flex;
@@ -162,7 +167,7 @@ onMounted(() => {
    .filter-controls {
       display: flex;
       flex-flow: row wrap;
-      justify-content: space-between;
+      justify-content: flex-end;
        padding: 10px 0;
       button.p-button-secondary.p-button {
          margin-left: 5px;
