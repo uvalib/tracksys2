@@ -25,7 +25,11 @@
          :rowsPerPageOptions="[10,30,100]"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
-         <Column field="id" header="ID" :sortable="true" />
+         <Column field="id" header="ID" :sortable="true">
+            <template #body="slotProps">
+               <router-link :to="`/orders/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
+            </template>
+         </Column>
          <Column field="status" header="Status" >
             <template #body="slotProps">
                <span :class="`status ${slotProps.data.status}`">{{displayStatus(slotProps.data.status)}}</span>

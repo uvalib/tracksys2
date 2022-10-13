@@ -131,6 +131,21 @@ export const useOrdersStore = defineStore('orders', {
          })
 
       },
+      async discardItem(itemID) {
+         const system = useSystemStore()
+         system.working = true
+         return axios.delete( `/api/orders/${this.detail.id}/items/${itemID}` ).then( () => {
+            let itemIdx = this.items.findIndex( i => i.id == itemID)
+            if (itemIdx > -1) {
+               this.items.splice(itemIdx, 1)
+            }
+            system.toastMessage("Item Discarded", 'Order item has been discarded')
+            system.working = false
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
       async getOrderDetails(orderID) {
          if ( this.detail.id == orderID ) return
          const system = useSystemStore()

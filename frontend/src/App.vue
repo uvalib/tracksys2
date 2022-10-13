@@ -1,5 +1,6 @@
 <template>
    <Toast position="top-center" />
+   <ConfirmDialog position="top"/>
    <div class="header" role="banner" id="uva-header">
       <div class="main-header">
          <div class="library-link">

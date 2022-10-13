@@ -1,5 +1,4 @@
 <template>
-   <ConfirmDialog position="top"/>
    <h2>Job Statuses</h2>
    <div class="job-status">
       <div class="toolbar">

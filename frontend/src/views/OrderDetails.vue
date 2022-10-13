@@ -120,8 +120,8 @@
                   <DataDisplay v-if="item.description" label="Description" :value="item.description"/>
                </dl>
                <div class="item-acts">
-                  <DPGButton label="Discard" autofocus class="p-button-secondary" @click="discardItem(item)"/>
-                  <DPGButton label="Create Unit" autofocus class="p-button-secondary" @click="createUnitFromItem(item)"/>
+                  <DPGButton label="Discard" autofocus class="p-button-secondary right-pad" @click="discardItem(item)"/>
+                  <AddUnitDialog label="Create Unit" :item="item" />
                </div>
             </div>
          </div>
@@ -132,7 +132,7 @@
          <template #header v-if="detail.status != 'completed' && detail.status != 'canceled'">
             <div class="add-header">
                <span>Units</span>
-               <AddUnitDialog />
+               <AddUnitDialog size="small" />
             </div>
          </template>
          <RelatedUnits :units="ordersStore.units" />
@@ -168,7 +168,9 @@ import RelatedUnits from '../components/related/RelatedUnits.vue'
 import Divider from 'primevue/divider'
 import SendEmailDialog from '../components/order/SendEmailDialog.vue'
 import AddUnitDialog from '../components/order/AddUnitDialog.vue'
+import { useConfirm } from "primevue/useconfirm"
 
+const confirm = useConfirm()
 const route = useRoute()
 const router = useRouter()
 const systemStore = useSystemStore()
@@ -289,12 +291,16 @@ function createInvoiceClicked() {
     ordersStore.editInvoice = true
     ordersStore.showInvoice = true
 }
-
-function createUnitFromItem(item) {
-   alert("create from "+item.id)
-}
 function discardItem(item) {
-   alert("discard "+item.id)
+   confirm.require({
+      message: 'Are you sure you want delete this item? All data will be lost. This cannot be reversed.',
+      header: 'Confirm Delete Item',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         await ordersStore.discardItem(item.id)
+      }
+   })
 }
 
 function sendFeeEstimateCllicked() {

@@ -1,5 +1,5 @@
 <template>
-   <DPGButton @click="show" label="Add Unit" class="p-button-secondary add"/>
+   <DPGButton @click="show" :label="props.label" class="p-button-secondary add"  :class="{ small: size=='small'}"/>
    <Dialog v-model:visible="isOpen" :modal="true" header="Add Unit" :style="{width: '750px'}">
       <FormKit type="form" id="customer-detail" :actions="false" @submit="createUnit">
          <Panel header="Unit Metadata" class="margin-bottom">
@@ -70,6 +70,21 @@ import { useOrdersStore } from '@/stores/orders'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 
+const props = defineProps({
+   label: {
+      type: String,
+      default: "Add Unit",
+   },
+   size: {
+      type: String,
+      default: "normal",
+   },
+   item: {
+      type: Object,
+      default: null,
+   },
+})
+
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
 const ordersStore = useOrdersStore()
@@ -112,12 +127,15 @@ async function lookupMetadata() {
 
 async function createUnit() {
    error.value = ""
-   console.log(selectedMetadata.value)
    if ( !selectedMetadata.value) {
 
       error.value = "Please select a metadata record for the new unit."
    } else {
-      await ordersStore.addUnit(selectedMetadata.value.id, unitInfo.value)
+      if (props.item != null ) {
+         await ordersStore.addUnit(selectedMetadata.value.id, unitInfo.value, props.item.id)
+      } else {
+         await ordersStore.addUnit(selectedMetadata.value.id, unitInfo.value)
+      }
       hide()
    }
 }
@@ -131,13 +149,36 @@ function show() {
    metadataSearch.value = ""
    selectedMetadata.value = null
    metadataStore.resetSearch()
+   if (props.item) {
+      metadataSearch.value = props.item.title
+      var si = `Title: ${props.item.title}`
+      si += `\nPages to Digitize: ${props.item.pages}`
+      if (props.item.callNumber && props.item.callNumber != "") {
+         si += `\nCall Number: ${props.item.callNumber}`
+         metadataSearch.value = props.item.callNumber
+      }
+      if (props.item.author && props.item.author != "") {
+         si += `\nAuthor: ${props.item.author}`
+      }
+      if (props.item.year && props.item.year != "") {
+         si += `\nYear: ${props.item.year}`
+      }
+      if (props.item.location && props.item.location != "") {
+         si += `\nLocation: ${props.item.location}`
+      }
+      if (props.item.description && props.item.description != "") {
+         si += `\nDescription: ${props.item.description}`
+      }
+      unitInfo.value.specialInstructions = si
+      lookupMetadata()
+   }
 }
 </script>
 
 <style lang="scss" scoped>
-button.p-button.add {
-   font-size: 0.8em;
-   padding: 5px 20px;
+button.p-button.add.small {
+   font-size: 0.7em;
+   padding: 5px 10px;
 }
 div.p-panel {
    font-size: 0.85em;

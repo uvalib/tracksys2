@@ -44,6 +44,7 @@ func main() {
 		api.GET("/orders", svc.getOrders)
 		api.POST("/orders", svc.createOrder)
 		api.GET("/orders/:id", svc.getOrderDetails)
+		api.DELETE("/orders/:id/items/:item", svc.deleteOrderItem)
 		api.POST("/orders/:id/units", svc.addUnitToOrder)
 		api.POST("/orders/:id/update", svc.updateOrder)
 		api.POST("/orders/:id/fee/accept", svc.acceptFee)

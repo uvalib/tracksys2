@@ -548,6 +548,18 @@ func (svc *serviceContext) updateInvoice(c *gin.Context) {
 	log.Printf("INFO: order %d updated", inv.ID)
 	c.JSON(http.StatusOK, inv)
 }
+func (svc *serviceContext) deleteOrderItem(c *gin.Context) {
+	orderID := c.Param("id")
+	itemID := c.Param("item")
+	log.Printf("INFO: discard item %s from order %s", itemID, orderID)
+	err := svc.DB.Delete(&orderItem{}, itemID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to delete item %s: %s", itemID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.String(http.StatusOK, "deleted")
+}
 
 func (svc *serviceContext) addUnitToOrder(c *gin.Context) {
 	orderID := c.Param("id")
@@ -597,10 +609,10 @@ func (svc *serviceContext) addUnitToOrder(c *gin.Context) {
 		return
 	}
 
-	var tgtItem *orderItem
 	if addReq.ItemID != 0 {
 		log.Printf("INFO: update order item %d for new unit in order %s", addReq.MetadataID, orderID)
-		err = svc.DB.Find(tgtItem, addReq.ItemID).Error
+		var tgtItem orderItem
+		err = svc.DB.Find(&tgtItem, addReq.ItemID).Error
 		if err != nil {
 			log.Printf("ERROR: unable to retrieve orderItem %d for new unit in order %s: %s", addReq.ItemID, orderID, err.Error())
 			c.String(http.StatusBadRequest, err.Error())
@@ -608,7 +620,9 @@ func (svc *serviceContext) addUnitToOrder(c *gin.Context) {
 		}
 		if tgtItem.Converted == false {
 			tgtItem.Converted = true
-			svc.DB.Model(tgtItem).Select("Converted").Updates(tgtItem)
+			svc.DB.Model(&tgtItem).Select("Converted").Updates(tgtItem)
+		} else {
+			log.Printf("INFO: item %d has already been marked as converted", tgtItem.ID)
 		}
 	}
 
