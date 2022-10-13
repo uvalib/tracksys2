@@ -31,7 +31,7 @@
             </div>
          </Panel>
          <Panel header="Digitization Information">
-            <FormKit label="Intended Use" type="select" v-model="unitInfo.intendedUseID" outer-class="first" :options="intendedUses"/>
+            <FormKit label="Intended Use" type="select" v-model="unitInfo.intendedUseID" outer-class="first" :options="intendedUses" placeholder="Select an intended use" required/>
             <FormKit label="Source URL" type="text" v-model="unitInfo.sourceURL"/>
             <FormKit label="Special Instructions" type="textarea" rows="4" v-model="unitInfo.specialInstructions"/>
             <FormKit label="Staff Notes" type="textarea" rows="2" v-model="unitInfo.staffNotes"/>
@@ -94,7 +94,7 @@ const error = ref("")
 const metadataSearch = ref("")
 const selectedMetadata = ref()
 const unitInfo = ref({
-   intendedUseID: null,
+   intendedUseID: 0,
    sourceURL: "",
    specialInstructions: "",
    staffNotes: "",
@@ -128,7 +128,6 @@ async function lookupMetadata() {
 async function createUnit() {
    error.value = ""
    if ( !selectedMetadata.value) {
-
       error.value = "Please select a metadata record for the new unit."
    } else {
       if (props.item != null ) {

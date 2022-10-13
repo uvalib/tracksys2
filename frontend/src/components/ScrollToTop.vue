@@ -56,8 +56,8 @@ onUnmounted( async () => {
    border-radius: 50%;
    cursor: pointer;
    align-items: center;
-   bottom: 50px;
-   right: 25px;
+   bottom: 5px;
+   right: 5px;
    box-shadow: rgba(0, 0, 0, 0.14) 0px 2px 2px 0px;
    box-sizing: border-box;
    justify-content: center;

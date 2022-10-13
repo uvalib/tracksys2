@@ -8,7 +8,11 @@
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >
-      <Column field="id" header="ID" :sortable="true"/>
+      <Column field="id" header="ID" :sortable="true">
+         <template #body="slotProps">
+            <router-link :to="`/units/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
+         </template>
+      </Column>
       <Column field="metadata.title" header="Title" :sortable="true"/>
       <Column field="intendedUse.name" header="Intended Use"/>
       <Column header="Date Patron Deliverables Ready">
