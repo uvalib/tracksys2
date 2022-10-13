@@ -4,7 +4,7 @@
    </div>
    <DataTable v-else :value="props.orders" ref="relatedOrdersTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-      :lazy="false" :paginator="true" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
+      :lazy="false" :paginator="props.orders.length > 15" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >

@@ -192,47 +192,43 @@ export const useMetadataStore = defineStore('metadata', {
             this.other.ocrLanguageHint = response.data.metadata.ocrLanguageHint
             this.other.preservationTier = response.data.metadata.preservationTier
 
+            this.setRelatedItems(response.data.units)
+
             system.working = false
          }).catch( e => {
             system.setError(e)
          })
       },
 
-      getRelatedItems( metadataID ) {
-         const system = useSystemStore()
+      setRelatedItems( units ) {
          this.related.units = []
          this.related.orders = []
-         axios.get( `/api/metadata/${metadataID}/related` ).then(response => {
-            let orderIDs = []
-            response.data.forEach( r => {
-               let u = {
-                  id: r.id,
-                  reorder: r.reorder,
-                  inDL: r.includeInDL,
-                  dateArchived: r.dateArchived,
-                  dateDLDeliverablesReady: r.dateDLDeliverablesReady,
-                  datePatronDeliverablesReady: r.datePatronDeliverablesReady,
-                  masterFilesCount: r.masterFilesCount,
-                  intendedUse: r.intendedUse
-               }
-               this.related.units.push(u)
-               if (orderIDs.includes(r.order.id) == false ) {
-                  orderIDs.push(r.order.id)
-                  this.related.orders.push({
-                     id: r.order.id,
-                     title: r.order.title,
-                     customer: r.order.customer,
-                     agency: r.order.agency,
-                     staffNotes: r.order.staffNotes,
-                     specialInstructions: r.order.specialInstructions,
-                  })
-               }
-            })
-         }).catch( e => {
-            system.setError(e)
+         let orderIDs = []
+         units.forEach( r => {
+            let u = {
+               id: r.id,
+               reorder: r.reorder,
+               inDL: r.includeInDL,
+               dateArchived: r.dateArchived,
+               dateDLDeliverablesReady: r.dateDLDeliverablesReady,
+               datePatronDeliverablesReady: r.datePatronDeliverablesReady,
+               masterFilesCount: r.masterFilesCount,
+               intendedUse: r.intendedUse,
+               metadata: r.metadata
+            }
+            this.related.units.push(u)
+            if (orderIDs.includes(r.order.id) == false ) {
+               orderIDs.push(r.order.id)
+               this.related.orders.push({
+                  id: r.order.id,
+                  title: r.order.title,
+                  customer: r.order.customer,
+                  agency: r.order.agency,
+                  staffNotes: r.order.staffNotes,
+                  specialInstructions: r.order.specialInstructions,
+               })
+            }
          })
-
       }
-
    }
 })

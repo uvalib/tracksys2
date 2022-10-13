@@ -9,8 +9,8 @@ require (
 	github.com/gin-gonic/contrib v0.0.0-20201101042839-6a891bf89f19
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-sql-driver/mysql v1.6.0
-	gorm.io/driver/mysql v1.3.6
-	gorm.io/gorm v1.23.10
+	gorm.io/driver/mysql v1.4.1
+	gorm.io/gorm v1.24.0
 )
 
 require (
@@ -28,10 +28,10 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
-	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be // indirect
-	golang.org/x/net v0.0.0-20221002022538-bcab6841153b // indirect
-	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a // indirect
+	golang.org/x/net v0.0.0-20221012135044-0b7e1fb9d458 // indirect
+	golang.org/x/sys v0.0.0-20221010170243-090e33056c14 // indirect
+	golang.org/x/text v0.3.8 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

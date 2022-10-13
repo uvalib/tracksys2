@@ -202,13 +202,11 @@ const useRight = computed(() => {
 onBeforeRouteUpdate(async (to) => {
    let mdID = to.params.id
    metadataStore.getDetails( mdID )
-   metadataStore.getRelatedItems( mdID )
 })
 
 onBeforeMount(() => {
    let mdID = route.params.id
    metadataStore.getDetails( mdID )
-   metadataStore.getRelatedItems( mdID )
 })
 
 async function publishClicked() {

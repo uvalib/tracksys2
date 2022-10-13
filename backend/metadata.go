@@ -196,7 +196,8 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 	}
 
 	type mdResp struct {
-		Metadata     metadata          `json:"metadata"`
+		Metadata     *metadata         `json:"metadata"`
+		Units        []*unit           `json:"units"`
 		Extended     *internalMetadata `json:"details"`
 		ArchiveSpace *asMetadata       `json:"asDetails"`
 		JSTOR        *jstorMetadata    `json:"jstorDetails"`
@@ -204,8 +205,16 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 		VirgoURL     string            `json:"virgoURL"`
 		Error        string            `json:"error"`
 	}
-	out := mdResp{Metadata: md}
+	out := mdResp{Metadata: &md}
+	out.Units, err = svc.getMetadataRelatedUnits(&md)
+	if err != nil {
+		log.Printf("ERROR: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	if md.Type == "SirsiMetadata" || md.Type == "XmlMetadata" {
+		log.Printf("INFO: get extended sirsi/xml metadata for %d", md.ID)
 		parsedDetail, err := svc.getUVAMapData(md.PID)
 		if err != nil {
 			log.Printf("ERROR: unable to get extended metadata for sirsi/cml %s: %s", md.PID, err.Error())
@@ -291,18 +300,15 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
-func (svc *serviceContext) getMetadataRelatedItems(c *gin.Context) {
-	mdID := c.Param("id")
-	log.Printf("INFO: get related units and orders for metadata %s", mdID)
+func (svc *serviceContext) getMetadataRelatedUnits(mdRec *metadata) ([]*unit, error) {
+	log.Printf("INFO: get related units and orders for metadata %d", mdRec.ID)
 
-	var units []unit
-	err := svc.DB.Debug().Where("metadata_id=?", mdID).Preload("IntendedUse").
+	var units []*unit
+	err := svc.DB.Where("metadata_id=?", mdRec.ID).Preload("IntendedUse").
 		Preload("Order").Preload("Order.Customer").Preload("Order.Agency").
 		Find(&units).Error
 	if err != nil {
-		log.Printf("ERROR: unable to get units related to metadata %s: %s", mdID, err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
+		return nil, err
 	}
 
 	if len(units) == 0 {
@@ -311,35 +317,36 @@ func (svc *serviceContext) getMetadataRelatedItems(c *gin.Context) {
 		// This is usually the case with image collections where each image has its own descriptive metadata.
 		// In this case, there is no direct link from metadata to unit. Must find it by
 		// going through the master file that this metadata describes
-		log.Printf("INFO: no units directly found for metadata %s; searching master files...", mdID)
+		log.Printf("INFO: no units directly found for metadata %d; searching master files...", mdRec.ID)
 		var mfCnt int64
-		err := svc.DB.Table("master_files").Where("metadata_id=?", mdID).Count(&mfCnt).Error
+		err := svc.DB.Table("master_files").Where("metadata_id=?", mdRec.ID).Count(&mfCnt).Error
 		if err != nil {
-			log.Printf("ERROR: unable to get master file count for metadata %s: %s", mdID, err.Error())
-			c.String(http.StatusInternalServerError, err.Error())
-			return
+			return nil, fmt.Errorf("unable to get master file count for metadata %d: %s", mdRec.ID, err.Error())
 		}
-		log.Printf("INFO: %d master files found that are associated with metadata %s", mfCnt, mdID)
+		log.Printf("INFO: %d master files found that are associated with metadata %d", mfCnt, mdRec.ID)
 
 		if mfCnt >= 1 {
 			var mf []masterFile
 			err = svc.DB.Preload("Unit").Preload("Unit.Order").
 				Preload("Unit.Order.Customer").Preload("Unit.Order.Agency").
-				Preload("Unit.IntendedUse").Where("metadata_id=?", mdID).
+				Preload("Unit.IntendedUse").Where("metadata_id=?", mdRec.ID).
 				Distinct("unit_id").
 				Find(&mf).Error
 			if err != nil {
-				log.Printf("ERROR: unabel to get masterfile unit for metadata %s: %s", mdID, err.Error())
-				c.String(http.StatusInternalServerError, err.Error())
-				return
+				return nil, fmt.Errorf("unable to get masterfile unit for metadata %d: %s", mdRec.ID, err.Error())
 			}
 			for _, f := range mf {
-				units = append(units, *f.Unit)
+				units = append(units, f.Unit)
 			}
 		}
 	}
 
-	c.JSON(http.StatusOK, units)
+	for _, u := range units {
+		u.MetadataID = &mdRec.ID
+		u.Metadata = mdRec
+	}
+
+	return units, nil
 }
 
 func (svc *serviceContext) getUVAMapData(pid string) (*internalMetadata, error) {
