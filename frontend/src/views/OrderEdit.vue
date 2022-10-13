@@ -118,14 +118,16 @@ onMounted( async () =>{
 })
 
 function cancelEdit() {
-   router.push(`/orders/${route.params.id}`)
+   if ( newOrder.value == true) {
+      router.push(`/orders`)
+   } else {
+      router.push(`/orders/${route.params.id}`)
+   }
 }
 async function submitChanges() {
    if ( newOrder.value == true) {
-      console.log("CREATE ORDER")
       await ordersStore.createOrder( edited.value )
    } else {
-      console.log("UPDATE ORDER")
       await ordersStore.submitEdit( edited.value )
    }
    if (systemStore.showError == false) {
