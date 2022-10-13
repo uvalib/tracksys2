@@ -105,7 +105,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onBeforeMount } from 'vue'
 import { useCustomersStore } from '@/stores/customers'
 import { useSystemStore } from '@/stores/system'
 import DataTable from 'primevue/datatable'
@@ -138,6 +138,10 @@ const academicStatuses = computed(() => {
       out.push( {label: i.name, value: {id: i.id, name: i.name}} )
    })
    return out
+})
+
+onBeforeMount(() => {
+   document.title = `Customers`
 })
 
 function submitChanges() {

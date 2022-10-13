@@ -24,6 +24,7 @@ onBeforeRouteUpdate(async (to) => {
 onBeforeMount(() => {
    let cID = route.params.id
    console.log("before component " + cID)
+   document.title = `Component #${cID}`
 })
 
 </script>

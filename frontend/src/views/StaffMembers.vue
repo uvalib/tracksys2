@@ -132,6 +132,7 @@ function clearSearch() {
 
 onMounted(() => {
    staffStore.getStaff( filter.value  )
+   document.title = `Staff Members`
 })
 </script>
 

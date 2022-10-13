@@ -207,6 +207,7 @@ onBeforeRouteUpdate(async (to) => {
 onBeforeMount(() => {
    let mdID = route.params.id
    metadataStore.getDetails( mdID )
+   document.title = `Metadata #${mdID}`
 })
 
 async function publishClicked() {

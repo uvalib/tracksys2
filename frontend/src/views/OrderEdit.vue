@@ -1,7 +1,7 @@
 <template>
    <h2>
       <span v-if="route.params.id">Order {{route.params.id}}</span>
-      <span v-else>New Order [{{newOrder}}]</span>
+      <span v-else>New Order</span>
    </h2>
    <div class="edit-form">
       <FormKit type="form" id="customer-detail" :actions="false" @submit="submitChanges">
@@ -82,13 +82,14 @@ const orderStatuses = computed(() => {
 
 onMounted( async () =>{
    let orderID = route.params.id
-   console.log(orderID)
    if (orderID) {
       newOrder.value = false
       await ordersStore.getOrderDetails(orderID)
+      document.title = `Order #${orderID}`
    } else {
       ordersStore.clearDetails()
       newOrder.value = true
+      document.title = `New Order`
    }
 
    edited.value.status = ordersStore.detail.status

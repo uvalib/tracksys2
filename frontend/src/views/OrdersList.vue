@@ -162,6 +162,7 @@ function onSort(event) {
 
 onMounted(() => {
    ordersStore.getOrders()
+   document.title = `Orders`
 })
 </script>
 

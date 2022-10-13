@@ -55,6 +55,7 @@ function getAssociatedObjectLink( objName ) {
 
 onMounted(() => {
    jobsStore.getJobDetails(route.params.id)
+   document.title = `Job #${route.params.id}`
 })
 </script>
 

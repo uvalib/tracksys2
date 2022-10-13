@@ -151,6 +151,7 @@ onBeforeMount(() => {
    let uID = route.params.id
    unitsStore.getDetails( uID )
    unitsStore.getMasterFiles(uID)
+   document.title = `Unit #${uID}`
 })
 
 function downloadAttachment(id) {

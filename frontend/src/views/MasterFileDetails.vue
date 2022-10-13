@@ -101,6 +101,7 @@ onBeforeRouteUpdate( async (to) => {
 onBeforeMount(() => {
    let mfID = route.params.id
    masterFiles.getDetails(mfID)
+   document.title = `Master File #${mfID}`
 })
 
 function formatDate( date ) {

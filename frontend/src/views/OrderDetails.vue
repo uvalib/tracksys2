@@ -236,6 +236,7 @@ onBeforeRouteUpdate(async (to) => {
 onBeforeMount(() => {
    let orderID = route.params.id
    ordersStore.getOrderDetails(orderID)
+   document.title = `Order #${orderID}`
 })
 function recreateEmailClicked() {
    ordersStore.recreateEmail()

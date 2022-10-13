@@ -45,6 +45,7 @@ function resetSearch() {
 }
 
 onBeforeMount( () => {
+   document.title = `Tracksys`
    let paramsDetected = false
    if ( route.query.q && searchStore.query != route.query.q ) {
       searchStore.query = route.query.q

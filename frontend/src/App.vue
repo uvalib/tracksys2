@@ -61,6 +61,7 @@ function errorClosed() {
 }
 
 onBeforeMount( async () => {
+   document.title = `Tracksys`
    await systemStore.getConfig()
    await customersStore.getCustomers()
 })

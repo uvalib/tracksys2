@@ -133,6 +133,7 @@ function onSelectAllChange(event) {
 
 onMounted(() => {
    jobsStore.getJobs()
+   document.title = `Job Statuses`
 })
 </script>
 
