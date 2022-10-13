@@ -1,12 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type intendedUse struct {
@@ -22,6 +24,11 @@ type attachment struct {
 	Filename    string `json:"filename"`
 	MD5         string `gorm:"column:md5" json:"md5"`
 	Description string `json:"description"`
+}
+
+type lastError struct {
+	ID    uint64 `json:"jobID"`
+	Error string `json:"error"`
 }
 
 type unit struct {
@@ -51,6 +58,7 @@ type unit struct {
 	CreatedAt                   time.Time    `json:"-"`
 	UpdatedAt                   time.Time    `json:"-"`
 	ProjectID                   int64        `gorm:"-" json:"projectID,omitempty"`
+	LastError                   *lastError   `gorm:"-" json:"lastError,omitempty"`
 }
 
 func (svc *serviceContext) getUnit(c *gin.Context) {
@@ -72,6 +80,20 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 		log.Printf("ERROR: unable to get project id for unit %s: %s", unitID, err.Error())
 	} else {
 		unitDetail.ProjectID = project.ID
+	}
+
+	log.Printf("INFO: check for recent errors for unit %d", unitDetail.ID)
+	var lastStatus jobStatus
+	err = svc.DB.Where("originator_type=?", "Unit").Where("originator_id=?", unitDetail.ID).Order("created_at desc").First(&lastStatus).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) == false {
+			log.Printf("ERROR: failed to find job statuses for unit %d", unitDetail.ID)
+		}
+	} else {
+		if lastStatus.Status == "failure" {
+			le := lastError{ID: lastStatus.ID, Error: lastStatus.Error}
+			unitDetail.LastError = &le
+		}
 	}
 
 	c.JSON(http.StatusOK, unitDetail)

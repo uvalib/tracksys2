@@ -1,5 +1,9 @@
 <template>
    <h2>Unit {{route.params.id}}</h2>
+   <div v-if="detail.lastError" class="last-error">
+      <span>Recent Error:</span>
+      <router-link :to="`/jobs/${detail.lastError.jobID}`">{{detail.lastError.error}}</router-link>
+   </div>
    <div class="details" v-if="systemStore.working==false">
       <Panel header="General Information">
          <dl>
@@ -205,6 +209,19 @@ function formatDate( dateStr ) {
 </script>
 
 <style scoped lang="scss">
+.last-error {
+   background: var(--uvalib-red-darker);
+   padding: 10px;
+   color: white;
+   span {
+      display: inline-block;
+      font-weight: bold;
+      margin-right: 10px;
+   }
+   a {
+      color: white !important;
+   }
+}
 .details {
    padding: 0 25px 10px 25px;
    display: flex;
