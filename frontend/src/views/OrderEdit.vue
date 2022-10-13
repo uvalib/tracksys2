@@ -15,9 +15,15 @@
          <FormKit label="Staff Notes" type="textarea" rows="5" v-model="edited.staffNotes"/>
          <FormKit label="Fee" type="number" v-model="edited.fee"/>
          <div class="split">
-            <FormKit label="Agency" type="select" v-model="edited.agencyID" :options="agencies" placeholder="Select an agency"/>
+            <div class="select-wrapper">
+               <label class="dpg-form-label">Agency</label>
+               <Dropdown v-model="edited.agencyID" :options="agencies" optionLabel="label" optionValue="value" placeholder="Select an agency" :filter="true" />
+            </div>
             <div class="sep"></div>
-            <FormKit label="Customer" type="select" v-model="edited.customerID" :options="customers" placeholder="Select a customer" required/>
+            <div class="select-wrapper">
+               <label class="dpg-form-label">Customer</label>
+               <Dropdown v-model="edited.customerID" :options="customers" optionLabel="label" optionValue="value" placeholder="Select a customer" :filter="true" />
+            </div>
          </div>
 
          <div class="acts">
@@ -35,6 +41,7 @@ import { useSystemStore } from '@/stores/system'
 import { useCustomersStore } from '@/stores/customers'
 import { onMounted, ref, computed } from 'vue'
 import dayjs from 'dayjs'
+import Dropdown from 'primevue/dropdown'
 
 const route = useRoute()
 const router = useRouter()
@@ -137,8 +144,12 @@ async function submitChanges() {
       display: flex;
       flex-flow: row nowrap;
       justify-content: space-between;
-      :deep(.formkit-outer) {
-         flex-grow: 0.6;
+      :deep(.formkit-outer), .select-wrapper {
+         flex-grow: 1;
+      }
+      :deep(.p-dropdown) {
+         width: 100%;
+         text-align: left;
       }
       .sep {
          display: inline-block;
