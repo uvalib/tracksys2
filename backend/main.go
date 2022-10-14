@@ -61,6 +61,7 @@ func main() {
 
 		api.GET("/units/:id", svc.getUnit)
 		api.GET("/units/:id/masterfiles", svc.getUnitMasterfiles)
+		api.POST("/units/:id/update", svc.updateUnit)
 
 		api.GET("/search", svc.searchRequest)
 

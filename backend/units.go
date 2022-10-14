@@ -99,6 +99,63 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 	c.JSON(http.StatusOK, unitDetail)
 }
 
+func (svc *serviceContext) updateUnit(c *gin.Context) {
+	unitID := c.Param("id")
+	var unitDetail unit
+	err := svc.DB.Find(&unitDetail, unitID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get unit %s details before update: %s", unitID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	var req struct {
+		Status              string `json:"status"`
+		PatronSourceURL     string `json:"patronSourceURL"`
+		SpecialInstructions string `json:"specialInstructions"`
+		StaffNotes          string `json:"staffNotes"`
+		CompleteScan        bool   `json:"completeScan"`
+		ThrowAway           bool   `json:"throwAway"`
+		OrderID             int64  `json:"orderID"`
+		MetadataID          int64  `json:"metadataID"`
+		IntendedUseID       int64  `json:"intendedUseID"`
+		OCRMasterFiles      bool   `json:"ocrMasterFiles"`
+		RemoveWaterMark     bool   `json:"removeWatermark"`
+		IncludeInDL         bool   `json:"includeInDL"`
+	}
+	err = c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid update unit %s request: %s", unitID, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	log.Printf("INFO: update unit %d", unitDetail.ID)
+	unitDetail.UnitStatus = req.Status
+	unitDetail.PatronSourceURL = req.Status
+	unitDetail.SpecialInstructions = req.SpecialInstructions
+	unitDetail.StaffNotes = req.StaffNotes
+	unitDetail.CompleteScan = req.CompleteScan
+	unitDetail.ThrowAway = req.ThrowAway
+	unitDetail.OrderID = req.OrderID
+	unitDetail.MetadataID = &req.MetadataID
+	unitDetail.IntendedUseID = &req.IntendedUseID
+	unitDetail.OcrMasterFiles = req.OCRMasterFiles
+	unitDetail.RemoveWatermark = req.RemoveWaterMark
+	unitDetail.IncludeInDL = req.IncludeInDL
+	err = svc.DB.Model(&unitDetail).
+		Select(
+			"Status", "PatronSourceURL", "SpecialInstructions", "StaffNotes", "CompleteScan", "ThrowAway",
+			"OrderID", "MetadataID", "IntendedUseID", "OcrMasterFiles", "RemoveWatermark", "IncludeInDL").
+		Updates(unitDetail).Error
+	if err != nil {
+		log.Printf("ERROR: unable to update unit %d: %s", unitDetail.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	svc.DB.Preload("IntendedUse").Preload("Metadata").Preload("Attachments").Find(&unitDetail, unitID)
+	c.JSON(http.StatusOK, unitDetail)
+}
+
 func (svc *serviceContext) getUnitMasterfiles(c *gin.Context) {
 	unitID := c.Param("id")
 	log.Printf("INFO: get unit %s masterfiles", unitID)

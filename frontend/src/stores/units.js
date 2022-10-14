@@ -54,6 +54,17 @@ export const useUnitsStore = defineStore('units', {
          })
       },
 
+      async submitEdit( edit ) {
+         const system = useSystemStore()
+         system.working = true
+         return axios.post( `/api/units/${this.detail.id}/update`, edit ).then( (resp) => {
+            this.detail = resp.data
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
       getMasterFiles( unitID ) {
          const system = useSystemStore()
          this.masterFiles = []
