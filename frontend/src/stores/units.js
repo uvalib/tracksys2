@@ -25,10 +25,28 @@ export const useUnitsStore = defineStore('units', {
 	getters: {
 	},
 	actions: {
-      getDetails( unitID ) {
+      clearDetails() {
+         this.detail.id = 0
+         this.detail.status = ""
+         this.detail.intendedUse = null
+         this.detail.includeInDL = false
+         this.detail.removeWaterMark = false
+         this.detail.reorder = false
+         this.detail.completeScan = false
+         this.detail.throwAway = false
+         this.detail.ocrMasterFiles = false
+         this.detail.attachments = []
+         this.detail.staffNotes = ""
+         this.detail.dateArchived = ""
+         this.detail.datePatronDeliverablesReady = ""
+         this.detail.dateDLDeliverablesReady = ""
+      },
+      async getDetails( unitID ) {
+         if ( this.detail.id == unitID ) return
+
          const system = useSystemStore()
          system.working = true
-         axios.get( `/api/units/${unitID}` ).then(response => {
+         return axios.get( `/api/units/${unitID}` ).then(response => {
             this.detail = response.data
             system.working = false
          }).catch( e => {
@@ -44,8 +62,6 @@ export const useUnitsStore = defineStore('units', {
          }).catch( e => {
             system.setError(e)
          })
-
       }
-
    }
 })

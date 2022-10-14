@@ -4,7 +4,7 @@
       <span v-else>New Order</span>
    </h2>
    <div class="edit-form">
-      <FormKit type="form" id="customer-detail" :actions="false" @submit="submitChanges">
+      <FormKit type="form" id="order-edit" :actions="false" @submit="submitChanges">
          <div class="split">
             <FormKit label="Status" type="select" v-model="edited.status" :options="orderStatuses" required/>
             <div class="sep"></div>
@@ -92,7 +92,7 @@ onMounted( async () =>{
    if (orderID) {
       newOrder.value = false
       await ordersStore.getOrderDetails(orderID)
-      document.title = `Order #${orderID}`
+      document.title = `Edit | Order #${orderID}`
    } else {
       ordersStore.clearDetails()
       newOrder.value = true

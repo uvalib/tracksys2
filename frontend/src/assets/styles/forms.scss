@@ -37,6 +37,12 @@ button.dpg-form-input {
    width: auto;
 }
 
+div.formkit-outer.first {
+   .dpg-form-label {
+      margin-top: 5px;
+   }
+}
+
 .formkit-outer[data-type="radio"] {
    margin-top: 20px;
    .dpg-form-help {
@@ -68,6 +74,23 @@ button.dpg-form-input {
       }
    }
  }
+
+div.checkbox {
+   display: flex;
+   flex-flow: row nowrap;
+   justify-content: flex-start;
+   align-items: center;
+   margin: 0;
+   input[type=checkbox] {
+      width: 18px;
+      height: 18px;
+      margin-right: 10px;
+      display: inline-block;
+   }
+   span {
+      display: inline-block;
+   }
+}
 
 span.req {
    margin-left: 5px;

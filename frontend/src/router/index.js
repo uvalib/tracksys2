@@ -61,6 +61,11 @@ const router = createRouter({
       component: () => import('../views/UnitDetails.vue')
     },
     {
+      path: '/units/:id/edit',
+      name: 'unitedit',
+      component: () => import('../views/UnitEdit.vue')
+    },
+    {
       path: '/components/:id',
       name: 'component',
       component: () => import('../views/ComponentDetails.vue')

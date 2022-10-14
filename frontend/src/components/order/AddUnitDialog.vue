@@ -219,32 +219,11 @@ div.p-panel {
 div.margin-bottom {
    margin-bottom: 25px;
 }
-:deep(div.formkit-outer.first) {
-   .dpg-form-label {
-      margin-top: 5px;
-   }
-}
 div.opts {
    display: flex;
    flex-flow: row nowrap;
    justify-content: space-between;
    margin: 20px 0 10px 0;
-   div.checkbox {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-start;
-      align-items: center;
-      margin: 0;
-      input[type=checkbox] {
-         width: 18px;
-         height: 18px;
-         margin-right: 10px;
-         display: inline-block;
-      }
-      span {
-         display: inline-block;
-      }
-   }
 }
 .acts {
    display: flex;

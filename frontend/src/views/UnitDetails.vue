@@ -1,5 +1,6 @@
 <template>
    <h2>Unit {{route.params.id}}</h2>
+   <DPGButton label="Edit" class="p-button-secondary edit" @click="editUnit()"/>
    <div v-if="detail.lastError" class="last-error">
       <span>Recent Error:</span>
       <router-link :to="`/jobs/${detail.lastError.jobID}`">{{detail.lastError.error}}</router-link>
@@ -126,7 +127,7 @@
 
 <script setup>
 import { onBeforeMount, ref } from 'vue'
-import { useRoute, onBeforeRouteUpdate } from 'vue-router'
+import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useUnitsStore } from '@/stores/units'
 import Panel from 'primevue/panel'
@@ -137,6 +138,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 
 const route = useRoute()
+const router = useRouter()
 const systemStore = useSystemStore()
 const unitsStore = useUnitsStore()
 
@@ -157,6 +159,10 @@ onBeforeMount(() => {
    unitsStore.getMasterFiles(uID)
    document.title = `Unit #${uID}`
 })
+
+function editUnit() {
+   router.push(`/units/${route.params.id}/edit`)
+}
 
 function downloadAttachment(id) {
    alert(id)
@@ -209,6 +215,11 @@ function formatDate( dateStr ) {
 </script>
 
 <style scoped lang="scss">
+button.p-button-secondary.edit {
+   position: absolute;
+   right:15px;
+   top: 15px;
+}
 .last-error {
    background: var(--uvalib-red-darker);
    padding: 10px;
