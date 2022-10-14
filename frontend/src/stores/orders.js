@@ -42,7 +42,9 @@ export const useOrdersStore = defineStore('orders', {
       items: [],
       units: [],
       showInvoice: false,
-      editInvoice: false
+      editInvoice: false,
+      lookupHits: [],
+      totalLookupHits: 0,
 	}),
 	getters: {
       isFeePaid: state => {
@@ -84,6 +86,16 @@ export const useOrdersStore = defineStore('orders', {
       },
    },
 	actions: {
+      async lookup( query ) {
+         const system = useSystemStore()
+         let url = `/api/search?scope=orders&q=${encodeURIComponent(query)}&start=0&limit=30`
+         return axios.get(url).then(response => {
+            this.lookupHits = response.data.orders.hits
+            this.totalLookupHits = response.data.orders.total
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
       clearDetails()  {
          this.detail.id = 0
          this.detail.status = ""

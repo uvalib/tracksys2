@@ -16,13 +16,15 @@
                      <div class="related">
                         <label>Order ID</label>
                         <div class="item">
-                           <span>{{edited.orderID}}</span>
+                           <span>{{displayOrderID}}</span>
+                           <LookupDialog target="orders" @selected="orderSelected" />
                         </div>
                      </div>
                      <div class="related">
                         <label>Metadata ID</label>
                         <div class="item">
-                           <span>{{edited.metadataID}}</span>
+                           <span>{{displayMetadataID}}</span>
+                           <LookupDialog target="metadata" @selected="metadataSelected" />
                         </div>
                      </div>
                   </div>
@@ -72,6 +74,7 @@ import { onMounted, ref, computed } from 'vue'
 import { useUnitsStore } from '@/stores/units'
 import { useSystemStore } from '@/stores/system'
 import Panel from 'primevue/panel'
+import LookupDialog from '../components/LookupDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -105,6 +108,18 @@ const intendedUses = computed(() => {
       }
    })
    return out
+})
+const displayMetadataID = computed( () => {
+   if (edited.value.metadataID && edited.value.metadataID) {
+      return edited.value.metadataID
+   }
+   return "None"
+})
+const displayOrderID = computed( () => {
+   if (edited.value.orderID && edited.value.orderID) {
+      return edited.value.orderID
+   }
+   return "None"
 })
 
 const edited = ref({
@@ -143,6 +158,12 @@ onMounted( async () =>{
    edited.value.includeInDL = unitsStore.detail.includeInDL
 })
 
+function orderSelected( o ) {
+   edited.value.orderID = o
+}
+function metadataSelected( o ) {
+   edited.value.metadataID = o
+}
 function cancelEdit() {
    router.push(`/units/${route.params.id}`)
 }
@@ -159,7 +180,7 @@ async function submitChanges() {
 <style lang="scss" scoped>
 .edit-form {
    width: 80%;
-   margin: 0 auto;
+   margin: 30px auto 0 auto;
 
    .top-pad {
       margin-top: 15px;
@@ -178,11 +199,15 @@ async function submitChanges() {
       }
       .related {
          label {
-            margin-bottom: 5px;
             display: block;
+            text-align: left;
          }
          .item {
             text-align: left;
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: flex-start;
+            align-items: center;
          }
       }
    }

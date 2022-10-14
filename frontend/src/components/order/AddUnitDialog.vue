@@ -7,7 +7,7 @@
                <input type="text" v-model="metadataSearch"  @keydown.stop.prevent.enter="lookupMetadata"/>
                <DPGButton @click="lookupMetadata" label="Lookup" class="p-button-secondary"/>
             </div>
-            <template v-if="metadataStore.searched">
+            <template v-if="searched">
                <div class="no-results" v-if="metadataStore.totalSearchHits == 0">
                   No matching metadata records found.
                </div>
@@ -90,6 +90,7 @@ const metadataStore = useMetadataStore()
 const ordersStore = useOrdersStore()
 
 const isOpen = ref(false)
+const searched = ref(false)
 const error = ref("")
 const metadataSearch = ref("")
 const selectedMetadata = ref()
@@ -123,6 +124,7 @@ const intendedUses = computed(() => {
 
 async function lookupMetadata() {
    await metadataStore.lookup( metadataSearch.value )
+   searched.value = true
 }
 
 async function createUnit() {

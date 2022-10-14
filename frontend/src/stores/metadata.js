@@ -83,7 +83,6 @@ export const useMetadataStore = defineStore('metadata', {
       },
       searchHits: [],
       totalSearchHits: 0,
-      searched: false
    }),
 	getters: {
 	},
@@ -91,20 +90,13 @@ export const useMetadataStore = defineStore('metadata', {
       resetSearch() {
          this.searchHits = []
          this.totalSearchHits = 0
-         this.searched = false
       },
       async lookup( query ) {
          const system = useSystemStore()
-         system.working = true
-         this.searched = false
          let url = `/api/search?scope=metadata&q=${encodeURIComponent(query)}&start=0&limit=30`
-         console.log(url)
          return axios.get(url).then(response => {
             this.searchHits = response.data.metadata.hits
             this.totalSearchHits = response.data.metadata.total
-            system.working = false
-            this.searched = true
-            console.log("RESULTS")
          }).catch( e => {
             system.setError(e)
          })
