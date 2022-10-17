@@ -81,7 +81,7 @@
                <Column header="" class="row-acts">
                   <template #body="slotProps">
                      <DPGButton label="Download" class="p-button-secondary" @click="downloadAttachment(slotProps.data.id)"/>
-                     <DPGButton label="Delete" class="p-button-secondary" @click="deleteAttachment(slotProps.data.id)"/>
+                     <DPGButton label="Delete" class="p-button-secondary" @click="deleteAttachment(slotProps.data)"/>
                   </template>
                </Column>
             </DataTable>
@@ -173,8 +173,8 @@ function downloadAttachment(id) {
    alert(id)
 }
 
-function deleteAttachment(id) {
-   alert(id)
+async function deleteAttachment(item) {
+   unitsStore.deleteAttachment(item)
 }
 
 function onRowSelect() {
@@ -265,6 +265,7 @@ button.p-button-secondary.edit {
    }
    .row-acts {
       font-size: 0.9em;
+      width: 75px;
       button.p-button {
          padding: 4px 10px;
          width: 100%;

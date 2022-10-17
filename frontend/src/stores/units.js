@@ -83,6 +83,18 @@ export const useUnitsStore = defineStore('units', {
             system.setError(e)
          })
       },
+      async deleteAttachment(item) {
+         const system = useSystemStore()
+         let url = `${system.jobsURL}/units/${this.detail.id}/attachments/${item.filename}`
+         return axios.delete(url).then( async () => {
+            let aIdx = this.detail.attachments.findIndex( a => a.id == item.id)
+            if (aIdx > -1) {
+               this.detail.attachments.splice(aIdx, 1)
+            }
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
 
       async submitEdit( edit ) {
          const system = useSystemStore()
