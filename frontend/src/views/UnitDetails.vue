@@ -80,7 +80,7 @@
                <Column field="description" header="Description" />
                <Column header="" class="row-acts">
                   <template #body="slotProps">
-                     <DPGButton label="Download" class="p-button-secondary" @click="downloadAttachment(slotProps.data.id)"/>
+                     <DPGButton label="Download" class="p-button-secondary" @click="downloadAttachment(slotProps.data)"/>
                      <DPGButton label="Delete" class="p-button-secondary" @click="deleteAttachment(slotProps.data)"/>
                   </template>
                </Column>
@@ -141,7 +141,9 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import CreateProjectDialog from '../components/unit/CreateProjectDialog.vue'
 import AddAttachmentDialog from '../components/unit/AddAttachmentDialog.vue'
+import { useConfirm } from "primevue/useconfirm"
 
+const confirm = useConfirm()
 const route = useRoute()
 const router = useRouter()
 const systemStore = useSystemStore()
@@ -169,12 +171,21 @@ function editUnit() {
    router.push(`/units/${route.params.id}/edit`)
 }
 
-function downloadAttachment(id) {
-   alert(id)
+function downloadAttachment(item) {
+   let url = `${systemStore.jobsURL}/units/${unitsStore.detail.id}/attachments/${item.filename}`
+   window.open(url)
 }
 
-async function deleteAttachment(item) {
-   unitsStore.deleteAttachment(item)
+function deleteAttachment(item) {
+   confirm.require({
+      message: 'Are you sure you want delete the selected attachment? All data will be lost. This cannot be reversed.',
+      header: 'Confirm Delete Attachment',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         await unitsStore.deleteAttachment(item)
+      }
+   })
 }
 
 function onRowSelect() {
