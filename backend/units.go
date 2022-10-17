@@ -11,6 +11,17 @@ import (
 	"gorm.io/gorm"
 )
 
+type project struct {
+	ID            int64      `json:"id"`
+	WorkflowID    int64      `json:"-"`
+	UnitID        int64      `json:"-"`
+	DueOn         *time.Time `json:"dueOn,omitempty"`
+	AddedAt       *time.Time `json:"addedAt,omitempty"`
+	CategoryID    int64      `json:"-"`
+	ItemCondition uint       `json:"itemCondition"`
+	ConditionNote string     `json:"conditionNote,omitempty"`
+}
+
 type intendedUse struct {
 	ID                    int64  `json:"id"`
 	Description           string `json:"name"`
@@ -34,9 +45,9 @@ type lastError struct {
 type unit struct {
 	ID                          int64        `json:"id"`
 	OrderID                     int64        `json:"orderID"`
-	Order                       *order       `json:"order,omitempty"`
+	Order                       *order       `gorm:"foreignKey:OrderID" json:"order,omitempty"`
 	MetadataID                  *int64       `json:"metadataID,omitempty"`
-	Metadata                    *metadata    `json:"metadata,omitempty"`
+	Metadata                    *metadata    `gorm:"foreignKey:MetadataID" json:"metadata,omitempty"`
 	UnitStatus                  string       `json:"status"`
 	IntendedUseID               *int64       `json:"-"`
 	IntendedUse                 *intendedUse `gorm:"foreignKey:IntendedUseID" json:"intendedUse"`
@@ -65,7 +76,7 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 	unitID := c.Param("id")
 	log.Printf("INFO: get unit %s details", unitID)
 	var unitDetail unit
-	err := svc.DB.Preload("IntendedUse").Preload("Attachments").Preload("Metadata").Find(&unitDetail, unitID).Error
+	err := svc.DB.Preload("IntendedUse").Preload("Attachments").Preload("Metadata").Preload("Order").Find(&unitDetail, unitID).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get detauls for unit %s: %s", unitID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -97,6 +108,50 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, unitDetail)
+}
+
+func (svc *serviceContext) createProject(c *gin.Context) {
+	unitID := c.Param("id")
+	var unitDetail unit
+	err := svc.DB.Find(&unitDetail, unitID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get unit %s details before update: %s", unitID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	var req struct {
+		WorkflowID int64  `json:"workflowID"`
+		CategoryID int64  `json:"categoryID"`
+		Condition  uint   `json:"condition"`
+		DueOn      string `json:"dueOn"`
+		Notes      string `json:"notes"`
+	}
+	err = c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid create project request for unit %s: %s", unitID, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	log.Printf("INFO: create project for unit %d", unitDetail.ID)
+	dueDate, _ := time.Parse("2006-01-02", req.DueOn)
+	now := time.Now()
+	newProj := project{
+		WorkflowID:    req.WorkflowID,
+		UnitID:        unitDetail.ID,
+		DueOn:         &dueDate,
+		AddedAt:       &now,
+		CategoryID:    req.CategoryID,
+		ItemCondition: req.Condition,
+		ConditionNote: req.Notes,
+	}
+	err = svc.DB.Create(&newProj).Error
+	if err != nil {
+		log.Printf("ERROR: unable to create project for unit %d: %s", unitDetail.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: new project %d created for unit %d", newProj.ID, unitDetail.ID)
+	c.String(http.StatusOK, fmt.Sprintf("%d", newProj.ID))
 }
 
 func (svc *serviceContext) updateUnit(c *gin.Context) {

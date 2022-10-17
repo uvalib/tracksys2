@@ -12,12 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type containerType struct {
-	ID         int64
-	Name       string
-	hasFolders bool
-}
-
 type location struct {
 	ID              int64
 	MetadataID      int64 `gorm:"column:metadata_id"`

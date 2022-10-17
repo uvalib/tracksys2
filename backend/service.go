@@ -52,6 +52,24 @@ type agency struct {
 	Description string `json:"description"`
 }
 
+type category struct {
+	ID   uint64 `json:"id"`
+	Name string `json:"name"`
+}
+
+type containerType struct {
+	ID         int64
+	Name       string
+	hasFolders bool
+}
+
+type workflow struct {
+	ID          uint64 `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Active      bool   `json:"-"`
+}
+
 // InitializeService sets up the service context for all API handlers
 func initializeService(version string, cfg *configData) *serviceContext {
 	ctx := serviceContext{Version: version,
@@ -120,7 +138,10 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		ControlledVocabularies struct {
 			AcademicStatuses []academicStatus `json:"academicStatuses"`
 			Agencies         []agency         `json:"agencies"`
+			Categories       []category       `json:"categories"`
+			ContainerTypes   []containerType  `json:"containerTypes"`
 			IntendedUses     []intendedUse    `json:"intendedUses"`
+			Workflows        []workflow       `json:"workflows"`
 		} `json:"controlledVocabularies"`
 		SearchFields map[string][]searchField `json:"searchFields"`
 	}
@@ -149,10 +170,34 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		return
 	}
 
+	log.Printf("INFO: load categories")
+	err = svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.Categories).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get categories: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: load container types")
+	err = svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.ContainerTypes).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get container types: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	log.Printf("INFO: load intended uses")
 	err = svc.DB.Order("description asc").Where("is_approved=?", 1).Find(&resp.ControlledVocabularies.IntendedUses).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get intended uses: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: load workflows")
+	err = svc.DB.Order("name asc").Where("active=?", 1).Find(&resp.ControlledVocabularies.Workflows).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get workflows: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}

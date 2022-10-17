@@ -54,6 +54,15 @@ export const useUnitsStore = defineStore('units', {
          })
       },
 
+      async createProject( data ) {
+         const system = useSystemStore()
+         return axios.post( `/api/units/${this.detail.id}/project`, data ).then( (resp) => {
+            this.detail.projectID = parseInt(resp.data, 10)
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
       async submitEdit( edit ) {
          const system = useSystemStore()
          system.working = true

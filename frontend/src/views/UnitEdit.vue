@@ -57,6 +57,9 @@
                         <span class="label">Throw Away</span>
                      </div>
                   </div>
+                  <p class="note">
+                     <b>Note:</b> Throw away scans will not be sent to preservation. They are one-time scans made for a single patron.
+                  </p>
                </Panel>
             </div>
          </div>
@@ -74,7 +77,7 @@ import { onMounted, ref, computed } from 'vue'
 import { useUnitsStore } from '@/stores/units'
 import { useSystemStore } from '@/stores/system'
 import Panel from 'primevue/panel'
-import LookupDialog from '../components/LookupDialog.vue'
+import LookupDialog from '../components/unit/LookupDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -182,6 +185,13 @@ async function submitChanges() {
    width: 80%;
    margin: 30px auto 0 auto;
 
+   p.note {
+      text-align: left;
+      font-size: 0.8em;
+      font-style: italic;
+      padding:0;
+      margin:20px 0 0 0;
+   }
    .top-pad {
       margin-top: 15px;
    }

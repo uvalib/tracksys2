@@ -49,6 +49,9 @@
             </DataDisplay>
             <DataDisplay label="Date DL Deliverables Ready" :value="formatDate(detail.dateDLDeliverablesReady)" />
          </dl>
+         <div class="acts" v-if="!detail.projectID">
+            <CreateProjectDialog />
+         </div>
       </Panel>
    </div>
    <div class="details" v-if="systemStore.working==false">
@@ -136,6 +139,7 @@ import DataDisplay from '../components/DataDisplay.vue'
 import dayjs from 'dayjs'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import CreateProjectDialog from '../components/unit/CreateProjectDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -257,6 +261,10 @@ button.p-button-secondary.edit {
       padding: 15px 0 0 0;
       text-align: right;
       font-size: 0.8em;
+   }
+   .acts {
+      font-size: 0.8em;
+      text-align: right;
    }
    .row-acts {
       font-size: 0.9em;
