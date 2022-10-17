@@ -63,6 +63,27 @@ export const useUnitsStore = defineStore('units', {
          })
       },
 
+      async attachFile( info ) {
+         const system = useSystemStore()
+         var formData = new FormData()
+         let fileData = info.attachment[0]
+         formData.append("description", info.description)
+         formData.append("name", fileData.name)
+         formData.append("file", fileData.file)
+         let url = `${system.jobsURL}/units/${this.detail.id}/attach`
+         return axios.post(url, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+         }).then( async () => {
+            let uID = this.detail.id
+            this.detail.id = 0
+            await this.getDetails(uID)
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
       async submitEdit( edit ) {
          const system = useSystemStore()
          system.working = true

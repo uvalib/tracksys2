@@ -93,7 +93,7 @@
             Attachments cannot be aded to unapproved units.
          </p>
          <div v-else class="toolbar">
-            <DPGButton label="Add Attachment" class="p-button-secondary" @click="addAttachmentClicked()"/>
+            <AddAttachmentDialog />
          </div>
       </Panel>
    </div>
@@ -140,6 +140,7 @@ import dayjs from 'dayjs'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import CreateProjectDialog from '../components/unit/CreateProjectDialog.vue'
+import AddAttachmentDialog from '../components/unit/AddAttachmentDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -174,10 +175,6 @@ function downloadAttachment(id) {
 
 function deleteAttachment(id) {
    alert(id)
-}
-
-function addAttachmentClicked() {
-   alert("not yet implemenetd")
 }
 
 function onRowSelect() {

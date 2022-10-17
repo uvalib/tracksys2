@@ -1,7 +1,7 @@
 <template>
    <DPGButton @click="show" class="p-button-secondary" label="Create Digitization Project"/>
    <Dialog v-model:visible="isOpen" :modal="true" header="Create Digitization Project" :style="{width: '400px'}">
-      <FormKit type="form" id="order-edit" :actions="false" @submit="createProject">
+      <FormKit type="form" id="create-project" :actions="false" @submit="createProject">
          <FormKit label="Workflow" type="select" v-model="project.workflowID" :options="workflows" required outer-class="first" />
          <FormKit label="Category" type="select" v-model="project.categoryID" :options="categories" required/>
          <FormKit label="Date Due" type="date" v-model="project.dueOn" required/>
@@ -75,19 +75,10 @@ function show() {
 </script>
 
 <style lang="scss" scoped>
-  .spacer {
-      display: inline-block;
-      margin: 0 5px;
-   }
- .split {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: space-between;
-   :deep(.formkit-outer) {
-      flex-grow: 1;
-   }
- }
-
+.spacer {
+   display: inline-block;
+   margin: 0 5px;
+}
 .acts {
    display: flex;
    flex-flow: row nowrap;
