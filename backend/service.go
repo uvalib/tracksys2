@@ -131,7 +131,8 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		Version                string `json:"version"`
 		ReportsURL             string `json:"reportsURL"`
 		ProjectsURL            string `json:"projectsURL"`
-		IiifURL                string `json:"iiifURL"`
+		IIIFURL                string `json:"iiifURL"`
+		IIIFManifestURL        string `json:"iiifManifestURL"`
 		CurioURL               string `json:"curioURL"`
 		PdfURL                 string `json:"pdfURL"`
 		JobsURL                string `json:"jobsURL"`
@@ -146,12 +147,13 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		SearchFields map[string][]searchField `json:"searchFields"`
 	}
 	resp := cfgData{Version: Version,
-		CurioURL:    svc.ExternalSystems.Curio,
-		IiifURL:     svc.ExternalSystems.IIIF,
-		ReportsURL:  svc.ExternalSystems.Reports,
-		PdfURL:      svc.ExternalSystems.PDF,
-		ProjectsURL: svc.ExternalSystems.Projects,
-		JobsURL:     svc.ExternalSystems.Jobs,
+		CurioURL:        svc.ExternalSystems.Curio,
+		IIIFURL:         svc.ExternalSystems.IIIF,
+		IIIFManifestURL: svc.ExternalSystems.IIIFMan,
+		ReportsURL:      svc.ExternalSystems.Reports,
+		PdfURL:          svc.ExternalSystems.PDF,
+		ProjectsURL:     svc.ExternalSystems.Projects,
+		JobsURL:         svc.ExternalSystems.Jobs,
 	}
 
 	log.Printf("INFO: load academic statuses")

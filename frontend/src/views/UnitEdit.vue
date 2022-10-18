@@ -88,8 +88,6 @@ const unitStatuses = computed(() => {
    let out = []
    out.push( {label: "Approved", value: "approved"} )
    out.push( {label: "Canceled", value: "canceled"} )
-   out.push( {label: "Condition", value: "condition"} )
-   out.push( {label: "Copyright", value: "copyright"} )
    out.push( {label: "Done", value: "done"} )
    out.push( {label: "Error", value: "error"} )
    out.push( {label: "Unapproved", value: "unapproved"} )

@@ -115,6 +115,37 @@ export const useUnitsStore = defineStore('units', {
          }).catch( e => {
             system.setError(e)
          })
+      },
+
+      regenerateIIIF() {
+         const system = useSystemStore()
+         let url = `${system.iiifManifestURL}/pid/${this.detail.metadata.pid}?refresh=true`
+         axios.get( url ).then( () => {
+            system.toastMessage("IIIF Manifest Regenerated", "The IIIF manifest for this unit has been regenerated.")
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
+      generateDeliverables() {
+         const system = useSystemStore()
+         let url = `${system.jobsURL}/units/${this.detail.id}/deliverables`
+         axios.post(url).then( () => {
+            system.toastMessage("Generate Deliverables", "Generating unit deliverables.")
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
+      downloadFromArchive( computeID, filename='all' ) {
+         const system = useSystemStore()
+         let payload = {computeID: computeID, filename: filename}
+         let url = `${system.jobsURL}/units/${this.detail.id}/copy`
+         axios.post(url, payload).then( () => {
+            system.toastMessage("Archive Download", "Unit is being downloaded from the archive.")
+         }).catch( e => {
+            system.setError(e)
+         })
       }
    }
 })

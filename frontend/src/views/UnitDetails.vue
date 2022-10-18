@@ -49,11 +49,40 @@
             </DataDisplay>
             <DataDisplay label="Date DL Deliverables Ready" :value="formatDate(detail.dateDLDeliverablesReady)" />
          </dl>
-         <div class="acts" v-if="!detail.projectID && unitsStore.masterFiles.length == 0">
-            <CreateProjectDialog />
-            <p class="note" v-if="unitsStore.detail.status != 'approved' || unitsStore.detail.order.status != 'approved'">
-               Cannot create project, unit or order has not been approved.
-            </p>
+
+         <div class="acts-wrap" v-if="detail.status != 'finalizing'">
+            <div class="acts" v-if="!detail.projectID && unitsStore.masterFiles.length == 0">
+               <CreateProjectDialog />
+            </div>
+            <div class="acts">
+               <DPGButton v-if="detail.reorder && !detail.datePatronDeliverablesReady" @click="generateDeliverablesClicked"
+                  class="p-button-secondary" label="Generate Deliverables" />
+               <DPGButton v-if="detail.intendedUseID != 110 && detail.datePatronDeliverablesReady" @click="generateDeliverablesClicked"
+                  class="p-button-secondary" label="Regenerate Deliverables" />
+               <DPGButton v-if="unitsStore.masterFiles.length > 0" @click="regenerateIIIFClicked"
+                  class="p-button-secondary" label="Regenerate IIIF Manifest" />
+               <template v-if="detail.status == 'done'">
+                  <DPGButton v-if="detail.dateArchived" @click="downloadClicked" class="p-button-secondary" label="Download Unit From Archive" />
+                  <DPGButton v-if="!detail.reorder && detail.metadata && detail.metadata.type != 'ExternalMetadata'"
+                     class="p-button-secondary" label="ArchivesSpace Link" /> <!-- FIXME: this is a popup-->
+               </template>
+               <template v-else>
+                  <DPGButton v-if="detail.reorder && detail.datePatronDeliverablesReady" @click="completeClicked"
+                     class="p-button-secondary" label="Complete Unit" />
+               </template>
+            </div>
+         </div>
+
+         <div class="note"
+            v-if="(unitsStore.detail.status != 'approved' || unitsStore.detail.order.status != 'approved') && detail.projectID && unitsStore.masterFiles.length == 0"
+         >
+            Cannot create project, unit or order has not been approved.
+         </div>
+         <div class="note" v-if="detail.status == 'finalizing'">
+            Unit finalization is in-progress. No other actions available at this time.
+         </div>
+         <div class="note" v-if="detail.status == 'error' && detail.reorder == false">
+            Unit has failed finalization finalization. Correct the errors and use the 'Retry Finalization' button on the project page to restart finalization.
          </div>
       </Panel>
    </div>
@@ -136,6 +165,7 @@ import { onBeforeMount, ref } from 'vue'
 import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useUnitsStore } from '@/stores/units'
+import { useUserStore } from '@/stores/user'
 import Panel from 'primevue/panel'
 import { storeToRefs } from "pinia"
 import DataDisplay from '../components/DataDisplay.vue'
@@ -151,6 +181,7 @@ const route = useRoute()
 const router = useRouter()
 const systemStore = useSystemStore()
 const unitsStore = useUnitsStore()
+const userStore = useUserStore()
 
 const { detail } = storeToRefs(unitsStore)
 
@@ -169,6 +200,16 @@ onBeforeMount(() => {
    unitsStore.getMasterFiles(uID)
    document.title = `Unit #${uID}`
 })
+
+function regenerateIIIFClicked() {
+   unitsStore.regenerateIIIF()
+}
+function downloadClicked() {
+   unitsStore.downloadFromArchive( userStore.computeID )
+}
+function generateDeliverablesClicked() {
+   unitsStore.generateDeliverables()
+}
 
 function editUnit() {
    router.push(`/units/${route.params.id}/edit`)
@@ -260,6 +301,14 @@ button.p-button-secondary.edit {
    div.p-panel.p-component.small {
       flex: 25%;
    }
+   div.note {
+      margin-top: 15px;
+      font-size: 0.9em;
+   }
+   p.note {
+      padding: 0;
+      margin: 10px 0 0 0;
+   }
    .attachments-data {
       font-size: 0.8em;
    }
@@ -273,9 +322,19 @@ button.p-button-secondary.edit {
       text-align: right;
       font-size: 0.8em;
    }
-   .acts {
-      font-size: 0.8em;
-      text-align: right;
+   .acts-wrap {
+      border-top: 1px solid var(--uvalib-grey-light);
+      padding-top: 15px;
+      .acts {
+         padding: 5px 0;
+         font-size: 0.8em;
+         display: flex;
+         flex-flow: row wrap;
+         justify-content: flex-start;
+         :deep(button.p-button) {
+            margin-right: 10px;
+         }
+      }
    }
    .row-acts {
       font-size: 0.9em;

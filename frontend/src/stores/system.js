@@ -12,6 +12,7 @@ export const useSystemStore = defineStore('system', {
       jobsURL: "",
       reportsURL: "",
       projectsURL: "",
+      iiifManifestURL: "",
       academicStatuses: [],
       agencies: [],
       categories: [],
@@ -48,6 +49,7 @@ export const useSystemStore = defineStore('system', {
             this.reportsURL = response.data.reportsURL
             this.projectsURL = response.data.projectsURL
             this.jobsURL = response.data.jobsURL
+            this.iiifManifestURL = response.data.iiifManifestURL
             this.academicStatuses = response.data.controlledVocabularies.academicStatuses
             this.agencies = response.data.controlledVocabularies.agencies
             this.categories = response.data.controlledVocabularies.categories
