@@ -142,7 +142,24 @@ export const useUnitsStore = defineStore('units', {
          let payload = {computeID: computeID, filename: filename}
          let url = `${system.jobsURL}/units/${this.detail.id}/copy`
          axios.post(url, payload).then( () => {
-            system.toastMessage("Archive Download", "Unit is being downloaded from the archive.")
+            let tgt = "Master File"
+            if (filename == 'all') tgt = "Unit"
+            system.toastMessage("Archive Download", `${tgt} is being downloaded from the archive.`)
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
+      setExemplar( mfID ) {
+         const system = useSystemStore()
+         axios.post( `/api/units/${this.detail.id}/exemplar/${mfID}` ).then( () => {
+            this.masterFiles.forEach( mf => {
+               mf.exemplar = false
+               if (mf.id == mfID) {
+                  mf.exemplar = true
+               }
+            })
+            system.toastMessage("Exemplar", "New exemplar has been set.")
          }).catch( e => {
             system.setError(e)
          })

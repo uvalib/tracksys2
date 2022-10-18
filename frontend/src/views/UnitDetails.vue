@@ -50,7 +50,7 @@
             <DataDisplay label="Date DL Deliverables Ready" :value="formatDate(detail.dateDLDeliverablesReady)" />
          </dl>
 
-         <div class="acts-wrap" v-if="detail.status != 'finalizing'">
+         <div class="acts-wrap" v-if="detail.status != 'finalizing' && (userStore.isAdmin || userStore.isSupervisor)">
             <div class="acts" v-if="!detail.projectID && unitsStore.masterFiles.length == 0">
                <CreateProjectDialog />
             </div>
@@ -129,39 +129,11 @@
          </div>
       </Panel>
    </div>
-   <div class="details" v-if="systemStore.working==false && unitsStore.masterFiles.length > 0">
-      <Panel header="Master Files">
-         <DataTable :value="unitsStore.masterFiles" ref="unitMasterFilesTable" dataKey="id"
-            showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
-            :lazy="false" :paginator="unitsStore.masterFiles.length > 15" :rows="15" :rowsPerPageOptions="[15,30,50,100]"
-            paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-            currentPageReportTemplate="{first} - {last} of {totalRecords}"
-            v-model:selection="selectedMasterFiles" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
-         >
-            <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
-            <Column field="pid" header="PID"/>
-            <Column field="filename" header="File Name"/>
-            <Column field="title" header="Title"/>
-            <Column field="description" header="Description"/>
-            <Column field="thumbnailURL" header="Thumb" class="thumb">
-               <template #body="slotProps">
-                  <a :href="slotProps.data.viewerURL" target="_blank">
-                     <img :src="slotProps.data.thumbnailURL" />
-                  </a>
-               </template>
-            </Column>
-            <Column header="" class="row-acts nowrap">
-               <template #body="slotProps">
-                  <router-link :to="`/masterfiles/${slotProps.data.id}`">Details</router-link>
-               </template>
-            </Column>
-         </DataTable>
-      </Panel>
-   </div>
+   <MasterFilesList />
 </template>
 
 <script setup>
-import { onBeforeMount, ref } from 'vue'
+import { onBeforeMount } from 'vue'
 import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useUnitsStore } from '@/stores/units'
@@ -174,6 +146,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import CreateProjectDialog from '../components/unit/CreateProjectDialog.vue'
 import AddAttachmentDialog from '../components/unit/AddAttachmentDialog.vue'
+import MasterFilesList from '../components/unit/MasterFilesList.vue'
 import { useConfirm } from "primevue/useconfirm"
 
 const confirm = useConfirm()
@@ -184,9 +157,6 @@ const unitsStore = useUnitsStore()
 const userStore = useUserStore()
 
 const { detail } = storeToRefs(unitsStore)
-
-const selectedMasterFiles = ref([])
-const selectAll = ref(false)
 
 onBeforeRouteUpdate(async (to) => {
    let uID = to.params.id
@@ -230,22 +200,6 @@ function deleteAttachment(item) {
          await unitsStore.deleteAttachment(item)
       }
    })
-}
-
-function onRowSelect() {
-   selectAll.value = selectedMasterFiles.value < unitsStore.masterFiles.length
-}
-function onRowUnselect() {
-   selectAll.value  = false
-}
-function onSelectAllChange(event) {
-   selectAll.value = event.checked
-   if (selectAll.value) {
-      selectedMasterFiles.value = unitsStore.masterFiles
-   }
-   else {
-      selectedMasterFiles.value = []
-   }
 }
 
 function displayStatus( id) {
@@ -294,10 +248,6 @@ button.p-button-secondary.edit {
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
-   :deep(td.thumb) {
-      width: 160px !important;
-      text-align: center !important;
-   }
    div.p-panel.p-component.small {
       flex: 25%;
    }

@@ -80,6 +80,7 @@ type masterFile struct {
 	UpdatedAt         time.Time      `json:"-"`
 	ThumbnailURL      string         `gorm:"-" json:"thumbnailURL,omitempty"`
 	ViewerURL         string         `gorm:"-" json:"viewerURL,omitempty"`
+	Exemplar          bool           `json:"exemplar"`
 }
 
 func (svc *serviceContext) getMasterFile(c *gin.Context) {

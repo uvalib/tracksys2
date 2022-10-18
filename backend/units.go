@@ -245,3 +245,38 @@ func (svc *serviceContext) getUnitMasterfiles(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, masterFiles)
 }
+
+func (svc *serviceContext) setExemplar(c *gin.Context) {
+	unitID := c.Param("id")
+	mfID := c.Param("mfid")
+	log.Printf("INFO: set master file %s as exemplar for unit %s", mfID, unitID)
+	var exemplar masterFile
+	now := time.Now()
+	err := svc.DB.Find(&exemplar, mfID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("INFO: unable to set master file %s as exemplar; file not found", mfID)
+			c.String(http.StatusNotFound, fmt.Sprintf("master file %s not found", mfID))
+		} else {
+			log.Printf("ERROR: unable to set master file %s as exemplar: %s", mfID, err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	err = svc.DB.Exec("update master_files set exemplar=? where unit_id=?", false, unitID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to clear unit %s exemplar: %s", unitID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	exemplar.Exemplar = true
+	exemplar.UpdatedAt = now
+	err = svc.DB.Model(&exemplar).Select("Exemplar", "UpdatedAt").Updates(exemplar).Error
+	if err != nil {
+		log.Printf("ERROR: unable to set master file %s as exemplar: %s", mfID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.String(http.StatusOK, "exemplar set")
+}
