@@ -57,7 +57,7 @@ type unit struct {
 	Reorder                     bool         `json:"reorder"`
 	CompleteScan                bool         `json:"completeScan"`
 	ThrowAway                   bool         `json:"throwAway"`
-	OcrMasterFiles              bool         `gorm:"column:ocr_master_files" json:"ocrMasterFiles"`
+	OCRMasterFiles              bool         `gorm:"column:ocr_master_files" json:"ocrMasterFiles"`
 	MasterFiles                 []masterFile `gorm:"foreignKey:UnitID" json:"masterFiles"`
 	Attachments                 []attachment `gorm:"foreignKey:UnitID" json:"attachments"`
 	SpecialInstructions         string       `json:"specialInstructions"`
@@ -183,9 +183,9 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	log.Printf("INFO: update unit %d", unitDetail.ID)
+	log.Printf("INFO: update unit %d with %+v", unitDetail.ID, req)
 	unitDetail.UnitStatus = req.Status
-	unitDetail.PatronSourceURL = req.Status
+	unitDetail.PatronSourceURL = req.PatronSourceURL
 	unitDetail.SpecialInstructions = req.SpecialInstructions
 	unitDetail.StaffNotes = req.StaffNotes
 	unitDetail.CompleteScan = req.CompleteScan
@@ -193,12 +193,12 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 	unitDetail.OrderID = req.OrderID
 	unitDetail.MetadataID = &req.MetadataID
 	unitDetail.IntendedUseID = &req.IntendedUseID
-	unitDetail.OcrMasterFiles = req.OCRMasterFiles
+	unitDetail.OCRMasterFiles = req.OCRMasterFiles
 	unitDetail.RemoveWatermark = req.RemoveWaterMark
 	unitDetail.IncludeInDL = req.IncludeInDL
 	err = svc.DB.Model(&unitDetail).
 		Select(
-			"Status", "PatronSourceURL", "SpecialInstructions", "StaffNotes", "CompleteScan", "ThrowAway",
+			"UnitStatus", "PatronSourceURL", "SpecialInstructions", "StaffNotes", "CompleteScan", "ThrowAway",
 			"OrderID", "MetadataID", "IntendedUseID", "OcrMasterFiles", "RemoveWatermark", "IncludeInDL").
 		Updates(unitDetail).Error
 	if err != nil {
@@ -206,8 +206,7 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	svc.DB.Preload("IntendedUse").Preload("Metadata").Preload("Attachments").Find(&unitDetail, unitID)
+	svc.DB.Preload("IntendedUse").Preload("Attachments").Preload("Metadata").Preload("Order").Find(&unitDetail, unitID)
 	c.JSON(http.StatusOK, unitDetail)
 }
 

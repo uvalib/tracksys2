@@ -91,7 +91,7 @@ const unitStatuses = computed(() => {
    out.push( {label: "Condition", value: "condition"} )
    out.push( {label: "Copyright", value: "copyright"} )
    out.push( {label: "Done", value: "done"} )
-   out.push( {label: "Error", value: "eddor"} )
+   out.push( {label: "Error", value: "error"} )
    out.push( {label: "Unapproved", value: "unapproved"} )
    return out
 })

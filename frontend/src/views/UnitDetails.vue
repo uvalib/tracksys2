@@ -49,8 +49,11 @@
             </DataDisplay>
             <DataDisplay label="Date DL Deliverables Ready" :value="formatDate(detail.dateDLDeliverablesReady)" />
          </dl>
-         <div class="acts" v-if="!detail.projectID">
+         <div class="acts" v-if="!detail.projectID && unitsStore.masterFiles.length == 0">
             <CreateProjectDialog />
+            <p class="note" v-if="unitsStore.detail.status != 'approved' || unitsStore.detail.order.status != 'approved'">
+               Cannot create project, unit or order has not been approved.
+            </p>
          </div>
       </Panel>
    </div>

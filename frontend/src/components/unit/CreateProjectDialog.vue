@@ -1,5 +1,5 @@
 <template>
-   <DPGButton @click="show" class="p-button-secondary" label="Create Digitization Project"/>
+   <DPGButton @click="show" class="p-button-secondary" label="Create Digitization Project" :disabled="createDisabled"/>
    <Dialog v-model:visible="isOpen" :modal="true" header="Create Digitization Project" :style="{width: '400px'}">
       <FormKit type="form" id="create-project" :actions="false" @submit="createProject">
          <FormKit label="Workflow" type="select" v-model="project.workflowID" :options="workflows" required outer-class="first" />
@@ -34,6 +34,10 @@ const project = ref({
    notes: ""
 })
 
+const createDisabled = computed(() => {
+   let approved = (unitsStore.detail.status == 'approved' && unitsStore.detail.order.status == 'approved')
+   return !approved
+})
 const workflows = computed( () => {
    let out = []
    systemStore.workflows.forEach( w => {
