@@ -188,6 +188,18 @@ export const useUnitsStore = defineStore('units', {
          })
       },
 
+      renumberPages( startPage, filenames) {
+         const system = useSystemStore()
+         let data = {filenames: filenames, "startNum":  parseInt(startPage,10) }
+         axios.post(`${system.jobsURL}/units/${this.detail.id}/masterfiles/renumber`, data).then( () => {
+            this.getMasterFiles( this.detail.id )
+            system.toastMessage("Renumber Success", 'The selected master files have been renumbered.')
+         }).catch( e => {
+            system.setError(e)
+            this.updateInProgress = false
+         })
+      },
+
       replaceMasterFiles() {
          const system = useSystemStore()
          this.updateInProgress = true

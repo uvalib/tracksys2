@@ -9,6 +9,7 @@
             <template v-if="userStore.isAdmin && (detail.dateArchived==null || detail.reorder || detail.dateDLDeliverablesReady == null)">
                <DPGButton label="Delete Selected" @click="deleteClicked()" class="p-button-secondary" :disabled="!filesSelected" />
             </template>
+            <RenumberDialog :disabled="!filesSelected" :filenames="selectedFileNames" />
             <template v-if="detail.metadata && (detail.dateArchived != null || detail.reorder )">
                <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
             </template>
@@ -56,6 +57,7 @@ import Column from 'primevue/column'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useConfirm } from "primevue/useconfirm"
+import RenumberDialog from './RenumberDialog.vue'
 
 const confirm = useConfirm()
 const systemStore = useSystemStore()
@@ -70,6 +72,13 @@ const { detail } = storeToRefs(unitsStore)
 
 const filesSelected = computed(() => {
    return selectedMasterFiles.value.length > 0
+})
+const selectedFileNames = computed(() => {
+   let filenames = []
+   selectedMasterFiles.value.forEach( s => {
+      filenames.push(s.filename)
+   })
+   return filenames
 })
 
 function pdfClicked() {
@@ -114,11 +123,7 @@ function deleteClicked() {
       icon: 'pi pi-exclamation-triangle',
       rejectClass: 'p-button-secondary',
       accept: async () => {
-         let filenames = []
-         selectedMasterFiles.value.forEach( s => {
-            filenames.push(s.filename)
-         })
-         unitsStore.deleteMasterFiles(filenames)
+         unitsStore.deleteMasterFiles(selectedFileNames.value)
       }
    })
 }
