@@ -11,6 +11,7 @@ export const useSystemStore = defineStore('system', {
       showError: false,
       jobsURL: "",
       reportsURL: "",
+      pdfURL: "",
       projectsURL: "",
       iiifManifestURL: "",
       academicStatuses: [],

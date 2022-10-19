@@ -6,8 +6,11 @@
                <DPGButton label="Add" @click="addClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
                <DPGButton label="Replace" @click="replaceClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
             </template>
-            <template v-if="userStore.isAdmin && (detail.dateArchived==null  || detail.reorder || detail.dateDLDeliverablesReady == null)">
+            <template v-if="userStore.isAdmin && (detail.dateArchived==null || detail.reorder || detail.dateDLDeliverablesReady == null)">
                <DPGButton label="Delete Selected" @click="deleteClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+            </template>
+            <template v-if="detail.metadata && (detail.dateArchived != null || detail.reorder )">
+               <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
             </template>
          </div>
          <DataTable :value="unitsStore.masterFiles" ref="unitMasterFilesTable" dataKey="id"
@@ -69,6 +72,15 @@ const filesSelected = computed(() => {
    return selectedMasterFiles.value.length > 0
 })
 
+function pdfClicked() {
+   let ids = []
+   selectedMasterFiles.value.forEach( s => {
+      ids.push(s.id)
+   })
+   let token = new Date().getTime()
+   let url = `${systemStore.pdfURL}/${unitsStore.detail.metadata.pid}?unit=${unitsStore.detail.id}&token=${token}&pages=${ids.join(',')}`
+   window.open(url)
+}
 function replaceClicked() {
    let unitDir = `${unitsStore.detail.id}`.padStart(9, '0')
    confirm.require({
