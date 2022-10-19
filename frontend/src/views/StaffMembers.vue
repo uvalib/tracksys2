@@ -1,6 +1,6 @@
 <template>
    <h2>Staff Members</h2>
-   <DPGButton label="Add" class="p-button-secondary create" @click="addStaff()"/>
+   <DPGButton label="Add" class="p-button create" @click="addStaff()"/>
    <div class="staff">
       <div class="filter-controls">
          <span>
@@ -137,10 +137,11 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-button.p-button-secondary.create {
+button.p-button.create {
    position: absolute;
    right:15px;
    top: 15px;
+   font-size: 0.9em;
 }
 #staff-detail {
    .form-controls {

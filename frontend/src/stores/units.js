@@ -150,6 +150,16 @@ export const useUnitsStore = defineStore('units', {
          })
       },
 
+      startUnitOCR() {
+         const system = useSystemStore()
+         let payload = {type: "unit", id: this.detail.id}
+         axios.post(`${system.jobsURL}/ocr`, payload).then( () => {
+            system.toastMessage("OCR Started", 'OCR has begun. Check the job status page for updates.')
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
       setExemplar( mfID ) {
          const system = useSystemStore()
          axios.post( `/api/units/${this.detail.id}/exemplar/${mfID}` ).then( () => {

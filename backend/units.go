@@ -76,7 +76,8 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 	unitID := c.Param("id")
 	log.Printf("INFO: get unit %s details", unitID)
 	var unitDetail unit
-	err := svc.DB.Preload("IntendedUse").Preload("Attachments").Preload("Metadata").Preload("Order").Find(&unitDetail, unitID).Error
+	err := svc.DB.Preload("IntendedUse").Preload("Attachments").Preload("Order").
+		Preload("Metadata").Preload("Metadata.OCRHint").Find(&unitDetail, unitID).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get detauls for unit %s: %s", unitID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -206,7 +207,7 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-	svc.DB.Preload("IntendedUse").Preload("Attachments").Preload("Metadata").Preload("Order").Find(&unitDetail, unitID)
+	svc.DB.Preload("IntendedUse").Preload("Attachments").Preload("Order").Preload("Metadata").Preload("Metadata.OCRHint").Find(&unitDetail, unitID)
 	c.JSON(http.StatusOK, unitDetail)
 }
 

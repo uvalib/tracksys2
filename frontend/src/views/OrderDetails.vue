@@ -2,7 +2,7 @@
    <h2>
       <span>Order {{route.params.id}}</span>
    </h2>
-   <DPGButton label="Edit" class="p-button-secondary edit" @click="editOrder()"/>
+   <DPGButton label="Edit" class="edit" @click="editOrder()"/>
    <div class="details">
       <div class="left">
          <Panel header="General Information">
@@ -337,10 +337,11 @@ function declineFeeClicked() {
       margin: 0 0 5px 0 !important;
    }
 }
-button.p-button-secondary.edit {
+button.p-button.edit {
    position: absolute;
    right:15px;
    top: 15px;
+   font-size: 0.9em;
 }
 div.item {
    margin: 15px;

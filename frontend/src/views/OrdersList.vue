@@ -1,6 +1,6 @@
 <template>
    <h2>Orders</h2>
-   <DPGButton label="New Order" class="p-button-secondary create" @click="createOrder()"/>
+   <DPGButton label="New Order" class="create" @click="createOrder()"/>
    <div class="orders">
       <div class="toolbar">
          <span>
@@ -170,10 +170,11 @@ onMounted(() => {
 :deep(td.nowrap) {
    white-space: nowrap;
 }
-button.p-button-secondary.create {
+button.p-button.create {
    position: absolute;
    right:15px;
    top: 15px;
+   font-size: 0.9em;
 }
    .orders {
       min-height: 600px;

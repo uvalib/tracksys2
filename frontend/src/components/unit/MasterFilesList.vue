@@ -95,10 +95,9 @@ function onSelectAllChange(event) {
       border: 5px solid var(--uvalib-teal);
    }
 }
-.row-acts {
-   display: flex;
-   flex-flow: column;
-   justify-content: flex-start;
+:deep(td.row-acts) {
+   vertical-align: top;
+
    button.p-button.first {
       margin: 0;
    }

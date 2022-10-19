@@ -1,6 +1,6 @@
 <template>
    <h2>Customers</h2>
-   <DPGButton label="Add" class="p-button-secondary create" @click="addCustomer()"/>
+   <DPGButton label="Add" class="create" @click="addCustomer()"/>
    <div class="customers">
       <div class="filter-controls">
          <span>
@@ -187,10 +187,11 @@ function clearSearch() {
 </script>
 
 <style scoped lang="scss">
-button.p-button-secondary.create {
+button.p-button.create {
    position: absolute;
    right:15px;
    top: 15px;
+   font-size: 0.9em;;
 }
 .customers {
    min-height: 600px;

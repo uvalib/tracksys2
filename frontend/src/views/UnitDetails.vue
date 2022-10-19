@@ -1,6 +1,10 @@
 <template>
    <h2>Unit {{route.params.id}}</h2>
-   <DPGButton label="Edit" class="p-button-secondary edit" @click="editUnit()"/>
+   <div class="unit-acts">
+      <DPGButton label="OCR"  @click="unitOCRClicked()" v-if="canOCR" />
+      <DPGButton label="PDF" @click="unitPDFClicked()" v-if="detail.metadata && unitsStore.masterFiles.length > 0 && detail.reorder==false" />
+      <DPGButton label="Edit" @click="editUnit()"/>
+   </div>
    <div v-if="detail.lastError" class="last-error">
       <span>Recent Error:</span>
       <router-link :to="`/jobs/${detail.lastError.jobID}`">{{detail.lastError.error}}</router-link>
@@ -133,7 +137,7 @@
 </template>
 
 <script setup>
-import { onBeforeMount } from 'vue'
+import { onBeforeMount, computed } from 'vue'
 import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useUnitsStore } from '@/stores/units'
@@ -158,6 +162,13 @@ const userStore = useUserStore()
 
 const { detail } = storeToRefs(unitsStore)
 
+const canOCR = computed(() => {
+   if ( !unitsStore.detail.metadata ) return false
+   if ( !unitsStore.detail.metadata.ocrHint) return false
+   let isCandidate = unitsStore.detail.metadata.ocrHint.ocrCandidate
+   return ( unitsStore.masterFiles.length > 0 && unitsStore.detail.reorder == false && isCandidate && (userStore.isAdmin || userStore.isSupervisor) )
+})
+
 onBeforeRouteUpdate(async (to) => {
    let uID = to.params.id
    unitsStore.getDetails( uID )
@@ -171,6 +182,13 @@ onBeforeMount(() => {
    document.title = `Unit #${uID}`
 })
 
+function unitOCRClicked() {
+   unitsStore.startUnitOCR()
+}
+function unitPDFClicked() {
+   let url = `${systemStore.pdfURL}/${unitsStore.detail.metadata.pid}?unit=${unitsStore.detail.id}`
+   window.open(url)
+}
 function regenerateIIIFClicked() {
    unitsStore.regenerateIIIF()
 }
@@ -225,10 +243,14 @@ function formatDate( dateStr ) {
 </script>
 
 <style scoped lang="scss">
-button.p-button-secondary.edit {
+div.unit-acts {
    position: absolute;
    right:15px;
    top: 15px;
+   button.p-button {
+      margin-right: 5px;
+      font-size: 0.9em;
+   }
 }
 .last-error {
    background: var(--uvalib-red-darker);
