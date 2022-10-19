@@ -20,7 +20,8 @@ export const useUnitsStore = defineStore('units', {
          datePatronDeliverablesReady: "",
          dateDLDeliverablesReady: ""
       },
-      masterFiles: []
+      masterFiles: [],
+      updateInProgress: false
    }),
 	getters: {
 	},
@@ -145,6 +146,66 @@ export const useUnitsStore = defineStore('units', {
             let tgt = "Master File"
             if (filename == 'all') tgt = "Unit"
             system.toastMessage("Archive Download", `${tgt} is being downloaded from the archive.`)
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
+      awaitUpdateCompletion( jobID, message ) {
+         const system = useSystemStore()
+         var tid = setInterval( ()=> {
+            console.log("check hob status "+jobID)
+            axios.get(`${system.jobsURL}/jobs/${jobID}`).then( resp => {
+               console.log(resp.data)
+               let status = resp.data.status
+               if (status == 'failure') {
+                  clearInterval(tid)
+                  this.updateInProgress = false
+                  system.setError(`Update failed: ${resp.data.error}. Check the job status logs for more information.`)
+               } else if (status == 'finished') {
+                  this.getMasterFiles( this.detail.id )
+                  clearInterval(tid)
+                  system.toastMessage("Update Complete", message)
+                  this.updateInProgress = false
+               }
+            }).catch( e => {
+               system.setError(e)
+               this.updateInProgress = false
+               clearInterval(tid)
+            })
+         }, 1000)
+      },
+
+      addMasterFiles() {
+         const system = useSystemStore()
+         this.updateInProgress = true
+         axios.post(`${system.jobsURL}/units/${this.detail.id}/masterfiles/add`).then( resp => {
+            system.toastMessage("Please Wait", 'Master files are being added to the unit...')
+            this.awaitUpdateCompletion( resp.data, 'Master files have successfully been added.' )
+         }).catch( e => {
+            system.setError(e)
+            this.updateInProgress = false
+         })
+      },
+
+      replaceMasterFiles() {
+         const system = useSystemStore()
+         this.updateInProgress = true
+         axios.post(`${system.jobsURL}/units/${this.detail.id}/masterfiles/replace`).then( resp => {
+            system.toastMessage("Please Wait", 'Replacing unit master files...')
+            this.awaitUpdateCompletion( resp.data, 'Master files have successfully been replaced.' )
+         }).catch( e => {
+            system.setError(e)
+            this.updateInProgress = false
+         })
+      },
+
+      deleteMasterFiles( filenames ) {
+         const system = useSystemStore()
+         let payload = {filenames: filenames}
+         axios.post(`${system.jobsURL}/units/${this.detail.id}/masterfiles/delete`, payload).then( () => {
+            this.getMasterFiles( this.detail.id )
+            system.toastMessage("Delete Success", 'The selected master files have been deleted.')
          }).catch( e => {
             system.setError(e)
          })

@@ -1,6 +1,15 @@
 <template>
    <div class="details" v-if="systemStore.working==false && unitsStore.masterFiles.length > 0">
       <Panel header="Master Files">
+         <div class="master-file-acts">
+            <template v-if="detail.reorder==false && userStore.isAdmin">
+               <DPGButton label="Add" @click="addClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
+               <DPGButton label="Replace" @click="replaceClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
+            </template>
+            <template v-if="userStore.isAdmin && (detail.dateArchived==null  || detail.reorder || detail.dateDLDeliverablesReady == null)">
+               <DPGButton label="Delete Selected" @click="deleteClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+            </template>
+         </div>
          <DataTable :value="unitsStore.masterFiles" ref="unitMasterFilesTable" dataKey="id"
             showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
             :lazy="false" :paginator="unitsStore.masterFiles.length > 15" :rows="15" :rowsPerPageOptions="[15,30,50,100]"
@@ -34,7 +43,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useSystemStore } from '@/stores/system'
 import { useUnitsStore } from '@/stores/units'
 import { useUserStore } from '@/stores/user'
@@ -43,7 +52,9 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { useConfirm } from "primevue/useconfirm"
 
+const confirm = useConfirm()
 const systemStore = useSystemStore()
 const unitsStore = useUnitsStore()
 const userStore = useUserStore()
@@ -53,6 +64,52 @@ const selectedMasterFiles = ref([])
 const selectAll = ref(false)
 
 const { detail } = storeToRefs(unitsStore)
+
+const filesSelected = computed(() => {
+   return selectedMasterFiles.value.length > 0
+})
+
+function replaceClicked() {
+   let unitDir = `${unitsStore.detail.id}`.padStart(9, '0')
+   confirm.require({
+      message: `Replace master files with .tif files from ./finalization/unit_update/${unitDir}?`,
+      header: 'Confirm Replace Master Files',
+      icon: 'pi pi-question-circle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         unitsStore.replaceMasterFiles()
+      }
+   })
+}
+
+function addClicked() {
+   let unitDir = `${unitsStore.detail.id}`.padStart(9, '0')
+   confirm.require({
+      message: `Add all .tif files from ./finalization/unit_update/${unitDir} to this unit?`,
+      header: 'Confirm Add Master Files',
+      icon: 'pi pi-question-circle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         unitsStore.addMasterFiles()
+      }
+   })
+}
+
+function deleteClicked() {
+   confirm.require({
+      message: 'Are you sure you want delete the selected master files? All data will be lost. This cannot be reversed.',
+      header: 'Confirm Delete Master Files',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         let filenames = []
+         selectedMasterFiles.value.forEach( s => {
+            filenames.push(s.filename)
+         })
+         unitsStore.deleteMasterFiles(filenames)
+      }
+   })
+}
 
 function downloadFile( info) {
    unitsStore.downloadFromArchive(userStore.computeID, info.filename )
@@ -87,6 +144,17 @@ function onSelectAllChange(event) {
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
+
+   .master-file-acts {
+      font-size: 0.85em;
+      text-align: right;
+      padding: 0 0 15px 0;
+
+      button.p-button {
+         margin-left: 5px;
+      }
+   }
+
    :deep(td.thumb) {
       width: 160px !important;
       text-align: center !important;
