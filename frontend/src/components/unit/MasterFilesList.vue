@@ -9,10 +9,11 @@
             <template v-if="userStore.isAdmin && (detail.dateArchived==null || detail.reorder || detail.dateDLDeliverablesReady == null)">
                <DPGButton label="Delete Selected" @click="deleteClicked()" class="p-button-secondary" :disabled="!filesSelected" />
             </template>
-            <RenumberDialog :disabled="!filesSelected" :filenames="selectedFileNames" />
+            <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
             <template v-if="detail.metadata && (detail.dateArchived != null || detail.reorder )">
                <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
             </template>
+            <AssignMeadataDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :ids="selectedIDs" />
          </div>
          <DataTable :value="unitsStore.masterFiles" ref="unitMasterFilesTable" dataKey="id"
             showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
@@ -58,6 +59,7 @@ import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useConfirm } from "primevue/useconfirm"
 import RenumberDialog from './RenumberDialog.vue'
+import AssignMeadataDialog from './AssignMeadataDialog.vue'
 
 const confirm = useConfirm()
 const systemStore = useSystemStore()
@@ -79,6 +81,13 @@ const selectedFileNames = computed(() => {
       filenames.push(s.filename)
    })
    return filenames
+})
+const selectedIDs = computed(() => {
+   let ids = []
+   selectedMasterFiles.value.forEach( s => {
+      ids.push(s.id)
+   })
+   return ids
 })
 
 function pdfClicked() {

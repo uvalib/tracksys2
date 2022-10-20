@@ -188,9 +188,21 @@ export const useUnitsStore = defineStore('units', {
          })
       },
 
+      assignMetadata( metadataID, masterFileIDs) {
+         const system = useSystemStore()
+         let data = {ids: masterFileIDs, metadataID:  parseInt(metadataID,10) }
+         axios.post(`${system.jobsURL}/units/${this.detail.id}/masterfiles/metadata`, data).then( () => {
+            this.getMasterFiles( this.detail.id )
+            system.toastMessage("Assign Metadata Success", 'The selected master files have been assigned new metadata.')
+         }).catch( e => {
+            system.setError(e)
+            this.updateInProgress = false
+         })
+      },
+
       renumberPages( startPage, filenames) {
          const system = useSystemStore()
-         let data = {filenames: filenames, "startNum":  parseInt(startPage,10) }
+         let data = {filenames: filenames, startNum:  parseInt(startPage,10) }
          axios.post(`${system.jobsURL}/units/${this.detail.id}/masterfiles/renumber`, data).then( () => {
             this.getMasterFiles( this.detail.id )
             system.toastMessage("Renumber Success", 'The selected master files have been renumbered.')
