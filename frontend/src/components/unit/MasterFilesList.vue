@@ -1,6 +1,6 @@
 <template>
-   <div class="details" v-if="systemStore.working==false && unitsStore.masterFiles.length > 0">
-      <Panel header="Master Files">
+   <div class="details">
+      <Panel header="Master Files" v-if="unitsStore.masterFiles.length > 0">
          <div class="master-file-acts">
             <template v-if="detail.reorder==false && userStore.isAdmin">
                <DPGButton label="Add" @click="addClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
@@ -44,6 +44,13 @@
             </Column>
          </DataTable>
       </Panel>
+      <Panel header="Master Files" v-else>
+         <template v-if="cloneMasterFiles == false">
+            <p>No master files are associated with this unit.</p>
+            <DPGButton label="Clone Existing Master Files" class="p-button-secondary" @click="cloneClicked()" />
+         </template>
+         <CloneMasterFiles v-else @canceled="cloneCanceled()" />
+      </Panel>
    </div>
 </template>
 
@@ -60,6 +67,7 @@ import { storeToRefs } from 'pinia'
 import { useConfirm } from "primevue/useconfirm"
 import RenumberDialog from './RenumberDialog.vue'
 import AssignMeadataDialog from './AssignMeadataDialog.vue'
+import CloneMasterFiles from './CloneMasterFiles.vue'
 
 const confirm = useConfirm()
 const systemStore = useSystemStore()
@@ -69,6 +77,7 @@ const router = useRouter()
 
 const selectedMasterFiles = ref([])
 const selectAll = ref(false)
+const cloneMasterFiles = ref(false)
 
 const { detail } = storeToRefs(unitsStore)
 
@@ -89,6 +98,13 @@ const selectedIDs = computed(() => {
    })
    return ids
 })
+
+function cloneClicked() {
+   cloneMasterFiles.value = true
+}
+function cloneCanceled() {
+   cloneMasterFiles.value = false
+}
 
 function pdfClicked() {
    let ids = []

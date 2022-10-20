@@ -129,7 +129,7 @@
             Attachments cannot be aded to unapproved units.
          </p>
          <div v-else class="toolbar">
-            <AddAttachmentDialog />
+            <AddAttachmentDialog  v-if="systemStore.working==false"/>
          </div>
       </Panel>
    </div>

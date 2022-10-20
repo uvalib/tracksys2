@@ -129,7 +129,6 @@ export const useOrdersStore = defineStore('orders', {
             req.ItemID = itemID
          }
          return axios.post( `/api/orders/${this.detail.id}/units`, req ).then(response => {
-            console.log(response.data)
             this.units.push( response.data )
             if (itemID != 0) {
                let item = this.items.find( i => i.id == itemID)

@@ -63,6 +63,7 @@ func main() {
 		api.POST("/units/:id/exemplar/:mfid", svc.setExemplar)
 		api.POST("/units/:id/project", svc.createProject)
 		api.GET("/units/:id/masterfiles", svc.getUnitMasterfiles)
+		api.GET("/units/:id/clone-sources", svc.getUnitCloneSources)
 		api.POST("/units/:id/update", svc.updateUnit)
 
 		api.GET("/search", svc.searchRequest)
