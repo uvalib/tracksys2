@@ -13,13 +13,13 @@ import (
 )
 
 type location struct {
-	ID              int64
-	MetadataID      int64 `gorm:"column:metadata_id"`
-	ContainerTypeID int64
-	ContainerType   containerType `gorm:"foreignKey:ContainerTypeID"`
-	ContainerID     string        `gorm:"column:container_id"`
-	FolderID        string        `gorm:"column:folder_id"`
-	Notes           string
+	ID              int64          `json:"id"`
+	MetadataID      int64          `gorm:"column:metadata_id" json:"-"`
+	ContainerTypeID *int64         `json:"-"`
+	ContainerType   *containerType `gorm:"foreignKey:ContainerTypeID" jon:"containerType"`
+	ContainerID     string         `gorm:"column:container_id" json:"containerID"`
+	FolderID        string         `gorm:"column:folder_id" json:"folderID"`
+	Notes           string         `json:"notes"`
 }
 
 type imageTechMeta struct {
@@ -81,6 +81,7 @@ type masterFile struct {
 	ThumbnailURL      string         `gorm:"-" json:"thumbnailURL,omitempty"`
 	ViewerURL         string         `gorm:"-" json:"viewerURL,omitempty"`
 	Exemplar          bool           `json:"exemplar"`
+	Locations         []location     `gorm:"many2many:master_file_locations" json:"locations"`
 }
 
 func (svc *serviceContext) getMasterFile(c *gin.Context) {
@@ -88,7 +89,7 @@ func (svc *serviceContext) getMasterFile(c *gin.Context) {
 	log.Printf("INFO: get master file %s details", mfID)
 	var mf masterFile
 	err := svc.DB.Preload("ImageTechMeta").Preload("DeaccessionedBy").Preload("Tags").
-		Preload("Metadata").Find(&mf, mfID).Error
+		Preload("Metadata").Preload("Locations").Find(&mf, mfID).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get masterfile %s: %s", mfID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
