@@ -154,9 +154,7 @@ export const useUnitsStore = defineStore('units', {
       awaitUpdateCompletion( jobID, message ) {
          const system = useSystemStore()
          var tid = setInterval( ()=> {
-            console.log("check hob status "+jobID)
             axios.get(`${system.jobsURL}/jobs/${jobID}`).then( resp => {
-               console.log(resp.data)
                let status = resp.data.status
                if (status == 'failure') {
                   clearInterval(tid)

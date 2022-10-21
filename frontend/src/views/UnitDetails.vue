@@ -1,5 +1,5 @@
 <template>
-   <h2>Unit {{route.params.id}}</h2>
+   <h2>{{pageTitle}}</h2>
    <div class="unit-acts">
       <DPGButton label="OCR"  @click="unitOCRClicked()" v-if="canOCR" />
       <DPGButton label="PDF" @click="unitPDFClicked()" v-if="detail.metadata && unitsStore.masterFiles.length > 0 && detail.reorder==false" />
@@ -162,6 +162,16 @@ const userStore = useUserStore()
 
 const { detail } = storeToRefs(unitsStore)
 
+const pageTitle = computed(() => {
+   let t = 'Unit'
+   if ( unitsStore.detail ) {
+      t += ` ${unitsStore.detail.id}`
+      if (unitsStore.detail.reorder) {
+         t += " : REORDER"
+      }
+   }
+   return t
+})
 const canOCR = computed(() => {
    if ( !unitsStore.detail.metadata ) return false
    if ( !unitsStore.detail.metadata.ocrHint) return false

@@ -36,18 +36,20 @@
       </PickList>
       <div class="acts">
          <DPGButton label="Cancel" class="p-button-secondary" @click="cancelClicked()" />
-         <DPGButton label="Clone Master Files" @click="cloneClicked()" :disabled="masterFiles[1].length == 0" />
+         <DPGButton label="Clone Master Files" @click="cloneClicked()" :disabled="masterFiles[1].length == 0 || cloneStore.inProgress" />
       </div>
    </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useUnitsStore } from '@/stores/units'
 import { useCloneStore } from '@/stores/clone'
 import PickList from 'primevue/picklist'
-import DataDisplay from '../DataDisplay.vue';
+import DataDisplay from '../DataDisplay.vue'
+import { useConfirm } from "primevue/useconfirm"
 
+const confirm = useConfirm()
 const unitsStore = useUnitsStore()
 const cloneStore = useCloneStore()
 
@@ -55,6 +57,13 @@ const emit = defineEmits( ['canceled', 'cloned' ])
 
 const selectedUnitID = ref(0)
 const masterFiles = ref([[],[]])
+
+watch(() => cloneStore.status, (newStatus) => {
+   if ( newStatus == 'success') {
+      unitsStore.getMasterFiles( unitsStore.detail.id )
+      emit("cloned")
+   }
+})
 
 onMounted(() => {
    cloneStore.getSourceUnits( unitsStore.detail.id)
@@ -69,8 +78,15 @@ function cancelClicked() {
    emit("canceled")
 }
 function cloneClicked() {
-   console.log(masterFiles.value[1])
-   emit("cloned")
+   confirm.require({
+      message: 'Clone selected master files into this unit?',
+      header: 'Confirm Clone',
+      icon: 'pi pi-question-circle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         cloneStore.cloneMasterFiles( unitsStore.detail.id, masterFiles.value[1])
+      }
+   })
 }
 </script>
 

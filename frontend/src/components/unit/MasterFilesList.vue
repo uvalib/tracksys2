@@ -38,7 +38,7 @@
                <template #body="slotProps">
                   <DPGButton label="View" class="p-button-secondary first" @click="viewClicked(slotProps.data)" />
                   <DPGButton label="Download" class="p-button-secondary" @click="downloadFile(slotProps.data)"/>
-                  <DPGButton v-if="slotProps.data.exemplar==false && (detail.intendedUse.id == 110 || detail.includeInDL)"
+                  <DPGButton v-if="slotProps.data.exemplar==false && (detail.intendedUse && detail.intendedUse.id == 110 || detail.includeInDL)"
                      label="Exemplar" class="p-button-secondary" @click="exemplarClicked(slotProps.data)"/>
                </template>
             </Column>
@@ -49,7 +49,7 @@
             <p>No master files are associated with this unit.</p>
             <DPGButton label="Clone Existing Master Files" class="p-button-secondary" @click="cloneClicked()" />
          </template>
-         <CloneMasterFiles v-else @canceled="cloneCanceled()" />
+         <CloneMasterFiles v-else @canceled="cloneCanceled()" @cloned="cloneCompleted()" />
       </Panel>
    </div>
 </template>
@@ -104,6 +104,10 @@ function cloneClicked() {
 }
 function cloneCanceled() {
    cloneMasterFiles.value = false
+}
+function cloneCompleted() {
+   cloneMasterFiles.value = false
+   systemStore.toastMessage("Clone Success", 'All master files have been cloned.')
 }
 
 function pdfClicked() {
