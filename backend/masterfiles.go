@@ -16,7 +16,7 @@ type location struct {
 	ID              int64          `json:"id"`
 	MetadataID      int64          `gorm:"column:metadata_id" json:"-"`
 	ContainerTypeID *int64         `json:"-"`
-	ContainerType   *containerType `gorm:"foreignKey:ContainerTypeID" jon:"containerType"`
+	ContainerType   *containerType `gorm:"foreignKey:ContainerTypeID" json:"containerType"`
 	ContainerID     string         `gorm:"column:container_id" json:"containerID"`
 	FolderID        string         `gorm:"column:folder_id" json:"folderID"`
 	Notes           string         `json:"notes"`
@@ -89,7 +89,7 @@ func (svc *serviceContext) getMasterFile(c *gin.Context) {
 	log.Printf("INFO: get master file %s details", mfID)
 	var mf masterFile
 	err := svc.DB.Preload("ImageTechMeta").Preload("DeaccessionedBy").Preload("Tags").
-		Preload("Metadata").Preload("Locations").Find(&mf, mfID).Error
+		Preload("Metadata").Preload("Locations").Preload("Locations.ContainerType").Find(&mf, mfID).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get masterfile %s: %s", mfID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())

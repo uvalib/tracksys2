@@ -58,9 +58,9 @@ type category struct {
 }
 
 type containerType struct {
-	ID         int64
-	Name       string
-	hasFolders bool
+	ID         int64  `json:"id"`
+	Name       string `json:"name"`
+	HasFolders bool   `json:"hasFolders"`
 }
 
 type workflow struct {

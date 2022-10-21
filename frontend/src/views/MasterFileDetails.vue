@@ -21,12 +21,22 @@
          </Panel>
          <Panel header="Related Information">
             <dl>
-               <DataDisplay v-if="masterFiles.details.metadata" label="Metadata" :value="masterFiles.details.metadata.id">
-                  <router-link :to="`/metadata/${masterFiles.details.metadata.id}`">
-                     {{masterFiles.details.metadata.pid}}: {{masterFiles.details.metadata.title}}
-                  </router-link>
-               </DataDisplay>
+               <template v-if="masterFiles.details.metadata">
+                  <DataDisplay  label="Metadata" :value="masterFiles.details.metadata.id">
+                     <router-link :to="`/metadata/${masterFiles.details.metadata.id}`">
+                        {{masterFiles.details.metadata.pid}}: {{masterFiles.details.metadata.title}}
+                     </router-link>
+                  </DataDisplay>
+                  <DataDisplay v-if="masterFiles.details.metadata.callNumber" label="Call Number" :value="masterFiles.details.metadata.callNumber">
+                     <router-link :to="`/metadata/${masterFiles.details.metadata.id}`">{{masterFiles.details.metadata.callNumber}}</router-link>
+                  </DataDisplay>
+               </template>
                <DataDisplay v-else label="Metadata" value="" />
+               <template v-if="location">
+                  <DataDisplay label="Container Type" :value="location.containerType.name"/>
+                  <DataDisplay label="Container ID" :value="location.containerID"/>
+                  <DataDisplay label="Folder" :value="location.folderID"/>
+               </template>
                <DataDisplay label="Unit ID" :value="masterFiles.details.unitID">
                   <router-link :to="`/units/${masterFiles.details.unitID}`">{{masterFiles.details.unitID}}</router-link>
                </DataDisplay>
@@ -91,6 +101,12 @@ const tagList = computed( () => {
    let out = []
    masterFiles.details.tags.forEach( t => out.push(t.tag))
    return out.join(", ")
+})
+const location = computed(() => {
+   console.log(masterFiles.details.locations)
+   if (masterFiles.details.locations == null) return null
+   if (masterFiles.details.locations.length == 0) return null
+   return masterFiles.details.locations[0]
 })
 
 onBeforeRouteUpdate( async (to) => {
