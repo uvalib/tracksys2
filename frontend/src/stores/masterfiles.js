@@ -12,10 +12,10 @@ export const useMasterFilesStore = defineStore('masterfiles', {
 	getters: {
 	},
 	actions: {
-      getDetails( masterFileID ) {
+      async getDetails( masterFileID ) {
          const system = useSystemStore()
          system.working = true
-         axios.get( `/api/masterfiles/${masterFileID}` ).then(response => {
+         return axios.get( `/api/masterfiles/${masterFileID}` ).then(response => {
             this.details = response.data.masterFile
             this.thumbURL = response.data.thumbURL
             this.viewerURL = response.data.viewerURL
@@ -24,6 +24,16 @@ export const useMasterFilesStore = defineStore('masterfiles', {
          }).catch( e => {
             system.setError(e)
          })
-      }
+      },
+      async submitEdit( edit ) {
+         const system = useSystemStore()
+         system.working = true
+         return axios.post( `/api/masterfiles/${this.details.id}/update`, edit ).then( (resp) => {
+            this.details = resp.data
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
    }
 })

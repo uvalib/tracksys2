@@ -1,5 +1,8 @@
 <template>
    <h2>Master File {{route.params.id}}</h2>
+   <div class="masterfile-acts">
+      <DPGButton label="Edit" @click="editMasterFile()"/>
+   </div>
    <div class="details" v-if="systemStore.working==false">
       <div class="thumb">
          <a :href="masterFiles.viewerURL" target="_blank">
@@ -13,6 +16,7 @@
                <DataDisplay label="Filename" :value="masterFiles.details.filename" />
                <DataDisplay label="Title" :value="masterFiles.details.title" />
                <DataDisplay label="Description" :value="masterFiles.details.description" />
+               <DataDisplay label="Orientation" :value="orientationName" />
                <DataDisplay label="Date Archived" :value="formatDate(masterFiles.details.dateArchived)" blankValue="N/A" />
                <DataDisplay label="Date DL Ingest" :value="formatDate(masterFiles.details.dateDLIngest)" blankValue="N/A" />
                <DataDisplay label="Date DL Update" :value="formatDate(masterFiles.details.dateDLUpdate)" blankValue="N/A" />
@@ -32,24 +36,27 @@
                   </DataDisplay>
                </template>
                <DataDisplay v-else label="Metadata" value="" />
-               <template v-if="location">
-                  <DataDisplay label="Container Type" :value="location.containerType.name"/>
-                  <DataDisplay label="Container ID" :value="location.containerID"/>
-                  <DataDisplay label="Folder" :value="location.folderID"/>
-               </template>
                <DataDisplay label="Unit ID" :value="masterFiles.details.unitID">
                   <router-link :to="`/units/${masterFiles.details.unitID}`">{{masterFiles.details.unitID}}</router-link>
                </DataDisplay>
                <DataDisplay label="Order ID" :value="masterFiles.orderID">
                   <router-link :to="`/orders/${masterFiles.orderID}`">{{masterFiles.orderID}}</router-link>
                </DataDisplay>
-               <DataDisplay label="Component ID" :value="masterFiles.details.componentID">
+               <DataDisplay v-if="masterFiles.details.componentID" label="Component ID" :value="masterFiles.details.componentID">
                   <router-link :to="`/components/${masterFiles.details.componentID}`">{{masterFiles.details.componentID}}</router-link>
                </DataDisplay>
                <DataDisplay v-if="masterFiles.details.originalID>0" label="Cloned From" :value="masterFiles.details.originalID">
                   <router-link :to="`/masterfiles/${masterFiles.details.originalID}`">{{masterFiles.details.originalID}}</router-link>
                </DataDisplay>
             </dl>
+               <Fieldset legend="Location" v-if="location">
+                  <dl>
+                     <DataDisplay label="Container Type" :value="location.containerType.name"/>
+                     <DataDisplay label="Container ID" :value="location.containerID"/>
+                     <DataDisplay label="Folder" :value="location.folderID"/>
+                     <DataDisplay label="Notes" :value="location.notes"/>
+                  </dl>
+               </Fieldset>
          </Panel>
       </div>
       <Panel header="Technical Information">
@@ -87,23 +94,27 @@
 import { onBeforeMount, computed } from 'vue'
 import { useMasterFilesStore } from '@/stores/masterfiles'
 import { useSystemStore } from '@/stores/system'
-import { useRoute,onBeforeRouteUpdate } from 'vue-router'
+import { useRouter, useRoute,onBeforeRouteUpdate } from 'vue-router'
 import Panel from 'primevue/panel'
 import dayjs from 'dayjs'
 import DataDisplay from '../components/DataDisplay.vue'
-
+import Fieldset from 'primevue/fieldset'
 
 const route = useRoute()
+const router = useRouter()
 const masterFiles = useMasterFilesStore()
 const systemStore = useSystemStore()
 
+const orientationName = computed( () => {
+   let names = ["Normal", "Flip Y Axis", "Rotate 90&deg;", "Rotate 180&deg;", "Rotate 270&deg;"]
+   return names[masterFiles.details.techMetadata.orientation]
+})
 const tagList = computed( () => {
    let out = []
    masterFiles.details.tags.forEach( t => out.push(t.tag))
    return out.join(", ")
 })
 const location = computed(() => {
-   console.log(masterFiles.details.locations)
    if (masterFiles.details.locations == null) return null
    if (masterFiles.details.locations.length == 0) return null
    return masterFiles.details.locations[0]
@@ -120,6 +131,10 @@ onBeforeMount(() => {
    document.title = `Master File #${mfID}`
 })
 
+function editMasterFile() {
+   router.push(`/masterfiles/${route.params.id}/edit`)
+}
+
 function formatDate( date ) {
    if (date) {
       return dayjs(date).format("YYYY-MM-DD")
@@ -129,6 +144,26 @@ function formatDate( date ) {
 </script>
 
 <style scoped lang="scss">
+div.masterfile-acts {
+   position: absolute;
+   right:15px;
+   top: 15px;
+   button.p-button {
+      margin-right: 5px;
+      font-size: 0.9em;
+   }
+}
+:deep(.p-fieldset) {
+   margin-top: 15px;
+   .p-fieldset-content {
+      padding: 10px;
+   }
+   .p-fieldset-legend {
+      background: none;
+      border: 0;
+      padding: 0 10px;
+   }
+}
 .details {
    padding:  0 25px 10px 25px;
    display: flex;

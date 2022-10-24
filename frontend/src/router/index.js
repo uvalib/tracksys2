@@ -31,6 +31,11 @@ const router = createRouter({
       component: () => import('../views/MasterFileDetails.vue')
     },
     {
+      path: '/masterfiles/:id/edit',
+      name: 'masterfileedit',
+      component: () => import('../views/MasterFileEdit.vue')
+    },
+    {
       path: '/metadata/:id',
       name: 'metadata',
       component: () => import('../views/MetadataDetails.vue')

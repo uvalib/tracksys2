@@ -141,7 +141,7 @@ const edited = ref({
 onMounted( async () =>{
    let unitID = route.params.id
    await unitsStore.getDetails(unitID)
-   document.title = `Edit | Unit #${unitID}`
+   document.title = `Edit | Unit ${unitID}`
 
    edited.value.status = unitsStore.detail.status
    edited.value.patronSourceURL = unitsStore.detail.patronSourceURL

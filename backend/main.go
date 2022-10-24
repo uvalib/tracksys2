@@ -38,6 +38,7 @@ func main() {
 		api.POST("/customers", svc.addOrUpdateCustomer)
 
 		api.GET("/masterfiles/:id", svc.getMasterFile)
+		api.POST("/masterfiles/:id/update", svc.updateMasterFile)
 
 		api.GET("/metadata/:id", svc.getMetadata)
 

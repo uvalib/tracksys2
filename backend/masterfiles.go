@@ -43,6 +43,7 @@ type imageTechMeta struct {
 	ExposureTime string     `json:"exposureTime"`
 	Aperture     string     `json:"aperture"`
 	FocalLength  float64    `json:"focalLength"`
+	Orientation  uint       `json:"orientation"`
 	CreatedAt    time.Time  `json:"-"`
 	UpdatedAt    time.Time  `json:"-"`
 }
@@ -143,4 +144,64 @@ func (svc *serviceContext) getMasterFile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, out)
+}
+
+func (svc *serviceContext) updateMasterFile(c *gin.Context) {
+	mfID := c.Param("id")
+	var mf masterFile
+	err := svc.DB.Preload("Locations").Preload("Locations.ContainerType").Preload("ImageTechMeta").Find(&mf, mfID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get masterfile %s: %s", mfID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	var req struct {
+		Title           string `json:"title"`
+		Description     string `json:"description"`
+		Orientation     uint   `json:"orientation"`
+		MetadataID      int64  `json:"metadataID"`
+		UpdateLocation  bool   `json:"updateLocation"`
+		ContainerTypeID int64  `json:"containerTypeID"`
+		ContainerID     string `json:"containerID"`
+		FolderID        string `json:"folderID"`
+		Notes           string `json:"notes"`
+	}
+	err = c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid update unit %s request: %s", mfID, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	log.Printf("INFO: update masterfile %d with %+v", mf.ID, req)
+	mf.Title = req.Title
+	mf.Description = req.Description
+	mf.ImageTechMeta.Orientation = req.Orientation
+	mf.MetadataID = &req.MetadataID
+
+	err = svc.DB.Model(&mf).Select("Title", "Description", "MetadataID").Updates(mf).Error
+	if err != nil {
+		log.Printf("ERROR: unable to update master file %d: %s", mf.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	svc.DB.Model(&mf.ImageTechMeta).Select("Orientation").Updates(mf.ImageTechMeta)
+	if req.UpdateLocation {
+		if len(mf.Locations) == 0 {
+			newLoc := location{ContainerTypeID: &req.ContainerTypeID, ContainerID: req.ContainerID,
+				FolderID: req.FolderID, Notes: req.Notes, MetadataID: *mf.MetadataID}
+			svc.DB.Create(&newLoc)
+			svc.DB.Exec("INSERT into master_file_locations (master_file_id, location_id) values (?,?)", mf.ID, newLoc.ID)
+		} else {
+			loc := mf.Locations[0]
+			loc.ContainerTypeID = &req.ContainerTypeID
+			loc.ContainerID = req.ContainerID
+			loc.FolderID = req.FolderID
+			loc.Notes = req.Notes
+			svc.DB.Model(&loc).Select("ContainerTypeID", "ContainerID", "FolderID", "Notes").Updates(loc)
+		}
+	}
+
+	svc.DB.Preload("ImageTechMeta").Preload("DeaccessionedBy").Preload("Tags").Preload("Metadata").Preload("Locations").Preload("Locations.ContainerType").Find(&mf, mfID)
+	c.JSON(http.StatusOK, mf)
 }
