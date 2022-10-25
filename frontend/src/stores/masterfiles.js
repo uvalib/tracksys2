@@ -35,5 +35,15 @@ export const useMasterFilesStore = defineStore('masterfiles', {
             system.setError(e)
          })
       },
+      downloadFromArchive( computeID ) {
+         const system = useSystemStore()
+         let payload = {computeID: computeID, filename: this.details.filename}
+         let url = `${system.jobsURL}/units/${this.details.unitID}/copy`
+         axios.post(url, payload).then( () => {
+            system.toastMessage("Archive Download", `${this.details.filename} is being downloaded from the archive.`)
+         }).catch( e => {
+            system.setError(e)
+         })
+      }
    }
 })

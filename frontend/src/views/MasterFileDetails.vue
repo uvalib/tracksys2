@@ -1,6 +1,8 @@
 <template>
    <h2>Master File {{route.params.id}}</h2>
    <div class="masterfile-acts">
+      <DPGButton label="Download Image" @click="downloadImage()"/>
+      <DPGButton label="Download PDF" @click="downloadPDF()"/>
       <DPGButton label="Edit" @click="editMasterFile()"/>
    </div>
    <div class="details" v-if="systemStore.working==false">
@@ -94,6 +96,7 @@
 import { onBeforeMount, computed } from 'vue'
 import { useMasterFilesStore } from '@/stores/masterfiles'
 import { useSystemStore } from '@/stores/system'
+import { useUserStore } from '@/stores/user'
 import { useRouter, useRoute,onBeforeRouteUpdate } from 'vue-router'
 import Panel from 'primevue/panel'
 import dayjs from 'dayjs'
@@ -104,6 +107,7 @@ const route = useRoute()
 const router = useRouter()
 const masterFiles = useMasterFilesStore()
 const systemStore = useSystemStore()
+const userStore = useUserStore()
 
 const orientationName = computed( () => {
    let names = ["Normal", "Flip Y Axis", "Rotate 90&deg;", "Rotate 180&deg;", "Rotate 270&deg;"]
@@ -130,6 +134,14 @@ onBeforeMount(() => {
    masterFiles.getDetails(mfID)
    document.title = `Master File #${mfID}`
 })
+
+function downloadImage() {
+   masterFiles.downloadFromArchive( userStore.computeID )
+}
+function downloadPDF() {
+   let url = `${systemStore.pdfURL}/${masterFiles.details.pid}`
+   window.open(url)
+}
 
 function editMasterFile() {
    router.push(`/masterfiles/${route.params.id}/edit`)
