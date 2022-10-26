@@ -39,6 +39,8 @@ func main() {
 
 		api.GET("/masterfiles/:id", svc.getMasterFile)
 		api.POST("/masterfiles/:id/update", svc.updateMasterFile)
+		api.POST("/masterfiles/:id/tags", svc.addMasterFileTag)
+		api.DELETE("/masterfiles/:id/tags", svc.removeMasterFileTag)
 
 		api.GET("/metadata/:id", svc.getMetadata)
 
@@ -71,6 +73,9 @@ func main() {
 
 		api.GET("/staff", svc.getStaff)
 		api.POST("/staff", svc.addOrUpdateStaff)
+
+		api.GET("/tags", svc.getTags)
+		api.POST("/tags", svc.createTag)
 
 	}
 

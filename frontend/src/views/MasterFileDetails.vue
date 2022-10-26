@@ -24,6 +24,9 @@
                <DataDisplay label="Date DL Update" :value="formatDate(masterFiles.details.dateDLUpdate)" blankValue="N/A" />
                <DataDisplay label="Tags" :value="tagList" blankValue="N/A" />
             </dl>
+            <div class="tags">
+               <TagsDialog />
+            </div>
          </Panel>
          <Panel header="Related Information">
             <dl>
@@ -102,6 +105,7 @@ import Panel from 'primevue/panel'
 import dayjs from 'dayjs'
 import DataDisplay from '../components/DataDisplay.vue'
 import Fieldset from 'primevue/fieldset'
+import TagsDialog from '../components/masterfile/TagsDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -175,6 +179,10 @@ div.masterfile-acts {
       border: 0;
       padding: 0 10px;
    }
+}
+.tags {
+   font-size: 0.8em;
+   text-align: right;
 }
 .details {
    padding:  0 25px 10px 25px;

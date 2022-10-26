@@ -48,11 +48,6 @@ type imageTechMeta struct {
 	UpdatedAt    time.Time  `json:"-"`
 }
 
-type tag struct {
-	ID  uint64 `json:"id"`
-	Tag string `json:"tag"`
-}
-
 type masterFile struct {
 	ID                int64          `json:"id"`
 	PID               string         `gorm:"column:pid" json:"pid"`
@@ -65,7 +60,7 @@ type masterFile struct {
 	Filename          string         `json:"filename"`
 	Title             string         `json:"title"`
 	Description       string         `json:"description"`
-	Tags              []*tag         `gorm:"many2many:master_file_tags" json:"tags"`
+	Tags              []tag          `gorm:"many2many:master_file_tags" json:"tags"`
 	Filesize          int64          `json:"filesize"`
 	MD5               string         `gorm:"column:md5" json:"md5"`
 	OriginalMfID      int64          `gorm:"column:original_mf_id" json:"originalID"`
@@ -204,4 +199,41 @@ func (svc *serviceContext) updateMasterFile(c *gin.Context) {
 
 	svc.DB.Preload("ImageTechMeta").Preload("DeaccessionedBy").Preload("Tags").Preload("Metadata").Preload("Locations").Preload("Locations.ContainerType").Find(&mf, mfID)
 	c.JSON(http.StatusOK, mf)
+}
+
+func (svc *serviceContext) addMasterFileTag(c *gin.Context) {
+	mfID := c.Param("id")
+	tID := c.Query("tag")
+	log.Printf("INFO: add tag id %s to masterfile %s", tID, mfID)
+
+	var mf masterFile
+	err := svc.DB.Find(&mf, mfID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to load masterfile %s to add tag: %s", mfID, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var tgtTag tag
+	err = svc.DB.Find(&tgtTag, tID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to load tag %s for master file add: %s", tID, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	svc.DB.Exec("INSERT into master_file_tags (master_file_id, tag_id) values (?,?)", mf.ID, tgtTag.ID)
+	c.String(http.StatusOK, "added")
+}
+
+func (svc *serviceContext) removeMasterFileTag(c *gin.Context) {
+	mfID := c.Param("id")
+	tID := c.Query("tag")
+	log.Printf("INFO: remove tag id %s from masterfile %s", tID, mfID)
+	err := svc.DB.Exec("DELETE from master_file_tags where master_file_id=? and tag_id=?", mfID, tID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to remove tag %s from master file %s: %s", tID, mfID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.String(http.StatusOK, "removed")
 }

@@ -44,6 +44,25 @@ export const useMasterFilesStore = defineStore('masterfiles', {
          }).catch( e => {
             system.setError(e)
          })
+      },
+      addTag( tag ) {
+         axios.post(`/api/masterfiles/${this.details.id}/tags?tag=${tag.id}`).then( () => {
+            this.details.tags.push(tag)
+         }).catch( e => {
+            const system = useSystemStore()
+            system.setError(e)
+         })
+      },
+      removeTag( tgt ) {
+         axios.delete(`/api/masterfiles/${this.details.id}/tags?tag=${tgt.id}`).then( () => {
+            let idx = this.details.tags.findIndex( t => t.tag == tgt.tag)
+            if (idx > -1) {
+               this.details.tags.splice(idx,1)
+            }
+         }).catch( e => {
+            const system = useSystemStore()
+            system.setError(e)
+         })
       }
-   }
+   },
 })
