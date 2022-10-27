@@ -583,7 +583,7 @@ func (svc *serviceContext) addUnitToOrder(c *gin.Context) {
 	}
 
 	log.Printf("INFO: validate order %s before adding unit", orderID)
-	var tgtOrder metadata
+	var tgtOrder order
 	err = svc.DB.Find(&tgtOrder, orderID).Error
 	if err != nil {
 		log.Printf("ERROR: unable to retrieve order %s: %s", orderID, err.Error())
@@ -637,6 +637,19 @@ func (svc *serviceContext) addUnitToOrder(c *gin.Context) {
 		log.Printf("ERROR: unable to create new unit for order %s", orderID)
 		c.String(http.StatusInternalServerError, err.Error())
 		return
+	}
+
+	log.Printf("INFO: Update unit count for order %s", orderID)
+	var unitCnt int64
+	err = svc.DB.Table("units").Where("order_id=?", tgtOrder.ID).Count(&unitCnt).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get unit count for order %d: %s", tgtOrder.ID, err.Error())
+	} else {
+		tgtOrder.UnitsCount = unitCnt
+		err = svc.DB.Model(&tgtOrder).Select("UnitsCount").Updates(tgtOrder).Error
+		if err != nil {
+			log.Printf("ERROR: unable to update unit count for order %d: %s", tgtOrder.ID, err.Error())
+		}
 	}
 
 	c.JSON(http.StatusOK, newUnit)
