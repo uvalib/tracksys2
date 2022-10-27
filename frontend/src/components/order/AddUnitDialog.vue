@@ -171,6 +171,7 @@ function show() {
          si += `\nDescription: ${props.item.description}`
       }
       unitInfo.value.specialInstructions = si
+      unitInfo.value.sourceURL = props.item.sourceURL
       lookupMetadata()
    }
 }
