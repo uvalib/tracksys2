@@ -13,7 +13,7 @@
          <FormKit label="Order Title" type="text" v-model="edited.title"/>
          <FormKit label="Special Instructions" type="textarea" rows="5" v-model="edited.specialInstructions"/>
          <FormKit label="Staff Notes" type="textarea" rows="5" v-model="edited.staffNotes"/>
-         <FormKit label="Fee" type="number" v-model="edited.fee"/>
+         <FormKit v-if="isExternalCustomer" label="Fee" type="text" v-model="edited.fee"/>
          <div class="split">
             <div class="select-wrapper">
                <label class="dpg-form-label">Agency</label>
@@ -60,6 +60,11 @@ const edited = ref({
 })
 const newOrder = ref(false)
 
+const isExternalCustomer = computed( () => {
+   if (ordersStore.detail.customer == null) return false
+   return customersStore.isExternal(ordersStore.detail.customer.id)
+})
+
 const agencies = computed(() => {
    let out = []
    systemStore.agencies.forEach( a => {
@@ -104,7 +109,9 @@ onMounted( async () =>{
    edited.value.title = ordersStore.detail.title
    edited.value.specialInstructions = ordersStore.detail.specialInstructions
    edited.value.staffNotes = ordersStore.detail.staffNotes
-   edited.value.fee = ordersStore.detail.fee
+   if (ordersStore.detail.fee) {
+      edited.value.fee = parseFloat(ordersStore.detail.fee).toFixed(2)
+   }
    if (ordersStore.detail.agency) {
       edited.value.agencyID = ordersStore.detail.agency.id
    } else {

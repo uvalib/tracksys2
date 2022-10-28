@@ -56,9 +56,11 @@
          <dl>
             <DataDisplay label="Date Submitted" :value="formatDate(detail.dateSubmitted)"/>
             <DataDisplay label="Date Due" :value="formatDate(detail.dateDue)"/>
-            <DataDisplay label="Fee" :value="formatFee(detail.fee)"/>
+            <template v-if="isExternalCustomer">
+               <DataDisplay label="Fee" :value="formatFee(detail.fee)"/>
+               <DataDisplay label="Date Fee Sent to Customer" :value="formatDate(detail.dateFeeEstimateSent)"/>
+            </template>
             <DataDisplay label="Date Deferred" :value="formatDate(detail.dateDeferred)"/>
-            <DataDisplay label="Date Fee Sent to Customer" :value="formatDate(detail.dateFeeEstimateSent)"/>
             <DataDisplay label="Date Finalization Started" :value="formatDateTime(detail.dateFinalizationBegun)"/>
             <DataDisplay label="Date Archiving Complete" :value="formatDateTime(detail.dateArchivingComplete)"/>
             <DataDisplay label="Date Patron Deliverables Complete" :value="formatDateTime(detail.datePatronDeliverablesComplete)"/>
@@ -251,7 +253,8 @@ function viewPDFClicked() {
 
 function formatFee( fee ) {
    if (fee) {
-      return `$${fee}.00`
+      let floatFee = parseFloat(fee).toFixed(2)
+      return `$${floatFee}`
    }
    return ""
 }

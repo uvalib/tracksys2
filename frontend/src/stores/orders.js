@@ -197,6 +197,9 @@ export const useOrdersStore = defineStore('orders', {
       async createOrder( data ) {
          const system = useSystemStore()
          system.working = true
+         if (data.fee) {
+            data.fee = `${data.fee}`
+         }
          return axios.post( `/api/orders`, data ).then( (response ) => {
             this.detail = response.data
             if (this.detail.fee) {
@@ -215,6 +218,9 @@ export const useOrdersStore = defineStore('orders', {
       async submitEdit( edit ) {
          const system = useSystemStore()
          system.working = true
+         if (edit.fee) {
+            edit.fee = `${edit.fee}`
+         }
          return axios.post( `/api/orders/${this.detail.id}/update`, edit ).then( (resp) => {
             this.detail.status = resp.data.status
             this.detail.dateDue = resp.data.dateDue
