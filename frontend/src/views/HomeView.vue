@@ -76,7 +76,6 @@ onBeforeMount( () => {
 
 function scopeChanged() {
    searchStore.field = "all"
-   doSearch()
 }
 
 function doSearch() {
