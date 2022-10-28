@@ -11,10 +11,22 @@ import (
 	"gorm.io/gorm"
 )
 
+type step struct {
+	ID          int64  `json:"id"`
+	WorkflowID  int64  `json:"workflowID"`
+	StepType    uint   `json:"stepType"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	NextStepID  uint   `json:"nextStepID"`
+	FailStepID  uint   `json:"failStepID"`
+	OwnerType   uint   `json:"ownerType"`
+}
+
 type project struct {
 	ID            int64      `json:"id"`
 	WorkflowID    int64      `json:"-"`
 	UnitID        int64      `json:"-"`
+	CurrentStepID int64      `json:"-"`
 	DueOn         *time.Time `json:"dueOn,omitempty"`
 	AddedAt       *time.Time `json:"addedAt,omitempty"`
 	CategoryID    int64      `json:"-"`
@@ -133,12 +145,23 @@ func (svc *serviceContext) createProject(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
+
+	log.Printf("INFO: lookup first step of new project for unit %d, workflow %d", unitDetail.ID, req.WorkflowID)
+	var firstStep step
+	err = svc.DB.Where("workflow_id=? and step_type=0", req.WorkflowID).First(&firstStep).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get first step for workflow %d: %s", req.WorkflowID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	log.Printf("INFO: create project for unit %d", unitDetail.ID)
 	dueDate, _ := time.Parse("2006-01-02", req.DueOn)
 	now := time.Now()
 	newProj := project{
 		WorkflowID:    req.WorkflowID,
 		UnitID:        unitDetail.ID,
+		CurrentStepID: firstStep.ID,
 		DueOn:         &dueDate,
 		AddedAt:       &now,
 		CategoryID:    req.CategoryID,
