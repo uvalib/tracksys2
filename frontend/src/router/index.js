@@ -1,5 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import JobStatusList from '../views/JobStatusList.vue'
+import JobStatusDetails from '../views/JobStatusDetails.vue'
+import MasterFileDetails from '../views/MasterFileDetails.vue'
+import MasterFileEdit from '../views/MasterFileEdit.vue'
+import MetadataDetails from '../views/MetadataDetails.vue'
+import OrdersList from '../views/OrdersList.vue'
+import OrderDetails from '../views/OrderDetails.vue'
+import OrderEdit from '../views/OrderEdit.vue'
+import UnitDetails from '../views/UnitDetails.vue'
+import UnitEdit from '../views/UnitEdit.vue'
+
+import ComponentDetails from '../views/ComponentDetails.vue'
+import DigitizationEquipment from '../views/DigitizationEquipment.vue'
+
+import StaffMembers from '../views/StaffMembers.vue'
+import CustomerList from '../views/CustomerList.vue'
+
 import SignedOut from '../views/SignedOut.vue'
 import ForbiddenView from '../views/ForbiddenView.vue'
 import NotFound from '../views/NotFound.vue'
@@ -18,77 +35,77 @@ const router = createRouter({
     {
       path: '/jobs',
       name: 'jobs',
-      component: () => import('../views/JobStatusList.vue')
+      component: JobStatusList
     },
     {
       path: '/jobs/:id',
       name: 'jobdetail',
-      component: () => import('../views/JobStatusDetails.vue')
+      component: JobStatusDetails
     },
     {
       path: '/masterfiles/:id',
       name: 'masterfile',
-      component: () => import('../views/MasterFileDetails.vue')
+      component: MasterFileDetails
     },
     {
       path: '/masterfiles/:id/edit',
       name: 'masterfileedit',
-      component: () => import('../views/MasterFileEdit.vue')
+      component: MasterFileEdit
     },
     {
       path: '/metadata/:id',
       name: 'metadata',
-      component: () => import('../views/MetadataDetails.vue')
+      component: MetadataDetails
     },
     {
       path: '/orders',
       name: 'order',
-      component: () => import('../views/OrdersList.vue')
+      component: OrdersList
     },
     {
       path: '/orders/new',
       name: 'neworder',
-      component: () => import('../views/OrderEdit.vue')
+      component: OrderEdit
     },
     {
       path: '/orders/:id',
       name: 'orderdetails',
-      component: () => import('../views/OrderDetails.vue')
+      component: OrderDetails
     },
     {
       path: '/orders/:id/edit',
       name: 'orderedit',
-      component: () => import('../views/OrderEdit.vue')
+      component: OrderEdit
     },
     {
       path: '/units/:id',
       name: 'unit',
-      component: () => import('../views/UnitDetails.vue')
+      component: UnitDetails
     },
     {
       path: '/units/:id/edit',
       name: 'unitedit',
-      component: () => import('../views/UnitEdit.vue')
+      component: UnitEdit
     },
     {
       path: '/components/:id',
       name: 'component',
-      component: () => import('../views/ComponentDetails.vue')
+      component: ComponentDetails
     },
     {
       path: '/equipment',
       name: 'equipment',
-      component: () => import('../views/DigitizationEquipment.vue')
+      component: DigitizationEquipment
     },
     {
       path: '/staff',
       name: 'staff',
-      component: () => import('../views/StaffMembers.vue')
+      component: StaffMembers
     },
     {
       path: '/customers',
       name: 'customers',
-      component: () => import('../views/CustomerList.vue')
+      component: CustomerList
     },
     {
       path: '/signedout',

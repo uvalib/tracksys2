@@ -139,14 +139,15 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		PdfURL                 string `json:"pdfURL"`
 		JobsURL                string `json:"jobsURL"`
 		ControlledVocabularies struct {
-			AcademicStatuses []academicStatus  `json:"academicStatuses"`
-			Agencies         []agency          `json:"agencies"`
-			Categories       []category        `json:"categories"`
-			ContainerTypes   []containerType   `json:"containerTypes"`
-			IntendedUses     []intendedUse     `json:"intendedUses"`
-			OCRHints         []ocrHint         `json:"ocrHints"`
-			OCRLanguageHints []ocrLanguageHint `json:"ocrLanguageHints"`
-			Workflows        []workflow        `json:"workflows"`
+			AcademicStatuses  []academicStatus   `json:"academicStatuses"`
+			Agencies          []agency           `json:"agencies"`
+			Categories        []category         `json:"categories"`
+			ContainerTypes    []containerType    `json:"containerTypes"`
+			IntendedUses      []intendedUse      `json:"intendedUses"`
+			OCRHints          []ocrHint          `json:"ocrHints"`
+			OCRLanguageHints  []ocrLanguageHint  `json:"ocrLanguageHints"`
+			PreservationTiers []preservationTier `json:"preservationTiers"`
+			Workflows         []workflow         `json:"workflows"`
 		} `json:"controlledVocabularies"`
 		SearchFields map[string][]searchField `json:"searchFields"`
 	}
@@ -224,6 +225,14 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 				resp.ControlledVocabularies.OCRLanguageHints = append(resp.ControlledVocabularies.OCRLanguageHints, ocrLanguageHint{Code: rec[0], Language: rec[1]})
 			}
 		}
+	}
+
+	log.Printf("INFO: load preservation tiers")
+	err = svc.DB.Order("id asc").Find(&resp.ControlledVocabularies.PreservationTiers).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get preservtion tiers: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	log.Printf("INFO: load workflows")

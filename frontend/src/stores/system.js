@@ -20,6 +20,7 @@ export const useSystemStore = defineStore('system', {
       containerTypes: [],
       ocrHints: [],
       ocrLanguageHints: [],
+      preservationTiers: [],
       intendedUses: [],
       workflows: [],
       toast: {
@@ -60,6 +61,7 @@ export const useSystemStore = defineStore('system', {
             this.containerTypes = response.data.controlledVocabularies.containerTypes
             this.ocrHints = response.data.controlledVocabularies.ocrHints
             this.ocrLanguageHints = response.data.controlledVocabularies.ocrLanguageHints
+            this.preservationTiers = response.data.controlledVocabularies.preservationTiers
             this.intendedUses = response.data.controlledVocabularies.intendedUses
             this.workflows = response.data.controlledVocabularies.workflows
             const searchStore = useSearchStore()
