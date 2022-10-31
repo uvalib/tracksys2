@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -137,12 +139,14 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		PdfURL                 string `json:"pdfURL"`
 		JobsURL                string `json:"jobsURL"`
 		ControlledVocabularies struct {
-			AcademicStatuses []academicStatus `json:"academicStatuses"`
-			Agencies         []agency         `json:"agencies"`
-			Categories       []category       `json:"categories"`
-			ContainerTypes   []containerType  `json:"containerTypes"`
-			IntendedUses     []intendedUse    `json:"intendedUses"`
-			Workflows        []workflow       `json:"workflows"`
+			AcademicStatuses []academicStatus  `json:"academicStatuses"`
+			Agencies         []agency          `json:"agencies"`
+			Categories       []category        `json:"categories"`
+			ContainerTypes   []containerType   `json:"containerTypes"`
+			IntendedUses     []intendedUse     `json:"intendedUses"`
+			OCRHints         []ocrHint         `json:"ocrHints"`
+			OCRLanguageHints []ocrLanguageHint `json:"ocrLanguageHints"`
+			Workflows        []workflow        `json:"workflows"`
 		} `json:"controlledVocabularies"`
 		SearchFields map[string][]searchField `json:"searchFields"`
 	}
@@ -194,6 +198,32 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		log.Printf("ERROR: unable to get intended uses: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
+	}
+
+	log.Printf("INFO: load ocr hints")
+	err = svc.DB.Order("id asc").Find(&resp.ControlledVocabularies.OCRHints).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get ocr hints: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: load ocr language hints")
+	resp.ControlledVocabularies.OCRLanguageHints = make([]ocrLanguageHint, 0)
+	f, err := os.Open("./data/languages.csv")
+	if err != nil {
+		log.Printf("ERROR: unable to load ocr language hints: %s", err.Error())
+	} else {
+		defer f.Close()
+		csvReader := csv.NewReader(f)
+		langRecs, err := csvReader.ReadAll()
+		if err != nil {
+			log.Printf("ERROR: unable to parse languages file: %s", err.Error())
+		} else {
+			for _, rec := range langRecs {
+				resp.ControlledVocabularies.OCRLanguageHints = append(resp.ControlledVocabularies.OCRLanguageHints, ocrLanguageHint{Code: rec[0], Language: rec[1]})
+			}
+		}
 	}
 
 	log.Printf("INFO: load workflows")

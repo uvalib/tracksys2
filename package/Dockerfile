@@ -11,6 +11,7 @@ WORKDIR /build
 COPY go.mod go.sum Makefile ./
 COPY backend ./backend
 COPY frontend ./frontend
+COPY data ./data
 RUN make linux-full
 
 #
@@ -28,7 +29,7 @@ RUN addgroup webservice && adduser webservice -G webservice -D
 ENV TZ=UTC
 RUN cp /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Specify home 
+# Specify home
 ENV APP_HOME /tracksys2
 WORKDIR $APP_HOME
 
@@ -45,10 +46,11 @@ COPY package/data/container_bash_profile /home/webservice/.profile
 COPY package/scripts/entry.sh $APP_HOME/scripts/entry.sh
 COPY --from=builder /build/bin/tracksys2.linux $APP_HOME/bin/tracksys2
 COPY --from=builder /build/bin/public $APP_HOME/bin/public
+COPY --from=builder /build/bin/data $APP_HOME/bin/data
 
 # Ensure permissions are correct
 RUN chown webservice:webservice /home/webservice/.profile $APP_HOME/scripts/entry.sh $APP_HOME/bin/tracksys2 && chmod 755 /home/webservice/.profile $APP_HOME/scripts/entry.sh $APP_HOME/bin/tracksys2
-RUN chown -R webservice:webservice $APP_HOME/bin/public && chmod -R 755 $APP_HOME/bin/public
+RUN chown -R webservice:webservice $APP_HOME/bin/public $APP_HOME/bin/data && chmod -R 755 $APP_HOME/bin/public $APP_HOME/bin/data
 
 # Add the build tag
 ARG BUILD_TAG

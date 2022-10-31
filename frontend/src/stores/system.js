@@ -18,6 +18,8 @@ export const useSystemStore = defineStore('system', {
       agencies: [],
       categories: [],
       containerTypes: [],
+      ocrHints: [],
+      ocrLanguageHints: [],
       intendedUses: [],
       workflows: [],
       toast: {
@@ -56,6 +58,8 @@ export const useSystemStore = defineStore('system', {
             this.agencies = response.data.controlledVocabularies.agencies
             this.categories = response.data.controlledVocabularies.categories
             this.containerTypes = response.data.controlledVocabularies.containerTypes
+            this.ocrHints = response.data.controlledVocabularies.ocrHints
+            this.ocrLanguageHints = response.data.controlledVocabularies.ocrLanguageHints
             this.intendedUses = response.data.controlledVocabularies.intendedUses
             this.workflows = response.data.controlledVocabularies.workflows
             const searchStore = useSearchStore()
