@@ -139,15 +139,17 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		PdfURL                 string `json:"pdfURL"`
 		JobsURL                string `json:"jobsURL"`
 		ControlledVocabularies struct {
-			AcademicStatuses  []academicStatus   `json:"academicStatuses"`
-			Agencies          []agency           `json:"agencies"`
-			Categories        []category         `json:"categories"`
-			ContainerTypes    []containerType    `json:"containerTypes"`
-			IntendedUses      []intendedUse      `json:"intendedUses"`
-			OCRHints          []ocrHint          `json:"ocrHints"`
-			OCRLanguageHints  []ocrLanguageHint  `json:"ocrLanguageHints"`
-			PreservationTiers []preservationTier `json:"preservationTiers"`
-			Workflows         []workflow         `json:"workflows"`
+			AcademicStatuses     []academicStatus     `json:"academicStatuses"`
+			Agencies             []agency             `json:"agencies"`
+			AvailabilityPolicies []availabilityPolicy `json:"availabilityPolicies"`
+			Categories           []category           `json:"categories"`
+			ContainerTypes       []containerType      `json:"containerTypes"`
+			IntendedUses         []intendedUse        `json:"intendedUses"`
+			OCRHints             []ocrHint            `json:"ocrHints"`
+			OCRLanguageHints     []ocrLanguageHint    `json:"ocrLanguageHints"`
+			PreservationTiers    []preservationTier   `json:"preservationTiers"`
+			UseRights            []useRight           `json:"useRights"`
+			Workflows            []workflow           `json:"workflows"`
 		} `json:"controlledVocabularies"`
 		SearchFields map[string][]searchField `json:"searchFields"`
 	}
@@ -173,6 +175,14 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 	err = svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.Agencies).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get agencies: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: load availability policies")
+	err = svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.AvailabilityPolicies).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get availability policies: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -231,6 +241,14 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 	err = svc.DB.Order("id asc").Find(&resp.ControlledVocabularies.PreservationTiers).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get preservtion tiers: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: load use rights")
+	err = svc.DB.Order("id asc").Find(&resp.ControlledVocabularies.UseRights).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get use rights: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}

@@ -16,12 +16,14 @@ export const useSystemStore = defineStore('system', {
       iiifManifestURL: "",
       academicStatuses: [],
       agencies: [],
+      availabilityPolicies: [],
       categories: [],
       containerTypes: [],
+      intendedUses: [],
       ocrHints: [],
       ocrLanguageHints: [],
       preservationTiers: [],
-      intendedUses: [],
+      useRights: [],
       workflows: [],
       toast: {
          summary: "",
@@ -57,12 +59,14 @@ export const useSystemStore = defineStore('system', {
             this.iiifManifestURL = response.data.iiifManifestURL
             this.academicStatuses = response.data.controlledVocabularies.academicStatuses
             this.agencies = response.data.controlledVocabularies.agencies
+            this.availabilityPolicies = response.data.controlledVocabularies.availabilityPolicies
             this.categories = response.data.controlledVocabularies.categories
             this.containerTypes = response.data.controlledVocabularies.containerTypes
+            this.intendedUses = response.data.controlledVocabularies.intendedUses
             this.ocrHints = response.data.controlledVocabularies.ocrHints
             this.ocrLanguageHints = response.data.controlledVocabularies.ocrLanguageHints
             this.preservationTiers = response.data.controlledVocabularies.preservationTiers
-            this.intendedUses = response.data.controlledVocabularies.intendedUses
+            this.useRights = response.data.controlledVocabularies.useRights
             this.workflows = response.data.controlledVocabularies.workflows
             const searchStore = useSearchStore()
             searchStore.setGlobalSearchFields(response.data.searchFields)
