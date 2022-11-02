@@ -63,7 +63,7 @@
                   class="p-button-secondary" label="Generate Deliverables" />
                <DPGButton v-if="detail.intendedUseID != 110 && detail.datePatronDeliverablesReady" @click="generateDeliverablesClicked"
                   class="p-button-secondary" label="Regenerate Deliverables" />
-               <DPGButton v-if="unitsStore.masterFiles.length > 0" @click="regenerateIIIFClicked"
+               <DPGButton v-if="unitsStore.masterFiles.length > 0 && detail.status != 'error'" @click="regenerateIIIFClicked"
                   class="p-button-secondary" label="Regenerate IIIF Manifest" />
                <template v-if="detail.status == 'done'">
                   <DPGButton v-if="detail.dateArchived" @click="downloadClicked" class="p-button-secondary" label="Download Unit From Archive" />
