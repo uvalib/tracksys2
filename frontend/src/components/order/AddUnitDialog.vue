@@ -1,11 +1,12 @@
 <template>
    <DPGButton @click="show" :label="props.label" class="p-button-secondary add"  :class="{ small: size=='small'}"/>
-   <Dialog v-model:visible="isOpen" :modal="true" header="Add Unit" :style="{width: '750px'}">
-      <FormKit type="form" id="customer-detail" :actions="false" @submit="createUnit">
+   <Dialog v-model:visible="isOpen" :modal="true" :header="title" :style="{width: '750px'}" position="top">
+      <FormKit v-if="mode=='unit'" type="form" id="customer-detail" :actions="false" @submit="createUnit">
          <Panel header="Unit Metadata" class="margin-bottom">
             <div class="lookup">
                <input type="text" v-model="metadataSearch"  @keydown.stop.prevent.enter="lookupMetadata"/>
                <DPGButton @click="lookupMetadata" label="Lookup" class="p-button-secondary"/>
+               <DPGButton @click="createMetadata" label="Create" :disabled="true" class="p-button-secondary"/>
             </div>
             <template v-if="searched">
                <div class="no-results" v-if="metadataStore.totalSearchHits == 0">
@@ -27,7 +28,7 @@
                </div>
             </template>
             <div v-else class="hint">
-               Find a metadata record for the new unit.
+               Find or create a metadata record for the new unit.
             </div>
          </Panel>
          <Panel header="Digitization Information">
@@ -57,6 +58,7 @@
             <FormKit type="submit" label="Add Unit" wrapper-class="submit-button" />
          </div>
       </FormKit>
+      <NewMetadataPanel v-else @canceled="metadataCreateCanceled" @created="metadataCreated" />
    </Dialog>
 </template>
 
@@ -69,6 +71,7 @@ import { useMetadataStore } from '@/stores/metadata'
 import { useOrdersStore } from '@/stores/orders'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import NewMetadataPanel from './NewMetadataPanel.vue'
 
 const props = defineProps({
    label: {
@@ -90,6 +93,7 @@ const metadataStore = useMetadataStore()
 const ordersStore = useOrdersStore()
 
 const isOpen = ref(false)
+const mode = ref("unit")
 const searched = ref(false)
 const error = ref("")
 const metadataSearch = ref("")
@@ -104,6 +108,10 @@ const unitInfo = ref({
    includeInDL: false,
 })
 
+const title = computed(() => {
+   if (mode.value == "unit") return "Add Unit"
+   return "Create Metadata"
+})
 const intendedUses = computed(() => {
    let out = []
    systemStore.intendedUses.forEach( a => {
@@ -121,6 +129,19 @@ const intendedUses = computed(() => {
    })
    return out
 })
+
+function createMetadata() {
+   mode.value = "metadata"
+}
+function metadataCreateCanceled() {
+   mode.value = "unit"
+}
+function metadataCreated() {
+   metadataSearch.value = metadataStore.dl.pid
+   searched.value = true
+   selectedMetadata.value = metadataStore.searchHits[0]
+   mode.value = "unit"
+}
 
 async function lookupMetadata() {
    await metadataStore.lookup( metadataSearch.value )

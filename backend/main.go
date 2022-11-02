@@ -43,6 +43,7 @@ func main() {
 		api.DELETE("/masterfiles/:id/tags", svc.removeMasterFileTag)
 
 		api.GET("/metadata/:id", svc.getMetadata)
+		api.POST("/metadata/", svc.createMetadata)
 
 		api.GET("/orders", svc.getOrders)
 		api.POST("/orders", svc.createOrder)

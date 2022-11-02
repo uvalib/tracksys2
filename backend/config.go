@@ -75,6 +75,7 @@ func getConfiguration() *configData {
 	}
 
 	log.Printf("[CONFIG] port          = [%d]", config.port)
+	log.Printf("[CONFIG] tsapi         = [%s]", config.tracksysAPIURL)
 	log.Printf("[CONFIG] reports       = [%s]", config.reportsURL)
 	log.Printf("[CONFIG] projects      = [%s]", config.projectsURL)
 	log.Printf("[CONFIG] virgo         = [%s]", config.virgoURL)

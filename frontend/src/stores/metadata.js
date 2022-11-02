@@ -6,6 +6,7 @@ export const useMetadataStore = defineStore('metadata', {
 	state: () => ({
       detail: {
          id: 0,
+         type: "",
          barcode: "",
          catalogKey: "",
          callNumber: "",
@@ -27,7 +28,7 @@ export const useMetadataStore = defineStore('metadata', {
          useRightRationale: "",
          creatorDeathDate: "",
          availabilityPolicy: "",
-         collectionFacet: "",
+         collectionID: "",
          dateDLIngest: null,
          dateDLUpdate: null,
       },
@@ -110,82 +111,106 @@ export const useMetadataStore = defineStore('metadata', {
             system.setError(e)
          })
       },
+      async create( data ) {
+         const system = useSystemStore()
+         system.working = true
+         return axios.post("/api/metadata", data).then(response => {
+            this.setMetadataDetails(response.data)
+            this.searchHits = [ {
+               id: this.detail.id,
+               pid: this.dl.pid,
+               type: this.detail.type,
+               barcode: this.detail.barcode,
+               callNumber: this.detail.callNumber,
+               catalogKey: this.detail.catalogKey,
+               creatorName: this.detail.creatorName,
+               title: this.detail.title,
+               virgoURL: "",
+            }]
+            this.totalSearchHits = 1
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      setMetadataDetails( details ) {
+         // general info
+         this.detail.id = details.metadata.id
+         this.detail.type = details.metadata.type
+         this.detail.barcode = details.metadata.barcode
+         this.detail.catalogKey = details.metadata.catalogKey
+         this.detail.callNumber = details.metadata.callNumber
+         this.detail.title = details.metadata.title
+         this.detail.creatorName = details.metadata.creatorName
+         if (this.detail.type == "XmlMetadata" || this.detail.type == "SirsiMetadata") {
+            if ( details.details.title && details.details.title != "") {
+               this.detail.title = details.details.title
+            }
+            if ( details.details.creatorName && details.details.creatorName != "") {
+               this.detail.creatorName = details.details.creatorName
+            }
+            this.detail.creatorNameType = details.details.creatorType
+            this.detail.year = details.details.year
+            this.detail.publicationPlace = details.details.publicationPlace
+            this.detail.location = details.details.location
+            this.thumbURL = details.details.previewURL
+            this.viewerURL = details.details.objectURL
+            this.virgoURL = details.virgoURL
+            this.detail.xmlMetadata = details.metadata.descMetadata
+         } else  {
+            this.detail.externalSystem = details.metadata.externalSystem.name
+            this.detail.externalURL = `${details.metadata.externalSystem.publicURL}${details.metadata.externalURI}`
+            if (details.metadata.externalSystem.name == "ArchivesSpace") {
+               this.archivesSpace.id = details.asDetails.id
+               this.archivesSpace.title = details.asDetails.title
+               this.archivesSpace.createdBy = details.asDetails.created_by
+               this.archivesSpace.createDate = details.asDetails.create_time.split("T")[0]
+               this.archivesSpace.level = details.asDetails.level
+               this.archivesSpace.URL = details.asDetails.url
+               this.archivesSpace.repo = details.asDetails.repo
+               this.archivesSpace.collectionTitle = details.asDetails.collection_title
+               this.archivesSpace.language = details.asDetails.language
+               this.archivesSpace.dates = details.asDetails.dates
+            } else if (details.metadata.externalSystem.name == "JSTOR Forum") {
+               this.jstor = details.jstorDetails
+            } else if (details.metadata.externalSystem.name == "Apollo") {
+               this.apollo = details.apolloDetails
+            }
+         }
+         if (details.metadata.supplementalURI) {
+            this.detail.supplementalURL = `${details.metadata.supplementalSystem.publicURL}/${details.metadata.supplementalURI}`
+            this.detail.supplementalSystem = details.metadata.supplementalSystem.name
+         }
+
+         // DL info
+         this.dl.pid = details.metadata.pid
+         this.dl.inDL = (details.metadata.dateDLIngest != null)
+         this.dl.inDPLA = details.metadata.dpla
+         this.dl.useRight = details.metadata.useRight
+         this.dl.useRightRationale = details.metadata.useRightRationale
+         if ( details.metadata.creatorDeathDate > 0) {
+            this.dl.creatorDeathDate = `${details.metadata.creatorDeathDate}`
+         }
+         this.dl.availability = details.metadata.availability
+         this.dl.collectionID = details.metadata.collectionID
+         this.dl.dateDLIngest = details.metadata.dateDLIngest
+         this.dl.dateDLUpdate = details.metadata.dateDLUpdate
+
+         // admin / other info
+         this.other.parentID = details.metadata.parentID
+         this.other.isManuscript = details.metadata.isManuscript
+         this.other.isPersonalItem = details.metadata.isPersonalItem
+         this.other.ocrHint = details.metadata.ocrHint
+         this.other.ocrLanguageHint = details.metadata.ocrLanguageHint
+         this.other.preservationTier = details.metadata.preservationTier
+
+         this.setRelatedItems(details.units)
+      },
       getDetails( metadataID ) {
          const system = useSystemStore()
          system.working = true
          axios.get( `/api/metadata/${metadataID}` ).then(response => {
-            // general info
-            this.detail.id = response.data.metadata.id
-            this.detail.type = response.data.metadata.type
-            this.detail.barcode = response.data.metadata.barcode
-            this.detail.catalogKey = response.data.metadata.catalogKey
-            this.detail.callNumber = response.data.metadata.callNumber
-            this.detail.title = response.data.metadata.title
-            this.detail.creatorName = response.data.metadata.creatorName
-            if (this.detail.type == "XmlMetadata" || this.detail.type == "SirsiMetadata") {
-               if ( response.data.details.title && response.data.details.title != "") {
-                  this.detail.title = response.data.details.title
-               }
-               if ( response.data.details.creatorName && response.data.details.creatorName != "") {
-                  this.detail.creatorName = response.data.details.creatorName
-               }
-               this.detail.creatorNameType = response.data.details.creatorType
-               this.detail.year = response.data.details.year
-               this.detail.publicationPlace = response.data.details.publicationPlace
-               this.detail.location = response.data.details.location
-               this.thumbURL = response.data.details.previewURL
-               this.viewerURL = response.data.details.objectURL
-               this.virgoURL = response.data.virgoURL
-               this.detail.xmlMetadata = response.data.metadata.descMetadata
-            } else  {
-               this.detail.externalSystem = response.data.metadata.externalSystem.name
-               this.detail.externalURL = `${response.data.metadata.externalSystem.publicURL}${response.data.metadata.externalURI}`
-               if (response.data.metadata.externalSystem.name == "ArchivesSpace") {
-                  this.archivesSpace.id = response.data.asDetails.id
-                  this.archivesSpace.title = response.data.asDetails.title
-                  this.archivesSpace.createdBy = response.data.asDetails.created_by
-                  this.archivesSpace.createDate = response.data.asDetails.create_time.split("T")[0]
-                  this.archivesSpace.level = response.data.asDetails.level
-                  this.archivesSpace.URL = response.data.asDetails.url
-                  this.archivesSpace.repo = response.data.asDetails.repo
-                  this.archivesSpace.collectionTitle = response.data.asDetails.collection_title
-                  this.archivesSpace.language = response.data.asDetails.language
-                  this.archivesSpace.dates = response.data.asDetails.dates
-               } else if (response.data.metadata.externalSystem.name == "JSTOR Forum") {
-                  this.jstor = response.data.jstorDetails
-               } else if (response.data.metadata.externalSystem.name == "Apollo") {
-                  this.apollo = response.data.apolloDetails
-               }
-            }
-            if (response.data.metadata.supplementalURI) {
-               this.detail.supplementalURL = `${response.data.metadata.supplementalSystem.publicURL}/${response.data.metadata.supplementalURI}`
-               this.detail.supplementalSystem = response.data.metadata.supplementalSystem.name
-            }
-
-            // DL info
-            this.dl.pid = response.data.metadata.pid
-            this.dl.inDL = (response.data.metadata.dateDLIngest != null)
-            this.dl.inDPLA = response.data.metadata.dpla
-            this.dl.useRight = response.data.metadata.useRight
-            this.dl.useRightRationale = response.data.metadata.useRightRationale
-            if ( response.data.metadata.creatorDeathDate > 0) {
-               this.dl.creatorDeathDate = `${response.data.metadata.creatorDeathDate}`
-            }
-            this.dl.availability = response.data.metadata.availability
-            this.dl.collectionFacet = response.data.metadata.collectionFacet
-            this.dl.dateDLIngest = response.data.metadata.dateDLIngest
-            this.dl.dateDLUpdate = response.data.metadata.dateDLUpdate
-
-            // admin / other info
-            this.other.parentID = response.data.metadata.parentID
-            this.other.isManuscript = response.data.metadata.isManuscript
-            this.other.isPersonalItem = response.data.metadata.isPersonalItem
-            this.other.ocrHint = response.data.metadata.ocrHint
-            this.other.ocrLanguageHint = response.data.metadata.ocrLanguageHint
-            this.other.preservationTier = response.data.metadata.preservationTier
-
-            this.setRelatedItems(response.data.units)
-
+            this.setMetadataDetails(response.data)
             system.working = false
          }).catch( e => {
             system.setError(e)

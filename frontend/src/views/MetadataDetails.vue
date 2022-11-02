@@ -95,7 +95,7 @@
             <DataDisplay label="Rights Rationale" :value="metadataStore.dl.useRightRationale"/>
             <DataDisplay label="Creator Death Date" :value="metadataStore.dl.creatorDeathDate"/>
             <DataDisplay label="Availability Policy" :value="availabilityPolicy"/>
-            <DataDisplay label="Collection ID" :value="metadataStore.dl.collectionFacet"/>
+            <DataDisplay label="Collection ID" :value="metadataStore.dl.collectionID"/>
             <DataDisplay v-if="metadataStore.detail.supplementalURL" label="Supplemental System" :value="metadataStore.detail.supplementalURL">
                <a :href="metadataStore.detail.supplementalURL" target="_blank" class="supplemental">
                   {{metadataStore.detail.supplementalSystem}}<i class="icon fas fa-external-link"></i>

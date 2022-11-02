@@ -7,10 +7,12 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type apTrustStatus struct {
@@ -62,41 +64,45 @@ type preservationTier struct {
 }
 
 type metadata struct {
-	ID                   int64              `json:"id"`
-	PID                  string             `gorm:"column:pid" json:"pid"`
-	Type                 string             `json:"type"`
-	ParentMetadataID     uint64             `gorm:"column:parent_metadata_id" json:"parentID"`
-	Title                string             `json:"title"`
-	Barcode              string             `json:"barcode"`
-	CallNumber           string             `json:"callNumber"`
-	CatalogKey           string             `json:"catalogKey"`
-	CreatorName          string             `json:"creatorName"`
-	CreatorDeathDate     uint64             `json:"creatorDeathDate"`
-	DescMetadata         string             `json:"descMetadata"`
-	CollectionFacet      string             `json:"collectionFacet"`
-	UseRightID           uint               `json:"-"`
-	UseRight             useRight           `gorm:"foreignKey:UseRightID" json:"useRight"`
-	UseRightRationale    string             `json:"useRightRationale"`
-	OCRHintID            *uint              `json:"-"`
-	OCRHint              *ocrHint           `gorm:"foreignKey:OCRHintID" json:"ocrHint"`
-	OCRLanguageHint      string             `json:"ocrLanguageHint"`
-	AvailabilityPolicyID uint               `json:"-"`
-	AvailabilityPolicy   availabilityPolicy `gorm:"foreignKey:AvailabilityPolicyID" json:"availability"`
-	ExternalSystemID     *uint              `json:"-"`
-	ExternalSystem       *externalSystem    `gorm:"foreignKey:ExternalSystemID" json:"externalSystem"`
-	ExternalURI          string             `gorm:"column:external_uri" json:"externalURI"`
-	SupplementalSystemID *uint              `json:"-"`
-	SupplementalSystem   *externalSystem    `gorm:"foreignKey:SupplementalSystemID" json:"supplementalSystem"`
-	SupplementalURI      string             `json:"supplementalURI"`
-	PreservationTierID   uint               `json:"-"`
-	PreservationTier     preservationTier   `gorm:"foreignKey:PreservationTierID" json:"preservationTier"`
-	DPLA                 bool               `gorm:"column:dpla" json:"dpla"`
-	IsManuscript         bool               `json:"isManuscript"`
-	IsPersonalItem       bool               `json:"isPersonalItem"`
-	DateDLIngest         *time.Time         `gorm:"date_dl_ingest" json:"dateDLIngest"`
-	DateDLUpdate         *time.Time         `gorm:"date_dl_update" json:"dateDLUpdate"`
-	CreatedAt            *time.Time         `json:"-"`
-	UpdatedAt            *time.Time         `json:"-"`
+	ID                   int64               `json:"id"`
+	PID                  string              `gorm:"column:pid" json:"pid"`
+	Type                 string              `json:"type"`
+	ParentMetadataID     uint64              `gorm:"column:parent_metadata_id" json:"parentID"`
+	Title                string              `json:"title"`
+	Barcode              *string             `json:"barcode"`
+	CallNumber           *string             `json:"callNumber"`
+	CatalogKey           *string             `json:"catalogKey"`
+	CreatorName          *string             `json:"creatorName"`
+	CreatorDeathDate     *uint64             `json:"creatorDeathDate"`
+	DescMetadata         *string             `json:"descMetadata"`
+	CollectionID         *string             `json:"collectionID"`
+	UseRightID           *int64              `json:"-"`
+	UseRight             *useRight           `gorm:"foreignKey:UseRightID" json:"useRight"`
+	UseRightRationale    string              `json:"useRightRationale"`
+	OCRHintID            *int64              `json:"-"`
+	OCRHint              *ocrHint            `gorm:"foreignKey:OCRHintID" json:"ocrHint"`
+	OCRLanguageHint      string              `json:"ocrLanguageHint"`
+	AvailabilityPolicyID *int64              `json:"-"`
+	AvailabilityPolicy   *availabilityPolicy `gorm:"foreignKey:AvailabilityPolicyID" json:"availability"`
+	ExternalSystemID     *int64              `json:"-"`
+	ExternalSystem       *externalSystem     `gorm:"foreignKey:ExternalSystemID" json:"externalSystem"`
+	ExternalURI          *string             `gorm:"column:external_uri" json:"externalURI"`
+	SupplementalSystemID *int64              `json:"-"`
+	SupplementalSystem   *externalSystem     `gorm:"foreignKey:SupplementalSystemID" json:"supplementalSystem"`
+	SupplementalURI      *string             `json:"supplementalURI"`
+	PreservationTierID   *int64              `json:"-"`
+	PreservationTier     *preservationTier   `gorm:"foreignKey:PreservationTierID" json:"preservationTier"`
+	DPLA                 bool                `gorm:"column:dpla" json:"dpla"`
+	IsManuscript         bool                `json:"isManuscript"`
+	IsPersonalItem       bool                `json:"isPersonalItem"`
+	DateDLIngest         *time.Time          `gorm:"date_dl_ingest" json:"dateDLIngest"`
+	DateDLUpdate         *time.Time          `gorm:"date_dl_update" json:"dateDLUpdate"`
+	CreatedAt            *time.Time          `json:"-"`
+	UpdatedAt            *time.Time          `json:"-"`
+}
+
+func (m *metadata) AfterCreate(tx *gorm.DB) (err error) {
+	return tx.Model(m).Update("pid", fmt.Sprintf("tsb:%d", m.ID)).Error
 }
 
 type internalMetadata struct {
@@ -181,37 +187,151 @@ type uvaMAP struct {
 	} `xml:"doc"`
 }
 
-func (svc *serviceContext) getMetadata(c *gin.Context) {
-	mdID := c.Param("id")
-	log.Printf("INFO: get metadata %s details", mdID)
+type metadataDetailResponse struct {
+	Metadata     *metadata         `json:"metadata"`
+	Units        []*unit           `json:"units"`
+	Extended     *internalMetadata `json:"details"`
+	ArchiveSpace *asMetadata       `json:"asDetails"`
+	JSTOR        *jstorMetadata    `json:"jstorDetails"`
+	Apollo       *apolloMetadata   `json:"apolloDetails"`
+	VirgoURL     string            `json:"virgoURL"`
+	Error        string            `json:"error"`
+}
 
-	var md metadata
-	err := svc.DB.Preload("UseRight").Preload("OCRHint").Preload("AvailabilityPolicy").
-		Preload("ExternalSystem").Preload("SupplementalSystem").
-		Preload("PreservationTier").Find(&md, mdID).Error
+var modsTemplate = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<mods xmlns="http://www.loc.gov/mods/v3" version="3.6">
+   <titleInfo>
+      <title>[TITLE]</title>
+   </titleInfo>
+`
+var modsAuthor = `   <name>
+      <role>
+         <roleTerm type="text">creator</roleTerm>
+      </role>
+      <namePart>[AUTHOR]</namePart>
+   </name>
+`
+
+func (svc *serviceContext) createMetadata(c *gin.Context) {
+	var req struct {
+		Type                 string `json:"type"`
+		ExternalSystemID     int64  `json:"externSystemID"`
+		ExternalURI          string `json:"externalURI"`
+		Title                string `json:"title"`
+		CallNumber           string `json:"callNumber"`
+		Author               string `json:"author"`
+		CatalogKey           string `json:"catalogKey"`
+		Barcode              string `json:"barcode"`
+		PersonalItem         bool   `json:"personalItem"`
+		Manuscript           bool   `json:"manuscript"`
+		OCRHint              int64  `json:"ocrHint"`
+		OCRLanguageHint      string `json:"ocrLanguageHint"`
+		PreservationTierID   int64  `json:"preservationTier"`
+		AvailabilityPolicyID int64  `json:"availabilityPolicy"`
+		UseRightID           int64  `json:"useRight"`
+		UseRightRationale    string `json:"useRightRationale"`
+		DPLA                 bool   `json:"inDPLA"`
+	}
+	err := c.BindJSON(&req)
 	if err != nil {
-		log.Printf("ERROR: unable to load metadata %s: %s", mdID, err.Error())
+		log.Printf("ERROR: invalid create metadata request: %s", err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	log.Printf("INFO: create %s metadata request", req.Type)
+
+	// create new record and set common attributes
+	createTime := time.Now()
+	newMD := metadata{Type: req.Type, Title: req.Title, IsPersonalItem: req.PersonalItem, IsManuscript: req.Manuscript, CreatedAt: &createTime}
+	if req.Author != "" {
+		newMD.CreatorName = &req.Author
+	}
+	if req.OCRHint > 0 {
+		newMD.OCRHintID = &req.OCRHint
+		if req.OCRHint == 1 && req.OCRLanguageHint != "" {
+			newMD.OCRLanguageHint = req.OCRLanguageHint
+		}
+	}
+	if req.PreservationTierID > 0 {
+		newMD.PreservationTierID = &req.PreservationTierID
+	}
+
+	// For non-external, set digital library attributes
+	if req.Type != "ExternalMetadata" {
+		newMD.AvailabilityPolicyID = &req.AvailabilityPolicyID
+		newMD.UseRightID = &req.UseRightID
+		newMD.UseRightRationale = req.UseRightRationale
+		newMD.DPLA = req.DPLA
+	}
+
+	if req.Type == "XmlMetadata" {
+		xmlMD := strings.Replace(modsTemplate, "[TITLE]", req.Title, 1)
+		if req.Author != "" {
+			xmlMD += strings.Replace(modsAuthor, "[AUTHOR]", req.Author, 1)
+		}
+		xmlMD += "</mods>"
+		newMD.DescMetadata = &xmlMD
+	} else if req.Type == "SirsiMetadata" {
+		newMD.Barcode = &req.Barcode
+		newMD.CallNumber = &req.CallNumber
+		newMD.CatalogKey = &req.CatalogKey
+	} else if req.Type == "ExternalMetadata" {
+		newMD.ExternalURI = &req.ExternalURI
+		newMD.ExternalSystemID = &req.ExternalSystemID
+	}
+
+	err = svc.DB.Create(&newMD).Error
+	if err != nil {
+		log.Printf("ERROR: unable to create metadata record: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	type mdResp struct {
-		Metadata     *metadata         `json:"metadata"`
-		Units        []*unit           `json:"units"`
-		Extended     *internalMetadata `json:"details"`
-		ArchiveSpace *asMetadata       `json:"asDetails"`
-		JSTOR        *jstorMetadata    `json:"jstorDetails"`
-		Apollo       *apolloMetadata   `json:"apolloDetails"`
-		VirgoURL     string            `json:"virgoURL"`
-		Error        string            `json:"error"`
+	log.Printf("INFO: load full details of newly created metadata record %d", newMD.ID)
+	resp, err := svc.loadMetadataDetails(newMD.ID)
+	if err != nil {
+		log.Printf("ERROR: get metadata %d failed: %s", newMD.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
 	}
-	out := mdResp{Metadata: &md}
-	out.Units, err = svc.getMetadataRelatedUnits(&md)
+	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) getMetadata(c *gin.Context) {
+	mdID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	if mdID == 0 {
+		log.Printf("ERROR: invalid metadata id %s", c.Param("iid"))
+		c.String(http.StatusBadRequest, "invalid id")
+		return
+	}
+	log.Printf("INFO: get metadata %d details", mdID)
+	resp, err := svc.loadMetadataDetails(mdID)
+	if err != nil {
+		log.Printf("ERROR: get metadata %d failed: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resp.Units, err = svc.getMetadataRelatedUnits(resp.Metadata)
 	if err != nil {
 		log.Printf("ERROR: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailResponse, error) {
+	var md metadata
+	err := svc.DB.Preload("UseRight").Preload("OCRHint").Preload("AvailabilityPolicy").
+		Preload("ExternalSystem").Preload("SupplementalSystem").
+		Preload("PreservationTier").Find(&md, mdID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	out := metadataDetailResponse{Metadata: &md, Units: make([]*unit, 0)}
 
 	if md.Type == "SirsiMetadata" || md.Type == "XmlMetadata" {
 		log.Printf("INFO: get extended sirsi/xml metadata for %d", md.ID)
@@ -222,13 +342,13 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 		} else {
 			out.Extended = parsedDetail
 			if md.DateDLIngest != nil {
-				out.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, md.CatalogKey)
+				out.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
 			}
 		}
 	} else {
 		if md.ExternalSystem.Name == "ArchivesSpace" {
 			log.Printf("INFO: get external ArchivesSpace metadata for %s", md.PID)
-			raw, getErr := svc.getRequest(fmt.Sprintf("%s/archivesspace/lookup?pid=%s&uri=%s", svc.ExternalSystems.Jobs, md.PID, md.ExternalURI))
+			raw, getErr := svc.getRequest(fmt.Sprintf("%s/archivesspace/lookup?pid=%s&uri=%s", svc.ExternalSystems.Jobs, md.PID, *md.ExternalURI))
 			if getErr != nil {
 				log.Printf("ERROR: unable to get archivesSpace metadata for %s: %s", md.PID, getErr.Message)
 			} else {
@@ -265,7 +385,7 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 			}
 		} else if md.ExternalSystem.Name == "Apollo" {
 			log.Printf("INFO: get external apollo metadata for %s", md.PID)
-			raw, getErr := svc.getRequest(fmt.Sprintf("%s%s", svc.ExternalSystems.Apollo, md.ExternalURI))
+			raw, getErr := svc.getRequest(fmt.Sprintf("%s%s", svc.ExternalSystems.Apollo, *md.ExternalURI))
 			if getErr != nil {
 				log.Printf("ERROR: unable to get apollo metadata for %s: %s", md.PID, getErr.Message)
 			} else {
@@ -297,7 +417,7 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, out)
+	return &out, nil
 }
 
 func (svc *serviceContext) getMetadataRelatedUnits(mdRec *metadata) ([]*unit, error) {
