@@ -13,7 +13,11 @@
             <router-link :to="`/units/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
          </template>
       </Column>
-      <Column field="metadata.title" header="Title" :sortable="true"/>
+      <Column field="metadata.title" header="Title" :sortable="true" v-if="metadata">
+         <template #body="slotProps">
+            <router-link :to="`/metadata/${slotProps.data.metadataID}`">{{slotProps.data.metadata.title}}</router-link>
+         </template>
+      </Column>
       <Column field="intendedUse.name" header="Intended Use"/>
       <Column header="Date Patron Deliverables Ready">
          <template #body="slotProps">
@@ -37,11 +41,6 @@
          </template>
       </Column>
       <Column field="masterFilesCount" header="Master Files Count" :sortable="true"/>
-      <Column header="" class="row-acts nowrap">
-         <template #body="slotProps">
-            <router-link :to="`/units/${slotProps.data.id}`">View</router-link>
-         </template>
-      </Column>
    </DataTable>
 </template>
 
@@ -54,6 +53,10 @@ const props = defineProps({
    units: {
       type: Array,
       required: true
+   },
+   metadata: {
+      type: Boolean,
+      default: true
    }
 })
 

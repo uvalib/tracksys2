@@ -8,7 +8,11 @@
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >
-      <Column field="id" header="ID" :sortable="true"/>
+      <Column field="id" header="ID" :sortable="true">
+         <template #body="slotProps">
+            <router-link :to="`/orders/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
+         </template>
+      </Column>
       <Column  field="customer.lastName" header="Customer" class="nowrap" :sortable="true">
          <template #body="slotProps">
             {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
@@ -18,11 +22,6 @@
       <Column field="title" header="Order Title" />
       <Column field="notes" header="Staff Notes" />
       <Column field="specialInstructions" header="Special Instructions" />
-      <Column header="" class="row-acts nowrap">
-         <template #body="slotProps">
-            <router-link :to="`/orders/${slotProps.data.id}`">View details</router-link>
-         </template>
-      </Column>
    </DataTable>
 </template>
 

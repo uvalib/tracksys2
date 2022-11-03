@@ -127,7 +127,7 @@
                   <RelatedOrders :orders="metadataStore.related.orders" />
                </TabPanel>
                <TabPanel header="Units">
-                  <RelatedUnits :units="metadataStore.related.units" />
+                  <RelatedUnits :units="metadataStore.related.units" :metadata="false"/>
                </TabPanel>
             </TabView>
          </Panel>
