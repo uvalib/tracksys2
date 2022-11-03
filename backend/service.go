@@ -369,6 +369,7 @@ func (svc *serviceContext) sendRequest(verb string, url string, payload *url.Val
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	} else {
 		req, _ = http.NewRequest(verb, url, nil)
+		req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36")
 	}
 
 	rawResp, rawErr := svc.HTTPClient.Do(req)

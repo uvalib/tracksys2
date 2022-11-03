@@ -42,8 +42,9 @@ func main() {
 		api.POST("/masterfiles/:id/tags", svc.addMasterFileTag)
 		api.DELETE("/masterfiles/:id/tags", svc.removeMasterFileTag)
 
+		api.GET("/metadata/sirsi", svc.lookupSirsiMetadata)
 		api.GET("/metadata/:id", svc.getMetadata)
-		api.POST("/metadata/", svc.createMetadata)
+		api.POST("/metadata", svc.createMetadata)
 
 		api.GET("/orders", svc.getOrders)
 		api.POST("/orders", svc.createOrder)
