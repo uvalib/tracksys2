@@ -47,6 +47,7 @@ type sirsiResponse struct {
 	Year             string `json:"year"`
 	PublicationPlace string `json:"publicationPlace"`
 	Location         string `json:"location"`
+	CollectionID     string `json:"collectionID"`
 }
 
 func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
@@ -78,6 +79,12 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 	if parseErr != nil {
 		log.Printf("ERROR: invalid response from %s: %s", url, parseErr.Error())
 		c.String(http.StatusInternalServerError, parseErr.Error())
+		return
+	}
+
+	if len(parsed.ControlFields) == 0 && len(parsed.DataFields) == 0 {
+		log.Printf("INFO: no matches found for %s", url)
+		c.String(http.StatusNotFound, "no matches found in sirsi")
 		return
 	}
 
@@ -150,6 +157,14 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 				}
 			}
 		}
+		if df.Tag == "852" {
+			// 852c is collectionID
+			for _, sf := range df.Subfields {
+				if sf.Code == "c" {
+					resp.CollectionID = strings.TrimSpace(sf.Value)
+				}
+			}
+		}
 
 		if df.Tag == "999" {
 			// 999 repeats, 1 per barcode. Match the queried barcode or just pick first
@@ -172,8 +187,11 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 				resp.Location = bcData.Location
 			}
 		}
-
 	}
 
-	c.XML(http.StatusOK, resp)
+	if resp.CollectionID == "" {
+		resp.CollectionID = resp.CallNumber
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
