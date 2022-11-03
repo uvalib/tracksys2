@@ -84,6 +84,20 @@ export const useMetadataStore = defineStore('metadata', {
       },
       searchHits: [],
       totalSearchHits: 0,
+      sirsiMatch: {
+         catalogKey: "",
+         barcode: "",
+         callNumber: "",
+         title: "",
+         creatorName: "",
+         creatorType: "",
+         year: "",
+         publicationPlace: "",
+         location: "",
+         collectionID: "",
+         error: "",
+         searching: false,
+      }
    }),
 	getters: {
 	},
@@ -91,6 +105,43 @@ export const useMetadataStore = defineStore('metadata', {
       resetSearch() {
          this.searchHits = []
          this.totalSearchHits = 0
+         this.sirsiMatch.catalogKey = ""
+         this.sirsiMatch.barcode = ""
+         this.sirsiMatch.callNumber = ""
+         this.sirsiMatch.title = ""
+         this.sirsiMatch.creatorName = ""
+         this.sirsiMatch.collectionID = ""
+         this.sirsiMatch.error = ""
+         this.sirsiMatch.searching = false
+      },
+      async sirsiLookup( barcode, catKey ) {
+         this.resetSearch()
+         this.sirsiMatch.searching = true
+         let url = "/api/metadata/sirsi"
+         if ( catKey != "") {
+            url += `?ckey=${catKey}`
+         } else {
+            url += `?barcode=${barcode}`
+         }
+         return axios.get(url).then(response => {
+            this.sirsiMatch.catalogKey = response.data.catalogKey
+            this.sirsiMatch.barcode =  response.data.barcode
+            this.sirsiMatch.callNumber =  response.data.callNumber
+            this.sirsiMatch.title =  response.data.title
+            this.sirsiMatch.creatorName =  response.data.creatorName
+            this.sirsiMatch.creatorType =  response.data.creatorType
+            this.sirsiMatch.year =  response.data.year
+            this.sirsiMatch.publicationPlace =  response.data.publicationPlace
+            this.sirsiMatch.location =  response.data.location
+            this.sirsiMatch.collectionID =  response.data.collectionID
+            this.sirsiMatch.searching = false
+         }).catch( e => {
+            this.sirsiMatch.searching = false
+            this.sirsiMatch.error = e
+            if (e.response) {
+               this.sirsiMatch.error = e.response.data
+            }
+         })
       },
       async lookup( query ) {
          const system = useSystemStore()

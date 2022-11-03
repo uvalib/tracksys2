@@ -1,7 +1,6 @@
 <template>
    <FormKit type="form" id="create-metadata" :actions="false" @submit="createMetadata">
       <Panel header="General Information" class="margin-bottom">
-         <p><b>IMPORTANT</b>: This is not fully implemented, do not use!!</p>
          <FormKit label="Metadata Type" type="select" outer-class="first" :options="metadataTypes" v-model="info.type" @change="typeChanged"/>
          <template v-if="info.type == 'SirsiMetadata'">
             <div class="split">
@@ -9,12 +8,14 @@
                <span class="sep"/>
                <FormKit label="Barcode" type="text" v-model="info.barcode"/>
                <span class="sep"/>
-               <DPGButton @click="lookupSirsiMetadata" label="Lookup" class="p-button-secondary"/>
+               <DPGButton @click="lookupSirsiMetadata" label="Lookup" class="p-button-secondary" :loading="metadataStore.sirsiMatch.searching"/>
             </div>
+            <p v-if="metadataStore.sirsiMatch.error" class="error">{{metadataStore.sirsiMatch.error}}</p>
             <dl>
                <DataDisplay label="Title" :value="info.title" blankValue="Unknown"/>
                <DataDisplay label="Call Number" :value="info.callNumber" blankValue="Unknown"/>
             </dl>
+
          </template>
          <template v-if="info.type == 'XmlMetadata'">
             <FormKit label="Title" type="text" v-model="info.title" required/>
@@ -48,7 +49,6 @@
          </div>
          <FormKit label="Use Right Rationale" type="textarea" :rows="2" v-model="info.useRightRationale"/>
       </Panel>
-      <p><b>IMPORTANT</b>: This is not fully implemented, do not use!!</p>
       <div class="acts">
          <DPGButton @click="cancelCreate" label="Cancel" class="p-button-secondary"/>
          <FormKit type="submit" label="Create Metadata" wrapper-class="submit-button" />
@@ -148,8 +148,13 @@ function typeChanged() {
       info.value.externSystemID = 1
    }
 }
-function lookupSirsiMetadata() {
-
+async function lookupSirsiMetadata() {
+   await metadataStore.sirsiLookup(info.value.barcode, info.value.catalogKey)
+   info.value.title = metadataStore.sirsiMatch.title
+   info.value.callNumber = metadataStore.sirsiMatch.callNumber
+   info.value.author = metadataStore.sirsiMatch.creatorName
+   info.value.catalogKey = metadataStore.sirsiMatch.catalogKey
+   info.value.barcode = metadataStore.sirsiMatch.barcode
 }
 function cancelCreate() {
    emit("canceled")
@@ -164,16 +169,19 @@ async function createMetadata() {
 .margin-bottom {
    margin-bottom: 15px;
 }
-
+p.error {
+   color: var(--uvalib-red-emergency);
+   text-align: right;
+   margin:5px 0 0 0;
+}
 div.p-panel {
    font-size: 0.8em;
 }
 dl {
-   margin: 10px 0;
+   margin: 10px 0 25px 0;
    display: inline-grid;
    grid-template-columns: max-content 1fr;
    grid-column-gap: 0px;
-   font-size: 0.8em;
    text-align: left;
    box-sizing: border-box;
 }

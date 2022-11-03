@@ -6,7 +6,7 @@
             <div class="lookup">
                <input type="text" v-model="metadataSearch"  @keydown.stop.prevent.enter="lookupMetadata"/>
                <DPGButton @click="lookupMetadata" label="Lookup" class="p-button-secondary"/>
-               <DPGButton @click="createMetadata" label="Create" :disabled="true" class="p-button-secondary"/>
+               <DPGButton @click="createMetadata" label="Create" class="p-button-secondary"/>
             </div>
             <template v-if="searched">
                <div class="no-results" v-if="metadataStore.totalSearchHits == 0">
@@ -166,6 +166,7 @@ function hide() {
    isOpen.value=false
 }
 function show() {
+   mode.value = "unit"
    isOpen.value = true
    error.value = ""
    metadataSearch.value = ""
