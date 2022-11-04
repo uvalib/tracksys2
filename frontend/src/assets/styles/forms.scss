@@ -36,6 +36,14 @@ button.dpg-form-input {
    @include primary-button();
    width: auto;
 }
+.submit-button.disabled button {
+   opacity: 0.3;
+   cursor: default;
+   &:hover {
+      background-color: var(--uvalib-brand-blue-light);
+      border: 1px solid var(--uvalib-brand-blue-light);
+   }
+}
 
 div.formkit-outer.first {
    .dpg-form-label {

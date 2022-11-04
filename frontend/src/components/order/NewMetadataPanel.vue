@@ -8,22 +8,30 @@
                <span class="sep"/>
                <FormKit label="Barcode" type="text" v-model="info.barcode"/>
                <span class="sep"/>
-               <DPGButton @click="lookupSirsiMetadata" label="Lookup" class="p-button-secondary" :loading="metadataStore.sirsiMatch.searching"/>
+               <DPGButton @click="sirsiLookup" label="Lookup" class="p-button-secondary" :loading="metadataStore.sirsiMatch.searching"/>
             </div>
             <p v-if="metadataStore.sirsiMatch.error" class="error">{{metadataStore.sirsiMatch.error}}</p>
             <dl>
                <DataDisplay label="Title" :value="info.title" blankValue="Unknown"/>
                <DataDisplay label="Call Number" :value="info.callNumber" blankValue="Unknown"/>
             </dl>
-
          </template>
          <template v-if="info.type == 'XmlMetadata'">
-            <FormKit label="Title" type="text" v-model="info.title" required/>
+            <FormKit label="Title" type="text" v-model="info.title" required @input="xmlTitleChanged"/>
             <FormKit label="Author" type="text" v-model="info.author"/>
          </template>
          <template v-if="info.type == 'ExternalMetadata'">
-            <FormKit label="External URI" type="text" v-model="info.date"/>
             <p class="note"><b>IMPORTANT</b>: Only URIs containing /resources/, /accessions/ or /archival_objects/ are supported.</p>
+            <div class="split">
+               <FormKit label="External URI" type="text" v-model="info.externalURI" required @input="uriChanged"/>
+               <span class="sep"/>
+               <DPGButton @click="validateASMetadata" label="Validate" class="p-button-secondary" :loading="metadataStore.asMatch.searching"/>
+            </div>
+            <p class="error" v-if="metadataStore.asMatch.error">Validation Failed: {{metadataStore.asMatch.error}}</p>
+            <dl>
+               <DataDisplay label="Title" :value="metadataStore.asMatch.title" blankValue="Unknown"/>
+               <DataDisplay label="ID" :value="metadataStore.asMatch.id" blankValue="Unknown"/>
+            </dl>
          </template>
          <div class="split">
             <FormKit label="Personal Item" type="select" :options="yesNo" v-model="info.personalItem"/>
@@ -51,13 +59,13 @@
       </Panel>
       <div class="acts">
          <DPGButton @click="cancelCreate" label="Cancel" class="p-button-secondary"/>
-         <FormKit type="submit" label="Create Metadata" wrapper-class="submit-button" />
+         <FormKit type="submit" label="Create Metadata" :disabled="!validated" :wrapper-class="submitClass"/>
       </div>
    </FormKit>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DataDisplay from '../DataDisplay.vue'
 import Panel from 'primevue/panel'
 import { useSystemStore } from "@/stores/system"
@@ -68,6 +76,7 @@ const emit = defineEmits( ['canceled', 'created' ])
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
 
+const validated = ref(false)
 const info = ref({
    type: "XmlMetadata",
    externSystemID: null,
@@ -88,6 +97,34 @@ const info = ref({
    inDPLA: false,
 })
 
+onMounted(() => {
+   validated.value = false
+   info.value.type = "XmlMetadata"
+   info.value.externSystemID = null
+   info.value.externalURI = ""
+   info.value.title = ""
+   info.value.callNumber = ""
+   info.value.author = ""
+   info.value.catalogKey = ""
+   info.value.barcode = ""
+   info.value.personalItem = false
+   info.value.manuscript = false
+   info.value.ocrHint = 0
+   info.value.ocrLanguageHint = ""
+   info.value.preservationTier = 0
+   info.value.availabilityPolicy = 1
+   info.value.useRight = 1
+   info.value.useRightRationale = ""
+   info.value.inDPLA = false
+})
+
+const submitClass = computed(() => {
+   let c = "submit-button"
+   if (validated.value === false ) {
+      c += " disabled"
+   }
+   return c
+})
 const availabilityPolicies = computed(() => {
    let out = []
    systemStore.availabilityPolicies.forEach( o => {
@@ -144,17 +181,35 @@ const isLanguageDisabled = computed(() => {
 
 function typeChanged() {
    info.value.externSystemID = null
+   validated.value = false
    if (info.value.type == "ExternalMetadata") {
       info.value.externSystemID = 1
    }
 }
-async function lookupSirsiMetadata() {
+function xmlTitleChanged() {
+   validated.value = ( info.value.title.length > 0)
+}
+function uriChanged() {
+   validated.value = false
+}
+async function validateASMetadata() {
+   await metadataStore.validateArchivesSpaceURI(info.value.externalURI)
+   if (metadataStore.asMatch.error == "") {
+      validated.value = true
+      info.value.externalURI = metadataStore.asMatch.validatedURL
+      info.value.title = metadataStore.asMatch.title
+   }
+}
+async function sirsiLookup() {
    await metadataStore.sirsiLookup(info.value.barcode, info.value.catalogKey)
    info.value.title = metadataStore.sirsiMatch.title
    info.value.callNumber = metadataStore.sirsiMatch.callNumber
    info.value.author = metadataStore.sirsiMatch.creatorName
    info.value.catalogKey = metadataStore.sirsiMatch.catalogKey
    info.value.barcode = metadataStore.sirsiMatch.barcode
+   if ( metadataStore.sirsiMatch.error == "") {
+      validated.value = true
+   }
 }
 function cancelCreate() {
    emit("canceled")
@@ -174,6 +229,12 @@ p.error {
    text-align: right;
    margin:5px 0 0 0;
 }
+p.valid {
+   margin:5px 0 0 0;
+   color: var(--uvalib-green-dark);
+   font-weight: bold;
+   text-align: right;
+}
 div.p-panel {
    font-size: 0.8em;
 }
@@ -184,6 +245,9 @@ dl {
    grid-column-gap: 0px;
    text-align: left;
    box-sizing: border-box;
+}
+p.note {
+   margin: 5px 0 0 0;
 }
 
 .split {

@@ -97,6 +97,13 @@ export const useMetadataStore = defineStore('metadata', {
          collectionID: "",
          error: "",
          searching: false,
+      },
+      asMatch: {
+         error: "",
+         searching: false,
+         validatedURL: "",
+         title: "",
+         id: "",
       }
    }),
 	getters: {
@@ -113,6 +120,26 @@ export const useMetadataStore = defineStore('metadata', {
          this.sirsiMatch.collectionID = ""
          this.sirsiMatch.error = ""
          this.sirsiMatch.searching = false
+         this.asMatch.error = ""
+         this.asMatch.searching = false
+         this.asMatch.title = ""
+         this.asMatch.id = ""
+      },
+      async validateArchivesSpaceURI( uri ) {
+         this.resetSearch()
+         this.asMatch.searching = true
+         return axios.get(`/api/metadata/archivesspace?uri=${encodeURIComponent(uri)}`).then(response => {
+            this.asMatch.validatedURL = response.data.uri
+            this.asMatch.title = response.data.detail.title
+            this.asMatch.id = response.data.detail.id
+            this.asMatch.searching = false
+         }).catch( e => {
+            this.asMatch.searching = false
+            this.asMatch.error = e
+            if (e.response) {
+               this.asMatch.error = e.response.data
+            }
+         })
       },
       async sirsiLookup( barcode, catKey ) {
          this.resetSearch()

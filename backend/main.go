@@ -43,6 +43,7 @@ func main() {
 		api.DELETE("/masterfiles/:id/tags", svc.removeMasterFileTag)
 
 		api.GET("/metadata/sirsi", svc.lookupSirsiMetadata)
+		api.GET("/metadata/archivesspace", svc.validateArchivesSpaceMetadata)
 		api.GET("/metadata/:id", svc.getMetadata)
 		api.POST("/metadata", svc.createMetadata)
 

@@ -513,3 +513,41 @@ func (svc *serviceContext) getUVAMapData(pid string) (*internalMetadata, error) 
 
 	return &detail, nil
 }
+
+func (svc *serviceContext) validateArchivesSpaceMetadata(c *gin.Context) {
+	uri := c.Query("uri")
+	if uri == "" {
+		log.Printf("INFO: invalid archivesspace lookup request; missing uri param")
+		c.String(http.StatusBadRequest, "uri param is required")
+		return
+	}
+	log.Printf("INFO: validate archivesspace uri %s", uri)
+	raw, getErr := svc.getRequest(fmt.Sprintf("%s/archivesspace/validate?url=%s", svc.ExternalSystems.Jobs, uri))
+	if getErr != nil {
+		log.Printf("ERROR: unable to validate archivesSpace uri %s: %d - %s", uri, getErr.StatusCode, getErr.Message)
+		c.String(getErr.StatusCode, getErr.Message)
+		return
+	}
+
+	var resp struct {
+		URI    string     `json:"uri"`
+		Detail asMetadata `json:"detail"`
+	}
+	resp.URI = string(raw)
+
+	log.Printf("INFO: lookup details for %s", resp.URI)
+	rawDetail, getErr := svc.getRequest(fmt.Sprintf("%s/archivesspace/lookup?uri=%s", svc.ExternalSystems.Jobs, resp.URI))
+	if getErr != nil {
+		log.Printf("ERROR: unable to validate archivesSpace uri %s: %d - %s", uri, getErr.StatusCode, getErr.Message)
+		c.String(getErr.StatusCode, getErr.Message)
+		return
+	}
+	parseErr := json.Unmarshal(rawDetail, &resp.Detail)
+	if parseErr != nil {
+		log.Printf("ERROR: unable to parse archivespace details for %s: %s", resp.URI, parseErr.Error())
+		c.String(http.StatusInternalServerError, parseErr.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
