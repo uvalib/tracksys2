@@ -3,7 +3,8 @@
    <Dialog v-model:visible="isOpen" :modal="true" header="Create Digitization Project" :style="{width: '400px'}">
       <FormKit type="form" id="create-project" :actions="false" @submit="createProject">
          <FormKit label="Workflow" type="select" v-model="project.workflowID" :options="workflows" required outer-class="first" />
-         <FormKit label="Category" type="select" v-model="project.categoryID" :options="categories" required/>
+         <FormKit v-if="project.workflowID==6" label="Container Type" type="select" v-model="project.containerTypeID" :options="containerTypes" required placeholder="Select a container type"/>
+         <FormKit label="Category" type="select" v-model="project.categoryID" :options="categories" required placeholder="Select a category"/>
          <FormKit label="Date Due" type="date" v-model="project.dueOn" required/>
          <FormKit label="Condition" type="select" v-model="project.condition" :options="conditions" required/>
          <FormKit label="" type="textarea" rows="4" v-model="project.notes"/>
@@ -28,6 +29,7 @@ const systemStore = useSystemStore()
 const isOpen = ref(false)
 const project = ref({
    workflowID: 1,
+   containerTypeID: 0,
    categoryID: 0,
    condition: 0,
    dueOn: null,
@@ -41,6 +43,13 @@ const createDisabled = computed(() => {
 const workflows = computed( () => {
    let out = []
    systemStore.workflows.forEach( w => {
+      out.push({label: w.name, value: w.id})
+   })
+   return out
+})
+const containerTypes = computed( () => {
+   let out = []
+   systemStore.containerTypes.forEach( w => {
       out.push({label: w.name, value: w.id})
    })
    return out
@@ -70,6 +79,7 @@ function hide() {
 function show() {
    project.value.workflowID = 1
    project.value.categoryID = 0
+   project.value.containerTypeID = 0
    project.value.condition = 0
    project.value.dueOn = unitsStore.detail.order.dateDue.split("T")[0]
    project.value.notes = ""
