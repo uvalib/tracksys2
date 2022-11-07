@@ -87,15 +87,14 @@ function scopeChanged() {
 }
 
 async function doUnitSearch() {
+   resetSearch()
    unitError.value = ""
    await searchStore.unitExists(unitID.value)
-   console.log("AFTER")
    if ( searchStore.unitValid == false) {
       unitError.value = `${unitID.value} is not a valid unit ID, please try again.`
       return
    }
 
-   console.log(`${unitID.value} is VALID`)
    router.push(`/units/${unitID.value}`)
 }
 

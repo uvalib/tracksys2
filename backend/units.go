@@ -90,7 +90,13 @@ func (svc *serviceContext) validateUnit(c *gin.Context) {
 	var cnt int64
 	err := svc.DB.Table("units").Where("id=?", unitID).Count(&cnt).Error
 	if err != nil {
-		log.Printf("INFO: unit %s not found: %s", unitID, err.Error())
+		log.Printf("INFO: error validating unit %s: %s", unitID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	if cnt == 0 {
+		log.Printf("INFO: unit %s not found", unitID)
+		c.String(http.StatusNotFound, "not found")
 		return
 	}
 	c.String(http.StatusOK, "exists")
