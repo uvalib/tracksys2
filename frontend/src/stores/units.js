@@ -18,7 +18,8 @@ export const useUnitsStore = defineStore('units', {
          staffNotes: "",
          dateArchived: "",
          datePatronDeliverablesReady: "",
-         dateDLDeliverablesReady: ""
+         dateDLDeliverablesReady: "",
+         relatedUnits: [],
       },
       masterFiles: [],
       updateInProgress: false

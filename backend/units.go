@@ -120,7 +120,20 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, unitDetail)
+	log.Printf("INFO: get a list if other unit ids that belong to the same order as unit %d", unitDetail.ID)
+	out := struct {
+		*unit
+		RelatedUnitIDs []int64 `json:"relatedUnits"`
+	}{
+		&unitDetail,
+		make([]int64, 0),
+	}
+	err = svc.DB.Table("units").Where("order_id=?", unitDetail.OrderID).Select("id").Find(&out.RelatedUnitIDs).Error
+	if err != nil {
+		log.Printf("ERROR: unable to find related units for unit %d: %s", unitDetail.ID, err.Error())
+	}
+
+	c.JSON(http.StatusOK, out)
 }
 
 func (svc *serviceContext) createProject(c *gin.Context) {

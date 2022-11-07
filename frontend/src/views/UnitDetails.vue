@@ -98,11 +98,20 @@
             </DataDisplay>
             <DataDisplay v-else label="Metadata" value=""/>
             <DataDisplay label="Order" :value="`${detail.orderID}`">
-               <router-link :to="`/orders/${detail.orderID}`">#{{detail.orderID}}</router-link>
+               <router-link :to="`/orders/${detail.orderID}`">{{detail.orderID}}</router-link>
+            </DataDisplay>
+            <DataDisplay label="Order Units" :value="`${detail.relatedUnits}`">
+               <div class="related-unit-ids">
+                  <template v-for="(uid,idx) in detail.relatedUnits" :key="`related-${uid}`">
+                     <template v-if="idx > 0"><span class="comma">,</span></template>
+                     <router-link :to="`/units/${uid}`" v-if="uid != detail.id">{{uid}}</router-link>
+                     <span class="current-unit" v-else>{{uid}}</span>
+                  </template>
+               </div>
             </DataDisplay>
             <DataDisplay v-if="detail.projectID"  label="Project" :value="`${detail.projectID}`">
                <a :href="`${systemStore.projectsURL}/projects/${detail.projectID}`" target="_blank">
-                  #{{detail.projectID}}<i class="icon fas fa-external-link"></i>
+                  {{detail.projectID}}<i class="icon fas fa-external-link"></i>
                </a>
             </DataDisplay>
          </dl>
@@ -260,6 +269,20 @@ div.unit-acts {
    button.p-button {
       margin-right: 5px;
       font-size: 0.9em;
+   }
+}
+.related-unit-ids {
+   display: flex;
+   flex-flow: row wrap;
+   justify-content: flex-start;
+.comma {
+      margin-right: 5px;
+   }
+   .current-unit {
+      font-weight: bold;
+      background: var(--uvalib-teal-lightest);
+      padding: 2px 4px;
+      border-radius: 5px;
    }
 }
 .last-error {
