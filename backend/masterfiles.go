@@ -97,6 +97,8 @@ func (svc *serviceContext) getMasterFile(c *gin.Context) {
 		OrderID    uint64     `json:"orderID"`
 		ThumbURL   string     `json:"thumbURL"`
 		ViewerURL  string     `json:"viewerURL"`
+		PrevID     int64      `json:"prevID,omitempty"`
+		NextID     int64      `json:"nextID,omitempty"`
 	}
 	out := mfResp{MasterFile: mf}
 
@@ -136,6 +138,25 @@ func (svc *serviceContext) getMasterFile(c *gin.Context) {
 	err = svc.DB.Table("units").Select("order_id").Where("id=?", mf.UnitID).Find(&out.OrderID).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get masterfile %s order info: %s", mfID, err.Error())
+	}
+
+	log.Printf("INFO: get a sorted list of other masterfile ids that belong to unit %d", out.MasterFile.UnitID)
+	mfIDs := make([]int64, 0)
+	err = svc.DB.Table("master_files").Where("unit_id=?", out.MasterFile.UnitID).Select("id").Order("filename asc").Find(&mfIDs).Error
+	if err != nil {
+		log.Printf("ERROR: unable to find masterfiles for unit %d: %s", out.MasterFile.UnitID, err.Error())
+	} else {
+		for idx, mfID := range mfIDs {
+			if mfID == out.MasterFile.ID {
+				if idx > 0 {
+					out.PrevID = mfIDs[idx-1]
+				}
+				if idx < len(mfIDs)-1 {
+					out.NextID = mfIDs[idx+1]
+				}
+				break
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, out)

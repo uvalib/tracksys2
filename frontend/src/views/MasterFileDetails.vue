@@ -1,6 +1,8 @@
 <template>
    <h2>Master File {{route.params.id}}</h2>
    <div class="masterfile-acts">
+      <DPGButton label="Previous" @click="prevImage()" v-if="masterFiles.prevID > 0"/>
+      <DPGButton label="Next" @click="nextImage()" v-if="masterFiles.nextID > 0"/>
       <DPGButton label="Download Image" @click="downloadImage()"/>
       <DPGButton label="Download PDF" @click="downloadPDF()"/>
       <DPGButton label="Edit" @click="editMasterFile()"/>
@@ -127,6 +129,13 @@ const location = computed(() => {
    if (masterFiles.details.locations.length == 0) return null
    return masterFiles.details.locations[0]
 })
+
+function prevImage() {
+   router.push(`/masterfiles/${masterFiles.prevID}`)
+}
+function nextImage() {
+   router.push(`/masterfiles/${masterFiles.nextID}`)
+}
 
 onBeforeRouteUpdate( async (to) => {
    let mfID = to.params.id
