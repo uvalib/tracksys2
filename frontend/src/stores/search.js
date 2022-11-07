@@ -8,6 +8,7 @@ export const useSearchStore = defineStore('search', {
       scope: "all",
       field: "all",
       searched: false,
+      unitValid: false,
       components: {
          start: 0,
          limit: 15,
@@ -101,6 +102,21 @@ export const useSearchStore = defineStore('search', {
          this.field = "all"
          this.searched = false
          this.resetResults()
+      },
+      async unitExists( unitID) {
+         const system = useSystemStore()
+         system.working = true
+         this.unitValid = false
+         console.log(unitID)
+         return axios.get(`/api/units/${unitID}/exists`).then( () => {
+            console.log("VALID")
+            this.unitValid = true
+            system.working = false
+         }).catch( () => {
+            console.log("NOT VALID")
+            system.working = false
+            this.unitValid = false
+         })
       },
       setFilter( scope, filterQueryParm) {
          let parsedFilters = []

@@ -117,7 +117,7 @@
          </dl>
       </Panel>
       <Panel header="Attachments">
-         <div v-if="detail.attachments.length > 0">
+         <div v-if="detail.attachments && detail.attachments.length > 0">
             <DataTable :value="detail.attachments" ref="attachmentsTable" dataKey="id"
                stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm attachments-data"
             >

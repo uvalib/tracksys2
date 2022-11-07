@@ -10,6 +10,11 @@
          <FormKit type="submit" label="Search" wrapper-class="submit-button" />
          <FormKit type="button" v-if="searchStore.searched"  label="Reset search" @click="resetSearch()" wrapper-class="reset-button"/>
       </FormKit>
+      <FormKit type="form" id="unit-search" :actions="false" @submit="doUnitSearch" outer-class="select-wrap" >
+         <FormKit label="" type="search" placeholder="Find Unit by ID..." v-model="unitID" outer-class="searchbar" />
+         <FormKit type="submit" label="Find Unit" wrapper-class="submit-button" />
+      </FormKit>
+      <p class="error" v-if="unitError">{{unitError}}</p>
       <SearchResults v-if="searchStore.searched" />
    </div>
 </template>
@@ -17,12 +22,15 @@
 <script setup>
 import { useSearchStore } from '../stores/search'
 import SearchResults from '@/components/results/SearchResults.vue'
-import { computed, onBeforeMount } from 'vue'
+import { ref, computed, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const searchStore = useSearchStore()
 const route = useRoute()
 const router = useRouter()
+
+const unitID = ref("")
+const unitError = ref("")
 
 const scopeFields = computed( () => {
    let scope = searchStore.scope
@@ -78,6 +86,19 @@ function scopeChanged() {
    searchStore.field = "all"
 }
 
+async function doUnitSearch() {
+   unitError.value = ""
+   await searchStore.unitExists(unitID.value)
+   console.log("AFTER")
+   if ( searchStore.unitValid == false) {
+      unitError.value = `${unitID.value} is not a valid unit ID, please try again.`
+      return
+   }
+
+   console.log(`${unitID.value} is VALID`)
+   router.push(`/units/${unitID.value}`)
+}
+
 function doSearch() {
    if (searchStore.query.length > 0) {
       let query = Object.assign({}, route.query)
@@ -110,7 +131,18 @@ function doSearch() {
       margin-top: 50px;
       padding-bottom: 50px;
       min-height:600px;
-      :deep(#global-search) {
+      :deep(#unit-search) {
+         width: 25% !important;
+         align-items: flex-end !important;
+         margin-top: 25px !important;
+         div.searchbar {
+            width: 40%;
+         }
+      }
+      p.error {
+         color: var(--uvalib-red-emergency);
+      }
+      :deep(#global-search), :deep(#unit-search) {
          display: flex;
          flex-flow: row nowrap;
          justify-content: center;

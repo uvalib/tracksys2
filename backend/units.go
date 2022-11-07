@@ -84,6 +84,18 @@ type unit struct {
 	LastError                   *lastError   `gorm:"-" json:"lastError,omitempty"`
 }
 
+func (svc *serviceContext) validateUnit(c *gin.Context) {
+	unitID := c.Param("id")
+	log.Printf("INFO: validate unit %s exists", unitID)
+	var cnt int64
+	err := svc.DB.Table("units").Where("id=?", unitID).Count(&cnt).Error
+	if err != nil {
+		log.Printf("INFO: unit %s not found: %s", unitID, err.Error())
+		return
+	}
+	c.String(http.StatusOK, "exists")
+}
+
 func (svc *serviceContext) getUnit(c *gin.Context) {
 	unitID := c.Param("id")
 	log.Printf("INFO: get unit %s details", unitID)
