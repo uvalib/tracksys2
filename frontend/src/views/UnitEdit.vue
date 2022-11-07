@@ -24,7 +24,7 @@
                         <label>Metadata ID</label>
                         <div class="item">
                            <span>{{displayMetadataID}}</span>
-                           <LookupDialog target="metadata" @selected="metadataSelected" />
+                           <LookupDialog target="metadata" @selected="metadataSelected" :create="true" />
                         </div>
                      </div>
                   </div>

@@ -4,7 +4,7 @@
       <div class="lookup" v-if="mode=='lookup'">
          <input type="text" v-model="query"  @keydown.stop.prevent.enter="lookupMetadata" autofocus/>
          <DPGButton @click="lookupMetadata" label="Lookup" class="p-button-secondary"/>
-         <DPGButton @click="createMetadata" label="Create" class="p-button-secondary"/>
+         <DPGButton @click="createMetadata" label="Create" class="p-button-secondary" v-if="props.create"/>
       </div>
       <NewMetadataPanel v-else @canceled="metadataCreateCanceled" @created="metadataCreated" />
       <template v-if="searched">
@@ -71,6 +71,10 @@ const props = defineProps({
       type: String,
       required: true
    },
+   create: {
+      type: Boolean,
+      default: false
+   }
 })
 
 const metadataStore = useMetadataStore()
