@@ -211,6 +211,23 @@ export const useMetadataStore = defineStore('metadata', {
             system.setError(e)
          })
       },
+      async uploadXML( fileData ) {
+         const system = useSystemStore()
+         var formData = new FormData()
+         formData.append("xml", fileData)
+         let url = `/api/metadata/${this.detail.id}/xml`
+         return axios.post(url, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+         }).then( resp => {
+            this.detail.xmlMetadata = resp.data
+            system.toastMessage("XML Uploaded", "XML metadata has successfully been uploaded.")
+         }).catch( e => {
+            system.setError(`Upload XML meadtata file '${fileData.name}' failed: ${e}`)
+         })
+      },
+
       setMetadataDetails( details ) {
          // general info
          this.detail.id = details.metadata.id

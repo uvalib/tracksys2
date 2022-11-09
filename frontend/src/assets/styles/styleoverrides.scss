@@ -56,7 +56,7 @@
    }
 }
 
-button.p-button {
+button.p-button, .p-fileupload.p-fileupload-basic.p-component {
    font-family: inherit;
    font-size: 100%;
    padding: 0.5em 1em;
@@ -77,6 +77,17 @@ button.p-button {
 
    &:focus {
       @include be-accessible();
+   }
+   .p-fileupload-choose {
+      background: none;
+      border: 0;
+      padding: 0;
+      .p-button-icon.p-button-icon-left {
+         display: none;
+      }
+      &:focus {
+         box-shadow: none;
+      }
    }
 }
 

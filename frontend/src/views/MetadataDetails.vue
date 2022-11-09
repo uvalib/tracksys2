@@ -1,5 +1,10 @@
 <template>
    <h2>Metadata {{route.params.id}}</h2>
+   <div class="unit-acts">
+      <DPGButton label="Download XML"  @click="downloadXMLClicked()" />
+      <FileUpload mode="basic" name="xml" accept=".xml" :customUpload="true" @uploader="xmlUploader"
+         :auto="true" chooseLabel="Upload XML" uploadIcon="" v-if="userStore.isAdmin || userStore.isSupervisor"/>
+   </div>
    <div class="details" v-if="systemStore.working==false">
       <div v-if="metadataStore.thumbURL" class="thumb">
          <a :href="metadataStore.viewerURL" target="_blank">
@@ -140,6 +145,7 @@ import { onBeforeMount, computed } from 'vue'
 import { useRoute, onBeforeRouteUpdate } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useMetadataStore } from '@/stores/metadata'
+import { useUserStore } from '@/stores/user'
 import Panel from 'primevue/panel'
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab'
@@ -149,11 +155,16 @@ import TabPanel from 'primevue/tabpanel'
 import dayjs from 'dayjs'
 import RelatedOrders from '../components/related/RelatedOrders.vue'
 import RelatedUnits from '../components/related/RelatedUnits.vue'
+import FileUpload from 'primevue/fileupload'
 
 const route = useRoute()
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
+const userStore = useUserStore()
 
+// const xmlUploadURL = computed( () => {
+//    return `/api/metadata/${metadataStore.detail.id}/xml`
+// })
 const canPublish = computed(() => {
    if (metadataStore.dl.dateDLIngest) {
       return true
@@ -210,6 +221,19 @@ onBeforeMount(() => {
    document.title = `Metadata #${mdID}`
 })
 
+function downloadXMLClicked() {
+   const fileURL = window.URL.createObjectURL(new Blob([metadataStore.detail.xmlMetadata], { type: 'application/xml' }))
+   const fileLink = document.createElement('a')
+   fileLink.href =  fileURL
+   fileLink.setAttribute('download', `${metadataStore.dl.pid}.xml`)
+   document.body.appendChild(fileLink)
+   fileLink.click()
+   window.URL.revokeObjectURL(fileURL)
+}
+function xmlUploader( event ) {
+   metadataStore.uploadXML( event.files[0] )
+}
+
 async function publishClicked() {
    await metadataStore.publish()
    systemStore.toastMessage('Publish Success', 'This item has successfully been published to Virgo')
@@ -230,22 +254,41 @@ function formatDate( date ) {
 </script>
 
 <style scoped lang="scss">
-   .more-detail {
-      padding: 0 35px 10px 35px;
-      text-align: left;
-      .xml {
-         font-weight: normal;
-         font-size: 0.85em;
-         padding: 10px;
-         margin: 0;
-         border-top: 0;
-         white-space: pre-wrap;       /* Since CSS 2.1 */
-         white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
-         white-space: -pre-wrap;      /* Opera 4-6 */
-         white-space: -o-pre-wrap;    /* Opera 7 */
-         word-wrap: break-word;       /* Internet Explorer 5.5+ */
+div.unit-acts {
+   position: absolute;
+   right:15px;
+   top: 15px;
+   button.p-button {
+      margin-right: 5px;
+      font-size: 0.9em;
+   }
+   :deep(.p-fileupload.p-fileupload-basic.p-component) {
+      margin-right: 5px;
+      font-size: 0.9em;
+      display: inline-block;
+      .p-button-label {
+         font-size: 0.9em;
+         outline: 0;
       }
    }
+}
+.more-detail {
+   padding: 0 35px 10px 35px;
+   text-align: left;
+   .xml {
+      font-weight: normal;
+      font-size: 0.85em;
+      padding: 10px;
+      margin: 0;
+      border-top: 0;
+      white-space: pre-wrap;       /* Since CSS 2.1 */
+      white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+      white-space: -pre-wrap;      /* Opera 4-6 */
+      white-space: -o-pre-wrap;    /* Opera 7 */
+      word-wrap: break-word;       /* Internet Explorer 5.5+ */
+   }
+}
+
 .details {
    padding:  0 25px 10px 25px;
    display: flex;

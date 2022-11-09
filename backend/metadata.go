@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -550,4 +552,60 @@ func (svc *serviceContext) validateArchivesSpaceMetadata(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) uploadXMLMetadata(c *gin.Context) {
+	mdID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	if mdID == 0 {
+		log.Printf("ERROR: invalid metadata id %s for xml upload", c.Param("iid"))
+		c.String(http.StatusBadRequest, "invalid id")
+		return
+	}
+	log.Printf("INFO: get metadata %d details", mdID)
+	var md metadata
+	err := svc.DB.Find(&md, mdID).Error
+	if err != nil {
+		log.Printf("ERROR: get metadata %d for xml upload failed: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if md.Type != "XmlMetadata" {
+		log.Printf("ERROR: xml upload to metadata %d is invalid; wrong metadata type %s", mdID, md.Type)
+		c.String(http.StatusBadRequest, fmt.Sprintf("%d is not an  XML metadata record", md.ID))
+		return
+	}
+
+	formFile, err := c.FormFile("xml")
+	if err != nil {
+		log.Printf("ERROR: Unable to get uploaded xml file: %s", err.Error())
+		c.String(http.StatusBadRequest, fmt.Sprintf("unable to get file: %s", err.Error()))
+		return
+	}
+
+	savedXMLFile := path.Join("/tmp", formFile.Filename)
+	err = c.SaveUploadedFile(formFile, savedXMLFile)
+	if err != nil {
+		log.Printf("ERROR: Unable to read uploaded xml file %s for metadata %d: %s", formFile.Filename, mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	xmlBytes, err := os.ReadFile(savedXMLFile)
+	if err != nil {
+		log.Printf("ERROR: unable to read uploaded xml file %s: %s", formFile.Filename, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	descMetadata := string(xmlBytes)
+	md.DescMetadata = &descMetadata
+	err = svc.DB.Model(&md).Select("DescMetadata").Updates(md).Error
+	if err != nil {
+		log.Printf("ERROR: update xml metadata %d failed: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.String(http.StatusOK, *md.DescMetadata)
 }
