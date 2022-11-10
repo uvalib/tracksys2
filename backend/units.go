@@ -23,15 +23,16 @@ type step struct {
 }
 
 type project struct {
-	ID            int64      `json:"id"`
-	WorkflowID    int64      `json:"-"`
-	UnitID        int64      `json:"-"`
-	CurrentStepID int64      `json:"-"`
-	DueOn         *time.Time `json:"dueOn,omitempty"`
-	AddedAt       *time.Time `json:"addedAt,omitempty"`
-	CategoryID    int64      `json:"-"`
-	ItemCondition uint       `json:"itemCondition"`
-	ConditionNote string     `json:"conditionNote,omitempty"`
+	ID              int64      `json:"id"`
+	WorkflowID      int64      `json:"-"`
+	ContainerTypeID *int64     `json:"-"`
+	UnitID          int64      `json:"-"`
+	CurrentStepID   int64      `json:"-"`
+	DueOn           *time.Time `json:"dueOn,omitempty"`
+	AddedAt         *time.Time `json:"addedAt,omitempty"`
+	CategoryID      int64      `json:"-"`
+	ItemCondition   uint       `json:"itemCondition"`
+	ConditionNote   string     `json:"conditionNote,omitempty"`
 }
 
 type intendedUse struct {
@@ -163,12 +164,14 @@ func (svc *serviceContext) createProject(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	var req struct {
-		WorkflowID int64  `json:"workflowID"`
-		CategoryID int64  `json:"categoryID"`
-		Condition  uint   `json:"condition"`
-		DueOn      string `json:"dueOn"`
-		Notes      string `json:"notes"`
+		WorkflowID      int64  `json:"workflowID"`
+		ContainerTypeID int64  `json:"containerTypeID"`
+		CategoryID      int64  `json:"categoryID"`
+		Condition       uint   `json:"condition"`
+		DueOn           string `json:"dueOn"`
+		Notes           string `json:"notes"`
 	}
 	err = c.BindJSON(&req)
 	if err != nil {
@@ -198,6 +201,9 @@ func (svc *serviceContext) createProject(c *gin.Context) {
 		CategoryID:    req.CategoryID,
 		ItemCondition: req.Condition,
 		ConditionNote: req.Notes,
+	}
+	if req.ContainerTypeID != 0 {
+		newProj.ContainerTypeID = &req.ContainerTypeID
 	}
 	err = svc.DB.Create(&newProj).Error
 	if err != nil {
