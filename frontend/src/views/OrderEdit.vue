@@ -55,8 +55,8 @@ const edited = ref({
    specialInstructions: "",
    staffNotes: "",
    fee: null,
-   agencyID: "",
-   customerID: "",
+   agencyID: 0,
+   customerID: 0,
 })
 const newOrder = ref(false)
 
@@ -104,6 +104,8 @@ onMounted( async () =>{
       document.title = `New Order`
    }
 
+   await customersStore.getCustomers()
+
    edited.value.status = ordersStore.detail.status
    edited.value.dateDue = dayjs(ordersStore.detail.dateDue).format("YYYY-MM-DD")
    edited.value.title = ordersStore.detail.title
@@ -115,12 +117,12 @@ onMounted( async () =>{
    if (ordersStore.detail.agency) {
       edited.value.agencyID = ordersStore.detail.agency.id
    } else {
-      edited.value.agencyID = ""
+      edited.value.agencyID = 0
    }
    if (ordersStore.detail.customer) {
       edited.value.customerID = ordersStore.detail.customer.id
    } else {
-      edited.value.customerID = ""
+      edited.value.customerID = 0
    }
 })
 
