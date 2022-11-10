@@ -344,7 +344,11 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 		} else {
 			out.Extended = parsedDetail
 			if md.DateDLIngest != nil {
-				out.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
+				if md.CatalogKey != nil {
+					out.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
+				} else {
+					out.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
+				}
 			}
 		}
 	} else {
