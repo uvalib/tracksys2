@@ -558,6 +558,24 @@ func (svc *serviceContext) validateArchivesSpaceMetadata(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+func (svc *serviceContext) getXMLMetadata(c *gin.Context) {
+	mdID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	if mdID == 0 {
+		log.Printf("ERROR: invalid metadata id %s for get xml", c.Param("iid"))
+		c.String(http.StatusBadRequest, "invalid id")
+		return
+	}
+	log.Printf("INFO: get xml metadata %d", mdID)
+	var md metadata
+	err := svc.DB.Find(&md, mdID).Error
+	if err != nil {
+		log.Printf("ERROR: get xml metadata %d failed: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.String(http.StatusOK, *md.DescMetadata)
+}
+
 func (svc *serviceContext) uploadXMLMetadata(c *gin.Context) {
 	mdID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	if mdID == 0 {
