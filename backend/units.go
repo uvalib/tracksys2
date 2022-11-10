@@ -83,6 +83,7 @@ type unit struct {
 	UpdatedAt                   time.Time    `json:"-"`
 	ProjectID                   int64        `gorm:"-" json:"projectID,omitempty"`
 	LastError                   *lastError   `gorm:"-" json:"lastError,omitempty"`
+	RelatedUnitIDs              []int64      `gorm:"-" json:"relatedUnits,,omitempty"`
 }
 
 func (svc *serviceContext) validateUnit(c *gin.Context) {
@@ -140,19 +141,12 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 	}
 
 	log.Printf("INFO: get a list if other unit ids that belong to the same order as unit %d", unitDetail.ID)
-	out := struct {
-		*unit
-		RelatedUnitIDs []int64 `json:"relatedUnits"`
-	}{
-		&unitDetail,
-		make([]int64, 0),
-	}
-	err = svc.DB.Table("units").Where("order_id=?", unitDetail.OrderID).Select("id").Find(&out.RelatedUnitIDs).Error
+	err = svc.DB.Table("units").Where("order_id=?", unitDetail.OrderID).Select("id").Find(&unitDetail.RelatedUnitIDs).Error
 	if err != nil {
 		log.Printf("ERROR: unable to find related units for unit %d: %s", unitDetail.ID, err.Error())
 	}
 
-	c.JSON(http.StatusOK, out)
+	c.JSON(http.StatusOK, unitDetail)
 }
 
 func (svc *serviceContext) createProject(c *gin.Context) {
@@ -268,6 +262,7 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 		return
 	}
 	svc.DB.Preload("IntendedUse").Preload("Attachments").Preload("Order").Preload("Metadata").Preload("Metadata.OCRHint").Find(&unitDetail, unitID)
+	svc.DB.Table("units").Where("order_id=?", unitDetail.OrderID).Select("id").Find(&unitDetail.RelatedUnitIDs)
 	c.JSON(http.StatusOK, unitDetail)
 }
 

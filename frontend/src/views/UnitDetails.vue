@@ -20,11 +20,11 @@
             </DataDisplay>
             <DataDisplay label="Special Instructions" :value="detail.specialInstructions"/>
             <DataDisplay label="Staff Notes" :value="detail.staffNotes"/>
-            <DataDisplay label="Complete Scan" :value="detail.completeScan.toString()">
-               <span :class="`flag ${detail.completeScan.toString()}`">{{displayFlag(detail.completeScan)}}</span>
+            <DataDisplay label="Complete Scan" :value="flagString(detail.completeScan)">
+               <span :class="`flag ${flagString(detail.completeScan)}`">{{displayFlag(detail.completeScan)}}</span>
             </DataDisplay>
-            <DataDisplay label="Throwaway" :value="detail.throwAway.toString()">
-               <span :class="`flag ${detail.throwAway.toString()}`">{{displayFlag(detail.throwAway)}}</span>
+            <DataDisplay label="Throwaway" :value="flagString(detail.throwAway)">
+               <span :class="`flag ${flagString(detail.throwAway)}`">{{displayFlag(detail.throwAway)}}</span>
             </DataDisplay>
          </dl>
       </Panel>
@@ -40,16 +40,16 @@
                <DataDisplay label="Deliverable Format" value=""/>
                <DataDisplay label="Deliverable Resolution" value=""/>
             </template>
-            <DataDisplay label="OCR Master Files" :value="detail.ocrMasterFiles.toString()">
-               <span :class="`flag ${detail.ocrMasterFiles.toString()}`">{{displayFlag(detail.ocrMasterFiles)}}</span>
+            <DataDisplay label="OCR Master Files" :value="flagString(detail.ocrMasterFiles)">
+               <span :class="`flag ${flagString(detail.ocrMasterFiles)}`">{{displayFlag(detail.ocrMasterFiles)}}</span>
             </DataDisplay>
-            <DataDisplay label="Remove Watermark" :value="detail.removeWatermark.toString()">
-               <span :class="`flag ${detail.removeWatermark.toString()}`">{{displayFlag(detail.removeWatermark)}}</span>
+            <DataDisplay label="Remove Watermark" :value="flagString(detail.removeWatermark)">
+               <span :class="`flag ${flagString(detail.removeWatermark)}`">{{displayFlag(detail.removeWatermark)}}</span>
             </DataDisplay>
             <DataDisplay label="Date Archived" :value="formatDate(detail.dateArchived)" />
             <DataDisplay label="Date Patron Deliverables Ready" :value="formatDate(detail.datePatronDeliverablesReady)" />
-            <DataDisplay label="In Digital Library" :value="detail.includeInDL.toString()">
-               <span :class="`flag ${detail.includeInDL.toString()}`">{{displayFlag(detail.includeInDL)}}</span>
+            <DataDisplay label="In Digital Library" :value="flagString(detail.includeInDL)">
+               <span :class="`flag ${flagString(detail.includeInDL)}`">{{displayFlag(detail.includeInDL)}}</span>
             </DataDisplay>
             <DataDisplay label="Date DL Deliverables Ready" :value="formatDate(detail.dateDLDeliverablesReady)" />
          </dl>
@@ -200,6 +200,32 @@ onBeforeMount(() => {
    unitsStore.getMasterFiles(uID)
    document.title = `Unit #${uID}`
 })
+
+function flagString( flag ) {
+   if ( flag === true) {
+      return "true"
+   }
+   return "false"
+}
+
+async function completeClicked() {
+   let update = {
+      status: "done",
+      patronSourceURL: unitsStore.detail.patronSourceURL,
+      specialInstructions: unitsStore.detail.specialInstructions,
+      staffNotes: unitsStore.detail.staffNotes,
+      completeScan: unitsStore.detail.completeScan,
+      throwAway: unitsStore.detail.throwAway,
+      orderID: unitsStore.detail.orderID,
+      metadataID: unitsStore.detail.metadataID,
+      intendedUseID: unitsStore.detail.intendedUse.id,
+      ocrMasterFiles: unitsStore.detail.ocrMasterFiles,
+      removeWatermark: unitsStore.detail.removeWatermark,
+      includeInDL: unitsStore.detail.includeInDL,
+   }
+   await unitsStore.submitEdit( update )
+   systemStore.toastMessage("Unit Updated", "Unit has been marked as done.")
+}
 
 function unitOCRClicked() {
    unitsStore.startUnitOCR()
