@@ -153,7 +153,9 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		} `json:"controlledVocabularies"`
 		SearchFields map[string][]searchField `json:"searchFields"`
 	}
-	resp := cfgData{Version: Version,
+
+	vMap := svc.lookupVersion()
+	resp := cfgData{Version: fmt.Sprintf("%s-%s", vMap["version"], vMap["build"]),
 		CurioURL:        svc.ExternalSystems.Curio,
 		IIIFURL:         svc.ExternalSystems.IIIF,
 		IIIFManifestURL: svc.ExternalSystems.IIIFMan,
@@ -313,6 +315,11 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 
 // GetVersion reports the version of the serivce
 func (svc *serviceContext) getVersion(c *gin.Context) {
+	vMap := svc.lookupVersion()
+	c.JSON(http.StatusOK, vMap)
+}
+
+func (svc *serviceContext) lookupVersion() map[string]string {
 	build := "unknown"
 	// working directory is the bin directory, and build tag is in the root
 	files, _ := filepath.Glob("../buildtag.*")
@@ -323,7 +330,7 @@ func (svc *serviceContext) getVersion(c *gin.Context) {
 	vMap := make(map[string]string)
 	vMap["version"] = svc.Version
 	vMap["build"] = build
-	c.JSON(http.StatusOK, vMap)
+	return vMap
 }
 
 // HealthCheck reports the health of the serivce
