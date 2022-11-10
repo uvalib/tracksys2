@@ -141,7 +141,8 @@ const academicStatuses = computed(() => {
 })
 
 onBeforeMount(() => {
-   document.title = `Customers`
+   customersStore.getCustomers()
+   document.title = `customers`
 })
 
 function submitChanges() {

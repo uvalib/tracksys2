@@ -36,7 +36,6 @@ import MenuBar from "@/components/MenuBar.vue"
 import WaitSpinner from "@/components/WaitSpinner.vue"
 import { useSystemStore } from "@/stores/system"
 import { useUserStore } from "@/stores/user"
-import { useCustomersStore } from "@/stores/customers"
 import { onBeforeMount,watch } from 'vue'
 import Dialog from 'primevue/dialog'
 import Toast from 'primevue/toast'
@@ -44,7 +43,6 @@ import { useToast } from "primevue/usetoast"
 
 const systemStore = useSystemStore()
 const userStore = useUserStore()
-const customersStore = useCustomersStore()
 const toast = useToast()
 
 
@@ -63,7 +61,6 @@ function errorClosed() {
 onBeforeMount( async () => {
    document.title = `Tracksys`
    await systemStore.getConfig()
-   await customersStore.getCustomers()
 })
 
 </script>

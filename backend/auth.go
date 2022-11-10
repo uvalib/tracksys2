@@ -85,7 +85,7 @@ func (svc *serviceContext) authenticate(c *gin.Context) {
 	}
 
 	// Set auth info in a cookie the client can read and pass along in future requests
-	c.SetCookie("dpg_jwt", signedStr, 10, "/", "", false, false)
+	c.SetCookie("ts2_jwt", signedStr, 10, "/", "", false, false)
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.Redirect(http.StatusFound, "/granted")
 }

@@ -40,7 +40,7 @@ export const useUserStore = defineStore('user', {
    },
    actions: {
       signout() {
-         localStorage.removeItem("dpg_jwt")
+         localStorage.removeItem("ts2_jwt")
          this.jwt = ""
          this.firstName = ""
          this.lastName = ""
@@ -51,7 +51,7 @@ export const useUserStore = defineStore('user', {
       setJWT(jwt) {
          if (jwt != this.jwt) {
             this.jwt = jwt
-            localStorage.setItem("dpg_jwt", jwt)
+            localStorage.setItem("ts2_jwt", jwt)
 
             let parsed = parseJwt(jwt)
             this.ID = parsed.userID
@@ -76,7 +76,7 @@ export const useUserStore = defineStore('user', {
                      this.router.push("/forbidden")
                   } else {
                      if (err.response && err.response.status == 401) {
-                        localStorage.removeItem("dpg_jwt")
+                        localStorage.removeItem("ts2_jwt")
                         this.jwt = ""
                         this.firstName = ""
                         this.lastName = ""

@@ -22,6 +22,10 @@
              target: process.env.TRACKSYS2_SRV,
              changeOrigin: true
           },
+          '/config': {
+            target: process.env.TRACKSYS2_SRV,
+            changeOrigin: true
+         },
           '/healthcheck': {
              target: process.env.TRACKSYS2_SRV,
              changeOrigin: true

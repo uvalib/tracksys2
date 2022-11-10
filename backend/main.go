@@ -30,10 +30,9 @@ func main() {
 	router.GET("/version", svc.getVersion)
 	router.GET("/healthcheck", svc.healthCheck)
 	router.GET("/authenticate", svc.authenticate)
-	api := router.Group("/api")
+	router.GET("/config", svc.getConfig)
+	api := router.Group("/api", svc.authMiddleware)
 	{
-		api.GET("/config", svc.getConfig)
-
 		api.GET("/customers", svc.getCustomers)
 		api.POST("/customers", svc.addOrUpdateCustomer)
 
