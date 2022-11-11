@@ -97,6 +97,12 @@ func initializeService(version string, cfg *configData) *serviceContext {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Printf("INFO: configure db pool settings...")
+	sqlDB, _ := gdb.DB()
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(10)
 	ctx.DB = gdb
 	log.Printf("INFO: DB Connection established")
 
