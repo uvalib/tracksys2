@@ -20,6 +20,7 @@
          :rowsPerPageOptions="[10,30,100]"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
+         <Column field="id" header="ID" :sortable="true"/>
          <Column field="lastName" header="Last Name" :sortable="true"/>
          <Column field="firstName" header="First Name"/>
          <Column field="computingID" header="UVA Computing ID" :sortable="true"/>

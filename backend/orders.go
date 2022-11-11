@@ -326,6 +326,91 @@ func (svc *serviceContext) addOrderAuditEvent(o *order, msg string, staffIDStr s
 	}
 }
 
+func (svc *serviceContext) completeOrder(c *gin.Context) {
+	oID := c.Param("id")
+	staffID := c.Query("staff")
+	if staffID == "" {
+		log.Printf("ERROR: staff param required for complete order %s", oID)
+		c.String(http.StatusBadRequest, "staff param is required")
+		return
+	}
+	oDetail, err := svc.loadOrder(oID)
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve order %s to mark as complete: %s", oID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// check if this has patron deliverables (units with intended use NOT equal to 110)
+	var orderUnits []unit
+	patronOrder := false
+	allUnitsArchived := true
+	var latestArchiveDate *time.Time
+	err = svc.DB.Where("order_id=? and unit_status <> ?", oDetail.ID, "canceled").Order("date_archived desc").Find(&orderUnits).Error
+	if err != nil {
+		log.Printf("ERROR: unable to determine if order %d has patron deliverables: %s", oDetail.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	for idx, u := range orderUnits {
+		if *u.IntendedUseID != 110 {
+			patronOrder = true
+		}
+		if idx == 0 {
+			latestArchiveDate = u.DateArchived
+		}
+		if u.DateArchived == nil {
+			allUnitsArchived = false
+		}
+	}
+
+	if patronOrder == true {
+		log.Printf("INFO: complete patron order %d", oDetail.ID)
+		if oDetail.DateCustomerNotified == nil {
+			if oDetail.DatePatronDeliverablesComplete == nil {
+				log.Printf("INFO: order %d cannot be completed because deliverables have not been generated", oDetail.ID)
+				c.String(http.StatusPreconditionFailed, "deliverables have not been generated")
+			} else {
+				log.Printf("INFO: order %d cannot be completed because customer has not been notified", oDetail.ID)
+				c.String(http.StatusPreconditionFailed, "customer has not been notified")
+			}
+			return
+		}
+	} else {
+		log.Printf("INFO: complete digital collection building order %d", oDetail.ID)
+		if oDetail.DateArchivingComplete == nil {
+			if oDetail.DateFinalizationBegun == nil {
+				log.Printf("INFO: order %d cannot be completed because it has not been finalized", oDetail.ID)
+				c.String(http.StatusPreconditionFailed, "order has not been finalized")
+				return
+			}
+			if allUnitsArchived == false {
+				log.Printf("INFO: order %d cannot be completed because not al units have been archived", oDetail.ID)
+				c.String(http.StatusPreconditionFailed, "not all units have been archived")
+				return
+			}
+		}
+	}
+
+	now := time.Now()
+	msg := fmt.Sprintf("Status %s to COMPLETED", strings.ToUpper(oDetail.OrderStatus))
+	svc.addOrderAuditEvent(oDetail, msg, staffID)
+	oDetail.OrderStatus = "completed"
+	oDetail.DateCompleted = &now
+	if oDetail.DateArchivingComplete == nil {
+		oDetail.DateArchivingComplete = latestArchiveDate
+	}
+	err = svc.DB.Model(&oDetail).Select("OrderStatus", "DateCompleted", "DateArchivingComplete").Updates(oDetail).Error
+	if err != nil {
+		log.Printf("ERROR: unable to mark order  %d as complete: %s", oDetail.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, oDetail)
+}
+
 func (svc *serviceContext) approveOrder(c *gin.Context) {
 	oID := c.Param("id")
 	staffID := c.Query("staff")

@@ -83,13 +83,14 @@
                   <DPGButton label="Complete Order" class="p-button-secondary" :disabled="isCompleteOrderDisabled" @click="completeOrderClicked()"/>
                </div>
             </template>
-            <div class="actions" v-if="(detail.status == 'approved' || detail.status == 'completed') && ordersStore.hasPatronDeliverables && detail.email">
+            <div class="actions" v-if="(detail.status == 'approved' || detail.status == 'completed') && ordersStore.hasPatronDeliverables && detail.email" >
                <DPGButton label="View Customer Email" class="p-button-secondary" @click="viewEmailClicked()" :style="{marginLeft:0}"/>
                <DPGButton label="Recreate Email" class="p-button-secondary" @click="recreateEmailClicked()" />
                <SendEmailDialog mode="order" />
             </div>
             <div class="actions" v-if="ordersStore.hasPatronDeliverables && (detail.status == 'approved' || detail.status == 'completed')">
-               <DPGButton label="View Customer PDF" class="p-button-secondary" @click="viewPDFClicked()" />
+               <DPGButton v-if="!detail.email" label="Check Order Completeness" class="p-button-secondary" @click="checkOrderComplete()" />
+               <DPGButton v-if="detail.email" label="View Customer PDF" class="p-button-secondary" @click="viewPDFClicked()" />
                <DPGButton v-if="detail.email" label="Recreate Customer PDF" class="p-button-secondary" @click="recreatePDFClicked()" />
             </div>
             <div class="actions" v-if="detail.invoice || detail.fee">
@@ -323,13 +324,16 @@ function cancelOrderClicked() {
    ordersStore.cancelOrder( user.ID )
 }
 function completeOrderClicked() {
-   //
+   ordersStore.completeOrder( user.ID )
 }
 function payFeeClicked() {
    ordersStore.feeAccepted( user.ID )
 }
 function declineFeeClicked() {
    ordersStore.feeDeclined( user.ID )
+}
+function checkOrderComplete() {
+   alert("not yet implemented")
 }
 
 </script>

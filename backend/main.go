@@ -60,6 +60,7 @@ func main() {
 		api.POST("/orders/:id/defer", svc.deferOrder)
 		api.POST("/orders/:id/resume", svc.resumeOrder)
 		api.POST("/orders/:id/cancel", svc.cancelOrder)
+		api.POST("/orders/:id/complete", svc.completeOrder)
 		api.POST("/invoices/:id/update", svc.updateInvoice)
 
 		api.GET("/jobs", svc.getJobStatuses)

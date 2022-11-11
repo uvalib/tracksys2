@@ -353,7 +353,11 @@ export const useOrdersStore = defineStore('orders', {
             system.toastMessage("Fee Accepted", "Fee accepted and order approved")
             system.working = false
          }).catch( e => {
-            system.setError(e)
+            if (e.response) {
+               system.setError("Unable to accept fee: "+e.response.data)
+            } else {
+               system.setError(e)
+            }
          })
       },
       feeDeclined( staffID ) {
@@ -372,7 +376,11 @@ export const useOrdersStore = defineStore('orders', {
             system.toastMessage("Fee Declined", "Fee declined and order canceled")
             system.working = false
          }).catch( e => {
-            system.setError(e)
+            if (e.response) {
+               system.setError("Unable to decline feev: "+e.response.data)
+            } else {
+               system.setError(e)
+            }
          })
       },
       approveOrder( staffID ) {
@@ -391,7 +399,11 @@ export const useOrdersStore = defineStore('orders', {
             system.toastMessage("Order Approved", "Order has been approved")
             system.working = false
          }).catch( e => {
-            system.setError(e)
+            if (e.response) {
+               system.setError("Unable to approve order: "+e.response.data)
+            } else {
+               system.setError(e)
+            }
          })
       },
       cancelOrder( staffID ) {
@@ -409,7 +421,11 @@ export const useOrdersStore = defineStore('orders', {
             system.toastMessage("Order Canceled", "Order has been canceled")
             system.working = false
          }).catch( e => {
-            system.setError(e)
+            if (e.response) {
+               system.setError("Unable to cancel order: "+e.response.data)
+            } else {
+               system.setError(e)
+            }
          })
       },
       deferOrder( staffID ) {
@@ -427,7 +443,29 @@ export const useOrdersStore = defineStore('orders', {
             system.toastMessage("Order Deferred", "Order has been deferred")
             system.working = false
          }).catch( e => {
-            system.setError(e)
+            if (e.response) {
+               system.setError("Unable to defer order: "+e.response.data)
+            } else {
+               system.setError(e)
+            }
+         })
+      },
+      completeOrder( staffID ) {
+         const system = useSystemStore()
+         system.working = true
+         let url = `/api/orders/${this.detail.id}/complete?staff=${staffID}`
+         axios.post( url ).then( (resp) => {
+            this.detail.dateCompleted = resp.data.dateCompleted
+            this.detail.dateArchivingComplete = resp.data.dateArchivingComplete
+            this.detail.status = resp.data.status
+            system.toastMessage("Order Complete", "Order has been completed.")
+            system.working = false
+         }).catch( e => {
+            if (e.response) {
+               system.setError("Unable to mark order complete: "+e.response.data)
+            } else {
+               system.setError(e)
+            }
          })
       },
       resumeOrder( staffID ) {
@@ -443,7 +481,11 @@ export const useOrdersStore = defineStore('orders', {
             system.toastMessage("Order Resumed", "Order has been reactivated")
             system.working = false
          }).catch( e => {
-            system.setError(e)
+            if (e.response) {
+               system.setError("Unable to resume order: "+e.response.data)
+            } else {
+               system.setError(e)
+            }
          })
       }
 	}
