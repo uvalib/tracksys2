@@ -46,6 +46,9 @@ export const useSystemStore = defineStore('system', {
       },
       setError( e ) {
          this.error = e
+         if (e.response && e.response.data) {
+            this.error = e.response.data
+         }
          this.showError = true
          this.working = false
       },

@@ -236,10 +236,11 @@ onBeforeRouteUpdate(async (to) => {
    ordersStore.getOrderDetails(orderID)
 })
 
-onBeforeMount(() => {
+onBeforeMount( async () => {
    let orderID = route.params.id
-   ordersStore.getOrderDetails(orderID)
    document.title = `Order #${orderID}`
+   await ordersStore.getOrderDetails(orderID)
+   await customerStore.getCustomers()
 })
 function recreateEmailClicked() {
    ordersStore.recreateEmail()
