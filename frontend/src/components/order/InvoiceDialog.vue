@@ -20,7 +20,7 @@
          <div class="split">
             <FormKit label="Date Fee Paid" type="date" v-model="edit.dateFeePaid"/>
             <div class="sep"></div>
-            <FormKit label="Fee Amount Paid" type="number" v-model="edit.feeAmountPaid"/>
+            <FormKit label="Fee Amount Paid" type="text" v-model="edit.feeAmountPaid"/>
          </div>
          <div class="split">
             <FormKit label="Date Fee Declined" type="date" v-model="edit.dateFeeDeclined"/>
