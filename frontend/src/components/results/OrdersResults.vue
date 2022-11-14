@@ -28,7 +28,11 @@
       <template #header>
          <div class="matches">{{searchStore.orders.total}} matches found</div>
       </template>
-      <Column field="id" header="ID"/>
+      <Column field="id" header="ID">
+         <template #body="slotProps">
+            <router-link :to="`/orders/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
+         </template>
+      </Column>
       <Column header="Customer" class="nowrap" filterField="last_name" :showFilterMatchModes="false">
          <template #body="slotProps">
             {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
@@ -59,7 +63,7 @@
       </Column>
       <Column header="" class="row-acts nowrap">
          <template #body="slotProps">
-            <router-link :to="`/orders/${slotProps.data.id}`">View details</router-link>
+            <router-link :to="`/orders/${slotProps.data.id}`">View</router-link>
          </template>
       </Column>
    </DataTable>

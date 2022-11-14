@@ -1,9 +1,11 @@
 <template>
    <h2>Metadata {{route.params.id}}</h2>
    <div class="unit-acts">
-      <DPGButton label="Download XML"  @click="downloadXMLClicked()" />
-      <FileUpload mode="basic" name="xml" accept=".xml" :customUpload="true" @uploader="xmlUploader"
-         :auto="true" chooseLabel="Upload XML" uploadIcon="" v-if="userStore.isAdmin || userStore.isSupervisor"/>
+      <template  v-if="metadataStore.detail.type == 'XmlMetadata' && systemStore.working==false">
+         <DPGButton label="Download XML"  @click="downloadXMLClicked()" />
+         <FileUpload mode="basic" name="xml" accept=".xml" :customUpload="true" @uploader="xmlUploader"
+            :auto="true" chooseLabel="Upload XML" uploadIcon="" v-if="userStore.isAdmin || userStore.isSupervisor"/>
+      </template>
    </div>
    <div class="details" v-if="systemStore.working==false">
       <div v-if="metadataStore.thumbURL" class="thumb">
