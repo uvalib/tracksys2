@@ -64,8 +64,8 @@ type order struct {
 	Agency                         *agency    `gorm:"foreignKey:AgencyID" json:"agency,omitempty"`
 	Fee                            *float64   `json:"fee,omitempty"`
 	Invoice                        *invoice   `gorm:"-" json:"invoice,omitempty"`
-	UnitsCount                     int64      `gorm:"unitCount" json:"unitCount"`
-	MasterFilesCount               int64      `gorm:"masterFileCount" json:"masterFileCount"`
+	UnitCount                      int64      `json:"unitCount"`       // NOTE: this is different than the cached count field units_count
+	MasterFileCount                int64      `json:"masterFileCount"` // NOTE: this is different than the cached count master_files_count
 	Email                          string     `json:"email"`
 	StaffNotes                     string     `json:"staffNotes"`
 	SpecialInstructions            string     `json:"specialInstructions"`
@@ -254,7 +254,7 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	var o []*order
 	unitCnt := "(select count(*) from units where order_id=orders.id) as unit_count"
 	mfCnt := "(select count(*) from master_files m inner join units u on u.id=m.unit_id where u.order_id=orders.id) as master_file_count"
-	err := filterQ.Preload("Agency").Preload("Customer").
+	err := filterQ.Preload("Agency").Preload("Customer").Omit("units_count", "master_files_count").
 		Select("orders.*", unitCnt, mfCnt).
 		Offset(startIndex).Limit(pageSize).Order(orderStr).Find(&o).Error
 	if err != nil {
@@ -264,10 +264,10 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	}
 
 	type resp struct {
-		Jobs  []*order `json:"orders"`
-		Total int64    `json:"total"`
+		Orders []*order `json:"orders"`
+		Total  int64    `json:"total"`
 	}
-	out := resp{Jobs: o, Total: total}
+	out := resp{Orders: o, Total: total}
 
 	c.JSON(http.StatusOK, out)
 }
@@ -730,7 +730,7 @@ func (svc *serviceContext) addUnitToOrder(c *gin.Context) {
 	if err != nil {
 		log.Printf("ERROR: unable to get unit count for order %d: %s", tgtOrder.ID, err.Error())
 	} else {
-		tgtOrder.UnitsCount = unitCnt
+		tgtOrder.UnitCount = unitCnt
 		err = svc.DB.Model(&tgtOrder).Select("UnitsCount").Updates(tgtOrder).Error
 		if err != nil {
 			log.Printf("ERROR: unable to update unit count for order %d: %s", tgtOrder.ID, err.Error())

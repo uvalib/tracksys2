@@ -39,6 +39,7 @@ type metadataHit struct {
 
 type orderHit struct {
 	ID                  uint64   `json:"id"`
+	OrderStatus         string   `json:"status"`
 	OrderTitle          string   `json:"title"`
 	StaffNotes          string   `json:"notes"`
 	SpecialInstructions string   `json:"specialInstructions"`

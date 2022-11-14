@@ -33,6 +33,14 @@
             <router-link :to="`/orders/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
          </template>
       </Column>
+      <Column field="status" header="Status" class="nowrap" filterField="order_status" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <Dropdown v-model="filterModel.value" :options="orderStatuses" optionLabel="name" optionValue="code" placeholder="Select a status" />
+         </template>
+         <template #body="slotProps">
+            <span :class="`status ${slotProps.data.status}`">{{displayStatus(slotProps.data.status)}}</span>
+         </template>
+      </Column>
       <Column header="Customer" class="nowrap" filterField="last_name" :showFilterMatchModes="false">
          <template #body="slotProps">
             {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
@@ -75,6 +83,7 @@ import { FilterMatchMode } from 'primevue/api'
 import { useSearchStore } from '../../stores/search'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -83,12 +92,22 @@ const router = useRouter()
 const searchStore = useSearchStore()
 
 const filters = ref( {
+   'order_status': {value: null, matchMode: FilterMatchMode.EQUALS},
    'last_name': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'agencies.name': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'order_title': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'orders.staff_notes': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'orders.special_instructions': {value: null, matchMode: FilterMatchMode.CONTAINS},
 })
+
+const orderStatuses = ref([
+   {name: "Requested", code: "requested"},
+   {name: "Approved", code: "approved"},
+   {name: "Await Fee", code: "await_fee"},
+   {name: "Completed", code: "completed"},
+   {name: "Canceled", code: "canceled"},
+   {name: "Deferred", code: "deferred"},
+])
 
 const selectedFilters = computed(() => {
    let out = []
@@ -110,6 +129,13 @@ onMounted(() =>{
       filters.value[fv.field].value = fv.value
    })
 })
+
+function displayStatus( id) {
+   if (id == "await_fee") {
+      return "Await Fee"
+   }
+   return id.charAt(0).toUpperCase() + id.slice(1)
+}
 
 function clearFilters() {
    Object.values(filters.value).forEach( fv => fv.value = null )
