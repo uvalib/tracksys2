@@ -43,6 +43,9 @@ export const useUnitsStore = defineStore('units', {
          this.detail.datePatronDeliverablesReady = ""
          this.detail.dateDLDeliverablesReady = ""
       },
+      flagAsReorder() {
+         this.detail.reorder = true
+      },
       async getDetails( unitID ) {
          if ( this.detail.id == unitID ) return
 

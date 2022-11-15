@@ -83,7 +83,7 @@ function cloneClicked() {
       header: 'Confirm Clone',
       icon: 'pi pi-question-circle',
       rejectClass: 'p-button-secondary',
-      accept: async () => {
+      accept: () => {
          cloneStore.cloneMasterFiles( unitsStore.detail.id, masterFiles.value[1])
       }
    })

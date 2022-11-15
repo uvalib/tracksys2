@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { useSystemStore } from './system'
+import { useUnitsStore } from './units'
 import axios from 'axios'
 
 export const useCloneStore = defineStore('clone', {
@@ -73,6 +74,8 @@ export const useCloneStore = defineStore('clone', {
                } else if (status == 'finished') {
                   clearInterval(tid)
                   this.status = "success"
+                  const unitsStore = useUnitsStore()
+                  unitsStore.flagAsReorder()
                }
             }).catch( e => {
                system.setError(e)
