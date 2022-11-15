@@ -91,9 +91,9 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 	log.Printf("INFO: extract fields from raw marc response")
 	resp := sirsiResponse{CatalogKey: catKey}
 
-	// catkey is in in 001 of control fields. find it first
+	// catkey is in 001 of control fields. find it first
 	for _, cf := range parsed.ControlFields {
-		log.Printf("CF %s", cf.Tag)
+		log.Printf("INFO: CF %s", cf.Tag)
 		if cf.Tag == "001" {
 			resp.CatalogKey = cf.Value
 			break

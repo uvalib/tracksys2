@@ -45,7 +45,7 @@ func (svc *serviceContext) createTag(c *gin.Context) {
 	newTag := tag{Tag: req.Tag}
 	err = svc.DB.Create(&newTag).Error
 	if err != nil {
-		log.Printf("Unable to create tag %s: %s", newTag.Tag, err.Error())
+		log.Printf("ERROR: unable to create tag %s: %s", newTag.Tag, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
