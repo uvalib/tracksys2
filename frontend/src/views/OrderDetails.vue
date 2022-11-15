@@ -334,7 +334,7 @@ function declineFeeClicked() {
    ordersStore.feeDeclined( user.ID )
 }
 function checkOrderComplete() {
-   alert("not yet implemented")
+   ordersStore.checkOrderComplete()
 }
 
 </script>

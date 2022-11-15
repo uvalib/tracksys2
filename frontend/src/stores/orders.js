@@ -487,6 +487,17 @@ export const useOrdersStore = defineStore('orders', {
                system.setError(e)
             }
          })
+      },
+      checkOrderComplete() {
+         const system = useSystemStore()
+         system.working = true
+         let url = `${system.jobsURL}/orders/${this.detail.id}/check`
+         axios.post( url ).then( () => {
+            system.toastMessage("Order Checked", `Order ${this.detail.id} has been checked. See details in the job status log.`)
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
       }
 	}
 })
