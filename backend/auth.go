@@ -34,10 +34,10 @@ func (svc *serviceContext) authenticate(c *gin.Context) {
 	computingID := c.GetHeader("remote_user")
 	if svc.DevAuthUser != "" {
 		computingID = svc.DevAuthUser
-		log.Printf("Using dev auth user ID: %s", computingID)
+		log.Printf("INFO: using dev auth user ID: %s", computingID)
 	}
 	if computingID == "" {
-		log.Printf("ERROR: Expected auth header not present in request. Not authorized.")
+		log.Printf("ERROR: expected auth header not present in request. Not authorized.")
 		c.Redirect(http.StatusFound, "/forbidden")
 		return
 	}
@@ -57,12 +57,12 @@ func (svc *serviceContext) authenticate(c *gin.Context) {
 	var sm staffMember
 	resp := svc.DB.Where("computing_id=?", computingID).First(&sm)
 	if resp.Error != nil {
-		log.Printf("ERROR: could not fond staff mamber %s: %s", computingID, resp.Error.Error())
+		log.Printf("ERROR: could not find staff mamber %s: %s", computingID, resp.Error.Error())
 		c.Redirect(http.StatusFound, "/forbidden")
 		return
 	}
 
-	log.Printf("Generate JWT for %s", computingID)
+	log.Printf("INFO: generate JWT for %s", computingID)
 	expirationTime := time.Now().Add(8 * time.Hour)
 	claims := jwtClaims{
 		UserID:    sm.ID,
@@ -96,29 +96,29 @@ func (svc *serviceContext) authMiddleware(c *gin.Context) {
 	log.Printf("Authorize access to %s", c.Request.URL)
 	tokenStr, err := getBearerToken(c.Request.Header.Get("Authorization"))
 	if err != nil {
-		log.Printf("Authentication failed: [%s]", err.Error())
+		log.Printf("WARNING: authentication failed: [%s]", err.Error())
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	if tokenStr == "undefined" {
-		log.Printf("Authentication failed; bearer token is undefined")
+		log.Printf("WARNING: authentication failed; bearer token is undefined")
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	log.Printf("Validating JWT auth token...")
+	log.Printf("INFO: validating JWT auth token...")
 	jwtClaims := &jwtClaims{}
 	_, jwtErr := jwt.ParseWithClaims(tokenStr, jwtClaims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(svc.JWTKey), nil
 	})
 	if jwtErr != nil {
-		log.Printf("Authentication failed; token validation failed: %+v", jwtErr)
+		log.Printf("WARNING: authentication failed; token validation failed: %+v", jwtErr)
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	log.Printf("got valid bearer token: [%s] for %s", tokenStr, jwtClaims.ComputeID)
+	log.Printf("INFO: got valid bearer token: [%s] for %s", tokenStr, jwtClaims.ComputeID)
 	c.Set("jwt", tokenStr)
 	c.Set("claims", jwtClaims)
 	c.Next()
