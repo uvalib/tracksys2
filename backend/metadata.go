@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -85,7 +86,7 @@ type metadata struct {
 	OCRHint              *ocrHint            `gorm:"foreignKey:OCRHintID" json:"ocrHint"`
 	OCRLanguageHint      string              `json:"ocrLanguageHint"`
 	AvailabilityPolicyID *int64              `json:"-"`
-	AvailabilityPolicy   *availabilityPolicy `gorm:"foreignKey:AvailabilityPolicyID" json:"availability"`
+	AvailabilityPolicy   *availabilityPolicy `gorm:"foreignKey:AvailabilityPolicyID" json:"availabilityPolicy"`
 	ExternalSystemID     *int64              `json:"-"`
 	ExternalSystem       *externalSystem     `gorm:"foreignKey:ExternalSystemID" json:"externalSystem"`
 	ExternalURI          *string             `gorm:"column:external_uri" json:"externalURI"`
@@ -322,6 +323,90 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) updateMetadata(c *gin.Context) {
+	mdID := c.Param("id")
+	log.Printf("INFO: received update request for metadata %s", mdID)
+	var md metadata
+	err := svc.DB.Find(&md, mdID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("INFO: metadata %s not found", mdID)
+			c.String(http.StatusNotFound, fmt.Sprintf("metadata %s not found", mdID))
+		} else {
+			log.Printf("ERROR: unable to get metadata %s: %s ", mdID, err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	log.Printf("INFO: update request for metadata %s is a valid metadata record", mdID)
+
+	var req struct {
+		ExternalSystemID     int64  `json:"externSystemID"`
+		ExternalURI          string `json:"externalURI"`
+		CatalogKey           string `json:"catalogKey"`
+		Barcode              string `json:"barcode"`
+		PersonalItem         bool   `json:"personalItem"`
+		Manuscript           bool   `json:"manuscript"`
+		OCRHint              int64  `json:"ocrHint"`
+		OCRLanguageHint      string `json:"ocrLanguageHint"`
+		PreservationTierID   int64  `json:"preservationTier"`
+		AvailabilityPolicyID int64  `json:"availabilityPolicy"`
+		UseRightID           int64  `json:"useRight"`
+		UseRightRationale    string `json:"useRightRationale"`
+		DPLA                 bool   `json:"inDPLA"`
+	}
+	err = c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid create metadata request: %s", err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	log.Printf("INFO: update metadata %d request with %+v", md.ID, req)
+	fields := []string{"DPLA", "IsManuscript", "IsPersonalItem"}
+	md.DPLA = req.DPLA
+	md.IsManuscript = req.Manuscript
+	md.IsPersonalItem = req.PersonalItem
+	if req.OCRHint > 0 {
+		md.OCRHintID = &req.OCRHint
+		fields = append(fields, "OCRHintID")
+	}
+	if req.OCRLanguageHint != "" {
+		md.OCRLanguageHint = req.OCRLanguageHint
+		fields = append(fields, "OCRLanguageHint")
+	}
+	if req.PreservationTierID > 0 {
+		md.PreservationTierID = &req.PreservationTierID
+		fields = append(fields, "PreservationTierID")
+	}
+	if req.AvailabilityPolicyID > 0 {
+		md.AvailabilityPolicyID = &req.AvailabilityPolicyID
+		fields = append(fields, "AvailabilityPolicyID")
+	}
+	if req.UseRightID > 0 {
+		md.UseRightID = &req.UseRightID
+		fields = append(fields, "UseRightID")
+	}
+	if req.UseRightRationale != "" {
+		md.UseRightRationale = req.UseRightRationale
+		fields = append(fields, "UseRightRationale")
+	}
+	err = svc.DB.Debug().Model(&md).Select(fields).Updates(md).Error
+	if err != nil {
+		log.Printf("ERROR: unable to update metadata %d: %s", md.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: metadata %d updated, reloadaing details", md.ID)
+	resp, err := svc.loadMetadataDetails(md.ID)
+	if err != nil {
+		log.Printf("ERROR: unable load updated metadata %d: %s", md.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, *resp)
 }
 
 func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailResponse, error) {

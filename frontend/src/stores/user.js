@@ -72,6 +72,8 @@ export const useUserStore = defineStore('user', {
             axios.interceptors.response.use(
                res => res,
                err => {
+                  console.log("failed response")
+                  console.log(err)
                   if (err.config.url.match(/\/authenticate/)) {
                      this.router.push("/forbidden")
                   } else {

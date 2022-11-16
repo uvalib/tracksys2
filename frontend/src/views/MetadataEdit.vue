@@ -1,0 +1,220 @@
+<template>
+   <h2>{{pageHeader}}</h2>
+   <div class="edit-form">
+      <FormKit type="form" id="maetadata-edit" :actions="false" @submit="submitChanges" v-if="systemStore.working == false">
+         <Panel header="General Information" class="margin-bottom">
+            <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
+            </template>
+            <template v-if="metadataStore.detail.type == 'XmlMetadata'">
+               <p class="note"><b>Note</b>:
+                  To update the XML, use the 'Download XML' button on the details page to get a copy of the data.
+                  Edit it with a standalone XML editor, then upload the result using the'Upload XML' button.
+               </p>
+            </template>
+            <div class="split">
+               <FormKit label="Personal Item" type="select" :options="yesNo" v-model="edited.personalItem"/>
+               <span class="sep"/>
+               <FormKit label="Manuscript" type="select" :options="yesNo" v-model="edited.manuscript"/>
+            </div>
+            <div class="split">
+               <FormKit label="OCR Hint" type="select" :options="ocrHints" v-model="edited.ocrHint" placeholder="Select a hint"/>
+               <span class="sep"/>
+               <FormKit label="OCR Language" type="select" :options="ocrLanguages" :disabled="isLanguageDisabled"
+                  v-model="edited.ocrLanguageHint" placeholder="Select a language"/>
+               <span class="sep"/>
+               <FormKit label="Preservation Tier" type="select" :options="preservationTiers" v-model="edited.preservationTier" placeholder="Select a tier"/>
+            </div>
+         </Panel>
+         <Panel v-if="metadataStore.detail.type != 'ExternalMetadata'" header="Digital Library Information">
+         <div class="split">
+            <FormKit label="In DPLA" type="select" :options="yesNo" v-model="edited.inDPLA"/>
+            <span class="sep"/>
+            <FormKit label="Availability Policy" outer-class="first" type="select" :options="availabilityPolicies" v-model="edited.availabilityPolicy" required/>
+            <span class="sep"/>
+            <FormKit label="Right Statement" outer-class="first" type="select" :options="useRights" v-model="edited.useRight" required/>
+         </div>
+         <FormKit label="Use Right Rationale" type="textarea" :rows="2" v-model="edited.useRightRationale"/>
+      </Panel>
+         <div class="acts">
+            <DPGButton label="Cancel" class="p-button-secondary" @click="cancelEdit()"/>
+            <FormKit type="submit" label="Save" wrapper-class="submit-button" />
+         </div>
+      </FormKit>
+   </div>
+</template>
+
+<script setup>
+import { useRoute, useRouter } from 'vue-router'
+import { onMounted, ref, computed } from 'vue'
+import { useMetadataStore } from '@/stores/metadata'
+import { useSystemStore } from '@/stores/system'
+import Panel from 'primevue/panel'
+
+const route = useRoute()
+const router = useRouter()
+const metadataStore = useMetadataStore()
+const systemStore = useSystemStore()
+
+const edited = ref({
+   externalURI: "",
+   catalogKey: "",
+   barcode: "",
+   personalItem: false,
+   manuscript: false,
+   ocrHint: 0,
+   ocrLanguageHint: "",
+   preservationTier: 0,
+   availabilityPolicy: 1,
+   useRight: 1,
+   useRightRationale: "",
+   inDPLA: false,
+})
+const pageHeader = computed( () => {
+   let baseHdr = `Metadata ${route.params.id}`
+   if ( systemStore.working){
+      return baseHdr
+   }
+   if ( metadataStore.detail.type == "SirsiMetadata") {
+      return "Sirsi "+ baseHdr
+   }
+   if ( metadataStore.detail.type == "XmlMetadata") {
+      return "XML "+ baseHdr
+   }
+   return "ArchivesSpace "+baseHdr
+
+})
+const useRights = computed(() => {
+   let out = []
+   systemStore.useRights.forEach( o => {
+      out.push({label: o.name, value: o.id})
+   })
+   return out
+})
+const yesNo = computed(() => {
+   let out = []
+   out.push( {label: "No", value: false} )
+   out.push( {label: "Yes", value: true} )
+   return out
+})
+const isLanguageDisabled = computed(() => {
+   if ( edited.value.ocrHint == 0) return true
+   let hint = systemStore.ocrHints.find( h => h.id == edited.value.ocrHint)
+   return !hint.ocrCandidate
+})
+const availabilityPolicies = computed(() => {
+   let out = []
+   systemStore.availabilityPolicies.forEach( o => {
+      out.push({label: o.name, value: o.id})
+   })
+   return out
+})
+const preservationTiers = computed(() => {
+   let out = []
+   systemStore.preservationTiers.forEach( o => {
+      out.push({label: o.name, value: o.id})
+   })
+   return out
+})
+const ocrLanguages = computed(() => {
+   let out = []
+   systemStore.ocrLanguageHints.forEach( o => {
+      out.push({label: o.language, value: o.code})
+   })
+   return out
+})
+const ocrHints = computed(() => {
+   let out = []
+   systemStore.ocrHints.forEach( o => {
+      out.push({label: o.name, value: o.id})
+   })
+   return out
+})
+
+onMounted( async () =>{
+   let mdID = route.params.id
+   await metadataStore.getDetails(mdID)
+   document.title = `Edit | Metadata ${mdID}`
+
+   edited.value.externalURI = metadataStore.archivesSpace.URL // FIXME
+   edited.value.catalogKey = metadataStore.detail.catalogKey
+   edited.value.barcode = metadataStore.detail.barcoce
+   edited.value.personalItem = metadataStore.other.isPersonalItem
+   edited.value.manuscript = metadataStore.other.isManuscript
+   edited.value.ocrHint = 0
+   if (metadataStore.other.ocrHint) {
+      edited.value.ocrHint = metadataStore.other.ocrHint.id
+   }
+   edited.value.ocrLanguageHint = metadataStore.other.ocrLanguageHint
+   edited.value.preservationTier = 0
+   if (metadataStore.other.preservationTier) {
+      edited.value.ocrHint = metadataStore.other.preservationTier.id
+   }
+   edited.value.availabilityPolicy = 0
+   if (metadataStore.dl.availabilityPolicy) {
+      edited.value.availabilityPolicy = metadataStore.dl.availabilityPolicy.id
+   }
+   edited.value.useRight=0
+   if (metadataStore.dl.useRight) {
+      edited.value.useRight = metadataStore.dl.useRight.id
+   }
+   edited.value.useRightRationale = metadataStore.dl.useRightRationale
+   edited.value.inDPLA = metadataStore.dl.inDPLA
+})
+
+function cancelEdit() {
+   router.push(`/metadata/${route.params.id}`)
+}
+
+async function submitChanges() {
+   await metadataStore.submitEdit( edited.value )
+   if (systemStore.showError == false) {
+      router.push(`/metadata/${metadataStore.detail.id}`)
+   }
+}
+</script>
+
+
+<style lang="scss" scoped>
+.edit-form {
+   width: 60%;
+   margin: 30px auto 0 auto;
+   p.note {
+      margin: 0;
+      padding: 10px;
+      border: 1px solid var(--uvalib-teal-light);
+      background: var(--uvalib-teal-lightest);
+      border-radius: 3px;
+      text-align: left;
+   }
+
+   .margin-bottom {
+      margin-bottom: 15px;
+   }
+
+   .split {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-start;
+      align-items: flex-end;
+      :deep(.formkit-outer) {
+         flex-grow: 1;
+      }
+      .p-button {
+         margin-bottom: 0.3em;
+      }
+      .sep {
+         display: inline-block;
+         width: 10px;
+      }
+   }
+}
+.acts {
+   display: flex;
+   flex-flow: row nowrap;
+   justify-content: flex-end;
+   padding: 25px 0;
+   button {
+      margin-right: 10px;
+   }
+}
+</style>

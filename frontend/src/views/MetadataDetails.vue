@@ -6,6 +6,7 @@
          <FileUpload mode="basic" name="xml" accept=".xml" :customUpload="true" @uploader="xmlUploader"
             :auto="true" chooseLabel="Upload XML" uploadIcon="" v-if="userStore.isAdmin || userStore.isSupervisor"/>
       </template>
+      <DPGButton label="Edit" @click="editMetadata()"/>
    </div>
    <div class="details" v-if="systemStore.working==false">
       <div v-if="metadataStore.thumbURL" class="thumb">
@@ -16,18 +17,20 @@
       <Panel header="General Information">
          <dl v-if="metadataStore.detail.type != 'ExternalMetadata'">
             <DataDisplay label="Type" :value="metadataStore.detail.type"/>
-            <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey">
+            <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey" v-if="metadataStore.detail.type == 'SirsiMetadata'">
                <span>{{metadataStore.detail.catalogKey}}</span>
                <a class="virgo" :href="metadataStore.virgoURL" target="_blank">VIRGO<i class="icon fas fa-external-link"></i></a>
             </DataDisplay>
-            <DataDisplay label="Barcode" :value="metadataStore.detail.barcode"/>
-            <DataDisplay label="Call Number" :value="metadataStore.detail.callNumber"/>
+            <DataDisplay label="Barcode" :value="metadataStore.detail.barcode" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
+            <DataDisplay label="Call Number" :value="metadataStore.detail.callNumber" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
             <DataDisplay label="Title" :value="metadataStore.detail.title"/>
-            <DataDisplay label="Creator Name" :value="metadataStore.detail.creatorName"/>
-            <DataDisplay label="Creator Name Type" :value="metadataStore.detail.creatorNameType"/>
-            <DataDisplay label="Year" :value="metadataStore.detail.year"/>
-            <DataDisplay label="Place of Publication" :value="metadataStore.detail.publicationPlace"/>
-            <DataDisplay label="Location" :value="metadataStore.detail.location"/>
+            <template  v-if="metadataStore.detail.type == 'SirsiMetadata'">
+               <DataDisplay label="Creator Name" :value="metadataStore.detail.creatorName"/>
+               <DataDisplay label="Creator Name Type" :value="metadataStore.detail.creatorNameType"/>
+               <DataDisplay label="Year" :value="metadataStore.detail.year"/>
+               <DataDisplay label="Place of Publication" :value="metadataStore.detail.publicationPlace"/>
+               <DataDisplay label="Location" :value="metadataStore.detail.location"/>
+            </template>
 
             <DataDisplay label="Manuscript/Unpublished Item" :value="formatBoolean(metadataStore.other.isManuscript)"/>
             <DataDisplay label="Personal Item" :value="formatBoolean(metadataStore.other.isPersonalItem)"/>
@@ -144,7 +147,7 @@
 
 <script setup>
 import { onBeforeMount, computed } from 'vue'
-import { useRoute, onBeforeRouteUpdate } from 'vue-router'
+import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useMetadataStore } from '@/stores/metadata'
 import { useUserStore } from '@/stores/user'
@@ -160,13 +163,11 @@ import RelatedUnits from '../components/related/RelatedUnits.vue'
 import FileUpload from 'primevue/fileupload'
 
 const route = useRoute()
+const router = useRouter()
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
 const userStore = useUserStore()
 
-// const xmlUploadURL = computed( () => {
-//    return `/api/metadata/${metadataStore.detail.id}/xml`
-// })
 const canPublish = computed(() => {
    if (metadataStore.dl.dateDLIngest) {
       return true
@@ -185,8 +186,8 @@ const canPublish = computed(() => {
 })
 
 const availabilityPolicy = computed(() => {
-   if ( metadataStore.dl.availability ) {
-      return metadataStore.dl.availability.name
+   if ( metadataStore.dl.availabilityPolicy ) {
+      return metadataStore.dl.availabilityPolicy.name
    }
    return ""
 })
@@ -222,6 +223,10 @@ onBeforeMount(() => {
    metadataStore.getDetails( mdID )
    document.title = `Metadata #${mdID}`
 })
+
+function editMetadata() {
+   router.push(`/metadata/${metadataStore.detail.id}/edit`)
+}
 
 function downloadXMLClicked() {
    const fileURL = window.URL.createObjectURL(new Blob([metadataStore.detail.xmlMetadata], { type: 'application/xml' }))

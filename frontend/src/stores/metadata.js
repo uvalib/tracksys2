@@ -27,7 +27,7 @@ export const useMetadataStore = defineStore('metadata', {
          useRight: null,
          useRightRationale: "",
          creatorDeathDate: "",
-         availabilityPolicy: "",
+         availabilityPolicy: null,
          collectionID: "",
          dateDLIngest: null,
          dateDLUpdate: null,
@@ -286,7 +286,7 @@ export const useMetadataStore = defineStore('metadata', {
          if ( details.metadata.creatorDeathDate > 0) {
             this.dl.creatorDeathDate = `${details.metadata.creatorDeathDate}`
          }
-         this.dl.availability = details.metadata.availability
+         this.dl.availabilityPolicy = details.metadata.availabilityPolicy
          this.dl.collectionID = details.metadata.collectionID
          this.dl.dateDLIngest = details.metadata.dateDLIngest
          this.dl.dateDLUpdate = details.metadata.dateDLUpdate
@@ -302,6 +302,8 @@ export const useMetadataStore = defineStore('metadata', {
          this.setRelatedItems(details.units)
       },
       getDetails( metadataID ) {
+         if (this.detail.id == metadataID) return
+
          const system = useSystemStore()
          system.working = true
          axios.get( `/api/metadata/${metadataID}` ).then(response => {
@@ -311,7 +313,16 @@ export const useMetadataStore = defineStore('metadata', {
             system.setError(e)
          })
       },
-
+      submitEdit( update ) {
+         const system = useSystemStore()
+         system.working = true
+         axios.post( `/api/metadata/${this.detail.id}`, update ).then(response => {
+            this.setMetadataDetails(response.data)
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
       setRelatedItems( units ) {
          this.related.units = []
          this.related.orders = []

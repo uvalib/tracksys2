@@ -5,6 +5,7 @@ import JobStatusDetails from '../views/JobStatusDetails.vue'
 import MasterFileDetails from '../views/MasterFileDetails.vue'
 import MasterFileEdit from '../views/MasterFileEdit.vue'
 import MetadataDetails from '../views/MetadataDetails.vue'
+import MetadataEdit from '../views/MetadataEdit.vue'
 import OrdersList from '../views/OrdersList.vue'
 import OrderDetails from '../views/OrderDetails.vue'
 import OrderEdit from '../views/OrderEdit.vue'
@@ -56,6 +57,11 @@ const router = createRouter({
          path: '/metadata/:id',
          name: 'metadata',
          component: MetadataDetails
+      },
+      {
+         path: '/metadata/:id/edit',
+         name: 'metadataedit',
+         component: MetadataEdit
       },
       {
          path: '/orders',
