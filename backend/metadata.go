@@ -201,6 +201,26 @@ type metadataDetailResponse struct {
 	Error        string            `json:"error"`
 }
 
+type metadataRequest struct {
+	Type                 string `json:"type"`
+	ExternalSystemID     int64  `json:"externSystemID"`
+	ExternalURI          string `json:"externalURI"`
+	Title                string `json:"title"`
+	CallNumber           string `json:"callNumber"`
+	Author               string `json:"author"`
+	CatalogKey           string `json:"catalogKey"`
+	Barcode              string `json:"barcode"`
+	PersonalItem         bool   `json:"personalItem"`
+	Manuscript           bool   `json:"manuscript"`
+	OCRHint              int64  `json:"ocrHint"`
+	OCRLanguageHint      string `json:"ocrLanguageHint"`
+	PreservationTierID   int64  `json:"preservationTier"`
+	AvailabilityPolicyID int64  `json:"availabilityPolicy"`
+	UseRightID           int64  `json:"useRight"`
+	UseRightRationale    string `json:"useRightRationale"`
+	DPLA                 bool   `json:"inDPLA"`
+}
+
 var modsTemplate = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <mods xmlns="http://www.loc.gov/mods/v3" version="3.6">
    <titleInfo>
@@ -216,25 +236,7 @@ var modsAuthor = `   <name>
 `
 
 func (svc *serviceContext) createMetadata(c *gin.Context) {
-	var req struct {
-		Type                 string `json:"type"`
-		ExternalSystemID     int64  `json:"externSystemID"`
-		ExternalURI          string `json:"externalURI"`
-		Title                string `json:"title"`
-		CallNumber           string `json:"callNumber"`
-		Author               string `json:"author"`
-		CatalogKey           string `json:"catalogKey"`
-		Barcode              string `json:"barcode"`
-		PersonalItem         bool   `json:"personalItem"`
-		Manuscript           bool   `json:"manuscript"`
-		OCRHint              int64  `json:"ocrHint"`
-		OCRLanguageHint      string `json:"ocrLanguageHint"`
-		PreservationTierID   int64  `json:"preservationTier"`
-		AvailabilityPolicyID int64  `json:"availabilityPolicy"`
-		UseRightID           int64  `json:"useRight"`
-		UseRightRationale    string `json:"useRightRationale"`
-		DPLA                 bool   `json:"inDPLA"`
-	}
+	var req metadataRequest
 	err := c.BindJSON(&req)
 	if err != nil {
 		log.Printf("ERROR: invalid create metadata request: %s", err.Error())
@@ -342,21 +344,7 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 	}
 	log.Printf("INFO: update request for metadata %s is a valid metadata record", mdID)
 
-	var req struct {
-		ExternalSystemID     int64  `json:"externSystemID"`
-		ExternalURI          string `json:"externalURI"`
-		CatalogKey           string `json:"catalogKey"`
-		Barcode              string `json:"barcode"`
-		PersonalItem         bool   `json:"personalItem"`
-		Manuscript           bool   `json:"manuscript"`
-		OCRHint              int64  `json:"ocrHint"`
-		OCRLanguageHint      string `json:"ocrLanguageHint"`
-		PreservationTierID   int64  `json:"preservationTier"`
-		AvailabilityPolicyID int64  `json:"availabilityPolicy"`
-		UseRightID           int64  `json:"useRight"`
-		UseRightRationale    string `json:"useRightRationale"`
-		DPLA                 bool   `json:"inDPLA"`
-	}
+	var req metadataRequest
 	err = c.BindJSON(&req)
 	if err != nil {
 		log.Printf("ERROR: invalid create metadata request: %s", err.Error())
@@ -392,6 +380,16 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		md.UseRightRationale = req.UseRightRationale
 		fields = append(fields, "UseRightRationale")
 	}
+
+	if md.Type == "SirsiMetadata" {
+		md.Barcode = &req.Barcode
+		md.CallNumber = &req.CallNumber
+		md.CatalogKey = &req.CatalogKey
+		md.Title = req.Title
+		md.CreatorName = &req.Author
+		fields = append(fields, "Barcode", "CallNumber", "CatalogKey", "Title", "CreatorName")
+	}
+
 	err = svc.DB.Debug().Model(&md).Select(fields).Updates(md).Error
 	if err != nil {
 		log.Printf("ERROR: unable to update metadata %d: %s", md.ID, err.Error())

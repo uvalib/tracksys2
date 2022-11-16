@@ -4,6 +4,18 @@
       <FormKit type="form" id="maetadata-edit" :actions="false" @submit="submitChanges" v-if="systemStore.working == false">
          <Panel header="General Information" class="margin-bottom">
             <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
+               <div class="split">
+                  <FormKit label="Catalog Key" type="text" v-model="edited.catalogKey"/>
+                  <span class="sep"/>
+                  <FormKit label="Barcode" type="text" v-model="edited.barcode"/>
+                  <span class="sep"/>
+                  <DPGButton @click="sirsiLookup" label="Lookup" class="p-button-secondary" :loading="metadataStore.sirsiMatch.searching"/>
+               </div>
+               <p v-if="metadataStore.sirsiMatch.error" class="error">{{metadataStore.sirsiMatch.error}}</p>
+               <dl>
+                  <DataDisplay label="Title" :value="edited.title" blankValue="Unknown"/>
+                  <DataDisplay label="Call Number" :value="edited.callNumber" blankValue="Unknown"/>
+               </dl>
             </template>
             <template v-if="metadataStore.detail.type == 'XmlMetadata'">
                <p class="note"><b>Note</b>:
@@ -49,16 +61,21 @@ import { onMounted, ref, computed } from 'vue'
 import { useMetadataStore } from '@/stores/metadata'
 import { useSystemStore } from '@/stores/system'
 import Panel from 'primevue/panel'
+import DataDisplay from '@/components/DataDisplay.vue'
 
 const route = useRoute()
 const router = useRouter()
 const metadataStore = useMetadataStore()
 const systemStore = useSystemStore()
 
+const validated = ref(false)
 const edited = ref({
    externalURI: "",
    catalogKey: "",
    barcode: "",
+   title: "",
+   callNumber: "",
+   author: "",
    personalItem: false,
    manuscript: false,
    ocrHint: 0,
@@ -69,6 +86,7 @@ const edited = ref({
    useRightRationale: "",
    inDPLA: false,
 })
+
 const pageHeader = computed( () => {
    let baseHdr = `Metadata ${route.params.id}`
    if ( systemStore.working){
@@ -136,8 +154,10 @@ onMounted( async () =>{
    document.title = `Edit | Metadata ${mdID}`
 
    edited.value.externalURI = metadataStore.archivesSpace.URL // FIXME
+   edited.value.title = metadataStore.detail.title
+   edited.value.callNumber = metadataStore.detail.callNumber
    edited.value.catalogKey = metadataStore.detail.catalogKey
-   edited.value.barcode = metadataStore.detail.barcoce
+   edited.value.barcode = metadataStore.detail.barcode
    edited.value.personalItem = metadataStore.other.isPersonalItem
    edited.value.manuscript = metadataStore.other.isManuscript
    edited.value.ocrHint = 0
@@ -161,6 +181,19 @@ onMounted( async () =>{
    edited.value.inDPLA = metadataStore.dl.inDPLA
 })
 
+async function sirsiLookup() {
+   validated.value = false
+   await metadataStore.sirsiLookup(edited.value.barcode, edited.value.catalogKey)
+   edited.value.title = metadataStore.sirsiMatch.title
+   edited.value.callNumber = metadataStore.sirsiMatch.callNumber
+   edited.value.author = metadataStore.sirsiMatch.creatorName
+   edited.value.catalogKey = metadataStore.sirsiMatch.catalogKey
+   edited.value.barcode = metadataStore.sirsiMatch.barcode
+   if ( metadataStore.sirsiMatch.error == "") {
+      validated.value = true
+   }
+}
+
 function cancelEdit() {
    router.push(`/metadata/${route.params.id}`)
 }
@@ -178,6 +211,7 @@ async function submitChanges() {
 .edit-form {
    width: 60%;
    margin: 30px auto 0 auto;
+   text-align: left;
    p.note {
       margin: 0;
       padding: 10px;
@@ -201,6 +235,7 @@ async function submitChanges() {
       }
       .p-button {
          margin-bottom: 0.3em;
+         font-size: 0.8em;
       }
       .sep {
          display: inline-block;
