@@ -67,8 +67,6 @@
                   class="p-button-secondary" label="Regenerate IIIF Manifest" />
                <template v-if="detail.status == 'done'">
                   <DPGButton v-if="detail.dateArchived" @click="downloadClicked" class="p-button-secondary" label="Download Unit From Archive" />
-                  <DPGButton v-if="!detail.reorder && detail.metadata && detail.metadata.type != 'ExternalMetadata'"
-                     class="p-button-secondary" label="ArchivesSpace Link" /> <!-- FIXME: this is a popup-->
                </template>
                <template v-else>
                   <DPGButton v-if="detail.reorder && detail.datePatronDeliverablesReady" @click="completeClicked"
