@@ -11,7 +11,7 @@ import (
 )
 
 // Version of the service
-const Version = "0.1.0"
+const Version = "0.9.0"
 
 func main() {
 	// Load cfg
@@ -51,6 +51,7 @@ func main() {
 
 		api.GET("/orders", svc.getOrders)
 		api.POST("/orders", svc.createOrder)
+		api.DELETE("/orders/:id", svc.deleteOrder)
 		api.GET("/orders/:id", svc.getOrderDetails)
 		api.DELETE("/orders/:id/items/:item", svc.deleteOrderItem)
 		api.POST("/orders/:id/units", svc.addUnitToOrder)

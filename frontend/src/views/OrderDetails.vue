@@ -2,7 +2,10 @@
    <h2>
       <span>Order {{route.params.id}}</span>
    </h2>
-   <DPGButton label="Edit" class="edit" @click="editOrder()"/>
+   <div class="order-acts">
+      <DPGButton label="Delete" class="edit" @click="deleteOrder()" v-if="canDelete"/>
+      <DPGButton label="Edit" class="edit" @click="editOrder()"/>
+   </div>
    <div class="details">
       <div class="left">
          <Panel header="General Information">
@@ -186,6 +189,10 @@ const { detail } = storeToRefs(ordersStore)
 const showEmail = ref(false)
 const events = ref(null)
 
+const canDelete = computed(() => {
+   return (user.isAdmin || user.isSupervisor) && ordersStore.detail.status=='requested' && ordersStore.units.length == 0
+})
+
 const hasMessages = computed(() => {
    if ( ordersStore.detail.id != 0 ) {
       if ( ordersStore.detail.status== 'requested' || ordersStore.detail.status == 'deferred' || ordersStore.detail.status== 'await_fee') return true
@@ -222,6 +229,19 @@ const isExternalCustomer = computed( () => {
    if (ordersStore.detail.customer == null) return false
    return customerStore.isExternal(ordersStore.detail.customer.id)
 })
+
+function deleteOrder() {
+   confirm.require({
+      message: 'Are you sure you want delete this order? All data will be lost. This cannot be reversed.',
+      header: 'Confirm Delete Order',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         await ordersStore.deleteOrder()
+         router.push("/orders")
+      }
+   })
+}
 
 function editOrder() {
    router.push(`/orders/${route.params.id}/edit`)
@@ -345,11 +365,14 @@ function checkOrderComplete() {
       margin: 0 0 5px 0 !important;
    }
 }
-button.p-button.edit {
+div.order-acts {
    position: absolute;
    right:15px;
    top: 15px;
-   font-size: 0.9em;
+   button.p-button {
+      margin-right: 5px;
+      font-size: 0.9em;
+   }
 }
 div.item {
    margin: 15px;

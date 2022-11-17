@@ -93,6 +93,37 @@ type orderRequest struct {
 	CustomerID          uint    `json:"customerID"`
 }
 
+func (svc *serviceContext) deleteOrder(c *gin.Context) {
+	oID := c.Param("id")
+	log.Printf("INFO: delete order %s", oID)
+	var unitCnt int64
+	err := svc.DB.Table("units").Where("order_id=?", oID).Count(&unitCnt).Error
+	if err != nil {
+		log.Printf("ERROR: unable to determine if unit %s has any units: %s", oID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	if unitCnt > 0 {
+		log.Printf("INFO: unable to delete order %s because it already has %d units", oID, unitCnt)
+		c.String(http.StatusPreconditionFailed, "order has units and cannont be deleted")
+		return
+	}
+
+	err = svc.DB.Delete(&order{}, oID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to delete order %s: %s", oID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = svc.DB.Where("order_id=?", oID).Delete(orderItem{}).Error
+	if err != nil {
+		log.Printf("ERROR: unable to delete order %s items: %s", oID, err.Error())
+	}
+
+	c.String(http.StatusOK, "deleted")
+}
+
 func (svc *serviceContext) createOrder(c *gin.Context) {
 	var req orderRequest
 	err := c.BindJSON(&req)
@@ -126,9 +157,13 @@ func (svc *serviceContext) createOrder(c *gin.Context) {
 func (svc *serviceContext) loadOrder(orderID string) (*order, error) {
 	log.Printf("INFO: load order %s details", orderID)
 	var oDetail order
-	err := svc.DB.Preload("Agency").Preload("Customer").Find(&oDetail, orderID).Error
+	err := svc.DB.Preload("Agency").Preload("Customer").Limit(1).Find(&oDetail, orderID).Error
 	if err != nil {
 		return nil, err
+	}
+
+	if oDetail.ID == 0 {
+		return &oDetail, nil
 	}
 
 	log.Printf("INFO: lookup invoice for order %d", oDetail.ID)
@@ -153,6 +188,11 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 	if err != nil {
 		log.Printf("ERROR: unable to retrieve order %s: %s", oID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	if oDetail.ID == 0 {
+		log.Printf("INFO: order %s not found", oID)
+		c.String(http.StatusNotFound, "not found")
 		return
 	}
 
