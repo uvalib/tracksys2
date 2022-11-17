@@ -331,7 +331,7 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 	mdID := c.Param("id")
 	log.Printf("INFO: received update request for metadata %s", mdID)
 	var md metadata
-	err := svc.DB.Find(&md, mdID).Error
+	err := svc.DB.Preload("ExternalSystem").Find(&md, mdID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Printf("INFO: metadata %s not found", mdID)
@@ -388,6 +388,10 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		md.Title = req.Title
 		md.CreatorName = &req.Author
 		fields = append(fields, "Barcode", "CallNumber", "CatalogKey", "Title", "CreatorName")
+	}
+	if md.Type == "ExternalMetadata" && md.ExternalSystem.Name == "ArchivesSpace" {
+		md.ExternalURI = &req.ExternalURI
+		fields = append(fields, "ExternalURI")
 	}
 
 	err = svc.DB.Debug().Model(&md).Select(fields).Updates(md).Error

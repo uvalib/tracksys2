@@ -6,7 +6,7 @@
          <FileUpload mode="basic" name="xml" accept=".xml" :customUpload="true" @uploader="xmlUploader"
             :auto="true" chooseLabel="Upload XML" uploadIcon="" v-if="userStore.isAdmin || userStore.isSupervisor"/>
       </template>
-      <DPGButton label="Edit" @click="editMetadata()"/>
+      <DPGButton label="Edit" @click="editMetadata()"  v-if="canEdit"/>
    </div>
    <div class="details" v-if="systemStore.working==false">
       <div v-if="metadataStore.thumbURL" class="thumb">
@@ -38,29 +38,32 @@
             <DataDisplay label="OCR Language Hint" :value="metadataStore.other.ocrLanguageHint"/>
             <DataDisplay label="Preservation Tier" :value="preservationTier"/>
          </dl>
-         <dl v-if="metadataStore.detail.externalSystem == 'ArchivesSpace'">
-            <DataDisplay label="Type" :value="metadataStore.detail.externalSystem"/>
-            <DataDisplay label="URL" :value="metadataStore.detail.externalURL">
-               <a class="supplemental" :href="metadataStore.detail.externalURL" target="_blank">
-                  {{metadataStore.detail.externalURL}}
-                  <i class="icon fas fa-external-link"></i>
-               </a>
-            </DataDisplay>
-            <DataDisplay label="Repository" :value="metadataStore.archivesSpace.repo"/>
-            <DataDisplay label="Collection Title" :value="metadataStore.archivesSpace.collectionTitle"/>
-            <DataDisplay label="ID" :value="metadataStore.archivesSpace.id"/>
-            <DataDisplay label="Language" :value="metadataStore.archivesSpace.language"/>
-            <DataDisplay label="Dates" :value="metadataStore.archivesSpace.dates"/>
-            <DataDisplay label="Title" :value="metadataStore.archivesSpace.title"/>
-            <DataDisplay label="Level" :value="metadataStore.archivesSpace.level"/>
-            <DataDisplay label="Created By" :value="metadataStore.archivesSpace.createdBy"/>
-            <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
-         </dl>
-         <dl v-if="metadataStore.detail.externalSystem == 'JSTOR Forum'">
-            <DataDisplay label="Type" :value="metadataStore.detail.externalSystem"/>
-            <DataDisplay label="URL" :value="metadataStore.detail.externalURL">
-               <a class="supplemental" :href="metadataStore.detail.externalURL" target="_blank">
-                  {{metadataStore.detail.externalURL}}
+         <template v-if="metadataStore.detail.externalSystem.name == 'ArchivesSpace'">
+            <dl>
+               <DataDisplay label="Type" :value="metadataStore.detail.externalSystem.name"/>
+               <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
+                  <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
+                     {{metadataStore.detail.externalURI}}
+                     <i class="icon fas fa-external-link"></i>
+                  </a>
+               </DataDisplay>
+               <DataDisplay label="Repository" :value="metadataStore.archivesSpace.repo"/>
+               <DataDisplay label="Collection Title" :value="metadataStore.archivesSpace.collectionTitle"/>
+               <DataDisplay label="ID" :value="metadataStore.archivesSpace.id"/>
+               <DataDisplay label="Language" :value="metadataStore.archivesSpace.language"/>
+               <DataDisplay label="Dates" :value="metadataStore.archivesSpace.dates"/>
+               <DataDisplay label="Title" :value="metadataStore.detail.title"/>
+               <DataDisplay label="Level" :value="metadataStore.archivesSpace.level"/>
+               <DataDisplay label="Created By" :value="metadataStore.archivesSpace.createdBy"/>
+               <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
+            </dl>
+            <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
+         </template>
+         <dl v-if="metadataStore.detail.externalSystem.name == 'JSTOR Forum'">
+            <DataDisplay label="Type" :value="metadataStore.detail.externalSystem.name"/>
+            <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
+               <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
+                  {{metadataStore.detail.externalURI}}
                   <i class="icon fas fa-external-link"></i>
                </a>
             </DataDisplay>
@@ -74,8 +77,8 @@
             <DataDisplay label="Artstor ID" :value="metadataStore.jstor.id"/>
             <DataDisplay label="Forum ID" :value="metadataStore.jstor.ssid"/>
          </dl>
-         <dl v-if="metadataStore.detail.externalSystem == 'Apollo'">
-            <DataDisplay label="Type" :value="metadataStore.detail.externalSystem"/>
+         <dl v-if="metadataStore.detail.externalSystem.name == 'Apollo'">
+            <DataDisplay label="Type" :value="metadataStore.detail.externalSystem.name"/>
             <DataDisplay label="URL" :value="metadataStore.apollo.itemURL">
                <a class="supplemental" :href="metadataStore.apollo.itemURL" target="_blank">
                   {{metadataStore.apollo.itemURL}}
@@ -168,6 +171,11 @@ const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
 const userStore = useUserStore()
 
+const canEdit = computed(() => {
+   if (metadataStore.detail.type != 'ExternalMetadata') return true
+   return metadataStore.detail.externalSystem.name == "ArchivesSpace"
+})
+
 const canPublish = computed(() => {
    if (metadataStore.dl.dateDLIngest) {
       return true
@@ -215,13 +223,14 @@ const useRight = computed(() => {
 
 onBeforeRouteUpdate(async (to) => {
    let mdID = to.params.id
-   metadataStore.getDetails( mdID )
+   document.title = `Metadata #${mdID}`
+   await metadataStore.getDetails( mdID )
 })
 
-onBeforeMount(() => {
+onBeforeMount( async () => {
    let mdID = route.params.id
-   metadataStore.getDetails( mdID )
    document.title = `Metadata #${mdID}`
+   await metadataStore.getDetails( mdID )
 })
 
 function editMetadata() {
@@ -319,8 +328,11 @@ div.unit-acts {
    .thumb {
       margin: 10px;
    }
-   .empty {
-      color: #ccc;
+   p.error {
+      color: var(--uvalib-red-emergency);
+      text-align: center;
+      padding: 0;
+      margin: 15px 0 0 0;
    }
    .publish {
       padding: 15px 0 0 0;

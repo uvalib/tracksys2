@@ -18,7 +18,9 @@ export const useMetadataStore = defineStore('metadata', {
          location: "",
          xmlMetadata: "",
          supplementalURL: "",
-         supplementalSystem: ""
+         supplementalSystem: "",
+         externalURI: "",
+         externalSystem: null
       },
       dl: {
          pid: "",
@@ -34,7 +36,6 @@ export const useMetadataStore = defineStore('metadata', {
       },
       archivesSpace: {
          id: "",
-         title: "",
          createdBy: "",
          createDate: null,
          level: "",
@@ -47,7 +48,6 @@ export const useMetadataStore = defineStore('metadata', {
       jstor: {
          id: "",
          ssid: "",
-         title: "",
          desc: "",
          creator: "",
          date: "",
@@ -59,7 +59,6 @@ export const useMetadataStore = defineStore('metadata', {
       apollo: {
          pid: "",
          type: "",
-         title: "",
          collectionPID: "",
          collectionTitle: "",
          collectionBarcode: "",
@@ -253,19 +252,23 @@ export const useMetadataStore = defineStore('metadata', {
             this.virgoURL = details.virgoURL
             this.detail.xmlMetadata = details.metadata.descMetadata
          } else  {
-            this.detail.externalSystem = details.metadata.externalSystem.name
-            this.detail.externalURL = `${details.metadata.externalSystem.publicURL}${details.metadata.externalURI}`
-            if (details.metadata.externalSystem.name == "ArchivesSpace") {
-               this.archivesSpace.id = details.asDetails.id
-               this.archivesSpace.title = details.asDetails.title
-               this.archivesSpace.createdBy = details.asDetails.created_by
-               this.archivesSpace.createDate = details.asDetails.create_time.split("T")[0]
-               this.archivesSpace.level = details.asDetails.level
-               this.archivesSpace.URL = details.asDetails.url
-               this.archivesSpace.repo = details.asDetails.repo
-               this.archivesSpace.collectionTitle = details.asDetails.collection_title
-               this.archivesSpace.language = details.asDetails.language
-               this.archivesSpace.dates = details.asDetails.dates
+            this.detail.externalSystem = details.metadata.externalSystem
+            this.detail.externalURI = details.metadata.externalURI
+            if (details.metadata.externalSystem.name == "ArchivesSpace" ) {
+               this.archivesSpace.error = ""
+               if ( details.asDetails) {
+                  this.archivesSpace.id = details.asDetails.id
+                  this.archivesSpace.createdBy = details.asDetails.created_by
+                  this.archivesSpace.createDate = details.asDetails.create_time.split("T")[0]
+                  this.archivesSpace.level = details.asDetails.level
+                  this.archivesSpace.URL = details.asDetails.url
+                  this.archivesSpace.repo = details.asDetails.repo
+                  this.archivesSpace.collectionTitle = details.asDetails.collection_title
+                  this.archivesSpace.language = details.asDetails.language
+                  this.archivesSpace.dates = details.asDetails.dates
+               } else {
+                  this.archivesSpace.error = "Unable to get details for "+details.metadata.externalURI
+               }
             } else if (details.metadata.externalSystem.name == "JSTOR Forum") {
                this.jstor = details.jstorDetails
             } else if (details.metadata.externalSystem.name == "Apollo") {
@@ -301,12 +304,12 @@ export const useMetadataStore = defineStore('metadata', {
 
          this.setRelatedItems(details.units)
       },
-      getDetails( metadataID ) {
+      async getDetails( metadataID ) {
          if (this.detail.id == metadataID) return
 
          const system = useSystemStore()
          system.working = true
-         axios.get( `/api/metadata/${metadataID}` ).then(response => {
+         return axios.get( `/api/metadata/${metadataID}` ).then(response => {
             this.setMetadataDetails(response.data)
             system.working = false
          }).catch( e => {

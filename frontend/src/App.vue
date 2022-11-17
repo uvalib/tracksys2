@@ -18,7 +18,9 @@
       </div>
       <MenuBar v-if="userStore.jwt" />
    </div>
-   <div class="content"><router-view /></div>
+   <div class="content" v-if="configuring==false">
+      <router-view />
+   </div>
    <Dialog v-model:visible="systemStore.showError" :modal="true" header="System Error" @hide="errorClosed()" class="error">
       {{systemStore.error}}
       <template #footer>
@@ -36,7 +38,7 @@ import MenuBar from "@/components/MenuBar.vue"
 import WaitSpinner from "@/components/WaitSpinner.vue"
 import { useSystemStore } from "@/stores/system"
 import { useUserStore } from "@/stores/user"
-import { onBeforeMount,watch } from 'vue'
+import { onBeforeMount, watch, ref } from 'vue'
 import Dialog from 'primevue/dialog'
 import Toast from 'primevue/toast'
 import { useToast } from "primevue/usetoast"
@@ -44,6 +46,8 @@ import { useToast } from "primevue/usetoast"
 const systemStore = useSystemStore()
 const userStore = useUserStore()
 const toast = useToast()
+
+const configuring = ref(true)
 
 
 watch(() => systemStore.toast.show, (newShow) => {
@@ -61,6 +65,7 @@ function errorClosed() {
 onBeforeMount( async () => {
    document.title = `Tracksys`
    await systemStore.getConfig()
+   configuring.value = false
 })
 
 </script>

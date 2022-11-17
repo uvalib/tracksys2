@@ -23,6 +23,19 @@
                   Edit it with a standalone XML editor, then upload the result using the'Upload XML' button.
                </p>
             </template>
+            <template v-if="metadataStore.detail.type == 'ExternalMetadata'">
+               <p class="note"><b>IMPORTANT</b>: Only URIs containing /resources/, /accessions/ or /archival_objects/ are supported.</p>
+               <div class="split">
+                  <FormKit label="External URI" type="text" v-model="edited.externalURI" required @input="uriChanged"/>
+                  <span class="sep"/>
+                  <DPGButton @click="validateASMetadata" label="Validate" class="p-button-secondary" :loading="metadataStore.asMatch.searching"/>
+               </div>
+               <p class="error" v-if="metadataStore.asMatch.error">Validation Failed: {{metadataStore.asMatch.error}}</p>
+               <dl>
+                  <DataDisplay label="Title" :value="edited.title" blankValue="Unknown"/>
+               </dl>
+               <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
+            </template>
             <div class="split">
                <FormKit label="Personal Item" type="select" :options="yesNo" v-model="edited.personalItem"/>
                <span class="sep"/>
@@ -49,7 +62,7 @@
       </Panel>
          <div class="acts">
             <DPGButton label="Cancel" class="p-button-secondary" @click="cancelEdit()"/>
-            <FormKit type="submit" label="Save" wrapper-class="submit-button" />
+            <FormKit type="submit" label="Save" :disabled="!validated" :wrapper-class="submitClass"/>
          </div>
       </FormKit>
    </div>
@@ -147,13 +160,20 @@ const ocrHints = computed(() => {
    })
    return out
 })
+const submitClass = computed(() => {
+   let c = "submit-button"
+   if (validated.value === false ) {
+      c += " disabled"
+   }
+   return c
+})
 
 onMounted( async () =>{
    let mdID = route.params.id
    await metadataStore.getDetails(mdID)
    document.title = `Edit | Metadata ${mdID}`
 
-   edited.value.externalURI = metadataStore.archivesSpace.URL // FIXME
+   edited.value.externalURI = metadataStore.detail.externalURI
    edited.value.title = metadataStore.detail.title
    edited.value.callNumber = metadataStore.detail.callNumber
    edited.value.catalogKey = metadataStore.detail.catalogKey
@@ -179,6 +199,9 @@ onMounted( async () =>{
    }
    edited.value.useRightRationale = metadataStore.dl.useRightRationale
    edited.value.inDPLA = metadataStore.dl.inDPLA
+   if ( metadataStore.detail.type == "ExternalMetadata") {
+      validated.value = metadataStore.archivesSpace.error != ""
+   }
 })
 
 async function sirsiLookup() {
@@ -193,7 +216,17 @@ async function sirsiLookup() {
       validated.value = true
    }
 }
-
+function uriChanged() {
+   validated.value = false
+}
+async function validateASMetadata() {
+   await metadataStore.validateArchivesSpaceURI(edited.value.externalURI)
+   if (metadataStore.asMatch.error == "") {
+      validated.value = true
+      edited.value.externalURI = metadataStore.asMatch.validatedURL
+      edited.value.title = metadataStore.asMatch.title
+   }
+}
 function cancelEdit() {
    router.push(`/metadata/${route.params.id}`)
 }
@@ -219,6 +252,11 @@ async function submitChanges() {
       background: var(--uvalib-teal-lightest);
       border-radius: 3px;
       text-align: left;
+   }
+   p.error {
+      color: var(--uvalib-red-emergency);
+      padding: 0;
+      margin: 15px 0 0 0;
    }
 
    .margin-bottom {
