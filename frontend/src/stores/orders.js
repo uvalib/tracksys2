@@ -179,6 +179,7 @@ export const useOrdersStore = defineStore('orders', {
          }).catch( e => {
             this.clearDetails()
             if (e.response && e.response.status == 404) {
+               system.working = false
                router.push("/not_found")
             } else {
                system.setError(e)

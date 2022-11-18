@@ -45,6 +45,7 @@ func main() {
 		api.GET("/metadata/archivesspace", svc.validateArchivesSpaceMetadata)
 		api.GET("/metadata/:id", svc.getMetadata)
 		api.POST("/metadata/:id", svc.updateMetadata)
+		api.DELETE("/metadata/:id", svc.deleteMetadata)
 		api.POST("/metadata/:id/xml", svc.uploadXMLMetadata)
 		api.GET("/metadata/:id/xml", svc.getXMLMetadata)
 		api.POST("/metadata", svc.createMetadata)

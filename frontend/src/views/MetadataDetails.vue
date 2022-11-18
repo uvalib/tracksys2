@@ -2,6 +2,7 @@
    <h2>Metadata {{route.params.id}}</h2>
    <div class="unit-acts">
       <template  v-if="metadataStore.detail.type == 'XmlMetadata' && systemStore.working==false">
+         <DPGButton label="Delete" class="edit" @click="deleteMetadata()" v-if="canDelete"/>
          <DPGButton label="Download XML"  @click="downloadXMLClicked()" />
          <FileUpload mode="basic" name="xml" accept=".xml" :customUpload="true" @uploader="xmlUploader"
             :auto="true" chooseLabel="Upload XML" uploadIcon="" v-if="userStore.isAdmin || userStore.isSupervisor"/>
@@ -38,9 +39,9 @@
             <DataDisplay label="OCR Language Hint" :value="metadataStore.other.ocrLanguageHint"/>
             <DataDisplay label="Preservation Tier" :value="preservationTier"/>
          </dl>
-         <template v-if="metadataStore.detail.externalSystem.name == 'ArchivesSpace'">
+         <template v-if="externalSystem == 'ArchivesSpace'">
             <dl>
-               <DataDisplay label="Type" :value="metadataStore.detail.externalSystem.name"/>
+               <DataDisplay label="Type" :value="externalSystem"/>
                <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
                   <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
                      {{metadataStore.detail.externalURI}}
@@ -59,8 +60,8 @@
             </dl>
             <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
          </template>
-         <dl v-if="metadataStore.detail.externalSystem.name == 'JSTOR Forum'">
-            <DataDisplay label="Type" :value="metadataStore.detail.externalSystem.name"/>
+         <dl v-if="externalSystem == 'JSTOR Forum'">
+            <DataDisplay label="Type" :value="externalSystem"/>
             <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
                <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
                   {{metadataStore.detail.externalURI}}
@@ -77,8 +78,8 @@
             <DataDisplay label="Artstor ID" :value="metadataStore.jstor.id"/>
             <DataDisplay label="Forum ID" :value="metadataStore.jstor.ssid"/>
          </dl>
-         <dl v-if="metadataStore.detail.externalSystem.name == 'Apollo'">
-            <DataDisplay label="Type" :value="metadataStore.detail.externalSystem.name"/>
+         <dl v-if="externalSystem == 'Apollo'">
+            <DataDisplay label="Type" :value="externalSystem"/>
             <DataDisplay label="URL" :value="metadataStore.apollo.itemURL">
                <a class="supplemental" :href="metadataStore.apollo.itemURL" target="_blank">
                   {{metadataStore.apollo.itemURL}}
@@ -164,16 +165,31 @@ import dayjs from 'dayjs'
 import RelatedOrders from '../components/related/RelatedOrders.vue'
 import RelatedUnits from '../components/related/RelatedUnits.vue'
 import FileUpload from 'primevue/fileupload'
+import { useConfirm } from "primevue/useconfirm"
 
+const confirm = useConfirm()
 const route = useRoute()
 const router = useRouter()
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
 const userStore = useUserStore()
 
+const canDelete = computed(() => {
+   if (!userStore.isAdmin && !userStore.isSupervisor) return false
+   if (metadataStore.related.units.length > 0) return false
+   if (metadataStore.related.orders.length > 0) return false
+   return true
+})
+
 const canEdit = computed(() => {
    if (metadataStore.detail.type != 'ExternalMetadata') return true
+   if (!metadataStore.detail.externalSystem) return true
    return metadataStore.detail.externalSystem.name == "ArchivesSpace"
+})
+
+const externalSystem = computed(() => {
+   if (!metadataStore.detail.externalSystem) return ""
+   return metadataStore.detail.externalSystem.name
 })
 
 const canPublish = computed(() => {
@@ -232,6 +248,18 @@ onBeforeMount( async () => {
    document.title = `Metadata #${mdID}`
    await metadataStore.getDetails( mdID )
 })
+
+function deleteMetadata() {
+   confirm.require({
+      message: 'Are you sure you want delete this metadata? All data will be lost. This cannot be reversed.',
+      header: 'Confirm Delete Metadata',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         await metadataStore.deleteMetadata()
+      }
+   })
+}
 
 function editMetadata() {
    router.push(`/metadata/${metadataStore.detail.id}/edit`)

@@ -146,7 +146,7 @@ function doSearch() {
          flex-flow: row nowrap;
          justify-content: center;
          align-items: center;
-         width: 50%;
+         width: 75%;
          margin: 0 auto;
          span  {
             font-weight: bold;

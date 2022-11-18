@@ -316,6 +316,11 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
+	if resp.Metadata.ID == 0 {
+		log.Printf("INFO: metadata %d not found", mdID)
+		c.String(http.StatusNotFound, "metadata record not found")
+		return
+	}
 
 	resp.Units, err = svc.getMetadataRelatedUnits(resp.Metadata)
 	if err != nil {
@@ -325,6 +330,56 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) deleteMetadata(c *gin.Context) {
+	mdID := c.Param("id")
+	log.Printf("INFO: received request to delete metadata %s", mdID)
+
+	hasRelated, err := svc.metadataHasRelatedItems(mdID, "units")
+	if err != nil {
+		log.Printf("ERROR: unable to determine if metadata %s has any units: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	if hasRelated {
+		log.Printf("INFO: unable to delete metadata %s because it has related units", mdID)
+		c.String(http.StatusPreconditionFailed, "order has units and cannont be deleted")
+		return
+	}
+	hasRelated, err = svc.metadataHasRelatedItems(mdID, "master_files")
+	if err != nil {
+		log.Printf("ERROR: unable to determine if metadata %s has any master files: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	if hasRelated {
+		log.Printf("INFO: unable to delete metadata %s because it has related master files", mdID)
+		c.String(http.StatusPreconditionFailed, "order has units and cannont be deleted")
+		return
+	}
+
+	log.Printf("INFO: metadata %s has no related items, proceeding with delete", mdID)
+	err = svc.DB.Delete(&metadata{}, mdID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to delete metadata %s: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: metadata %s has been deleted", mdID)
+	c.String(http.StatusOK, "deleted")
+}
+
+func (svc *serviceContext) metadataHasRelatedItems(mdID string, tableName string) (bool, error) {
+	var cnt int64
+	err := svc.DB.Table(tableName).Where("metadata_id=?", mdID).Count(&cnt).Error
+	if err != nil {
+		return false, err
+	}
+	if cnt > 0 {
+		return true, nil
+	}
+	return false, nil
 }
 
 func (svc *serviceContext) updateMetadata(c *gin.Context) {
@@ -415,12 +470,15 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 	var md metadata
 	err := svc.DB.Preload("UseRight").Preload("OCRHint").Preload("AvailabilityPolicy").
 		Preload("ExternalSystem").Preload("SupplementalSystem").
-		Preload("PreservationTier").Find(&md, mdID).Error
+		Preload("PreservationTier").Limit(1).Find(&md, mdID).Error
 	if err != nil {
 		return nil, err
 	}
 
 	out := metadataDetailResponse{Metadata: &md, Units: make([]*unit, 0)}
+	if md.ID == 0 {
+		return &out, nil
+	}
 
 	if md.Type == "SirsiMetadata" || md.Type == "XmlMetadata" {
 		log.Printf("INFO: get extended sirsi/xml metadata for %d", md.ID)
