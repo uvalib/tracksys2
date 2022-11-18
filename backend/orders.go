@@ -139,11 +139,21 @@ func (svc *serviceContext) createOrder(c *gin.Context) {
 	}
 	newOrder := order{OrderStatus: "requested", DateDue: dueDate, OrderTitle: req.Title,
 		SpecialInstructions: req.SpecialInstructions, StaffNotes: req.StaffNotes,
-		AgencyID: &req.AgencyID, CustomerID: &req.CustomerID, DateRequestSubmitted: time.Now()}
+		CustomerID: &req.CustomerID, DateRequestSubmitted: time.Now()}
+
+	omitFields := []string{"UnitCount", "MasterFileCount"}
 	if fee > 0 {
 		newOrder.Fee = &fee
+	} else {
+		omitFields = append(omitFields, "Fee")
 	}
-	err = svc.DB.Create(&newOrder).Error
+	if req.AgencyID > 0 {
+		newOrder.AgencyID = &req.AgencyID
+	} else {
+		omitFields = append(omitFields, "AgencyID")
+	}
+
+	err = svc.DB.Omit(omitFields...).Create(&newOrder).Error
 	if err != nil {
 		log.Printf("ERROR: unable to create new order %+v: %s", req, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())

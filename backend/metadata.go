@@ -449,7 +449,7 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		fields = append(fields, "ExternalURI")
 	}
 
-	err = svc.DB.Debug().Model(&md).Select(fields).Updates(md).Error
+	err = svc.DB.Model(&md).Select(fields).Updates(md).Error
 	if err != nil {
 		log.Printf("ERROR: unable to update metadata %d: %s", md.ID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())

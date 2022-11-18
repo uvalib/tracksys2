@@ -25,7 +25,7 @@
                <Dropdown v-model="edited.customerID" :options="customers" optionLabel="label" optionValue="value" placeholder="Select a customer" :filter="true" />
             </div>
          </div>
-
+         <p class="error" v-if="error">{{error}}</p>
          <div class="acts">
             <DPGButton label="Cancel" class="p-button-secondary" @click="cancelEdit()"/>
             <FormKit type="submit" label="Save" wrapper-class="submit-button" />
@@ -59,6 +59,7 @@ const edited = ref({
    customerID: 0,
 })
 const newOrder = ref(false)
+const error = ref("")
 
 const isExternalCustomer = computed( () => {
    if (ordersStore.detail.customer == null) return false
@@ -134,6 +135,10 @@ function cancelEdit() {
    }
 }
 async function submitChanges() {
+   if ( edited.value.customerID == 0) {
+      error.value = "Customer is required"
+      return
+   }
    if ( newOrder.value == true) {
       await ordersStore.createOrder( edited.value )
    } else {
@@ -150,6 +155,9 @@ async function submitChanges() {
 .edit-form {
    width: 50%;
    margin: 0 auto;
+   p.error {
+      color: var(--uvalib-red-emergency);
+   }
 
    .split {
       display: flex;
