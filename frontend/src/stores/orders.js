@@ -339,13 +339,13 @@ export const useOrdersStore = defineStore('orders', {
          axios.get( url ).then(response => {
             this.orders = []
             response.data.orders.forEach( js => {
-               js.dateDue =  dayjs(js.dateDue).format("YYYY-MM-DD")
-               js.dateSubmitted =  dayjs(js.dateSubmitted).format("YYYY-MM-DD")
+               js.dateDue = js.dateDue.split("T")[0]
+               js.dateSubmitted =  js.dateSubmitted.split("T")[0]
                if (js.dateCustomerNotified) {
-                  js.dateCustomerNotified =  dayjs(js.dateCustomerNotified).format("YYYY-MM-DD")
+                  js.dateCustomerNotified =  js.dateCustomerNotified.split("T")[0]
                }
                if (js.dateArchivingComplete) {
-                  js.dateArchivingComplete =  dayjs(js.dateArchivingComplete).format("YYYY-MM-DD")
+                  js.dateArchivingComplete =  js.dateArchivingComplete.split("T")[0]
                }
                js.customerName = `${js.customer.lastName}, ${js.customer.firstName}`
                this.orders.push(js)
