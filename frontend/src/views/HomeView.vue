@@ -1,26 +1,36 @@
 <template>
    <h2>Home</h2>
    <div class="home">
-      <FormKit type="form" id="global-search" :actions="false" @submit="doSearch">
-         <FormKit type="select" label="" v-model="searchStore.scope" outer-class="select-wrap" @change="scopeChanged"
-            :options="{ all: 'All items', orders: 'Orders', masterfiles: 'Master Files', metadata: 'Metadata', components: 'Components'}"
-         />
-         <FormKit type="select" label="" v-model="searchStore.field" :options="scopeFields" outer-class="select-wrap"/>
-         <FormKit label="" type="search" placeholder="Find Tracksys items..." v-model="searchStore.query" outer-class="searchbar" />
-         <FormKit type="submit" label="Search" wrapper-class="submit-button" />
-         <FormKit type="button" v-if="searchStore.searched"  label="Reset search" @click="resetSearch()" wrapper-class="reset-button"/>
-      </FormKit>
-      <FormKit type="form" id="unit-search" :actions="false" @submit="doUnitSearch" outer-class="select-wrap" >
-         <FormKit label="" type="search" placeholder="Find Unit by ID..." v-model="unitID" outer-class="searchbar" />
-         <FormKit type="submit" label="Find Unit" wrapper-class="submit-button" />
-      </FormKit>
-      <p class="error" v-if="unitError">{{unitError}}</p>
-      <SearchResults v-if="searchStore.searched" />
+      <div class="stats">
+         <div><label>Orders due in one week:</label><span>{{dashboard.dueInOneWeek}}</span></div>
+         <span class="sep"></span>
+         <div><label>Overdue orders:</label><span>{{dashboard.overdue}}</span></div>
+         <span class="sep"></span>
+         <div><label>Orders ready for delivery:</label><span>{{dashboard.readyForDelivery}}</span></div>
+      </div>
+      <div class="search">
+         <FormKit type="form" id="global-search" :actions="false" @submit="doSearch">
+            <FormKit type="select" label="" v-model="searchStore.scope" outer-class="select-wrap" @change="scopeChanged"
+               :options="{ all: 'All items', orders: 'Orders', masterfiles: 'Master Files', metadata: 'Metadata', components: 'Components'}"
+            />
+            <FormKit type="select" label="" v-model="searchStore.field" :options="scopeFields" outer-class="select-wrap"/>
+            <FormKit label="" type="search" placeholder="Find Tracksys items..." v-model="searchStore.query" outer-class="searchbar" />
+            <FormKit type="submit" label="Search" wrapper-class="submit-button" />
+            <FormKit type="button" v-if="searchStore.searched"  label="Reset search" @click="resetSearch()" wrapper-class="reset-button"/>
+         </FormKit>
+         <FormKit type="form" id="unit-search" :actions="false" @submit="doUnitSearch" outer-class="select-wrap" >
+            <FormKit label="" type="search" placeholder="Find Unit by ID..." v-model="unitID" outer-class="searchbar" />
+            <FormKit type="submit" label="Find Unit" wrapper-class="submit-button" />
+         </FormKit>
+         <p class="error" v-if="unitError">{{unitError}}</p>
+         <SearchResults v-if="searchStore.searched" />
+      </div>
    </div>
 </template>
 
 <script setup>
 import { useSearchStore } from '../stores/search'
+import { useDashboardStore } from '../stores/dashboard'
 import SearchResults from '@/components/results/SearchResults.vue'
 import { ref, computed, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -28,6 +38,7 @@ import { useRoute, useRouter } from 'vue-router'
 const searchStore = useSearchStore()
 const route = useRoute()
 const router = useRouter()
+const dashboard = useDashboardStore()
 
 const unitID = ref("")
 const unitError = ref("")
@@ -54,6 +65,8 @@ function resetSearch() {
 
 onBeforeMount( () => {
    document.title = `Tracksys2`
+   dashboard.getStatistics()
+
    let paramsDetected = false
    if ( route.query.q && searchStore.query != route.query.q ) {
       searchStore.query = route.query.q
@@ -127,9 +140,24 @@ function doSearch() {
 
 <style scoped lang="scss">
    .home {
-      margin-top: 50px;
+      margin-top: 15px;
       padding-bottom: 50px;
       min-height:600px;
+      .stats {
+         margin: 40px auto;
+         display: flex;
+         flex-flow: row wrap;
+         justify-content: center;
+         label {
+            font-weight: 600;
+            margin-right: 5px;
+         }
+         .sep {
+            display: inline-block;
+            width: 25px;
+         }
+      }
+
       :deep(#unit-search) {
          width: 25% !important;
          align-items: flex-end !important;
