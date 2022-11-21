@@ -81,9 +81,9 @@ const filters = ref([
    {name: "Deferred", code: "deferred"},
    {name: "Complete", code: "complete"},
    {name: "Canceled", code: "canceled"},
-   {name: "Due Today", code: "due_today"},
-   {name: "Due within a Week", code: "due_week"},
-   {name: "Overdue", code: "overdue"}
+   {name: "Due in a Week", code: "due_week"},
+   {name: "Overdue", code: "overdue"},
+   {name: "Ready for Delivery", code: "ready"}
 ])
 
 const sortOrder = computed(() => {

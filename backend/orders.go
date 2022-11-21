@@ -275,16 +275,23 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 		filterQ = filterQ.Where("order_status=?", "canceled")
 	} else if filter == "complete" {
 		filterQ = filterQ.Where("order_status=?", "completed")
-	} else if filter == "due_today" {
-		filterQ = filterQ.Where("date_due=?", dateNow).
-			Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled")
 	} else if filter == "due_week" {
 		dateWeek := time.Now().AddDate(0, 0, 7).Format("2006-01-02")
-		filterQ = filterQ.Where("date_due>=?", dateNow).Where("date_due<=?", dateWeek).
-			Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled")
+		filterQ = filterQ.Joins("inner join units u on u.order_id=orders.id").
+			Where("u.intended_use_id <> ?", 110).
+			Where("date_due>=?", dateNow).Where("date_due<=?", dateWeek).
+			Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled").Distinct("orders.id")
 	} else if filter == "overdue" {
-		filterQ = filterQ.Where("date_due<?", dateNow).
-			Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled")
+		oneYearAgo := time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
+		filterQ = filterQ.Joins("inner join units u on u.order_id=orders.id").
+			Where("u.intended_use_id <> ?", 110).
+			Where("date_request_submitted>?", oneYearAgo).Where("date_due<?", dateNow).
+			Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled").Distinct("orders.id")
+	} else if filter == "ready" {
+		filterQ = filterQ.Joins("inner join units u on u.order_id=orders.id").
+			Where("u.intended_use_id <> ?", 110).
+			Where("orders.email is not null and date_customer_notified is null").
+			Where("order_status != ? and order_status != ?", "canceled", "completed").Distinct("orders.id")
 	}
 
 	// set up query...

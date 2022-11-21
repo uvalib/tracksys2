@@ -9,14 +9,13 @@ import (
 )
 
 type dashboardStats struct {
-	DueToday         int64 `json:"dueToday"`
 	DueInOneWeek     int64 `json:"dueInOneWeek"`
 	Overdue          int64 `json:"overdue"`
 	ReadyForDelivery int64 `json:"readyForDelivery"`
 }
 
 func (svc *serviceContext) getDashboardStats(c *gin.Context) {
-	log.Printf("INFO: looking up dashboard stastics")
+	log.Printf("INFO: looking up dashboard stats")
 
 	var stats dashboardStats
 	now := time.Now()
@@ -25,15 +24,9 @@ func (svc *serviceContext) getDashboardStats(c *gin.Context) {
 		Joins("inner join units u on u.order_id=orders.id").
 		Where("u.intended_use_id <> ?", 110).Where(inProcQ)
 
-	// due today
-	err := baseQ.Debug().Where("date_due=?", now.Format("2006-01-02")).Distinct("orders.id").Count(&stats.DueToday).Error
-	if err != nil {
-		log.Printf("ERROR: unable to get orders due today: %s", err.Error())
-	}
-
-	/// due in a week
+	// due in a week
 	oneWeek := now.AddDate(0, 0, 7)
-	err = baseQ.Debug().Where("date_due>?", now.Format("2006-01-02")).
+	err := baseQ.Debug().Where("date_due>=?", now.Format("2006-01-02")).
 		Where("date_due<=?", oneWeek.Format("2006-01-02")).
 		Distinct("orders.id").Count(&stats.DueInOneWeek).Error
 	if err != nil {
@@ -52,8 +45,8 @@ func (svc *serviceContext) getDashboardStats(c *gin.Context) {
 	// ready for delivery
 	err = svc.DB.Debug().Table("orders").Joins("inner join units u on u.order_id=orders.id").
 		Where("u.intended_use_id <> ?", 110).
-		Where("orders.email is not null and date_customer_notified is null and order_status=?", "approved").
-		// Where("order_status != ? and order_status != ?", "canceled", "completed").
+		Where("orders.email is not null and date_customer_notified is null").
+		Where("order_status != ? and order_status != ?", "canceled", "completed").
 		Distinct("orders.id").Count(&stats.ReadyForDelivery).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get ready for delivery orders: %s", err.Error())
