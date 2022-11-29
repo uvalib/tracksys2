@@ -2,11 +2,20 @@
    <h2>Home</h2>
    <div class="home">
       <div class="stats">
-         <div><label>Orders due in one week:</label><span>{{dashboard.dueInOneWeek}}</span></div>
+         <div>
+            <label>Orders due in one week:</label>
+            <router-link to="/orders?filter=due_week&sort=id+desc">{{dashboard.dueInOneWeek}}</router-link>
+         </div>
          <span class="sep"></span>
-         <div><label>Overdue orders:</label><span>{{dashboard.overdue}}</span></div>
+         <div>
+            <label>Overdue orders:</label>
+            <router-link to="/orders?filter=overdue&sort=id+desc">{{dashboard.overdue}}</router-link>
+         </div>
          <span class="sep"></span>
-         <div><label>Orders ready for delivery:</label><span>{{dashboard.readyForDelivery}}</span></div>
+         <div>
+            <label>Orders ready for delivery:</label>
+            <router-link to="/orders?filter=ready&sort=id+desc">{{dashboard.readyForDelivery}}</router-link>
+         </div>
       </div>
       <div class="search">
          <FormKit type="form" id="global-search" :actions="false" @submit="doSearch">
