@@ -150,6 +150,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 			AvailabilityPolicies []availabilityPolicy `json:"availabilityPolicies"`
 			Categories           []category           `json:"categories"`
 			ContainerTypes       []containerType      `json:"containerTypes"`
+			ExternalSyatems      []externalSystem     `json:"externalSystems"`
 			IntendedUses         []intendedUse        `json:"intendedUses"`
 			OCRHints             []ocrHint            `json:"ocrHints"`
 			OCRLanguageHints     []ocrLanguageHint    `json:"ocrLanguageHints"`
@@ -207,6 +208,14 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 	err = svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.ContainerTypes).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get container types: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: load external systems")
+	err = svc.DB.Order("id asc").Find(&resp.ControlledVocabularies.ExternalSyatems).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get external systems: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}

@@ -5,11 +5,11 @@
             <ul>
                <li v-for="(vf,idx) in selectedFilters" :key="`mdfilter=${idx}`">
                   <label>{{vf.filter}}:</label>
-                  <span>{{vf.value}}</span>
+                  <span>{{filterValue(vf.value)}}</span>
                </li>
             </ul>
          <div class="filter-acts">
-            <DPGButton label="Clear all" class="p-button-secondary" @click="clearFilters()"/>
+            <DPGButton label="Clear filters" class="p-button-secondary" @click="clearFilters()"/>
          </div>
       </div>
    </div>
@@ -19,7 +19,7 @@
    <DataTable v-else :value="searchStore.metadata.hits" ref="metadataTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll"
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="searchStore.metadata.hits.length > 15" @page="onMetadataPage($event)"
+      :lazy="true" :paginator="showPaginator" @page="onMetadataPage($event)"
       :rows="searchStore.metadata.limit" :totalRecords="searchStore.metadata.total"
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
       :rowsPerPageOptions="[15,30,100]"
@@ -37,6 +37,10 @@
       <Column field="type" header="Type" filterField="type" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <Dropdown v-model="filterModel.value" :options="mdTypes" optionLabel="name" optionValue="code" placeholder="Select a type" />
+         </template>
+         <template #body="slotProps">
+            <div v-if="slotProps.data.type != 'ExternalMetadata'">{{slotProps.data.type}}</div>
+            <div v-else>{{slotProps.data.externalSystem.name}}</div>
          </template>
       </Column>
       <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
@@ -79,6 +83,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useSearchStore } from '../../stores/search'
+import { useSystemStore } from '../../stores/system'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
@@ -89,6 +94,7 @@ import { useRoute, useRouter } from 'vue-router'
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
+const system = useSystemStore()
 
 const filters = ref( {
     'type': {value: null, matchMode: FilterMatchMode.EQUALS},
@@ -98,17 +104,24 @@ const filters = ref( {
     'call_number': {value: null, matchMode: FilterMatchMode.CONTAINS},
     'catalog_key': {value: null, matchMode: FilterMatchMode.STARTS_WITH}
 })
-const mdTypes = ref([
-   {name: "SirsiMetadata", code: "SirsiMetadata"},
-   {name: "XmlMetadata", code: "XmlMetadata"},
-   {name: "ExternalMetadata", code: "ExternalMetadata"},
-])
+const mdTypes = computed(() => {
+   let out = []
+   out.push({name: "Sirsi", code: "SirsiMetadata"})
+   out.push({name: "XML", code: "XmlMetadata"})
+   system.externalSystems.forEach( es => {
+      out.push({name: es.name, code: `ExternalMetadata:${es.id}`})
+   })
+   return out
+})
 
+const showPaginator = computed( () => {
+   return searchStore.metadata.total > 15
+})
 const selectedFilters = computed(() => {
    let out = []
    Object.entries(filters.value).forEach(([key, data]) => {
       if (data.value && data.value != "") {
-         out.push( {filter: key, value: data.value})
+         out.push( {filter: key, value: decodeURIComponent(data.value)})
       }
    })
    return out
@@ -118,6 +131,15 @@ const hasFilter = computed(() => {
    let idx = Object.values(filters.value).findIndex( fv => fv.value && fv.value != "")
    return idx >= 0
 })
+
+function filterValue(fv) {
+   let bits = fv.split(":")
+   if (bits.length == 1) {
+      return fv
+   }
+   let es = system.externalSystems.find( e => e.id == bits[1])
+   return es.name
+}
 
 onMounted(() =>{
    searchStore.metadata.filters.forEach( fv => {

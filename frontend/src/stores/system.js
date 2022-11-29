@@ -19,6 +19,7 @@ export const useSystemStore = defineStore('system', {
       availabilityPolicies: [],
       categories: [],
       containerTypes: [],
+      externalSystems: [],
       intendedUses: [],
       ocrHints: [],
       ocrLanguageHints: [],
@@ -66,6 +67,7 @@ export const useSystemStore = defineStore('system', {
             this.availabilityPolicies = response.data.controlledVocabularies.availabilityPolicies
             this.categories = response.data.controlledVocabularies.categories
             this.containerTypes = response.data.controlledVocabularies.containerTypes
+            this.externalSystems = response.data.controlledVocabularies.externalSystems
             this.intendedUses = response.data.controlledVocabularies.intendedUses
             this.ocrHints = response.data.controlledVocabularies.ocrHints
             this.ocrLanguageHints = response.data.controlledVocabularies.ocrLanguageHints

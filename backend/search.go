@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -25,16 +26,18 @@ type masterFileHit struct {
 }
 
 type metadataHit struct {
-	ID           uint64     `json:"id"`
-	PID          string     `gorm:"column:pid" json:"pid"`
-	Type         string     `json:"type"`
-	Title        string     `json:"title"`
-	CallNumber   string     `json:"callNumber"`
-	Barcode      string     `json:"barcode"`
-	CatalogKey   string     `json:"catalogKey"`
-	CreatorName  string     `json:"creatorName"`
-	DateDlIngest *time.Time `gorm:"column:date_dl_ingest" json:"-"`
-	VirgoURL     string     `gorm:"-" json:"virgoURL"`
+	ID               uint64          `json:"id"`
+	PID              string          `gorm:"column:pid" json:"pid"`
+	Type             string          `json:"type"`
+	Title            string          `json:"title"`
+	CallNumber       string          `json:"callNumber"`
+	Barcode          string          `json:"barcode"`
+	CatalogKey       string          `json:"catalogKey"`
+	CreatorName      string          `json:"creatorName"`
+	DateDlIngest     *time.Time      `gorm:"column:date_dl_ingest" json:"-"`
+	VirgoURL         string          `gorm:"-" json:"virgoURL"`
+	ExternalSystemID *int64          `json:"-"`
+	ExternalSystem   *externalSystem `gorm:"foreignKey:ExternalSystemID" json:"externalSystem,omitempty"`
 }
 
 type orderHit struct {
@@ -88,7 +91,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	startIndex, _ := strconv.Atoi(c.Query("start"))
 	pageSize, _ := strconv.Atoi(c.Query("limit"))
 	if pageSize == 0 {
-		pageSize = 30
+		pageSize = 15
 	}
 	scope := c.Query("scope")
 	if scope == "" {
@@ -120,19 +123,28 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		for idx, f := range filters {
 			bits := strings.Split(f.Filter, "|")
 			tgtField := bits[0]
-			tgtVal := bits[2]
-			op := "="
-			if bits[1] == "contains" {
-				tgtVal = fmt.Sprintf("%%%s%%", tgtVal)
-				op = "like"
-			} else if bits[1] == "startsWith" {
-				tgtVal = fmt.Sprintf("%s%%", tgtVal)
-				op = "like"
-			}
-			if idx == 0 {
-				filterQ = svc.DB.Where(fmt.Sprintf("%s %s ?", tgtField, op), tgtVal)
+			tgtVal, _ := url.QueryUnescape(bits[2])
+			if tgtField == "type" {
+				typeBits := strings.Split(tgtVal, ":")
+				if len(typeBits) == 1 {
+					filterQ = svc.DB.Where("type=?", tgtVal)
+				} else {
+					filterQ = svc.DB.Where("type=? and external_system_id=?", "ExternalMetadata", typeBits[1])
+				}
 			} else {
-				filterQ = filterQ.Where(fmt.Sprintf("%s %s ?", tgtField, op), tgtVal)
+				op := "="
+				if bits[1] == "contains" {
+					tgtVal = fmt.Sprintf("%%%s%%", tgtVal)
+					op = "like"
+				} else if bits[1] == "startsWith" {
+					tgtVal = fmt.Sprintf("%s%%", tgtVal)
+					op = "like"
+				}
+				if idx == 0 {
+					filterQ = svc.DB.Where(fmt.Sprintf("%s %s ?", tgtField, op), tgtVal)
+				} else {
+					filterQ = filterQ.Where(fmt.Sprintf("%s %s ?", tgtField, op), tgtVal)
+				}
 			}
 		}
 	}
@@ -209,7 +221,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		searchQ := svc.DB.Table("metadata")
 		if field == "all" {
 			searchQ = searchQ.Where(
-				svc.DB.Where("id=?", qStr).Or("pid=?", qStr).Or("title like ?", matchAny).
+				svc.DB.Where("metadata.id=?", qStr).Or("pid=?", qStr).Or("title like ?", matchAny).
 					Or("barcode=?", qStr).Or("catalog_key=?", qStr).Or("call_number like ?", matchAny).
 					Or("creator_name like ?", matchAny),
 			)
@@ -226,7 +238,8 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		}
 
 		searchQ.Count(&resp.Metadata.Total)
-		err := searchQ.Offset(startIndex).Limit(pageSize).Find(&resp.Metadata.Hits).Error
+		searchQ = searchQ.Preload("ExternalSystem")
+		err := searchQ.Debug().Offset(startIndex).Limit(pageSize).Find(&resp.Metadata.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: metadata search failed: %s", err.Error())
 		}

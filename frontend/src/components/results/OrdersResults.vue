@@ -19,7 +19,7 @@
    <DataTable v-else :value="searchStore.orders.hits" ref="orderHitsTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="searchStore.orders.hits.length > 15" @page="onPage($event)"
+      :lazy="true" :paginator="searchStore.orders.total > 15" @page="onPage($event)"
       :rows="searchStore.orders.limit" :totalRecords="searchStore.orders.total"
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
       :rowsPerPageOptions="[15,30,100]"
