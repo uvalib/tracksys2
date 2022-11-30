@@ -1,6 +1,7 @@
 <template>
    <h2>Component {{route.params.id}}</h2>
    <div class="details" v-if="systemStore.working==false">
+      <Tree :value="componentsStore.nodes"></Tree>
       <Panel header="General Information">
 
       </Panel>
@@ -11,20 +12,23 @@
 import { onBeforeMount } from 'vue'
 import { useRoute, onBeforeRouteUpdate } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
+import { useComponentsStore } from '@/stores/components'
 import Panel from 'primevue/panel'
+import Tree from 'primevue/tree'
 
 const route = useRoute()
 const systemStore = useSystemStore()
+const componentsStore = useComponentsStore()
 
 onBeforeRouteUpdate(async (to) => {
    let cID = to.params.id
-   console.log("before component " + cID)
+   componentsStore.getComponentTree(cID)
 })
 
 onBeforeMount(() => {
    let cID = route.params.id
-   console.log("before component " + cID)
    document.title = `Component #${cID}`
+   componentsStore.getComponentTree(cID)
 })
 
 </script>

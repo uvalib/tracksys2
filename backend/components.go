@@ -54,26 +54,29 @@ func (svc *serviceContext) getComponentTree(c *gin.Context) {
 		return
 	}
 
-	ancestryParts := strings.Split(tgtCmp.Ancestry, "/")
-	if len(ancestryParts) == 0 {
-		log.Printf("INFO: component %d is a top level component", cID)
-		c.JSON(http.StatusOK, tgtCmp)
-		return
-	}
-
-	topID, _ := strconv.ParseInt(ancestryParts[0], 10, 64)
-	log.Printf("INFO: component %d is part of a tree rooted at %d", cID, topID)
 	var topComponent *component
-	err = svc.DB.Preload("ComponentType").Find(&topComponent, topID).Error
-	if err != nil {
-		log.Printf("ERROR: unable to get component %d top level parent %d: %s", cID, topID, err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
+	if tgtCmp.Ancestry == "" {
+		topComponent = tgtCmp
+	} else {
+		ancestryParts := strings.Split(tgtCmp.Ancestry, "/")
+		if len(ancestryParts) == 0 {
+			log.Printf("INFO: component %d is a top level component", cID)
+			c.JSON(http.StatusOK, tgtCmp)
+			return
+		}
+		topID, _ := strconv.ParseInt(ancestryParts[0], 10, 64)
+		log.Printf("INFO: component %d is part of a tree rooted at %d", cID, topID)
+		err = svc.DB.Preload("ComponentType").Find(&topComponent, topID).Error
+		if err != nil {
+			log.Printf("ERROR: unable to get component %d top level parent %d: %s", cID, topID, err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
 	err = svc.getComponentChildren(topComponent)
 	if err != nil {
-		log.Printf("ERROR: unable to get component %d children: %s", topID, err.Error())
+		log.Printf("ERROR: unable to get component %d children: %s", topComponent.ID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
