@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { useSystemStore } from './system'
 import axios from 'axios'
 
-function dataForComponentNode(node) {
+function getNodeData(node) {
    let data = {
       id: node.id,
       pid: node.pid,
@@ -14,31 +14,28 @@ function dataForComponentNode(node) {
       barcode: node.barcode,
       eadID: node.eadID,
       componentType: node.componentType.name,
-      dateDLIngest: node.dateDLIngest,
-      dateDLUpdate: node.dateDLUpdate,
    }
    return data
 }
 
 function getLabel( data )  {
-   let label = data.title
-   if (label == "") {
-      label = data.label
-      if (label == "") {
-         label = data.descripton
-      }
-   }
-   return label
+   // label is concatenated data for all to facilitate filtering. the label is not displayed.
+   return `${data.title} ${data.label} ${data.description} ${data.pid} ${data.date} ${data.eadID}`
 }
 
 function getNodeChildren( parentNode, children ) {
    children.forEach( c => {
       let newChild = {
-         key: c.pid,
+         key: `${c.id}`,
          label: getLabel(c),
-         data: dataForComponentNode(c)
+         data: getNodeData(c),
+         children: [],
+         selectable: true
       }
       parentNode.children.push( newChild )
+      if (c.children && c.children.length > 0) {
+         getNodeChildren(newChild, c.children)
+      }
    })
 }
 
@@ -47,19 +44,28 @@ export const useComponentsStore = defineStore('components', {
       nodes: []
 	}),
 	getters: {
+      title: state => {
+         if (state.nodes[0] && state.nodes[0].data) {
+            return `${state.nodes[0].label}`
+         }
+         return "Component Details"
+      },
 	},
 	actions: {
-      getComponentTree( id ) {
+      async getComponentTree( id ) {
          const system = useSystemStore()
+         this.nodes = []
          system.working = true
-         axios.get( `/api/components/${id}` ).then(response => {
+         return axios.get( `/api/components/${id}` ).then(response => {
             let root = {
-               key: response.data.pid,
+               key: `${response.data.id}`,
                label: getLabel(response.data),
-               data: dataForComponentNode(response.data),
+               data: getNodeData(response.data),
                children: []
             }
-            getNodeChildren(root, response.data.children)
+            if ( response.data.children ) {
+               getNodeChildren(root, response.data.children)
+            }
 
             this.nodes = [root]
             system.working = false
