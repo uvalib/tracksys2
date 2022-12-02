@@ -142,14 +142,21 @@ export const useUnitsStore = defineStore('units', {
          })
       },
 
-      downloadFromArchive( computeID, filename='all' ) {
+      downloadFromArchive( computeID, downloadTarget='all' ) {
          const system = useSystemStore()
-         let payload = {computeID: computeID, filename: filename}
+         let msg = "Master file is"
+         let payload = {computeID: computeID, filename: downloadTarget}
+         if (Array.isArray(downloadTarget)) {
+            payload = {computeID: computeID, files: downloadTarget}
+            msg = "Master files are"
+         } else {
+            if (downloadTarget == 'all') {
+               msg = "Unit is"
+            }
+         }
          let url = `${system.jobsURL}/units/${this.detail.id}/copy`
          axios.post(url, payload).then( () => {
-            let tgt = "Master File"
-            if (filename == 'all') tgt = "Unit"
-            system.toastMessage("Archive Download", `${tgt} is being downloaded from the archive.`)
+            system.toastMessage("Archive Download", `${msg} being downloaded from the archive.`)
          }).catch( e => {
             system.setError(e)
          })

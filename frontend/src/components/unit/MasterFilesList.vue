@@ -11,6 +11,9 @@
             </template>
             <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
             <template v-if="detail.metadata && detail.dateArchived != null && detail.reorder == false">
+               <DPGButton label="Download Selected" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+            </template>
+            <template v-if="detail.metadata && detail.dateArchived != null && detail.reorder == false">
                <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
             </template>
             <AssignMeadataDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :ids="selectedIDs" />
@@ -109,7 +112,9 @@ function cloneCompleted() {
    cloneMasterFiles.value = false
    systemStore.toastMessage("Clone Success", 'All master files have been cloned.')
 }
-
+function downloadClicked() {
+   unitsStore.downloadFromArchive(userStore.computeID, selectedFileNames.value)
+}
 function pdfClicked() {
    let ids = []
    selectedMasterFiles.value.forEach( s => {
