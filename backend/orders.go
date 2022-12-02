@@ -160,14 +160,14 @@ func (svc *serviceContext) createOrder(c *gin.Context) {
 		return
 	}
 	log.Printf("INFO: order %d updated", newOrder.ID)
-	svc.DB.Preload("Agency").Preload("Customer").Find(&newOrder, newOrder.ID)
+	svc.DB.Preload("Agency").Preload("Customer").Preload("Customer.AcademicStatus").Find(&newOrder, newOrder.ID)
 	c.JSON(http.StatusOK, newOrder)
 }
 
 func (svc *serviceContext) loadOrder(orderID string) (*order, error) {
 	log.Printf("INFO: load order %s details", orderID)
 	var oDetail order
-	err := svc.DB.Preload("Agency").Preload("Customer").Limit(1).Find(&oDetail, orderID).Error
+	err := svc.DB.Preload("Agency").Preload("Customer").Preload("Customer.AcademicStatus").Limit(1).Find(&oDetail, orderID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +311,7 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	var o []*order
 	unitCnt := "(select count(*) from units where order_id=orders.id) as unit_count"
 	mfCnt := "(select count(*) from master_files m inner join units u on u.id=m.unit_id where u.order_id=orders.id) as master_file_count"
-	err := filterQ.Preload("Agency").Preload("Customer").Omit("units_count", "master_files_count").
+	err := filterQ.Preload("Agency").Preload("Customer").Preload("Customer.AcademicStatus").Omit("units_count", "master_files_count").
 		Select("orders.*", unitCnt, mfCnt).
 		Offset(startIndex).Limit(pageSize).Order(orderStr).Find(&o).Error
 	if err != nil {

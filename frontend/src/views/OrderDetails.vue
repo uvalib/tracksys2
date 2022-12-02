@@ -35,7 +35,7 @@
                   </DataTable>
                </OverlayPanel>
                <DataDisplay v-if="detail.status=='completed'" label="Date Completed" :value="formatDateTime(detail.dateCompleted)"/>
-               <DataDisplay v-if="detail.customer" label="Customer" :value="`${detail.customer.lastName}, ${detail.customer.firstName}`"/>
+               <DataDisplay v-if="detail.customer" label="Customer" :value="customerInfo"/>
                <DataDisplay v-else label="Customer" value=""/>
                <DataDisplay v-if="detail.agency" label="Agency" :value="detail.agency.name"/>
                <DataDisplay v-else label="Agency" value=""/>
@@ -188,6 +188,14 @@ const { detail } = storeToRefs(ordersStore)
 
 const showEmail = ref(false)
 const events = ref(null)
+
+const customerInfo = computed(() => {
+   let cust = `${ordersStore.detail.customer.lastName}, ${ordersStore.detail.customer.firstName}`
+   if (ordersStore.detail.customer.academicStatus.id != 0) {
+      cust += ` (${ordersStore.detail.customer.academicStatus.name})`
+   }
+   return cust
+})
 
 const canDelete = computed(() => {
    return (user.isAdmin || user.isSupervisor) && ordersStore.detail.status=='requested' && ordersStore.units.length == 0

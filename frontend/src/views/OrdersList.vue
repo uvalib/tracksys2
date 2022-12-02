@@ -49,6 +49,7 @@
          <Column field="lastName" header="Customer" class="nowrap" >
             <template #body="slotProps">
                {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
+               <span class="academic-status" v-if="slotProps.data.customer.academicStatus">({{slotProps.data.customer.academicStatus.name}})</span>
             </template>
          </Column>
          <Column field="agency.name" header="Agency" />
@@ -200,6 +201,11 @@ button.p-button.create {
          font-size: 0.85em;
          span.status {
             width: 100%;
+         }
+         span.academic-status {
+            margin-left: 3px;
+            display:inline-block;
+            color: #ccc;
          }
          span.sta
          :deep(td), :deep(th) {
