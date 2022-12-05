@@ -41,7 +41,10 @@ function getNodeChildren( parentNode, children ) {
 
 export const useComponentsStore = defineStore('components', {
 	state: () => ({
-      nodes: []
+      selectedComponent: "",
+      nodes: [],
+      relatedMasterFiles: [],
+      loadingMasterFiles: false
 	}),
 	getters: {
       title: state => {
@@ -56,22 +59,41 @@ export const useComponentsStore = defineStore('components', {
          const system = useSystemStore()
          this.nodes = []
          system.working = true
+         this.selectedComponent = id
          return axios.get( `/api/components/${id}` ).then(response => {
+            let component = response.data.component
             let root = {
-               key: `${response.data.id}`,
-               label: getLabel(response.data),
-               data: getNodeData(response.data),
+               key: `${component.id}`,
+               label: getLabel(component),
+               data: getNodeData(component),
                children: []
             }
-            if ( response.data.children ) {
-               getNodeChildren(root, response.data.children)
+            if ( component.children ) {
+               getNodeChildren(root, component.children)
             }
 
             this.nodes = [root]
+            this.relatedMasterFiles = []
+            if (response.data.masterFiles) {
+               this.relatedMasterFiles = response.data.masterFiles
+            }
             system.working = false
          }).catch( e => {
             system.setError(e)
          })
       },
+      loadRelatedMasterFiles( id ) {
+         this.selectedComponent = id
+         this.loadingMasterFiles = true
+         this.relatedMasterFiles = []
+         axios.get( `/api/components/${id}/masterfiles` ).then(response => {
+            this.relatedMasterFiles = response.data
+            this.loadingMasterFiles = false
+         }).catch( e => {
+            const system = useSystemStore()
+            system.setError(e)
+            this.loadingMasterFiles = false
+         })
+      }
 	}
 })

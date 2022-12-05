@@ -2,16 +2,17 @@
    <h2>{{componentsStore.title}}</h2>
    <div class="details" v-if="systemStore.working==false">
       <Tree :value="componentsStore.nodes" :expandedKeys="expandedKeys"
-         :filter="true" filterMode="strict"
-         selectionMode="single" v-model:selectionKeys="selectedKey">
+         :filter="true" filterMode="strict" scrollHeight="450px"
+         selectionMode="single" v-model:selectionKeys="selectedKey" @node-select="componentSelected"
+      >
          <template #default="slotProps">
             <dl :id="`node-${slotProps.node.data.id}`">
                <DataDisplay label="ID" :value="slotProps.node.data.id" />
                <DataDisplay label="PID" :value="slotProps.node.data.pid" />
                <DataDisplay label="Type" :value="slotProps.node.data.componentType" />
-               <DataDisplay v-if="slotProps.node.data.title"  label="Title" :value="slotProps.node.data.title" />
-               <DataDisplay v-if="slotProps.node.data.label"  label="Label" :value="slotProps.node.data.label" />
-               <DataDisplay v-if="slotProps.node.data.description"  label="Description" :value="slotProps.node.data.description" />
+               <DataDisplay v-if="slotProps.node.data.title"  label="Title" :value="slotProps.node.data.title.trim()" />
+               <DataDisplay v-if="slotProps.node.data.label"  label="Label" :value="slotProps.node.data.label.trim()" />
+               <DataDisplay v-if="slotProps.node.data.description"  label="Description" :value="slotProps.node.data.description.trim()" />
                <DataDisplay v-if="slotProps.node.data.date" label="Date" :value="slotProps.node.data.date" />
                <DataDisplay v-if="slotProps.node.data.level" label="Level" :value="slotProps.node.data.level" />
                <DataDisplay v-if="slotProps.node.data.eadID" label="EAD ID" :value="slotProps.node.data.eadID" />
@@ -19,6 +20,9 @@
             </dl>
          </template>
       </Tree>
+      <div class="master-files">
+         <MasterFiles />
+      </div>
    </div>
 </template>
 
@@ -29,6 +33,7 @@ import { useSystemStore } from '@/stores/system'
 import { useComponentsStore } from '@/stores/components'
 import Tree from 'primevue/tree'
 import DataDisplay from '../components/DataDisplay.vue'
+import MasterFiles from '../components/component/MasterFiles.vue'
 
 const route = useRoute()
 const systemStore = useSystemStore()
@@ -50,6 +55,11 @@ onBeforeMount( async () => {
    expandSelectedComponent( cID )
 })
 
+function componentSelected( ) {
+   let cID = Object.keys( selectedKey.value )[0]
+   componentsStore.loadRelatedMasterFiles(cID)
+}
+
 function expandSelectedComponent( cID ) {
    let nodes = componentsStore.nodes
    if ( cID == nodes[0].key) {
@@ -61,11 +71,11 @@ function expandSelectedComponent( cID ) {
    nextTick( () =>{
       let eleID = `node-${cID}`
       let componentEle = document.getElementById(eleID)
-      var headerOffset = 40
-      var elementPosition = componentEle.getBoundingClientRect().top
-      var offsetPosition = elementPosition - headerOffset
-      window.scrollBy({
-         top: offsetPosition,
+      var w = document.getElementsByClassName("p-tree-wrapper")[0]
+      var elementPosition = componentEle.offsetTop - w.offsetTop - 40
+
+      w.scrollBy({
+         top: elementPosition,
          behavior: "smooth"
       })
       selectedKey.value[cID] = true
@@ -97,10 +107,14 @@ function findNode( currNode, tgtKey) {
 <style scoped lang="scss">
 .details {
    padding: 15px 25px;
+   .master-files {
+      margin-top: 25px;
+   }
+   :deep(dd) {
+      margin-bottom: 4px !important;
+   }
    :deep(span.p-treenode-label) {
       text-align: left;
-      // border-bottom: 2px solid var(--uvalib-grey-light);
-      // border-top: 1px solid var(--uvalib-grey-light);
       width: 100%;
       padding: 15px;
    }
@@ -114,6 +128,7 @@ function findNode( currNode, tgtKey) {
 
    :deep(.p-tree .p-treenode-children) {
       padding: 0 0 0 2rem;
+      font-size: 0.95em;
    }
 
 }

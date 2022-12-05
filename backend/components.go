@@ -102,5 +102,57 @@ func (svc *serviceContext) getComponentTree(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, topComponent)
+	log.Printf("INFO: find masterfiles related to componend %d", cID)
+	var related []*masterFile
+	err = svc.DB.Preload("Metadata").Where("component_id=?", cID).Find(&related).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get master files related to component %d: %s", cID, err.Error())
+	}
+
+	for idx, mf := range related {
+		mfPID := mf.PID
+		mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
+		if mf.MetadataID != nil {
+			mf.ViewerURL = fmt.Sprintf("%s/view/%s?unit=%d", svc.ExternalSystems.Curio, mf.Metadata.PID, mf.UnitID)
+			if idx > 0 {
+				mf.ViewerURL += fmt.Sprintf("&page=%d", (idx + 1))
+			}
+		} else {
+			mf.ViewerURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
+		}
+	}
+
+	resp := struct {
+		Component   *component    `json:"component"`
+		MasterFiles []*masterFile `json:"masterFiles,omitempty"`
+	}{
+		Component:   topComponent,
+		MasterFiles: related,
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) getComponentMasterFiles(c *gin.Context) {
+	cID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	log.Printf("INFO: get master files related to component %d", cID)
+	var related []*masterFile
+	err := svc.DB.Preload("Metadata").Where("component_id=?", cID).Find(&related).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get master files related to component %d: %s", cID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+	}
+	for idx, mf := range related {
+		mfPID := mf.PID
+		mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
+		if mf.MetadataID != nil {
+			mf.ViewerURL = fmt.Sprintf("%s/view/%s?unit=%d", svc.ExternalSystems.Curio, mf.Metadata.PID, mf.UnitID)
+			if idx > 0 {
+				mf.ViewerURL += fmt.Sprintf("&page=%d", (idx + 1))
+			}
+		} else {
+			mf.ViewerURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
+		}
+	}
+	c.JSON(http.StatusOK, related)
 }
