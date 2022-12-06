@@ -6,14 +6,15 @@ function getNodeData(node) {
    let data = {
       id: node.id,
       pid: node.pid,
-      title: node.title,
-      label: node.label,
-      description: node.description,
-      date: node.date,
+      title: node.title.replace(/\s+/g, ' ').trim(),
+      label: node.label.replace(/\s+/g, ' ').trim(),
+      description: node.description.replace(/\s+/g, ' ').trim(),
+      date: node.date.replace(/\s+/g, ' ').trim(),
       level: node.level,
       barcode: node.barcode,
       eadID: node.eadID,
       componentType: node.componentType.name,
+      masterFileCount: node.masterFileCount
    }
    return data
 }
@@ -83,6 +84,7 @@ export const useComponentsStore = defineStore('components', {
          })
       },
       loadRelatedMasterFiles( id ) {
+         console.log("LOAD MF FOR "+id)
          this.selectedComponent = id
          this.loadingMasterFiles = true
          this.relatedMasterFiles = []

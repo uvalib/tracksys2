@@ -2,7 +2,7 @@
    <h2>{{componentsStore.title}}</h2>
    <div class="details" v-if="systemStore.working==false">
       <Tree :value="componentsStore.nodes" :expandedKeys="expandedKeys"
-         :filter="true" filterMode="strict" scrollHeight="450px"
+         :filter="true" filterMode="lenient" scrollHeight="450px"
          selectionMode="single" v-model:selectionKeys="selectedKey" @node-select="componentSelected"
       >
          <template #default="slotProps">
@@ -17,6 +17,7 @@
                <DataDisplay v-if="slotProps.node.data.level" label="Level" :value="slotProps.node.data.level" />
                <DataDisplay v-if="slotProps.node.data.eadID" label="EAD ID" :value="slotProps.node.data.eadID" />
                <DataDisplay v-if="slotProps.node.data.barcode" label="Barcode" :value="slotProps.node.data.barcode" />
+               <DataDisplay label="Master Files" :value="slotProps.node.data.masterFileCount" blankValue="0" />
             </dl>
          </template>
       </Tree>
@@ -55,8 +56,8 @@ onBeforeMount( async () => {
    expandSelectedComponent( cID )
 })
 
-function componentSelected( ) {
-   let cID = Object.keys( selectedKey.value )[0]
+function componentSelected( tgtComponent ) {
+   let cID = parseInt(tgtComponent.key, 10)
    componentsStore.loadRelatedMasterFiles(cID)
 }
 
@@ -123,11 +124,11 @@ function findNode( currNode, tgtKey) {
    }
    :deep(.p-treenode.p-treenode-leaf) {
       padding-right: 0;
-      margin: 10px 0;
+      margin: 2px 0;
    }
 
    :deep(.p-tree .p-treenode-children) {
-      padding: 0 0 0 2rem;
+      padding: 0 0 0 3rem;
       font-size: 0.95em;
    }
 

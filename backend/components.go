@@ -19,6 +19,7 @@ type componentType struct {
 }
 
 type component struct {
+	MasterFileCount   int64         `gorm:"column:mf_cnt" json:"masterFileCount"`
 	ID                int64         `json:"id"`
 	ParentComponentID int64         `json:"-"`
 	PID               string        `gorm:"column:pid" json:"pid"`
@@ -39,7 +40,8 @@ func (svc *serviceContext) getComponentTree(c *gin.Context) {
 	cID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	log.Printf("INFO: get component tree for component %d", cID)
 	var tgtCmp *component
-	err := svc.DB.Preload("ComponentType").Find(&tgtCmp, cID).Error
+	subQ := "(select count(*) from master_files m where component_id=components.id) as mf_cnt"
+	err := svc.DB.Preload("ComponentType").Select("components.*", subQ).Find(&tgtCmp, cID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Printf("INFO: component %d not found", cID)
@@ -50,6 +52,7 @@ func (svc *serviceContext) getComponentTree(c *gin.Context) {
 		}
 		return
 	}
+	log.Printf("COUNT: %d", tgtCmp.MasterFileCount)
 
 	var topComponent *component
 	if tgtCmp.Ancestry == "" {
@@ -59,7 +62,7 @@ func (svc *serviceContext) getComponentTree(c *gin.Context) {
 		ancestryParts := strings.Split(tgtCmp.Ancestry, "/")
 		topID, _ := strconv.ParseInt(ancestryParts[0], 10, 64)
 		log.Printf("INFO: component %d is part of a tree rooted at %d", cID, topID)
-		err = svc.DB.Preload("ComponentType").Find(&topComponent, topID).Error
+		err = svc.DB.Preload("ComponentType").Select("components.*", subQ).Find(&topComponent, topID).Error
 		if err != nil {
 			log.Printf("ERROR: unable to get component %d top level parent %d: %s", cID, topID, err.Error())
 			c.String(http.StatusInternalServerError, err.Error())
@@ -69,7 +72,8 @@ func (svc *serviceContext) getComponentTree(c *gin.Context) {
 
 	log.Printf("INFO: get all children for component %d", topComponent.ID)
 	var children []*component
-	err = svc.DB.Preload("ComponentType").Where("ancestry like ?", fmt.Sprintf("%d%%", topComponent.ID)).Order("id asc").Find(&children).Error
+	err = svc.DB.Preload("ComponentType").Where("ancestry like ?", fmt.Sprintf("%d%%", topComponent.ID)).
+		Select("components.*", subQ).Order("id asc").Find(&children).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get children of %d: %s", topComponent.ID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
