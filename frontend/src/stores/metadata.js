@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { useSystemStore } from './system'
 import axios from 'axios'
-import { useRouter } from 'vue-router'
 
 export const useMetadataStore = defineStore('metadata', {
 	state: () => ({
@@ -309,7 +308,6 @@ export const useMetadataStore = defineStore('metadata', {
          if (this.detail.id == metadataID) return
 
          const system = useSystemStore()
-         const router = useRouter()
          system.working = true
          return axios.get( `/api/metadata/${metadataID}` ).then(response => {
             this.setMetadataDetails(response.data)
@@ -317,7 +315,7 @@ export const useMetadataStore = defineStore('metadata', {
          }).catch( e => {
             if (e.response && e.response.status == 404) {
                system.working = false
-               router.push("/not_found")
+               this.router.push("/not_found")
             } else {
                system.setError(e)
             }
@@ -326,12 +324,10 @@ export const useMetadataStore = defineStore('metadata', {
 
       async deleteMetadata() {
          const system = useSystemStore()
-         const router = useRouter()
-
          system.working = true
          return axios.delete( `/api/metadata/${this.detail.id}` ).then( () => {
             system.working = false
-            router.push("/")
+            this.router.push("/")
          }).catch( e => {
             system.setError(e)
          })

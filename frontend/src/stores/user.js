@@ -1,6 +1,5 @@
 import axios from 'axios'
 import { defineStore } from 'pinia'
-import { useRouter } from 'vue-router'
 
 function parseJwt(token) {
    var base64Url = token.split('.')[1]
@@ -73,13 +72,12 @@ export const useUserStore = defineStore('user', {
             axios.interceptors.response.use(
                res => res,
                err => {
-                  console.log("failed response")
+                  console.log("failed response for "+err.config.url)
                   console.log(err)
                   if (err.config.url.match(/\/authenticate/)) {
                      this.router.push("/forbidden")
                   } else {
                      if (err.response && err.response.status == 401) {
-                        const router = useRouter()
                         localStorage.removeItem("ts2_jwt")
                         this.jwt = ""
                         this.firstName = ""
@@ -87,8 +85,7 @@ export const useUserStore = defineStore('user', {
                         this.role = ""
                         this.computeID = ""
                         this.ID = 0
-                        router.push("/signedout?expired=1")
-                        return new Promise(() => { })
+                        this.router.push("/signedout?expired=1")
                      }
                   }
                   return Promise.reject(err)

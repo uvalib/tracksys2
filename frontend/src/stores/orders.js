@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { useSystemStore } from './system'
 import axios from 'axios'
 import dayjs from 'dayjs'
-import { useRouter } from 'vue-router'
 
 export const useOrdersStore = defineStore('orders', {
 	state: () => ({
@@ -162,7 +161,6 @@ export const useOrdersStore = defineStore('orders', {
       async getOrderDetails(orderID) {
          if ( this.detail.id == orderID ) return
          const system = useSystemStore()
-         const router = useRouter()
          system.working = true
          return axios.get( `/api/orders/${orderID}` ).then(response => {
             this.detail = response.data.order
@@ -180,7 +178,7 @@ export const useOrdersStore = defineStore('orders', {
             this.clearDetails()
             if (e.response && e.response.status == 404) {
                system.working = false
-               router.push("/not_found")
+               this.router.push("/not_found")
             } else {
                system.setError(e)
             }
