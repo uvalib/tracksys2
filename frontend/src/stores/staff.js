@@ -48,7 +48,6 @@ export const useStaffStore = defineStore('staff', {
             } else {
                // insert new staff at head of current page. the order will get fixed with a later load/sort/filter
                this.staff.unshift(response.data)
-               this.staff.pop()
             }
             system.working = false
          }).catch( e => {

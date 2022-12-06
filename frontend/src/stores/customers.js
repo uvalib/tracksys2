@@ -47,7 +47,6 @@ export const useCustomersStore = defineStore('customers', {
             } else {
                // insert new customer at head of current page. the order will get fixed with a later load/sort/filter
                this.customers.unshift(response.data)
-               this.customers.pop()
             }
             system.working = false
          }).catch( e => {
