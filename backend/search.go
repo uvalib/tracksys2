@@ -119,7 +119,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			c.String(http.StatusBadRequest, "invalid filters")
 			return
 		}
-		log.Printf("INFO: filters: %+v", filters)
+
 		for idx, f := range filters {
 			bits := strings.Split(f.Filter, "|")
 			tgtField := bits[0]
@@ -177,7 +177,8 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		}
 
 		searchQ.Count(&resp.Components.Total)
-		err := searchQ.Offset(startIndex).Limit(pageSize).Find(&resp.Components.Hits).Error
+		subQ := "(select count(*) from master_files m where component_id=components.id) as mf_cnt"
+		err := searchQ.Offset(startIndex).Limit(pageSize).Select("components.*", subQ).Find(&resp.Components.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: component search failed: %s", err.Error())
 		}

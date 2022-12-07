@@ -54,7 +54,8 @@
             <InputText type="text" v-model="filterModel.value" placeholder="Date"/>
          </template>
       </Column>
-      <Column field="eadID" header="EAD ID" class="nowrap" filterField="ead_id_att" :showFilterMatchModes="false" />
+      <Column field="eadID" header="EAD ID" />
+      <Column field="masterFileCount" header="Master Files"/>
       <Column header="" class="row-acts nowrap">
          <template #body="slotProps">
             <router-link :to="`/components/${slotProps.data.id}`">View</router-link>
@@ -81,7 +82,6 @@ const filters = ref( {
    'label': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'content_desc': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'date': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'ead_id_att': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
 })
 
 const selectedFilters = computed(() => {

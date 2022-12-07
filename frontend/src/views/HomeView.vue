@@ -179,6 +179,9 @@ function createMetadataClosed() {
 </script>
 
 <style scoped lang="scss">
+h2 {
+   margin-bottom: 0 !important;
+}
 div.actions {
    position: absolute;
    right:15px;
