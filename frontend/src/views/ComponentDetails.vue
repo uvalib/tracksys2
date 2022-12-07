@@ -80,11 +80,10 @@ function componentSelected( tgtComponent ) {
 
 function expandSelectedComponent( cID ) {
    let nodes = componentsStore.nodes
-   if ( cID == nodes[0].key) {
-      return
+   if ( cID != nodes[0].key) {
+      expandedKeys.value[nodes[0].key] = true
+      findNode(nodes[0], cID)
    }
-   expandedKeys.value[nodes[0].key] = true
-   findNode(nodes[0], cID)
 
    nextTick( () =>{
       let eleID = `node-${cID}`

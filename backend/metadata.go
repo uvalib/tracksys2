@@ -484,7 +484,7 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 		log.Printf("INFO: get extended sirsi/xml metadata for %d", md.ID)
 		parsedDetail, err := svc.getUVAMapData(md.PID)
 		if err != nil {
-			log.Printf("ERROR: unable to get extended metadata for sirsi/cml %s: %s", md.PID, err.Error())
+			log.Printf("ERROR: unable to get extended metadata for sirsi/xml %s: %s", md.PID, err.Error())
 			out.Error = err.Error()
 		} else {
 			out.Extended = parsedDetail

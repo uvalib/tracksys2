@@ -34,7 +34,7 @@
          </DataTable>
       </Panel>
       <Panel header="Related Master Files" v-else>
-         <p>No master files are associated with this unit.</p>
+         <p>No master files are associated with this component.</p>
       </Panel>
    </template>
 </template>

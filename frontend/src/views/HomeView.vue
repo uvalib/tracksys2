@@ -1,5 +1,9 @@
 <template>
    <h2>Home</h2>
+   <div class="actions" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
+      <DPGButton label="Create Metadata" class="create" @click="createMetadata()"/>
+      <DPGButton label="Create Order" class="create" @click="createOrder()"/>
+   </div>
    <div class="home">
       <div class="stats">
          <div>
@@ -35,22 +39,34 @@
          <SearchResults v-if="searchStore.searched" />
       </div>
    </div>
+   <Dialog v-model:visible="showCreateMetadata" :modal="true" header="Create Metadata" @hide="createMetadataClosed" :style="{width: '750px'}">
+      <NewMetadataPanel @canceled="createMetadataClosed" @created="metadataCreated" />
+   </Dialog>
 </template>
 
 <script setup>
 import { useSearchStore } from '../stores/search'
 import { useDashboardStore } from '../stores/dashboard'
+import { useUserStore } from '../stores/user'
+import { useSystemStore } from '../stores/system'
+import { useMetadataStore } from '../stores/metadata'
 import SearchResults from '@/components/results/SearchResults.vue'
 import { ref, computed, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import Dialog from 'primevue/dialog'
+import NewMetadataPanel from '../components/order/NewMetadataPanel.vue'
 
 const searchStore = useSearchStore()
 const route = useRoute()
 const router = useRouter()
 const dashboard = useDashboardStore()
+const userStore = useUserStore()
+const systemStore = useSystemStore()
+const metadataStore = useMetadataStore()
 
 const unitID = ref("")
 const unitError = ref("")
+const showCreateMetadata = ref(false)
 
 const scopeFields = computed( () => {
    let scope = searchStore.scope
@@ -145,25 +161,53 @@ function doSearch() {
       searchStore.executeSearch(searchStore.scope)
    }
 }
+
+function createOrder() {
+   router.push("/orders/new")
+}
+
+function createMetadata() {
+   showCreateMetadata.value = true
+}
+function metadataCreated() {
+   systemStore.toastMessage("Metadata Created", `Metadata ${metadataStore.dl.pid}: ${metadataStore.detail.title} has been created.`)
+   showCreateMetadata.value = false
+}
+function createMetadataClosed() {
+   showCreateMetadata.value = false
+}
 </script>
 
 <style scoped lang="scss">
+div.actions {
+   position: absolute;
+   right:15px;
+   top: 15px;
+   button.p-button {
+      margin-right: 5px;
+      font-size: 0.9em;
+   }
+}
    .home {
-      margin-top: 15px;
+      margin-top: 0px;
       padding-bottom: 50px;
       min-height:600px;
       .stats {
-         margin: 40px auto;
+         margin: 0px auto 40px auto;
          display: flex;
          flex-flow: row wrap;
          justify-content: center;
+         background: #fafafa;
+         padding: 15px;
+         border-bottom: 1px solid var(--uvalib-grey-light);
+
          label {
             font-weight: 600;
             margin-right: 5px;
          }
          .sep {
             display: inline-block;
-            width: 25px;
+            width: 50px;
          }
       }
 
@@ -183,7 +227,7 @@ function doSearch() {
          flex-flow: row nowrap;
          justify-content: center;
          align-items: center;
-         width: 75%;
+         width: 70%;
          margin: 0 auto;
          span  {
             font-weight: bold;
@@ -202,13 +246,15 @@ function doSearch() {
             padding: 6px 15px;
             margin-left: 10px;
             display: inline-block;
+            width: 125px;
          }
          .reset-button button {
             @include base-button();
             font-size: 0.95em;
             padding: 6px 15px;
-            margin-left: 20px;
+            margin-left: 10px;
             display: inline-block;
+            width: 125px;
          }
          .formkit-outer.select-wrap {
             margin: 0 10px 0 0;
