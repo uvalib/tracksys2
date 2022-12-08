@@ -495,6 +495,19 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 					out.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
 				}
 			}
+			log.Printf("INFO: look for metdata %d exemplar", mdID)
+			var exemplar masterFile
+			err = svc.DB.Where("metadata_id=? and exemplar=?", mdID, 1).Limit(1).Find(&exemplar).Error
+			if err != nil {
+				log.Printf("ERROR: unable to find exemplar for metadata %d: %s", mdID, err.Error())
+			} else {
+				if exemplar.ID > 0 {
+					log.Printf("INFO: metadata %d has exemplar [%s]", mdID, exemplar.PID)
+					out.Extended.PreviewURL = fmt.Sprintf("%s/%s/full/!240,385/0/default.jpg", svc.ExternalSystems.IIIF, exemplar.PID)
+				} else {
+					log.Printf("INFO: metadata %d does not have an exemplar", mdID)
+				}
+			}
 		}
 	} else {
 		if md.ExternalSystem.Name == "ArchivesSpace" {
@@ -655,9 +668,6 @@ func (svc *serviceContext) getUVAMapData(pid string) (*internalMetadata, error) 
 		case "uri":
 			if f.Access == "raw object" {
 				detail.ObjectURL = f.Text
-			} else if f.Access == "preview" {
-				url := strings.Replace(f.Text, "!125,200", "!240,385", 1)
-				detail.PreviewURL = url
 			}
 		}
 	}
