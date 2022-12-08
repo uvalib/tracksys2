@@ -160,14 +160,18 @@ func (svc *serviceContext) createOrder(c *gin.Context) {
 		return
 	}
 	log.Printf("INFO: order %d updated", newOrder.ID)
-	svc.DB.Preload("Agency").Preload("Customer").Preload("Customer.AcademicStatus").Find(&newOrder, newOrder.ID)
+	svc.DB.Preload("Agency").Preload("Customer").
+		Preload("Customer.AcademicStatus").Preload("Customer.Addresses").
+		Find(&newOrder, newOrder.ID)
 	c.JSON(http.StatusOK, newOrder)
 }
 
 func (svc *serviceContext) loadOrder(orderID string) (*order, error) {
 	log.Printf("INFO: load order %s details", orderID)
 	var oDetail order
-	err := svc.DB.Preload("Agency").Preload("Customer").Preload("Customer.AcademicStatus").Limit(1).Find(&oDetail, orderID).Error
+	err := svc.DB.Preload("Agency").Preload("Customer").
+		Preload("Customer.AcademicStatus").Preload("Customer.AcademicStatus").Preload("Customer.Addresses").
+		Limit(1).Find(&oDetail, orderID).Error
 	if err != nil {
 		return nil, err
 	}

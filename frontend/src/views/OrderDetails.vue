@@ -35,8 +35,35 @@
                   </DataTable>
                </OverlayPanel>
                <DataDisplay v-if="detail.status=='completed'" label="Date Completed" :value="formatDateTime(detail.dateCompleted)"/>
-               <DataDisplay v-if="detail.customer" label="Customer" :value="customerInfo"/>
+               <DataDisplay v-if="detail.customer" label="Customer" :value="customerInfo">
+                  <div class="customer">
+                     <span class="name" aria-haspopup="true" aria-controls="events-panel" @click="toggleCustomer">{{customerInfo}}</span>
+                  </div>
+               </DataDisplay>
                <DataDisplay v-else label="Customer" value=""/>
+               <OverlayPanel ref="customer" id="customer-panel" :showCloseIcon="true">
+                  <TabView>
+                     <TabPanel header="Customer">
+                        <dl>
+                           <DataDisplay label="Last Name" :value="detail.customer.lastName"></DataDisplay>
+                           <DataDisplay label="First Name" :value="detail.customer.firstName"></DataDisplay>
+                           <DataDisplay label="Email" :value="detail.customer.email"></DataDisplay>
+                           <DataDisplay label="Academic Status" :value="detail.customer.academicStatus.name"></DataDisplay>
+                        </dl>
+                     </TabPanel>
+                     <TabPanel v-for="(a,idx) in detail.customer.addresses" :header="addressHeader(idx)" :key="`c${detail.customer}-addr${idx}`" >
+                        <dl>
+                           <DataDisplay label="Address 1" :value="a.address1"></DataDisplay>
+                           <DataDisplay v-if="a.address2" label="Address 2" :value="a.address2"></DataDisplay>
+                           <DataDisplay v-if="a.city" label="City" :value="a.city"></DataDisplay>
+                           <DataDisplay v-if="a.state" label="State" :value="a.state"></DataDisplay>
+                           <DataDisplay v-if="a.zip"  label="Zip" :value="a.zip"></DataDisplay>
+                           <DataDisplay v-if="a.phone" label="Phone" :value="a.phone"></DataDisplay>
+                        </dl>
+                     </TabPanel>
+                  </TabView>
+               </OverlayPanel>
+
                <DataDisplay v-if="detail.agency" label="Agency" :value="detail.agency.name"/>
                <DataDisplay v-else label="Agency" value=""/>
                <DataDisplay label="Title" :value="detail.title"/>
@@ -159,6 +186,8 @@ import Dialog from 'primevue/dialog'
 import OverlayPanel from 'primevue/overlaypanel'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import TabView from 'primevue/tabview'
+import TabPanel from 'primevue/tabpanel'
 import { onBeforeMount, ref, computed } from 'vue'
 import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
@@ -188,6 +217,7 @@ const { detail } = storeToRefs(ordersStore)
 
 const showEmail = ref(false)
 const events = ref(null)
+const customer = ref(null)
 
 const customerInfo = computed(() => {
    let cust = `${ordersStore.detail.customer.lastName}, ${ordersStore.detail.customer.firstName}`
@@ -258,6 +288,9 @@ function editOrder() {
 function toggleEvents(e) {
    events.value.toggle(e)
 }
+function toggleCustomer(e) {
+   customer.value.toggle(e)
+}
 
 onBeforeRouteUpdate(async (to) => {
    let orderID = to.params.id
@@ -270,6 +303,11 @@ onBeforeMount( async () => {
    await ordersStore.getOrderDetails(orderID)
    await customerStore.getCustomers()
 })
+
+function addressHeader(idx) {
+   if ( idx == 0) return "Primary Address"
+   return "Billing Address"
+}
 function recreateEmailClicked() {
    ordersStore.recreateEmail()
 }
@@ -426,12 +464,28 @@ div.item {
    dl {
       margin-bottom: 10px !important;
    }
-   div.status {
+
+   div.customer, div.status {
       display: flex;
       flex-flow: row nowrap;
       justify-content: flex-start;
       align-items: center;
-      margin-top: -5px;
+      button.p-button {
+         height: auto;
+         width: auto;
+         margin-left: 10px;
+         font-weight: bold;;
+      }
+      .name {
+         color: var(--uvalib-blue-alt-dark);
+         font-weight: 500;
+         text-decoration: none;
+         display: inline-block;
+         cursor: pointer;
+         &:hover {
+            text-decoration: underline;
+         }
+      }
    }
 
    div.left {
@@ -464,6 +518,30 @@ div.item {
             margin-right: 10px;
          }
       }
+   }
+}
+:deep(dl) {
+   margin: 0;
+   display: inline-grid;
+   grid-template-columns: max-content 1fr;
+   grid-column-gap: 10px;
+   font-size: 0.9em;
+   text-align: left;
+   box-sizing: border-box;
+
+   dt {
+      font-weight: bold;
+      text-align: right;
+   }
+
+   dd {
+      margin: 0 0 5px 0;
+      word-break: break-word;
+      -webkit-hyphens: auto;
+      -moz-hyphens: auto;
+      hyphens: auto;
+      white-space: break-spaces;
+      margin-inline-start: 5px;
    }
 }
 div.email {

@@ -77,8 +77,12 @@ export const useSystemStore = defineStore('system', {
             const searchStore = useSearchStore()
             searchStore.setGlobalSearchFields(response.data.searchFields)
             this.working = false
-         }).catch( e => {
-            this.setError(  e )
+         }).catch( err => {
+            if (err.response && err.response.status == 401) {
+               console.log("Session expired in getConfig")
+            } else {
+               this.setError(  err )
+            }
          })
       },
 	}

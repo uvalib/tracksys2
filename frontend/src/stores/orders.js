@@ -76,7 +76,6 @@ export const useOrdersStore = defineStore('orders', {
       hasPatronDeliverables: state => {
          let hasDeliverables = false
          state.units.some( u=>{
-            console.log(u)
             /// only units that are NOT for digital collection building can have patron deliverables
             if (u.intendedUse && u.intendedUse.id != 110 ) {
                hasDeliverables = true

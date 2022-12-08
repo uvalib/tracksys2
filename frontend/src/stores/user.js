@@ -86,6 +86,7 @@ export const useUserStore = defineStore('user', {
                         this.computeID = ""
                         this.ID = 0
                         this.router.push("/signedout?expired=1")
+                        return new Promise(() => { })
                      }
                   }
                   return Promise.reject(err)
