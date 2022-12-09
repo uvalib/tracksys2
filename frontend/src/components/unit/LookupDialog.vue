@@ -2,13 +2,14 @@
    <DPGButton @click="show" icon="pi pi-search" class="p-button-rounded p-button-text" />
    <Dialog v-model:visible="isOpen" :modal="true" :header="dialogTitle">
       <div class="lookup" v-if="mode=='lookup'">
-         <input type="text" v-model="query"  @keydown.stop.prevent.enter="lookupMetadata" autofocus/>
-         <DPGButton @click="lookupMetadata" label="Lookup" class="p-button-secondary"/>
+         <input type="text" v-model="query"  @keydown.stop.prevent.enter="lookupRecords" autofocus/>
+         <DPGButton @click="lookupRecords" label="Lookup" class="p-button-secondary"/>
          <DPGButton @click="createMetadata" label="Create" class="p-button-secondary" v-if="props.create"/>
       </div>
       <NewMetadataPanel v-else @canceled="metadataCreateCanceled" @created="metadataCreated" />
       <template v-if="searched">
-         <div class="no-results" v-if="(target=='metadata' && metadataStore.totalSearchHits == 0) || (target=='orders' && ordersStore.totalLookupHits == 0)">
+         <div class="no-results"
+            v-if="(target=='metadata' && metadataStore.totalSearchHits == 0) || (target=='orders' && ordersStore.totalLookupHits == 0) || (target=='component' && componentsStore.totalLookupHits == 0)">
             No matching records found.
          </div>
          <div v-else class="hits">
@@ -27,6 +28,25 @@
                   <Column field="callNumber" header="Call Number" :sortable="true"/>
                   <Column field="barcode" header="Barcode" :sortable="true"/>
                </DataTable>
+
+               <DataTable v-if="target=='component'" :value="componentsStore.searchHits" ref="componentHitsTable" dataKey="id"
+                  stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+                  v-model:selection="selectedHit" selectionMode="single"
+                  :lazy="false" :paginator="false" :rows="30" removableSort
+               >
+                  <Column field="id" header="ID" :sortable="true"/>
+                  <Column field="pid" header="PID" :sortable="true"/>
+                  <Column field="title" header="Title" :sortable="true" >
+                     <template #body="slotProps">{{truncateTitle(slotProps.data.title)}}</template>
+                  </Column>
+                  <Column field="label" header="Label" :sortable="true" >
+                     <template #body="slotProps">{{truncateTitle(slotProps.data.label)}}</template>
+                  </Column>
+                  <Column field="date" header="Date" :sortable="false"/>
+                  <Column field="eadID" header="EAD ID" :sortable="false"/>
+                  <Column field="masterFileCount" header="Master Files"/>
+               </DataTable>
+
                <DataTable v-if="target=='orders'" :value="ordersStore.lookupHits" ref="orderHitsTable" dataKey="id"
                   stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
                   v-model:selection="selectedHit" selectionMode="single"
@@ -40,8 +60,8 @@
                   <template #body="slotProps">
                      {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
                   </template>
-               </Column>
-               <Column field="agency.name" header="Agency" />
+                  </Column>
+                  <Column field="agency.name" header="Agency" />
                </DataTable>
             </div>
          </div>
@@ -61,6 +81,7 @@ import { ref, computed } from 'vue'
 import Dialog from 'primevue/dialog'
 import { useMetadataStore } from '@/stores/metadata'
 import { useOrdersStore } from '@/stores/orders'
+import { useComponentsStore } from '@/stores/components'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import NewMetadataPanel from '../order/NewMetadataPanel.vue'
@@ -79,6 +100,7 @@ const props = defineProps({
 
 const metadataStore = useMetadataStore()
 const ordersStore = useOrdersStore()
+const componentsStore = useComponentsStore()
 
 const isOpen = ref(false)
 const mode = ref("lookup")
@@ -104,12 +126,17 @@ const dialogTitle = computed(() => {
       if (mode.value == "create") return "Create Metadata"
       return "Metadata Lookup"
    }
+   if (props.target == "component") {
+      return "Component Lookup"
+   }
    return "Order Lookup"
 })
 
-async function lookupMetadata() {
+async function lookupRecords() {
    if (props.target == "metadata") {
       await metadataStore.lookup( query.value )
+   } else if  (props.target == "component") {
+      await componentsStore.lookup( query.value )
    } else {
       await ordersStore.lookup( query.value )
    }

@@ -45,7 +45,9 @@ export const useComponentsStore = defineStore('components', {
       selectedComponent: "",
       nodes: [],
       relatedMasterFiles: [],
-      loadingMasterFiles: false
+      loadingMasterFiles: false,
+      searchHits: [],
+      totalSearchHits: 0,
 	}),
 	getters: {
       title: state => {
@@ -96,6 +98,16 @@ export const useComponentsStore = defineStore('components', {
             system.setError(e)
             this.loadingMasterFiles = false
          })
-      }
+      },
+      async lookup( query ) {
+         const system = useSystemStore()
+         let url = `/api/search?scope=components&q=${encodeURIComponent(query)}&start=0&limit=30`
+         return axios.get(url).then(response => {
+            this.searchHits = response.data.components.hits
+            this.totalSearchHits = response.data.components.total
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
 	}
 })

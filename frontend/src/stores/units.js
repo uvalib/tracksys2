@@ -205,7 +205,17 @@ export const useUnitsStore = defineStore('units', {
             system.toastMessage("Assign Metadata Success", 'The selected master files have been assigned new metadata.')
          }).catch( e => {
             system.setError(e)
-            this.updateInProgress = false
+         })
+      },
+
+      assignComponent( componentID, masterFileIDs) {
+         const system = useSystemStore()
+         let data = {ids: masterFileIDs, componentID:  parseInt(componentID,10) }
+         axios.post(`${system.jobsURL}/units/${this.detail.id}/masterfiles/component`, data).then( () => {
+            this.getMasterFiles( this.detail.id )
+            system.toastMessage("Assign Component Success", `The selected master files have been assigned to component ${componentID}.`)
+         }).catch( e => {
+            system.setError(e)
          })
       },
 

@@ -17,6 +17,7 @@
                <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
             </template>
             <AssignMeadataDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :ids="selectedIDs" />
+            <AssignComponentDialog  v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :ids="selectedIDs" />
          </div>
          <DataTable :value="unitsStore.masterFiles" ref="unitMasterFilesTable" dataKey="id"
             showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
@@ -71,6 +72,7 @@ import { useConfirm } from "primevue/useconfirm"
 import RenumberDialog from './RenumberDialog.vue'
 import AssignMeadataDialog from './AssignMeadataDialog.vue'
 import CloneMasterFiles from './CloneMasterFiles.vue'
+import AssignComponentDialog from './AssignComponentDialog.vue'
 
 const confirm = useConfirm()
 const systemStore = useSystemStore()
