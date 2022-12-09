@@ -1,4 +1,13 @@
 <script setup>
+import { onBeforeMount } from 'vue'
+import { useEquipmentStore } from '@/stores/equipment'
+
+const equipmentStore = useEquipmentStore()
+
+onBeforeMount( async () => {
+   document.title = "Equipment"
+   equipmentStore.getEquipment()
+})
 </script>
 
 <template>

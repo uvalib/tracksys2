@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { useSystemStore } from './system'
 import axios from 'axios'
 
-export const useDashboardStore = defineStore('dsahboard', {
+export const useDashboardStore = defineStore('dashboard', {
 	state: () => ({
       dueInOneWeek: 0,
       overdue: 0,
