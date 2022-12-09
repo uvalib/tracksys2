@@ -1,8 +1,8 @@
 <template>
    <Menubar :model="items">
-   <template #end>
-      <span class="signout" tabindex="0" @click="signOut">Sign Out</span>
-   </template>
+      <template #end>
+         <span class="signout" tabindex="0" @click="signOut">Sign Out</span>
+      </template>
    </Menubar>
 </template>
 

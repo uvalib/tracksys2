@@ -117,6 +117,8 @@ onBeforeMount( () => {
 
    if (paramsDetected) {
       searchStore.executeSearch(searchStore.scope)
+   } else {
+      searchStore.resetSearch()
    }
 })
 

@@ -9,7 +9,7 @@
             </a>
          </div>
          <div class="site-link">
-            <router-link to="/">Tracksys</router-link>
+            <router-link @click="homeClicked" to="/">Tracksys</router-link>
             <p class="version">v{{ systemStore.version }}</p>
          </div>
       </div>
@@ -38,6 +38,7 @@ import MenuBar from "@/components/MenuBar.vue"
 import WaitSpinner from "@/components/WaitSpinner.vue"
 import { useSystemStore } from "@/stores/system"
 import { useUserStore } from "@/stores/user"
+import { useSearchStore } from "@/stores/search"
 import { onBeforeMount, watch, ref } from 'vue'
 import Dialog from 'primevue/dialog'
 import Toast from 'primevue/toast'
@@ -45,6 +46,7 @@ import { useToast } from "primevue/usetoast"
 
 const systemStore = useSystemStore()
 const userStore = useUserStore()
+const searchStore = useSearchStore()
 const toast = useToast()
 
 const configuring = ref(true)
@@ -56,6 +58,10 @@ watch(() => systemStore.toast.show, (newShow) => {
       systemStore.clearToastMessage()
    }
 })
+
+function homeClicked() {
+   searchStore.resetSearch()
+}
 
 function errorClosed() {
    systemStore.setError("")
