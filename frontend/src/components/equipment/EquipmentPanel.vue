@@ -6,11 +6,6 @@
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       :lazy="false" :paginator="false" :rows="props.equipment.length"
    >
-      <Column field="status" header="Status" class="status-col">
-         <template #body="slotProps">
-            <span :class="statusClass(slotProps.data.status)"></span>
-         </template>
-      </Column>
       <Column field="name" header="Name" class="e-wide"/>
       <Column field="serialNumber" header="Serial Number" class="e-wide"/>
       <Column field="" header="Workstation" class="e-wide">
@@ -40,13 +35,6 @@ const props = defineProps({
 })
 
 const equipmentStore = useEquipmentStore()
-
-function statusClass(statusID) {
-   if (statusID == 1) {
-      return "ws-status inactive"
-   }
-   return "ws-status active"
-}
 
 function workstation( equipID ) {
    let wsName = ""

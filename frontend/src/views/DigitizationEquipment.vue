@@ -1,5 +1,5 @@
 <script setup>
-import { onBeforeMount, ref } from 'vue'
+import { onBeforeMount, ref, computed } from 'vue'
 import { useEquipmentStore } from '@/stores/equipment'
 import Panel from 'primevue/panel'
 import DataTable from 'primevue/datatable'
@@ -7,15 +7,45 @@ import Column from 'primevue/column'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import EquipmentPanel from '../components/equipment/EquipmentPanel.vue'
+import { useConfirm } from "primevue/useconfirm"
 
+const confirm = useConfirm()
 const equipmentStore = useEquipmentStore()
 
 const selectedWorkstation = ref()
+
+const clearAllDisabled = computed( () => {
+   let ws = equipmentStore.workstations.find(ws => ws.id == selectedWorkstation.value.id)
+   return ws.projectCount > 0
+})
 
 onBeforeMount( async () => {
    document.title = "Equipment"
    equipmentStore.getEquipment()
 })
+
+function deactivateWorkstation( wsID ) {
+   equipmentStore.deactivateWorkstation(wsID)
+}
+function activateWorkstation( wsID ) {
+   equipmentStore.activateWorkstation(wsID)
+}
+function retireWorkstation( wsID ) {
+   let ws = equipmentStore.workstations.find(ws => ws.id == wsID)
+   confirm.require({
+      message: `Retire workstation '${ws.name}'?`,
+      header: 'Confirm Clone',
+      icon: 'pi pi-question-circle',
+      rejectClass: 'p-button-secondary',
+      accept: () => {
+         equipmentStore.retireWorkstation(wsID)
+      }
+   })
+}
+
+function workstationSelected() {
+   equipmentStore.workstationSelected( selectedWorkstation.value.id )
+}
 
 function clearSetup() {
    console.log("clear")
@@ -36,7 +66,7 @@ function statusClass(statusID) {
          <Panel header="Workstations">
             <DataTable :value="equipmentStore.workstations" ref="workstationTable" dataKey="id"
                stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-               :lazy="false" :paginator="false"
+               @rowSelect="workstationSelected"
                selectionMode="single" v-model:selection="selectedWorkstation"
                :rows="equipmentStore.workstations.length" :totalRecords="equipmentStore.workstations.length"
             >
@@ -51,7 +81,7 @@ function statusClass(statusID) {
                   <template #body="slotProps">
                      <DPGButton v-if="slotProps.data.status==0" label="Deactivate"  class="p-button-secondary first" @click="deactivateWorkstation(slotProps.data.id)"/>
                      <DPGButton v-else label="Activate"  class="p-button-secondary first" @click="activateWorkstation(slotProps.data.id)"/>
-                     <DPGButton label="Retire"  class="p-button-secondary" @click="retireWorkstation(slotProps.data.id)"/>
+                     <DPGButton label="Retire"  class="p-button-secondary" @click="retireWorkstation(slotProps.data.id)" :disabled="slotProps.data.projectCount > 0"/>
                   </template>
                </Column>
             </DataTable>
@@ -59,7 +89,7 @@ function statusClass(statusID) {
          <Panel header="Workstation Setup">
             <h3 v-if="selectedWorkstation == null">Select a workstation to view details</h3>
             <template v-else>
-               <DataTable :value="selectedWorkstation.equipment" ref="setupTable" dataKey="id"
+               <DataTable :value="equipmentStore.pendingEquipment.equipment" ref="setupTable" dataKey="id"
                   stripedRows showGridlines class="p-datatable-sm"
                >
                   <Column field="type" header="Type"/>
@@ -68,8 +98,8 @@ function statusClass(statusID) {
 
                </DataTable>
                <div class="setup-acts">
-                  <DPGButton label="Clear Setup" class="p-button-secondary" @click="clearSetup"/>
-                  <DPGButton label="Save Setup Changes" class="p-button-secondary" @click="clearSetup"/>
+                  <DPGButton label="Clear Setup" class="p-button-secondary" @click="clearSetup" :disabled="clearAllDisabled"/>
+                  <DPGButton label="Save Setup Changes" class="p-button-secondary" @click="clearSetup" :disabled="equipmentStore.pendingEquipment.changed==false"/>
                </div>
             </template>
          </Panel>

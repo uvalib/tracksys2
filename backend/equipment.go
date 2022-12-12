@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -36,6 +37,7 @@ func (svc *serviceContext) getEquipment(c *gin.Context) {
 	}
 	projQ := "(select count(*) from projects p where workstations.id = p.workstation_id and finished_at is null) as proj_cnt"
 	err := svc.DB.Preload("Equipment").Select(projQ, "workstations.*").
+		Where("status != ?", 2).
 		Order("name asc").Find(&resp.Workstations).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get workstations: %s", err.Error())
@@ -51,4 +53,25 @@ func (svc *serviceContext) getEquipment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) updateWorkstation(c *gin.Context) {
+	wsID := c.Param("id")
+	tgtStatus, _ := strconv.ParseInt(c.Query("status"), 10, 8)
+	var tgtWS workstation
+	err := svc.DB.Find(&tgtWS, wsID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to load workstation %s: %s", wsID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: update workstation %d status to %d", tgtWS.ID, tgtStatus)
+	tgtWS.Status = uint(tgtStatus)
+	err = svc.DB.Model(&tgtWS).Update("status", tgtStatus).Error
+	if err != nil {
+		log.Printf("ERROR: unable to update workstation %d status: %s", tgtWS.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.String(http.StatusOK, "udpated")
 }
