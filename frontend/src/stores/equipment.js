@@ -8,6 +8,18 @@ export const useEquipmentStore = defineStore('equipment', {
       equipment: []
 	}),
 	getters: {
+      scanners: state => {
+         return state.equipment.filter( e => e.type == "Scanner")
+      },
+      lenses: state => {
+         return state.equipment.filter( e => e.type == "Lens")
+      },
+      cameraBodies: state => {
+         return state.equipment.filter( e => e.type == "CameraBody")
+      },
+      digitalBacks: state => {
+         return state.equipment.filter( e => e.type == "DigitalBack")
+      },
 	},
 	actions: {
       getEquipment( ) {

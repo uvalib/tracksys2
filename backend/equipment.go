@@ -19,12 +19,13 @@ type equipment struct {
 }
 
 type workstation struct {
-	ID        int64       `json:"id"`
-	Name      string      `json:"name"`
-	Status    uint        `json:"status"` // [:active, :inactive, :retired]
-	Equipment []equipment `gorm:"many2many:workstation_equipment" json:"equipment"`
-	CreatedAt time.Time   `json:"-"`
-	UpdatedAt time.Time   `json:"-"`
+	ID           int64       `json:"id"`
+	Name         string      `json:"name"`
+	Status       uint        `json:"status"` // [:active, :inactive, :retired]
+	Equipment    []equipment `gorm:"many2many:workstation_equipment" json:"equipment"`
+	ProjectCount int64       `gorm:"column:proj_cnt" json:"projectCount"`
+	CreatedAt    time.Time   `json:"-"`
+	UpdatedAt    time.Time   `json:"-"`
 }
 
 func (svc *serviceContext) getEquipment(c *gin.Context) {
@@ -33,7 +34,9 @@ func (svc *serviceContext) getEquipment(c *gin.Context) {
 		Workstations []workstation `json:"workstations"`
 		Equipment    []equipment   `json:"equipment"`
 	}
-	err := svc.DB.Preload("Equipment").Order("name asc").Find(&resp.Workstations).Error
+	projQ := "(select count(*) from projects p where workstations.id = p.workstation_id and finished_at is null) as proj_cnt"
+	err := svc.DB.Preload("Equipment").Select(projQ, "workstations.*").
+		Order("name asc").Find(&resp.Workstations).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get workstations: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
