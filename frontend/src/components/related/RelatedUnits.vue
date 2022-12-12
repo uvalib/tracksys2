@@ -19,6 +19,7 @@
             <span v-else class="empty">N/A</span>
          </template>
       </Column>
+      <Column field="metadata.callNumber" header="Call Number" v-if="showMetadata" class="nowrap" />
       <Column field="intendedUse.name" header="Intended Use"/>
       <Column header="Date Patron Deliverables Ready">
          <template #body="slotProps">
@@ -76,16 +77,11 @@ function formatDate( date ) {
 </script>
 
 <stype scoped lang="scss">
-.results {
-   margin: 20px;
-   font-size: 0.9em;
-   td.nowrap, th {
-      white-space: nowrap;
-   }
-   th, td {
-      font-size: 0.85em;
-   }
+
+td.nowrap {
+   white-space: nowrap;
 }
+
 .empty {
    color: #ccc;
 }
