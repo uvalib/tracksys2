@@ -5,14 +5,23 @@
    <DataTable v-else :value="props.equipment" ref="equipmentTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       :lazy="false" :paginator="false" :rows="props.equipment.length"
+      v-model:editingRows="editingRows" editMode="row"
    >
       <Column header="" headerStyle="width: 3em" v-if="equipmentStore.pendingEquipment.workstationID > 0">
          <template #body="slotProps">
             <Checkbox :value="slotProps.data" v-model="equipmentStore.pendingEquipment.equipment" :disabled="isItemDisabled(slotProps.data.id)" @click="equipmentClicked"/>
          </template>
       </Column>
-      <Column field="name" header="Name" class="e-wide"/>
-      <Column field="serialNumber" header="Serial Number" class="e-wide"/>
+      <Column field="name" header="Name" class="e-wide">
+         <template #editor>
+            <InputText v-model="newName" autofocus />
+         </template>
+      </Column>
+      <Column field="serialNumber" header="Serial Number" class="e-wide">
+         <template #editor>
+            <InputText v-model="newSerial" />
+         </template>
+      </Column>
       <Column field="" header="Workstation" class="e-wide">
          <template #body="slotProps">
             <span class="workstation">{{workstation(slotProps.data.id)}}</span>
@@ -20,8 +29,14 @@
       </Column>
       <Column header="Actions" class="row-acts">
          <template #body="slotProps">
-            <DPGButton label="Edit"  class="p-button-secondary first" @click="activateWorkstation(slotProps.data.id)"/>
-            <DPGButton label="Retire"  class="p-button-secondary" @click="retireWorkstation(slotProps.data.id)" :disabled="workstation(slotProps.data.id) != 'N/A'"/>
+            <template v-if="editingRows.length == 1 && editingRows[0].id == slotProps.data.id">
+               <DPGButton label="Cancel"  class="p-button-secondary first" @click="cancelEdit"/>
+               <DPGButton label="Save"  class="p-button-secondary" @click="saveChanges" :disabled="workstation(slotProps.data.id) != 'N/A'"/>
+            </template>
+            <template v-else>
+               <DPGButton label="Edit"  class="p-button-secondary first" @click="editEquipment(slotProps.data)" :disabled="editingRows.length > 0"/>
+               <DPGButton label="Retire"  class="p-button-secondary" @click="retireEquipment(slotProps.data.id)" :disabled="editingRows.length > 0 || workstation(slotProps.data.id) != 'N/A'"/>
+            </template>
          </template>
       </Column>
    </DataTable>
@@ -32,6 +47,8 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { useEquipmentStore } from '@/stores/equipment'
 import Checkbox from 'primevue/checkbox'
+import InputText from 'primevue/inputtext'
+import { ref } from 'vue'
 
 const props = defineProps({
    equipment: {
@@ -41,6 +58,25 @@ const props = defineProps({
 })
 
 const equipmentStore = useEquipmentStore()
+const editingRows = ref([])
+const newName = ref("")
+const newSerial = ref("")
+
+function retireEquipment( equipID) {
+   console.log("TODO: retire "+equipID)
+}
+function editEquipment( equip ) {
+   editingRows.value = [equip]
+   newName.value = equip.name
+   newSerial.value = equip.serialNumber
+}
+function saveChanges() {
+   // save data in newName and newSerial
+   console.log("TODO: save changes")
+}
+function cancelEdit() {
+   editingRows.value = []
+}
 
 function equipmentClicked() {
    equipmentStore.pendingEquipment.changed = true
@@ -76,6 +112,9 @@ function workstation( equipID ) {
 <stype scoped lang="scss">
 .e-wide {
    width: 30%;
+}
+.p-inputtext  {
+   width: 100%;
 }
 :deep(.status-col) {
    width: 25px;
