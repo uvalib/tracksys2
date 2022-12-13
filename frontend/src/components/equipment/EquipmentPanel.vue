@@ -6,6 +6,11 @@
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       :lazy="false" :paginator="false" :rows="props.equipment.length"
    >
+      <Column header="" headerStyle="width: 3em" v-if="equipmentStore.pendingEquipment.workstationID > 0">
+         <template #body="slotProps">
+            <Checkbox :value="slotProps.data" v-model="equipmentStore.pendingEquipment.equipment" :disabled="isItemDisabled(slotProps.data.id)" @click="equipmentClicked"/>
+         </template>
+      </Column>
       <Column field="name" header="Name" class="e-wide"/>
       <Column field="serialNumber" header="Serial Number" class="e-wide"/>
       <Column field="" header="Workstation" class="e-wide">
@@ -16,7 +21,7 @@
       <Column header="Actions" class="row-acts">
          <template #body="slotProps">
             <DPGButton label="Edit"  class="p-button-secondary first" @click="activateWorkstation(slotProps.data.id)"/>
-            <DPGButton label="Retire"  class="p-button-secondary" @click="retireWorkstation(slotProps.data.id)"/>
+            <DPGButton label="Retire"  class="p-button-secondary" @click="retireWorkstation(slotProps.data.id)" :disabled="workstation(slotProps.data.id) != 'N/A'"/>
          </template>
       </Column>
    </DataTable>
@@ -26,6 +31,7 @@
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { useEquipmentStore } from '@/stores/equipment'
+import Checkbox from 'primevue/checkbox'
 
 const props = defineProps({
    equipment: {
@@ -35,6 +41,20 @@ const props = defineProps({
 })
 
 const equipmentStore = useEquipmentStore()
+
+function equipmentClicked() {
+   equipmentStore.pendingEquipment.changed = true
+}
+
+function isItemDisabled(equipID) {
+   let equipWS = workstation(equipID)
+   if  ( equipWS == "N/A") return false
+   let tgtWS = equipmentStore.workstations.find( ws => ws.id == equipmentStore.pendingEquipment.workstationID)
+   if (tgtWS) {
+      return tgtWS.name != equipWS
+   }
+   return true
+}
 
 function workstation( equipID ) {
    let wsName = ""
@@ -54,27 +74,6 @@ function workstation( equipID ) {
 </script>
 
 <stype scoped lang="scss">
-.results {
-   margin: 20px;
-   font-size: 0.9em;
-   td.nowrap, th {
-      white-space: nowrap;
-   }
-   th, td {
-      font-size: 0.85em;
-   }
-   span.ws-status {
-      width: 20px;
-      height: 20px;
-      display: inline-block;
-      border-radius: 20px;
-      background: var(--uvalib-green);
-   }
-
-   span.ws-status.inactive {
-      background: var(--uvalib-grey-light);
-   }
-}
 .e-wide {
    width: 30%;
 }

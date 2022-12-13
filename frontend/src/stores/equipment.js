@@ -73,5 +73,9 @@ export const useEquipmentStore = defineStore('equipment', {
             system.setError(e)
          })
       },
+      clearSetup() {
+         this.pendingEquipment.changed = true
+         this.pendingEquipment.equipment = []
+      }
 	}
 })

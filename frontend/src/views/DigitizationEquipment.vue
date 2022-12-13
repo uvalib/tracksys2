@@ -14,9 +14,24 @@ const equipmentStore = useEquipmentStore()
 
 const selectedWorkstation = ref()
 
+const setupHeader = computed(() => {
+   let name = selectedWSName.value
+   if (name == "None") return "Workstation Setup"
+   return name+" Setup"
+})
+const selectedWSName = computed(() => {
+   if ( selectedWorkstation.value ) {
+      let ws = equipmentStore.workstations.find(ws => ws.id == selectedWorkstation.value.id)
+      if (ws) {
+         return ws.name
+      }
+   }
+   return "None"
+})
 const clearAllDisabled = computed( () => {
    let ws = equipmentStore.workstations.find(ws => ws.id == selectedWorkstation.value.id)
-   return ws.projectCount > 0
+   if (ws.projectCount > 0) return true
+   return equipmentStore.pendingEquipment.equipment.length == 0
 })
 
 onBeforeMount( async () => {
@@ -48,7 +63,7 @@ function workstationSelected() {
 }
 
 function clearSetup() {
-   console.log("clear")
+   equipmentStore.clearSetup()
 }
 
 function statusClass(statusID) {
@@ -70,7 +85,7 @@ function statusClass(statusID) {
                selectionMode="single" v-model:selection="selectedWorkstation"
                :rows="equipmentStore.workstations.length" :totalRecords="equipmentStore.workstations.length"
             >
-               <Column field="status" header="Status" class="status-col">
+               <Column field="status" header="Active" class="status-col">
                   <template #body="slotProps">
                      <span :class="statusClass(slotProps.data.status)"></span>
                   </template>
@@ -86,7 +101,7 @@ function statusClass(statusID) {
                </Column>
             </DataTable>
          </Panel>
-         <Panel header="Workstation Setup">
+         <Panel :header="setupHeader">
             <h3 v-if="selectedWorkstation == null">Select a workstation to view details</h3>
             <template v-else>
                <DataTable :value="equipmentStore.pendingEquipment.equipment" ref="setupTable" dataKey="id"
@@ -99,12 +114,19 @@ function statusClass(statusID) {
                </DataTable>
                <div class="setup-acts">
                   <DPGButton label="Clear Setup" class="p-button-secondary" @click="clearSetup" :disabled="clearAllDisabled"/>
-                  <DPGButton label="Save Setup Changes" class="p-button-secondary" @click="clearSetup" :disabled="equipmentStore.pendingEquipment.changed==false"/>
+                  <DPGButton label="Save Setup Changes" class="p-button-secondary" @click="clearSetup"
+                     :disabled="!(equipmentStore.pendingEquipment.changed==true && equipmentStore.pendingEquipment.equipment.length > 0)"/>
                </div>
             </template>
          </Panel>
       </div>
-      <Panel header="Equipment">
+      <Panel>
+         <template #header>
+            <div class="equip-header">
+               <span class="title">Equipment</span>
+               <span class="ws"><b>Workstation</b>: {{selectedWSName}}</span>
+            </div>
+         </template>
          <TabView class="results">
             <TabPanel header="Camera Bodies">
                <EquipmentPanel :equipment="equipmentStore.cameraBodies" />
@@ -133,6 +155,18 @@ function statusClass(statusID) {
       font-weight: 500;
       font-size: 1em;
    }
+   .equip-header {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      width: 100%;
+      .title {
+         font-weight: 600;
+      }
+      b {
+         font-weight: 600;
+      }
+   }
 
    .setup-acts {
       padding: 15px 0 0 0;
@@ -144,7 +178,7 @@ function statusClass(statusID) {
    }
 
    .p-component.p-datatable {
-      font-size: 0.9em;
+      font-size: 0.85em;
    }
 
    :deep(.wide) {
@@ -170,7 +204,6 @@ function statusClass(statusID) {
          padding: 3px 6px;
          display: block;
          width: 100%;
-         margin-top: 5px;
       }
    }
 
@@ -197,6 +230,11 @@ function statusClass(statusID) {
 
    span.ws-status.inactive {
       background: var(--uvalib-grey-light);
+   }
+   .results {
+      .p-datatable {
+         font-size: 1em;
+      }
    }
 }
 </style>

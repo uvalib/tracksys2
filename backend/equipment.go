@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -35,8 +36,11 @@ func (svc *serviceContext) getEquipment(c *gin.Context) {
 		Workstations []workstation `json:"workstations"`
 		Equipment    []equipment   `json:"equipment"`
 	}
-	projQ := "(select count(*) from projects p where workstations.id = p.workstation_id and finished_at is null) as proj_cnt"
-	err := svc.DB.Preload("Equipment").Select(projQ, "workstations.*").
+
+	// only count projects that are less than one year old that have been started, but not finished
+	lastYear := time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
+	projQ := fmt.Sprintf("(select count(*) from projects p where workstations.id = p.workstation_id and finished_at is null and started_at > '%s') as proj_cnt", lastYear)
+	err := svc.DB.Debug().Preload("Equipment").Select(projQ, "workstations.*").
 		Where("status != ?", 2).
 		Order("name asc").Find(&resp.Workstations).Error
 	if err != nil {
