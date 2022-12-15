@@ -62,17 +62,20 @@ const editingRows = ref([])
 const newName = ref("")
 const newSerial = ref("")
 
-function retireEquipment( equipID) {
-   console.log("TODO: retire "+equipID)
+async function retireEquipment( equipID ) {
+   let tgtE = equipmentStore.equipment.find( e => e.id == equipID)
+   await equipmentStore.updateEquipment( equipID, tgtE.name, tgtE.serialNumber, 2 )
 }
 function editEquipment( equip ) {
    editingRows.value = [equip]
    newName.value = equip.name
    newSerial.value = equip.serialNumber
 }
-function saveChanges() {
-   // save data in newName and newSerial
-   console.log("TODO: save changes")
+async function saveChanges() {
+   let equipID = editingRows.value[0].id
+   let currStatus = editingRows.value[0].status
+   await equipmentStore.updateEquipment( equipID, newName.value, newSerial.value, currStatus )
+   editingRows.value = []
 }
 function cancelEdit() {
    editingRows.value = []

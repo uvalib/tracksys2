@@ -42,6 +42,7 @@ func main() {
 		api.GET("/dashboard", svc.getDashboardStats)
 
 		api.GET("/equipment", svc.getEquipment)
+		api.POST("/equipment/:id/update", svc.updateEquipment)
 		api.POST("/workstation/:id/update", svc.updateWorkstation)
 
 		api.GET("/masterfiles/:id", svc.getMasterFile)

@@ -73,6 +73,42 @@ export const useEquipmentStore = defineStore('equipment', {
             system.setError(e)
          })
       },
+      async updateEquipment( equipID, newName, newSerial, newStatus ) {
+         var req = {name: newName, serialNumber: newSerial, status: newStatus}
+         return axios.post( `/api/equipment/${equipID}/update`, req ).then(() => {
+            let owningWS = null
+            let wsEquipIndex = -1
+            this.workstations.some( ws => {
+               wsEquipIndex = ws.equipment.findIndex( e => e.id == equipID)
+               if ( wsEquipIndex > -1 ) {
+                  owningWS = ws
+               }
+               return owningWS != null
+            })
+            if (newStatus == 2) {
+               // retired; remove from equip list and workstation equipment
+               let eIdx = this.equipment.findIndex(e => e.id == equipID)
+               this.equipment.splice(eIdx, 1)
+               if ( owningWS ) {
+                  owningWS.equipment.splice(wsEquipIndex, 1)
+               }
+            } else {
+               let tgtE = this.equipment.find(e => e.id == equipID)
+               tgtE.status = newStatus
+               tgtE.name = newName
+               tgtE.serialNumber = newSerial
+               if ( owningWS ) {
+                  let tgtE = owningWS.equipment.find(e => e.id == equipID)
+                  tgtE.status = newStatus
+                  tgtE.name = newName
+                  tgtE.serialNumber = newSerial
+               }
+            }
+         }).catch( e => {
+            const system = useSystemStore()
+            system.setError(e)
+         })
+      },
       clearSetup() {
          this.pendingEquipment.changed = true
          this.pendingEquipment.equipment = []

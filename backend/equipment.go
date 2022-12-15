@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type equipment struct {
@@ -40,7 +42,7 @@ func (svc *serviceContext) getEquipment(c *gin.Context) {
 	// only count projects that are less than one year old that have been started, but not finished
 	lastYear := time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
 	projQ := fmt.Sprintf("(select count(*) from projects p where workstations.id = p.workstation_id and finished_at is null and started_at > '%s') as proj_cnt", lastYear)
-	err := svc.DB.Debug().Preload("Equipment").Select(projQ, "workstations.*").
+	err := svc.DB.Debug().Preload("Equipment", "status != ?", 2).Select(projQ, "workstations.*").
 		Where("status != ?", 2).
 		Order("name asc").Find(&resp.Workstations).Error
 	if err != nil {
@@ -49,7 +51,7 @@ func (svc *serviceContext) getEquipment(c *gin.Context) {
 		return
 	}
 
-	err = svc.DB.Order("type asc, name asc").Find(&resp.Equipment).Error
+	err = svc.DB.Where("status!=?", 2).Order("type asc, name asc").Find(&resp.Equipment).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get equipment: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -57,6 +59,47 @@ func (svc *serviceContext) getEquipment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) updateEquipment(c *gin.Context) {
+	equipID := c.Param("id")
+	var tgtEquip equipment
+	err := svc.DB.Find(&tgtEquip, equipID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("INFO: equipment %s not found", equipID)
+			c.String(http.StatusNotFound, fmt.Sprintf("equipment %s not found", equipID))
+		} else {
+			log.Printf("ERROR: unable to load equipment %s: %s", equipID, err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	log.Printf("INFO: update equipment %d", tgtEquip.ID)
+	var req struct {
+		Name         string `json:"name"`
+		SerialNumber string `json:"serialNumber"`
+		Status       uint   `json:"status"`
+	}
+	err = c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid update equipment request: %s", err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tgtEquip.Name = req.Name
+	tgtEquip.SerialNumber = req.SerialNumber
+	tgtEquip.Status = req.Status
+
+	err = svc.DB.Model(&tgtEquip).Select("Name", "SerialNumber", "Status").Updates(tgtEquip).Error
+	if err != nil {
+		log.Printf("ERROR: unable to update equipment %d: %s", tgtEquip.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.String(http.StatusOK, "updated")
 }
 
 func (svc *serviceContext) updateWorkstation(c *gin.Context) {
