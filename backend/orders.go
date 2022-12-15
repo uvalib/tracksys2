@@ -828,9 +828,7 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 	oDetail.Fee = nil
 	if updateRequest.Fee != nil {
 		floatFee, _ := strconv.ParseFloat(*updateRequest.Fee, 64)
-		if floatFee > 0 {
-			oDetail.Fee = &floatFee
-		}
+		oDetail.Fee = &floatFee
 	}
 	oDetail.AgencyID = nil
 	if updateRequest.AgencyID != 0 {

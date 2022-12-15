@@ -43,7 +43,7 @@
          <Column field="masterFileCount" header="Master Files" :sortable="true" />
          <Column field="fee" header="Fee" :sortable="true">
             <template #body="slotProps">
-               <span class="fee" v-if="slotProps.data.fee > 0">${{parseFloat(slotProps.data.fee).toFixed(2)}}</span>
+               <span class="fee" v-if="slotProps.data.fee !== undefined">${{parseFloat(slotProps.data.fee).toFixed(2)}}</span>
             </template>
          </Column>
          <Column field="lastName" header="Customer" class="nowrap" >

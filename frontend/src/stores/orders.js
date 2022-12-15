@@ -164,7 +164,7 @@ export const useOrdersStore = defineStore('orders', {
          system.working = true
          return axios.get( `/api/orders/${orderID}` ).then(response => {
             this.detail = response.data.order
-            if (this.detail.fee) {
+            if (this.detail.fee != null) {
                this.detail.fee = `${this.detail.fee}`
             }
             if (this.detail.invoice && this.detail.invoice.feeAmountPaid) {
