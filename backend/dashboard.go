@@ -45,7 +45,7 @@ func (svc *serviceContext) getDashboardStats(c *gin.Context) {
 	// ready for delivery
 	err = svc.DB.Debug().Table("orders").Joins("inner join units u on u.order_id=orders.id").
 		Where("u.intended_use_id <> ?", 110).
-		Where("orders.email is not null and date_customer_notified is null").
+		Where("orders.email is not null and orders.email is != ? and date_customer_notified is null", "").
 		Where("order_status != ? and order_status != ?", "canceled", "completed").
 		Distinct("orders.id").Count(&stats.ReadyForDelivery).Error
 	if err != nil {
