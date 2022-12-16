@@ -1,5 +1,9 @@
 <template>
    <h2>Equipment</h2>
+   <div class="equip-acts">
+      <AddWorkstationDialog />
+      <AddEquipmentDialog />
+   </div>
    <div class="equipment">
       <div class="columns">
          <Panel header="Workstations">
@@ -79,6 +83,8 @@ import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import EquipmentPanel from '../components/equipment/EquipmentPanel.vue'
 import { useConfirm } from "primevue/useconfirm"
+import AddWorkstationDialog from '../components/equipment/AddWorkstationDialog.vue'
+import AddEquipmentDialog from '../components/equipment/AddEquipmentDialog.vue'
 
 const confirm = useConfirm()
 const equipmentStore = useEquipmentStore()
@@ -149,9 +155,21 @@ function statusClass(statusID) {
 </script>
 
 <style scoped lang="scss">
+.equip-acts {
+   position: absolute;
+   right:15px;
+   top: 15px;
+   button.p-button {
+      margin-right: 5px;
+      font-size: 0.9em;
+   }
+}
 .equipment {
    min-height: 600px;
    padding: 15px 25px;
+   .pad-bottom {
+      margin-bottom: 15px;
+   }
    h3 {
       text-align: center;
       color: var(--uvalib-text);

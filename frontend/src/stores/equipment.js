@@ -42,6 +42,24 @@ export const useEquipmentStore = defineStore('equipment', {
          let ws = this.workstations.find( ws => ws.id == wsID )
          this.pendingEquipment.equipment = ws.equipment.slice()
       },
+      async addWorkstation( newName ) {
+         var req = {name: newName}
+         return axios.post( `/api/workstation`, req ).then((response) => {
+            this.workstations.push( response.data )
+         }).catch( e => {
+            const system = useSystemStore()
+            system.setError(e)
+         })
+      },
+      async addEquipment( equipType, name, serialNumber) {
+         var req = {type: equipType, name: name, serialNumber: serialNumber}
+         return axios.post( `/api/equipment`, req ).then((response) => {
+            this.equipment.push( response.data )
+         }).catch( e => {
+            const system = useSystemStore()
+            system.setError(e)
+         })
+      },
       deactivateWorkstation( wsID ) {
          axios.post( `/api/workstation/${wsID}/update?status=1` ).then(() => {
             let tgtWS = this.workstations.find(ws => ws.id == wsID)

@@ -208,7 +208,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		}
 
 		searchQ.Count(&resp.MasterFiles.Total)
-		err := searchQ.Debug().Offset(startIndex).Limit(pageSize).Find(&resp.MasterFiles.Hits).Error
+		err := searchQ.Offset(startIndex).Limit(pageSize).Find(&resp.MasterFiles.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: masterfile search failed: %s", err.Error())
 		}
@@ -240,7 +240,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 
 		searchQ.Count(&resp.Metadata.Total)
 		searchQ = searchQ.Preload("ExternalSystem")
-		err := searchQ.Debug().Offset(startIndex).Limit(pageSize).Find(&resp.Metadata.Hits).Error
+		err := searchQ.Offset(startIndex).Limit(pageSize).Find(&resp.Metadata.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: metadata search failed: %s", err.Error())
 		}

@@ -685,7 +685,7 @@ func (svc *serviceContext) updateInvoice(c *gin.Context) {
 	inv.TransmittalNumber = updateRequest.TransmittalNumber
 	inv.Notes = updateRequest.Notes
 
-	err = svc.DB.Model(&inv).Debug().Select("DateFeePaid", "DateFeeDeclined", "FeeAmountPaid", "PermanentNonPayment", "TransmittalNumber", "Notes").Updates(inv).Error
+	err = svc.DB.Model(&inv).Select("DateFeePaid", "DateFeeDeclined", "FeeAmountPaid", "PermanentNonPayment", "TransmittalNumber", "Notes").Updates(inv).Error
 	if err != nil {
 		log.Printf("ERROR: unable to update invoice %d: %s", inv.ID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())

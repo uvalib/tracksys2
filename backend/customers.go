@@ -82,7 +82,7 @@ func (svc *serviceContext) addOrUpdateCustomer(c *gin.Context) {
 			}
 		} else {
 			log.Printf("INFO: update address %+v", addr)
-			err = svc.DB.Debug().Model(&addr).Select("Address1", "Address2", "City", "State", "Zip", "Country", "Phone").Updates(addr).Error
+			err = svc.DB.Model(&addr).Select("Address1", "Address2", "City", "State", "Zip", "Country", "Phone").Updates(addr).Error
 			if err != nil {
 				log.Printf("ERROR: unable to update staff member %d address: %s", custReq.ID, err.Error())
 				c.String(http.StatusInternalServerError, err.Error())

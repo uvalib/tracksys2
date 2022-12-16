@@ -42,7 +42,9 @@ func main() {
 		api.GET("/dashboard", svc.getDashboardStats)
 
 		api.GET("/equipment", svc.getEquipment)
+		api.POST("/equipment", svc.createEquipment)
 		api.POST("/equipment/:id/update", svc.updateEquipment)
+		api.POST("/workstation", svc.createWorkstation)
 		api.POST("/workstation/:id/update", svc.updateWorkstation)
 		api.POST("/workstation/:id/setup", svc.updateWorkstationSetup)
 

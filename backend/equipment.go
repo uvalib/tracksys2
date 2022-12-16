@@ -43,7 +43,7 @@ func (svc *serviceContext) getEquipment(c *gin.Context) {
 	// only count projects that are less than one year old that have been started, but not finished
 	lastYear := time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
 	projQ := fmt.Sprintf("(select count(*) from projects p where workstations.id = p.workstation_id and finished_at is null and started_at > '%s') as proj_cnt", lastYear)
-	err := svc.DB.Debug().Preload("Equipment", "status != ?", 2).Select(projQ, "workstations.*").
+	err := svc.DB.Preload("Equipment", "status != ?", 2).Select(projQ, "workstations.*").
 		Where("status != ?", 2).
 		Order("name asc").Find(&resp.Workstations).Error
 	if err != nil {
@@ -101,6 +101,50 @@ func (svc *serviceContext) updateEquipment(c *gin.Context) {
 	}
 
 	c.String(http.StatusOK, "updated")
+}
+
+func (svc *serviceContext) createWorkstation(c *gin.Context) {
+	log.Printf("INFO: create workstation")
+	var req struct {
+		Name string `json:"name"`
+	}
+	err := c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid create workstation request: %s", err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	newWorkstation := workstation{Name: req.Name}
+	err = svc.DB.Omit("ProjectCount").Create(&newWorkstation).Error
+	if err != nil {
+		log.Printf("ERROR: unable to create workstation: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, newWorkstation)
+}
+
+func (svc *serviceContext) createEquipment(c *gin.Context) {
+	log.Printf("INFO: create equipment")
+	var req struct {
+		Type         string `json:"type"`
+		Name         string `json:"name"`
+		SerialNumber string `json:"serialNumber"`
+	}
+	err := c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid create equipment request: %s", err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	newEquip := equipment{Type: req.Type, Name: req.Name, SerialNumber: req.SerialNumber}
+	err = svc.DB.Create(&newEquip).Error
+	if err != nil {
+		log.Printf("ERROR: unable to create equipment: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, newEquip)
 }
 
 func (svc *serviceContext) updateWorkstation(c *gin.Context) {
@@ -191,7 +235,7 @@ func (svc *serviceContext) updateWorkstationSetup(c *gin.Context) {
 		}
 	}
 	log.Printf("INFO: workstation %d setup is valid; save changes", tgtWS.ID)
-	err = svc.DB.Debug().Exec("delete from workstation_equipment where workstation_id=?", tgtWS.ID).Error
+	err = svc.DB.Exec("delete from workstation_equipment where workstation_id=?", tgtWS.ID).Error
 	if err != nil {
 		log.Printf("ERROR: unable to clear workstation %d setup: %s", tgtWS.ID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -199,7 +243,7 @@ func (svc *serviceContext) updateWorkstationSetup(c *gin.Context) {
 	}
 	addSQL := "insert into workstation_equipment (workstation_id,equipment_id) values "
 	addSQL += strings.Join(addValues, ",")
-	err = svc.DB.Debug().Exec(addSQL).Error
+	err = svc.DB.Exec(addSQL).Error
 	if err != nil {
 		log.Printf("ERROR: unable to add workstation %d setup: %s", tgtWS.ID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())

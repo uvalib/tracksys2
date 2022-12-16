@@ -26,7 +26,7 @@ func (svc *serviceContext) getDashboardStats(c *gin.Context) {
 
 	// due in a week
 	oneWeek := now.AddDate(0, 0, 7)
-	err := baseQ.Debug().Where("date_due>=?", now.Format("2006-01-02")).
+	err := baseQ.Where("date_due>=?", now.Format("2006-01-02")).
 		Where("date_due<=?", oneWeek.Format("2006-01-02")).
 		Distinct("orders.id").Count(&stats.DueInOneWeek).Error
 	if err != nil {
@@ -35,7 +35,7 @@ func (svc *serviceContext) getDashboardStats(c *gin.Context) {
 
 	// overdue
 	oneYearAgo := now.AddDate(-1, 0, 0)
-	err = baseQ.Debug().Where("date_request_submitted>?", oneYearAgo.Format("2006-01-02")).
+	err = baseQ.Where("date_request_submitted>?", oneYearAgo.Format("2006-01-02")).
 		Where("date_due<?", now.Format("2006-01-02")).
 		Distinct("orders.id").Count(&stats.Overdue).Error
 	if err != nil {
@@ -43,7 +43,7 @@ func (svc *serviceContext) getDashboardStats(c *gin.Context) {
 	}
 
 	// ready for delivery
-	err = svc.DB.Debug().Table("orders").Joins("inner join units u on u.order_id=orders.id").
+	err = svc.DB.Table("orders").Joins("inner join units u on u.order_id=orders.id").
 		Where("u.intended_use_id <> ?", 110).
 		Where("orders.email is not null and orders.email is != ? and date_customer_notified is null", "").
 		Where("order_status != ? and order_status != ?", "canceled", "completed").
