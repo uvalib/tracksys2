@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -121,4 +122,109 @@ func (svc *serviceContext) updateWorkstation(c *gin.Context) {
 		return
 	}
 	c.String(http.StatusOK, "udpated")
+}
+
+func (svc *serviceContext) updateWorkstationSetup(c *gin.Context) {
+	wsID := c.Param("id")
+	var tgtWS workstation
+	err := svc.DB.Find(&tgtWS, wsID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to load workstation %s to save setup: %s", wsID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: update workstation %d setup", tgtWS.ID)
+	var req struct {
+		Setup []equipment `json:"setup"`
+	}
+	err = c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid update workstation %d setup request: %s", tgtWS.ID, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	log.Printf("INFO: validate new setup for workstation %d", tgtWS.ID)
+	var scannerCount, bodyCount, lensCount, backCount uint
+	var addValues []string
+	for _, equip := range req.Setup {
+		addValues = append(addValues, fmt.Sprintf("(%d,%d)", tgtWS.ID, equip.ID))
+		if equip.Type == "Scanner" {
+			scannerCount++
+		}
+		if equip.Type == "Lens" {
+			lensCount++
+		}
+		if equip.Type == "CameraBody" {
+			bodyCount++
+		}
+		if equip.Type == "DigitalBack" {
+			backCount++
+		}
+	}
+	if scannerCount > 1 {
+		log.Printf("INFO: invalid setup for workstation %d; more than one scanner", tgtWS.ID)
+		c.String(http.StatusBadRequest, "a workstation can only have one scanner")
+		return
+	}
+	if scannerCount == 1 {
+		if len(req.Setup) > 1 {
+			log.Printf("INFO: invalid setup for workstation %d; workstation can only have a camera assembly or a scanner, not both", tgtWS.ID)
+			c.String(http.StatusBadRequest, "A workstation can only have a camera assembly or a scanner, not both")
+			return
+		}
+	} else {
+		if len(req.Setup) < 3 {
+			log.Printf("INFO: invalid setup for workstation %d; setup is incomplete", tgtWS.ID)
+			c.String(http.StatusBadRequest, "Incomplete camera assembly.")
+			return
+		}
+		if bodyCount != 1 || backCount != 1 {
+			log.Printf("INFO: invalid setup for workstation %d; camera must have 1 back and 1 body", tgtWS.ID)
+			c.String(http.StatusBadRequest, "Camera assembly must have one back and one body")
+			return
+		}
+		if lensCount > 2 {
+			log.Printf("INFO: invalid setup for workstation %d; more than 2 lenses", tgtWS.ID)
+			c.String(http.StatusBadRequest, "Camera assembly can have a maximum of two lenses")
+			return
+		}
+	}
+	log.Printf("INFO: workstation %d setup is valid; save changes", tgtWS.ID)
+	err = svc.DB.Debug().Exec("delete from workstation_equipment where workstation_id=?", tgtWS.ID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to clear workstation %d setup: %s", tgtWS.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	addSQL := "insert into workstation_equipment (workstation_id,equipment_id) values "
+	addSQL += strings.Join(addValues, ",")
+	err = svc.DB.Debug().Exec(addSQL).Error
+	if err != nil {
+		log.Printf("ERROR: unable to add workstation %d setup: %s", tgtWS.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: reload workstation %d and all equipment", tgtWS.ID)
+	var resp struct {
+		Workstation workstation `json:"workstation"`
+		Equipment   []equipment `json:"equipment"`
+	}
+
+	err = svc.DB.Preload("Equipment", "status != ?", 2).Find(&resp.Workstation, tgtWS.ID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get workstations: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = svc.DB.Where("status!=?", 2).Order("type asc, name asc").Find(&resp.Equipment).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get equipment: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

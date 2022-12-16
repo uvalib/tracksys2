@@ -49,6 +49,9 @@ import { useEquipmentStore } from '@/stores/equipment'
 import Checkbox from 'primevue/checkbox'
 import InputText from 'primevue/inputtext'
 import { ref } from 'vue'
+import { useConfirm } from "primevue/useconfirm"
+
+const confirm = useConfirm()
 
 const props = defineProps({
    equipment: {
@@ -62,9 +65,17 @@ const editingRows = ref([])
 const newName = ref("")
 const newSerial = ref("")
 
-async function retireEquipment( equipID ) {
+function retireEquipment( equipID ) {
    let tgtE = equipmentStore.equipment.find( e => e.id == equipID)
-   await equipmentStore.updateEquipment( equipID, tgtE.name, tgtE.serialNumber, 2 )
+   confirm.require({
+      message: `Retire equipment name: '${tgtE.name}, serial number: ${tgtE.serialNumber}'?`,
+      header: 'Confirm Clone',
+      icon: 'pi pi-question-circle',
+      rejectClass: 'p-button-secondary',
+      accept: () => {
+         equipmentStore.updateEquipment( equipID, tgtE.name, tgtE.serialNumber, 2 )
+      }
+   })
 }
 function editEquipment( equip ) {
    editingRows.value = [equip]

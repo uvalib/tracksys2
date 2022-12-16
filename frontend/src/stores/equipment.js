@@ -112,6 +112,18 @@ export const useEquipmentStore = defineStore('equipment', {
       clearSetup() {
          this.pendingEquipment.changed = true
          this.pendingEquipment.equipment = []
+      },
+      async saveSetup() {
+         var req = {setup: this.pendingEquipment.equipment}
+         return axios.post( `/api/workstation/${this.pendingEquipment.workstationID}/setup`, req ).then((response) => {
+            let wsIdx = this.workstations.findIndex( ws => ws.id == this.pendingEquipment.workstationID)
+            this.workstations[wsIdx] = response.data.workstation
+            this.equipment = response.data.equipment
+            this.pendingEquipment.changed = false
+         }).catch( e => {
+            const system = useSystemStore()
+            system.setError(e)
+         })
       }
 	}
 })

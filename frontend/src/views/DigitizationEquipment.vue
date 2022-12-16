@@ -1,3 +1,74 @@
+<template>
+   <h2>Equipment</h2>
+   <div class="equipment">
+      <div class="columns">
+         <Panel header="Workstations">
+            <DataTable :value="equipmentStore.workstations" ref="workstationTable" dataKey="id"
+               stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+               @rowSelect="workstationSelected"
+               selectionMode="single" v-model:selection="selectedWorkstation"
+               :rows="equipmentStore.workstations.length" :totalRecords="equipmentStore.workstations.length"
+            >
+               <Column field="status" header="Active" class="status-col">
+                  <template #body="slotProps">
+                     <span :class="statusClass(slotProps.data.status)"></span>
+                  </template>
+               </Column>
+               <Column field="name" header="Name" class="wide"/>
+               <Column field="projectCount" header="Projects"/>
+               <Column header="Actions" class="row-acts">
+                  <template #body="slotProps">
+                     <DPGButton v-if="slotProps.data.status==0" label="Deactivate"  class="p-button-secondary first" @click="deactivateWorkstation(slotProps.data.id)"/>
+                     <DPGButton v-else label="Activate"  class="p-button-secondary first" @click="activateWorkstation(slotProps.data.id)"/>
+                     <DPGButton label="Retire"  class="p-button-secondary" @click="retireWorkstation(slotProps.data.id)" :disabled="slotProps.data.projectCount > 0"/>
+                  </template>
+               </Column>
+            </DataTable>
+         </Panel>
+         <Panel :header="setupHeader">
+            <h3 v-if="selectedWorkstation == null">Select a workstation to view details</h3>
+            <template v-else>
+               <DataTable :value="equipmentStore.pendingEquipment.equipment" ref="setupTable" dataKey="id"
+                  stripedRows showGridlines class="p-datatable-sm"
+               >
+                  <Column field="type" header="Type"/>
+                  <Column field="name" header="Name"/>
+                  <Column field="serialNumber" header="Serial Number"/>
+
+               </DataTable>
+               <div class="setup-acts">
+                  <DPGButton label="Clear Setup" class="p-button-secondary" @click="clearSetup" :disabled="clearAllDisabled"/>
+                  <DPGButton label="Save Setup Changes" class="p-button-secondary" @click="saveSetup"
+                     :disabled="!(equipmentStore.pendingEquipment.changed==true && equipmentStore.pendingEquipment.equipment.length > 0)"/>
+               </div>
+            </template>
+         </Panel>
+      </div>
+      <Panel>
+         <template #header>
+            <div class="equip-header">
+               <span class="title">Equipment</span>
+               <span class="ws"><b>Workstation</b>: {{selectedWSName}}</span>
+            </div>
+         </template>
+         <TabView class="results">
+            <TabPanel header="Camera Bodies">
+               <EquipmentPanel :equipment="equipmentStore.cameraBodies" />
+            </TabPanel>
+            <TabPanel header="Lenses">
+               <EquipmentPanel :equipment="equipmentStore.lenses" />
+            </TabPanel>
+            <TabPanel header="Digital Backs">
+               <EquipmentPanel :equipment="equipmentStore.digitalBacks" />
+            </TabPanel>
+            <TabPanel header="Scanners">
+               <EquipmentPanel :equipment="equipmentStore.scanners" />
+            </TabPanel>
+         </TabView>
+      </Panel>
+   </div>
+</template>
+
 <script setup>
 import { onBeforeMount, ref, computed } from 'vue'
 import { useEquipmentStore } from '@/stores/equipment'
@@ -65,6 +136,9 @@ function workstationSelected() {
 function clearSetup() {
    equipmentStore.clearSetup()
 }
+function saveSetup() {
+   equipmentStore.saveSetup()
+}
 
 function statusClass(statusID) {
    if (statusID == 1) {
@@ -73,77 +147,6 @@ function statusClass(statusID) {
    return "ws-status active"
 }
 </script>
-
-<template>
-   <h2>Equipment</h2>
-   <div class="equipment">
-      <div class="columns">
-         <Panel header="Workstations">
-            <DataTable :value="equipmentStore.workstations" ref="workstationTable" dataKey="id"
-               stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-               @rowSelect="workstationSelected"
-               selectionMode="single" v-model:selection="selectedWorkstation"
-               :rows="equipmentStore.workstations.length" :totalRecords="equipmentStore.workstations.length"
-            >
-               <Column field="status" header="Active" class="status-col">
-                  <template #body="slotProps">
-                     <span :class="statusClass(slotProps.data.status)"></span>
-                  </template>
-               </Column>
-               <Column field="name" header="Name" class="wide"/>
-               <Column field="projectCount" header="Projects"/>
-               <Column header="Actions" class="row-acts">
-                  <template #body="slotProps">
-                     <DPGButton v-if="slotProps.data.status==0" label="Deactivate"  class="p-button-secondary first" @click="deactivateWorkstation(slotProps.data.id)"/>
-                     <DPGButton v-else label="Activate"  class="p-button-secondary first" @click="activateWorkstation(slotProps.data.id)"/>
-                     <DPGButton label="Retire"  class="p-button-secondary" @click="retireWorkstation(slotProps.data.id)" :disabled="slotProps.data.projectCount > 0"/>
-                  </template>
-               </Column>
-            </DataTable>
-         </Panel>
-         <Panel :header="setupHeader">
-            <h3 v-if="selectedWorkstation == null">Select a workstation to view details</h3>
-            <template v-else>
-               <DataTable :value="equipmentStore.pendingEquipment.equipment" ref="setupTable" dataKey="id"
-                  stripedRows showGridlines class="p-datatable-sm"
-               >
-                  <Column field="type" header="Type"/>
-                  <Column field="name" header="Name"/>
-                  <Column field="serialNumber" header="Serial Number"/>
-
-               </DataTable>
-               <div class="setup-acts">
-                  <DPGButton label="Clear Setup" class="p-button-secondary" @click="clearSetup" :disabled="clearAllDisabled"/>
-                  <DPGButton label="Save Setup Changes" class="p-button-secondary" @click="clearSetup"
-                     :disabled="!(equipmentStore.pendingEquipment.changed==true && equipmentStore.pendingEquipment.equipment.length > 0)"/>
-               </div>
-            </template>
-         </Panel>
-      </div>
-      <Panel>
-         <template #header>
-            <div class="equip-header">
-               <span class="title">Equipment</span>
-               <span class="ws"><b>Workstation</b>: {{selectedWSName}}</span>
-            </div>
-         </template>
-         <TabView class="results">
-            <TabPanel header="Camera Bodies">
-               <EquipmentPanel :equipment="equipmentStore.cameraBodies" />
-            </TabPanel>
-            <TabPanel header="Lenses">
-               <EquipmentPanel :equipment="equipmentStore.lenses" />
-            </TabPanel>
-            <TabPanel header="Digital Backs">
-               <EquipmentPanel :equipment="equipmentStore.digitalBacks" />
-            </TabPanel>
-            <TabPanel header="Scanners">
-               <EquipmentPanel :equipment="equipmentStore.scanners" />
-            </TabPanel>
-         </TabView>
-      </Panel>
-   </div>
-</template>
 
 <style scoped lang="scss">
 .equipment {
