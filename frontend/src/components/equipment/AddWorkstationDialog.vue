@@ -2,7 +2,7 @@
    <DPGButton @click="show" label="Add Workstation"/>
    <Dialog v-model:visible="isOpen" :modal="true" header="Add Workstation" :style="{width: '400px'}">
       <FormKit type="form" id="add-workstation" :actions="false" @submit="addWorkstation">
-         <FormKit label="Name" type="text" v-model="workstationName" outer-class="first" required/>
+         <FormKit label="Name" type="text" v-model="workstationName" outer-class="first" required autofocus/>
          <div class="acts">
             <DPGButton @click="hide" label="Cancel" class="p-button-secondary"/>
             <span class="spacer"></span>

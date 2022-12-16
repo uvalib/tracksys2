@@ -2,7 +2,7 @@
    <DPGButton @click="show" label="Add Equipment"/>
    <Dialog v-model:visible="isOpen" :modal="true" header="Add Equipment" :style="{width: '400px'}">
       <FormKit type="form" id="add-equipment" :actions="false" @submit="addEquipment">
-         <FormKit label="Type" type="select" v-model="equipType" outer-class="first" :options="equipmentTypes" placeholder="Select equipment type" required/>
+         <FormKit label="Type" type="select" v-model="equipType" outer-class="first" :options="equipmentTypes" placeholder="Select equipment type" required autofocus/>
          <FormKit label="Name" type="text" v-model="name" required/>
          <FormKit label="Serial Number" type="text" v-model="serialNumber" required/>
          <div class="acts">

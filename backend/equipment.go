@@ -121,6 +121,7 @@ func (svc *serviceContext) createWorkstation(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
+	newWorkstation.Equipment = make([]equipment, 0)
 	c.JSON(http.StatusOK, newWorkstation)
 }
 
