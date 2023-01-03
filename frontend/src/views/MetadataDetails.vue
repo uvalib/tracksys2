@@ -122,7 +122,7 @@
             </template>
          </dl>
          <div v-if="canPublish" class="publish">
-            <DPGButton label="Publsh to Virgo" autofocus class="p-button-secondary" @click="publishClicked()"/>
+            <DPGButton label="Publish to Virgo" autofocus class="p-button-secondary" @click="publishClicked()"/>
          </div>
       </Panel>
    </div>
@@ -196,7 +196,7 @@ const canPublish = computed(() => {
    if (metadataStore.dl.dateDLIngest) {
       return true
    } else {
-      if (metadataStore.detail.type == 'XmlMetadata' || metadataStore.detail.type == 'SirsilMetadata') {
+      if (metadataStore.detail.type == 'XmlMetadata' || metadataStore.detail.type == 'SirsiMetadata') {
          let canPub = false
          metadataStore.related.units.forEach( u => {
             if (u.inDL)  {
