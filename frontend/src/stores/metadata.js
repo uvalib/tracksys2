@@ -184,6 +184,7 @@ export const useMetadataStore = defineStore('metadata', {
          system.working = true
          return axios.post( `${system.jobsURL}/metadata/${this.detail.id}/publish` ).then( () => {
             this.getDetails(this.detail.id)
+            system.working = false
          }).catch( e => {
             system.setError(e)
          })
