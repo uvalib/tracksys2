@@ -182,7 +182,7 @@ export const useMetadataStore = defineStore('metadata', {
       async publish( ) {
          const system = useSystemStore()
          system.working = true
-         return axios.post( `/api/metadata/${this.detail.id}/publish` ).then( () => {
+         return axios.post( `${system.jobsURL}/metadata/${this.detail.id}/publish` ).then( () => {
             this.getDetails(this.detail.id)
          }).catch( e => {
             system.setError(e)
