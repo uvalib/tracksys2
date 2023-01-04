@@ -1,5 +1,5 @@
 <template>
-   <TabView class="results" @tabChange="tabChanged()" v-model:activeIndex="activeTab">
+   <TabView class="results" @tabChange="tabChanged()" v-model:activeIndex="searchStore.activeResultsIndex">
       <TabPanel :header="`Orders`" v-if="searchStore.scope=='all' || searchStore.scope=='orders'" >
          <OrdersResults />
       </TabPanel>
@@ -24,18 +24,15 @@ import OrdersResults from './OrdersResults.vue'
 import MasterFilesResults from './MasterFilesResults.vue'
 import ComponentsResults from './ComponentsResults.vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ref } from 'vue'
 
 const searchStore = useSearchStore()
 const route = useRoute()
 const router = useRouter()
 
-const activeTab = ref(0)
-
 function tabChanged() {
    let tabs = ['orders', 'metadata', 'masterfiles', 'components']
    let query = Object.assign({}, route.query)
-   query.scope = tabs[activeTab.value]
+   query.scope = tabs[searchStore.activeResultsIndex]
    let fp = searchStore.filtersAsQueryParam(query.scope)
    if (fp != "") {
       query.filters = fp

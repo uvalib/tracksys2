@@ -9,6 +9,7 @@ export const useSearchStore = defineStore('search', {
       field: "all",
       searched: false,
       unitValid: false,
+      activeResultsIndex: 0,  // results are presented in this order: Orders, Metadata, MasterFiles, Components
       components: {
          start: 0,
          limit: 15,
@@ -95,12 +96,15 @@ export const useSearchStore = defineStore('search', {
          this.orders.total = 0
          this.orders.hits = []
          this.orders.filters = []
+
+         this.activeResultsIndex = 0
       },
       resetSearch() {
          this.query = ""
          this.scope = "all"
          this.field = "all"
          this.searched = false
+         this.activeResultsIndex = 0
          this.resetResults()
       },
       async unitExists( unitID) {

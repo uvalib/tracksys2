@@ -93,15 +93,20 @@ onBeforeMount( () => {
    dashboard.getStatistics()
 
    let paramsDetected = false
-   if ( route.query.q && searchStore.query != route.query.q ) {
-      searchStore.query = route.query.q
+   let paramsChanged = false
+   if ( route.query.q  ) {
       paramsDetected = true
+      if (searchStore.query != route.query.q) {
+         searchStore.query = route.query.q
+         paramsChanged = true
+      }
    }
 
    if ( route.query.scope ) {
-      if (searchStore.scope != route.query.scope) {
+      paramsDetected = true
+      if (searchStore.scope != route.query.scope && searchStore.scope != "all") {
+         paramsChanged = true
          searchStore.scope = route.query.scope
-         paramsDetected = true
          if ( route.query.filters ) {
             searchStore.setFilter(route.query.scope, route.query.filters)
          }
@@ -115,9 +120,9 @@ onBeforeMount( () => {
       paramsDetected = true
    }
 
-   if (paramsDetected) {
+   if (paramsChanged) {
       searchStore.executeSearch(searchStore.scope)
-   } else {
+   } else if ( paramsDetected == false) {
       searchStore.resetSearch()
    }
 })
