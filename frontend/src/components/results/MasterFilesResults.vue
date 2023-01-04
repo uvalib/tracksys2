@@ -26,7 +26,10 @@
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >
       <template #header>
-         <div class="matches">{{searchStore.masterFiles.total}} matches found</div>
+         <div class="results-toolbar">
+            <div class="matches">{{searchStore.masterFiles.total}} matches found</div>
+            <DPGButton label="Download Results CSV" class="p-button-secondary" @click="downloadCSV"/>
+         </div>
       </template>
       <Column field="id" header="ID">
          <template #body="slotProps">
@@ -78,6 +81,8 @@ const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
 
+const masterFileHitsTable = ref()
+
 const filters = ref( {
    'unit_id': {value: null, matchMode: FilterMatchMode.EQUALS},
    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
@@ -104,6 +109,10 @@ onMounted(() =>{
       filters.value[fv.field].value = fv.value
    })
 })
+
+function downloadCSV() {
+   masterFileHitsTable.value.exportCSV()
+}
 
 function clearFilters() {
    Object.values(filters.value).forEach( fv => fv.value = null )
@@ -146,9 +155,17 @@ function onPage(event) {
    th, td {
       font-size: 0.85em;
    }
-   .matches {
-      padding: 5px 10px;
-      text-align: center;
+   .results-toolbar {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      .matches {
+         padding: 5px 0;
+         text-align: left;
+      }
+      button {
+         font-size: 0.8em;
+      }
    }
 }
 div.filters {
