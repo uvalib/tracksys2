@@ -72,6 +72,24 @@
             <div v-if="slotProps.data.virgoURL"><a :href="slotProps.data.virgoURL" target="_blank">VIRGO</a></div>
          </template>
       </Column>
+      <Column field="virgo" header="Virgo" class="nowrap" filterField="virgo" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <Dropdown v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
+         </template>
+         <template #body="slotProps">
+            <span v-if="slotProps.data.virgo">Yes</span>
+            <span v-else>No</span>
+         </template>
+      </Column>
+      <Column field="dpla" header="DPLA" class="nowrap" filterField="dpla" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <Dropdown v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
+         </template>
+         <template #body="slotProps">
+            <span v-if="slotProps.data.dpla">Yes</span>
+            <span v-else>No</span>
+         </template>
+      </Column>
       <Column header="" class="row-acts nowrap">
          <template #body="slotProps">
             <router-link :to="`/metadata/${slotProps.data.id}`">View</router-link>
@@ -102,7 +120,16 @@ const filters = ref( {
     'creator_name': {value: null, matchMode: FilterMatchMode.CONTAINS},
     'barcode': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
     'call_number': {value: null, matchMode: FilterMatchMode.CONTAINS},
-    'catalog_key': {value: null, matchMode: FilterMatchMode.STARTS_WITH}
+    'catalog_key': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
+    'virgo': {value: null, matchMode: FilterMatchMode.EQUALS},
+    'dpla': {value: null, matchMode: FilterMatchMode.EQUALS}
+})
+
+const yesNo = computed(() => {
+   let out = []
+   out.push( {label: "No", value: false} )
+   out.push( {label: "Yes", value: true} )
+   return out
 })
 const mdTypes = computed(() => {
    let out = []

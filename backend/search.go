@@ -35,6 +35,8 @@ type metadataHit struct {
 	CatalogKey       string          `json:"catalogKey"`
 	CreatorName      string          `json:"creatorName"`
 	DateDlIngest     *time.Time      `gorm:"column:date_dl_ingest" json:"-"`
+	Virgo            bool            `gorm:"-" json:"virgo"`
+	DPLA             bool            `json:"dpla"`
 	VirgoURL         string          `gorm:"-" json:"virgoURL"`
 	ExternalSystemID *int64          `json:"-"`
 	ExternalSystem   *externalSystem `gorm:"foreignKey:ExternalSystemID" json:"externalSystem,omitempty"`
@@ -130,6 +132,18 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 					filterQ = svc.DB.Where("type=?", tgtVal)
 				} else {
 					filterQ = svc.DB.Where("type=? and external_system_id=?", "ExternalMetadata", typeBits[1])
+				}
+			} else if tgtField == "virgo" {
+				if tgtVal == "true" {
+					filterQ = svc.DB.Where("date_dl_ingest is not null")
+				} else {
+					filterQ = svc.DB.Where("date_dl_ingest is null")
+				}
+			} else if tgtField == "dpla" {
+				if tgtVal == "true" {
+					filterQ = svc.DB.Where("dpla=1")
+				} else {
+					filterQ = svc.DB.Where("dpla=0")
 				}
 			} else {
 				op := "="
@@ -247,6 +261,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		for _, md := range resp.Metadata.Hits {
 			if md.DateDlIngest != nil {
 				md.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, md.CatalogKey)
+				md.Virgo = true
 			}
 		}
 	}
