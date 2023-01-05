@@ -34,7 +34,7 @@ ENV APP_HOME /tracksys2
 WORKDIR $APP_HOME
 
 # Create necessary directories
-RUN mkdir -p $APP_HOME/bin $APP_HOME/scripts
+RUN mkdir -p $APP_HOME/bin $APP_HOME/scripts $APP_HOME/db
 RUN chown -R webservice $APP_HOME && chgrp -R webservice $APP_HOME
 
 # add the migrate tool
@@ -48,13 +48,14 @@ CMD scripts/entry.sh
 COPY package/data/container_bash_profile /home/webservice/.profile
 COPY package/scripts/entry.sh $APP_HOME/scripts/entry.sh
 COPY package/scripts/migrate.sh $APP_HOME/scripts/migrate.sh
+COPY backend/db/migrations/*.sql $APP_HOME/db/
 COPY --from=builder /build/bin/tracksys2.linux $APP_HOME/bin/tracksys2
 COPY --from=builder /build/bin/public $APP_HOME/bin/public
 COPY --from=builder /build/bin/data $APP_HOME/bin/data
 
 # Ensure permissions are correct
 RUN chown webservice:webservice /home/webservice/.profile $APP_HOME/scripts/entry.sh $APP_HOME/bin/tracksys2 && chmod 755 /home/webservice/.profile $APP_HOME/scripts/entry.sh $APP_HOME/bin/tracksys2
-RUN chown -R webservice:webservice $APP_HOME/bin/public $APP_HOME/bin/data && chmod -R 755 $APP_HOME/bin/public $APP_HOME/bin/data
+RUN chown -R webservice:webservice $APP_HOME/bin/public $APP_HOME/bin/data $APP_HOME/db && chmod -R 755 $APP_HOME/bin/public $APP_HOME/bin/data $APP_HOME/db
 
 # Add the build tag
 ARG BUILD_TAG
