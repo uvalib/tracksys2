@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { defineStore } from 'pinia'
+import { useSystemStore } from './system'
 
 function parseJwt(token) {
    var base64Url = token.split('.')[1]
@@ -69,6 +70,7 @@ export const useUserStore = defineStore('user', {
             })
 
             // Catch 401 errors and redirect to an expired auth page
+            const system = useSystemStore()
             axios.interceptors.response.use(
                res => res,
                err => {
@@ -85,6 +87,7 @@ export const useUserStore = defineStore('user', {
                         this.role = ""
                         this.computeID = ""
                         this.ID = 0
+                        system.working = false
                         this.router.push("/signedout?expired=1")
                         return new Promise(() => { })
                      }
