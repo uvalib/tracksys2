@@ -5,7 +5,7 @@
 
 # run the migrations
 #bin/migrate -path db -verbose -database mysql://$DBUSER:$DBPASS@$DBHOST:$DBPORT/$DBNAME up
-echo wold do: bin/migrate -path db -verbose -database mysql://$DBUSER:$DBPASS@$DBHOST:$DBPORT/$DBNAME up"
+echo "WOULD DO: bin/migrate -path db -verbose -database mysql://$DBUSER:$DBPASS@$DBHOST:$DBPORT/$DBNAME up"
 
 # return the status
 exit $?
