@@ -21,7 +21,7 @@ Install the migrate binary on your host system. For OSX, the easiest method is b
 
 Define your MySQL connection params in an environment variable, like this:
 
-`export TS2DB=mysql://user:password@tcp(host:port)/dbname`
+`export TS2DB='mysql://user:password@tcp(host:port)/dbname?x-migrations-table=ts2_schema_migrations'`
 
 Run migrations like this:
 
