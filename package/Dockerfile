@@ -37,6 +37,9 @@ WORKDIR $APP_HOME
 RUN mkdir -p $APP_HOME/bin $APP_HOME/scripts
 RUN chown -R webservice $APP_HOME && chgrp -R webservice $APP_HOME
 
+# add the migrate tool
+RUN cd $APP_HOME/bin && curl -L https://github.com/golang-migrate/migrate/releases/download/v4.14.1/migrate.linux-amd64.tar.gz | tar xvz && mv migrate.linux-amd64 migrate
+
 # port and run command
 EXPOSE 8080
 CMD scripts/entry.sh
@@ -44,6 +47,7 @@ CMD scripts/entry.sh
 # Move in necessary assets
 COPY package/data/container_bash_profile /home/webservice/.profile
 COPY package/scripts/entry.sh $APP_HOME/scripts/entry.sh
+COPY package/scripts/migrate.sh $APP_HOME/scripts/migrate.sh
 COPY --from=builder /build/bin/tracksys2.linux $APP_HOME/bin/tracksys2
 COPY --from=builder /build/bin/public $APP_HOME/bin/public
 COPY --from=builder /build/bin/data $APP_HOME/bin/data
