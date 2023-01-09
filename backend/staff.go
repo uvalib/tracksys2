@@ -57,6 +57,7 @@ func (svc *serviceContext) addOrUpdateStaff(c *gin.Context) {
 }
 
 func (svc *serviceContext) getStaff(c *gin.Context) {
+	adminsOnly, _ := strconv.ParseBool(c.Query("admins"))
 	startIndex, _ := strconv.Atoi(c.Query("start"))
 	pageSize, _ := strconv.Atoi(c.Query("limit"))
 	if pageSize == 0 {
@@ -70,6 +71,22 @@ func (svc *serviceContext) getStaff(c *gin.Context) {
 	if sortOrder == "" {
 		sortOrder = "asc"
 	}
+
+	// just get active admin stafff
+	if adminsOnly {
+		log.Printf("INFO: get all active admin/supervisor staff")
+		var out []staffMember
+		// 0=admin, 1=supervisor
+		err := svc.DB.Where("is_active=? and (role=? or role=?)", 1, 0, 1).Order("last_name asc").Find(&out).Error
+		if err != nil {
+			log.Printf("ERROR: unable to get active admin users: %s", err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+		c.JSON(http.StatusOK, out)
+	}
+
+	// normal paged, filterd and sorted retrieval
 	fieldMap := map[string]string{"lastName": "last_name", "email": "email", "computingID": "computing_id"}
 	sortField := fieldMap[sortBy]
 	orderStr := fmt.Sprintf("%s %s", sortField, sortOrder)

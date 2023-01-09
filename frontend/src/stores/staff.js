@@ -32,6 +32,17 @@ export const useStaffStore = defineStore('staff', {
             system.setError(e)
          })
       },
+      getAdmins() {
+         const system = useSystemStore()
+         this.$reset()
+         let url = `/api/staff?admins=1`
+         axios.get( url ).then(response => {
+            this.staff = response.data
+            this.total = response.data.length
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
       addOrUpdateStaff( staffData ) {
          const system = useSystemStore()
          system.working = true
