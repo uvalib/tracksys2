@@ -101,7 +101,8 @@
          </dl>
          <div class="acts-wrap" v-if="user.isAdmin || user.isSupervisor">
             <div class="actions" v-if="detail.status != 'complete'">
-               <DPGButton label="Claim Order" class="p-button-secondary" @click="claimOrder()"/>
+               <DPGButton label="Claim for Processing" class="p-button-secondary" @click="claimOrder()"/>
+               <AssignModal />
             </div>
             <div class="actions" v-if="detail.status == 'await_fee'">
                <SendEmailDialog mode="fee" />
@@ -210,6 +211,7 @@ import Divider from 'primevue/divider'
 import SendEmailDialog from '../components/order/SendEmailDialog.vue'
 import AddUnitDialog from '../components/order/AddUnitDialog.vue'
 import { useConfirm } from "primevue/useconfirm"
+import AssignModal from '../components/order/AssignModal.vue'
 
 const confirm = useConfirm()
 const route = useRoute()

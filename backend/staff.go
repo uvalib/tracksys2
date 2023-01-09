@@ -83,7 +83,9 @@ func (svc *serviceContext) getStaff(c *gin.Context) {
 			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
+		log.Printf("INFO: %d active admin staff found", len(out))
 		c.JSON(http.StatusOK, out)
+		return
 	}
 
 	// normal paged, filterd and sorted retrieval
