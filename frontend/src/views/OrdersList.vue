@@ -49,10 +49,16 @@
          <Column field="lastName" header="Customer" class="nowrap" >
             <template #body="slotProps">
                {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
-               <span class="academic-status" v-if="slotProps.data.customer.academicStatus">({{slotProps.data.customer.academicStatus.name}})</span>
+               <span class="dimmed" v-if="slotProps.data.customer.academicStatus">({{slotProps.data.customer.academicStatus.name}})</span>
             </template>
          </Column>
          <Column field="agency.name" header="Agency" />
+         <Column field="processor" header="Processor" class="nowrap" >
+            <template #body="slotProps">
+               <span v-if="slotProps.data.processor">{{slotProps.data.processor.lastName}}, {{slotProps.data.processor.firstName}}</span>
+               <span v-else class="dimmed">None</span>
+            </template>
+         </Column>
 
          <Column header="" class="row-acts">
             <template #body="slotProps">
@@ -202,7 +208,7 @@ button.p-button.create {
          span.status {
             width: 100%;
          }
-         span.academic-status {
+         span.dimmed {
             margin-left: 3px;
             display:inline-block;
             color: #ccc;

@@ -505,6 +505,27 @@ export const useOrdersStore = defineStore('orders', {
             }
          })
       },
+      setProcessor( staffID ) {
+         const system = useSystemStore()
+         system.working = true
+         let url = `/api/orders/${this.detail.id}/processor?staff=${staffID}`
+         axios.post( url ).then( (response) => {
+            this.detail = response.data
+            if (this.detail.fee != null) {
+               this.detail.fee = `${this.detail.fee}`
+            }
+            if (this.detail.invoice && this.detail.invoice.feeAmountPaid) {
+               this.detail.invoice.feeAmountPaid = `${this.detail.invoice.feeAmountPaid}`
+            }
+            system.working = false
+         }).catch( e => {
+            if (e.response) {
+               system.setError("Unable to set order processor: "+e.response.data)
+            } else {
+               system.setError(e)
+            }
+         })
+      },
       checkOrderComplete() {
          const system = useSystemStore()
          system.working = true
