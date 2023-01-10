@@ -69,6 +69,9 @@
                <DataDisplay label="Title" :value="detail.title"/>
                <DataDisplay label="Special Instructions" :value="detail.specialInstructions"/>
                <DataDisplay label="Staff Notes" :value="detail.staffNotes"/>
+               <DataDisplay v-if="detail.processor" label="Order Processor" :value="detail.processor.lastName">
+                  <span>{{ detail.processor.firstName }} {{ detail.processor.lastName }}</span>
+               </DataDisplay>
             </dl>
          </Panel>
          <Panel class="messages" header="Messages" v-if="hasMessages">
@@ -97,6 +100,10 @@
             <DataDisplay label="Date Customer Notified" :value="formatDateTime(detail.dateCustomerNotified)"/>
          </dl>
          <div class="acts-wrap" v-if="user.isAdmin || user.isSupervisor">
+            <div class="actions" v-if="detail.status != 'complete'">
+               <DPGButton label="Claim for Processing" class="p-button-secondary" @click="claimOrder()"/>
+               <AssignModal />
+            </div>
             <div class="actions" v-if="detail.status == 'await_fee'">
                <SendEmailDialog mode="fee" />
                <DPGButton label="Customer Declines Fee" class="p-button-secondary" @click="declineFeeClicked()"/>
@@ -204,6 +211,7 @@ import Divider from 'primevue/divider'
 import SendEmailDialog from '../components/order/SendEmailDialog.vue'
 import AddUnitDialog from '../components/order/AddUnitDialog.vue'
 import { useConfirm } from "primevue/useconfirm"
+import AssignModal from '../components/order/AssignModal.vue'
 
 const confirm = useConfirm()
 const route = useRoute()
@@ -401,6 +409,17 @@ function declineFeeClicked() {
 }
 function checkOrderComplete() {
    ordersStore.checkOrderComplete()
+}
+function claimOrder() {
+   confirm.require({
+      message: 'Are you sure you want claim this order for processing?',
+      header: 'Confirm Claim Order',
+      icon: 'pi pi-question-circle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         ordersStore.setProcessor( user.ID )
+      }
+   })
 }
 
 </script>

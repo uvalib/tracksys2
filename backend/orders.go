@@ -54,32 +54,34 @@ type auditEvent struct {
 }
 
 type order struct {
-	ID                             int64      `json:"id"`
-	OrderStatus                    string     `json:"status"`
-	OrderTitle                     string     `json:"title"`
-	DateDue                        time.Time  `json:"dateDue"`
-	CustomerID                     *uint      `json:"-"`
-	Customer                       *customer  `gorm:"foreignKey:CustomerID" json:"customer,omitempty"`
-	AgencyID                       *uint      `json:"-"`
-	Agency                         *agency    `gorm:"foreignKey:AgencyID" json:"agency,omitempty"`
-	Fee                            *float64   `json:"fee,omitempty"`
-	Invoice                        *invoice   `gorm:"-" json:"invoice,omitempty"`
-	UnitCount                      int64      `json:"unitCount"`       // NOTE: this is different than the cached count field units_count
-	MasterFileCount                int64      `json:"masterFileCount"` // NOTE: this is different than the cached count master_files_count
-	Email                          string     `json:"email"`
-	StaffNotes                     string     `json:"staffNotes"`
-	SpecialInstructions            string     `json:"specialInstructions"`
-	DateRequestSubmitted           time.Time  `json:"dateSubmitted"`
-	DateOrderApproved              *time.Time `json:"dateApproved"`
-	DateDeferred                   *time.Time `json:"dateDeferred"`
-	DateCanceled                   *time.Time `json:"dateCanceled"`
-	DateCustomerNotified           *time.Time `json:"dateCustomerNotified"`
-	DatePatronDeliverablesComplete *time.Time `json:"datePatronDeliverablesComplete"`
-	DateArchivingComplete          *time.Time `json:"dateArchivingComplete"`
-	DateFinalizationBegun          *time.Time `json:"dateFinalizationBegun"`
-	DateFeeEstimateSentToCustomer  *time.Time `json:"dateFeeEstimateSent"`
-	DateCompleted                  *time.Time `json:"dateCompleted"`
-	UpdatedAt                      time.Time  `json:"-"`
+	ID                             int64        `json:"id"`
+	OrderStatus                    string       `json:"status"`
+	OrderTitle                     string       `json:"title"`
+	DateDue                        time.Time    `json:"dateDue"`
+	CustomerID                     *uint        `json:"-"`
+	Customer                       *customer    `gorm:"foreignKey:CustomerID" json:"customer,omitempty"`
+	ProcessorID                    *int64       `json:"-"`
+	Processor                      *staffMember `gorm:"foreignKey:ProcessorID" json:"processor,omitempty"`
+	AgencyID                       *uint        `json:"-"`
+	Agency                         *agency      `gorm:"foreignKey:AgencyID" json:"agency,omitempty"`
+	Fee                            *float64     `json:"fee,omitempty"`
+	Invoice                        *invoice     `gorm:"-" json:"invoice,omitempty"`
+	UnitCount                      int64        `json:"unitCount"`       // NOTE: this is different than the cached count field units_count
+	MasterFileCount                int64        `json:"masterFileCount"` // NOTE: this is different than the cached count master_files_count
+	Email                          string       `json:"email"`
+	StaffNotes                     string       `json:"staffNotes"`
+	SpecialInstructions            string       `json:"specialInstructions"`
+	DateRequestSubmitted           time.Time    `json:"dateSubmitted"`
+	DateOrderApproved              *time.Time   `json:"dateApproved"`
+	DateDeferred                   *time.Time   `json:"dateDeferred"`
+	DateCanceled                   *time.Time   `json:"dateCanceled"`
+	DateCustomerNotified           *time.Time   `json:"dateCustomerNotified"`
+	DatePatronDeliverablesComplete *time.Time   `json:"datePatronDeliverablesComplete"`
+	DateArchivingComplete          *time.Time   `json:"dateArchivingComplete"`
+	DateFinalizationBegun          *time.Time   `json:"dateFinalizationBegun"`
+	DateFeeEstimateSentToCustomer  *time.Time   `json:"dateFeeEstimateSent"`
+	DateCompleted                  *time.Time   `json:"dateCompleted"`
+	UpdatedAt                      time.Time    `json:"-"`
 }
 
 type orderRequest struct {
@@ -169,7 +171,7 @@ func (svc *serviceContext) createOrder(c *gin.Context) {
 func (svc *serviceContext) loadOrder(orderID string) (*order, error) {
 	log.Printf("INFO: load order %s details", orderID)
 	var oDetail order
-	err := svc.DB.Preload("Agency").Preload("Customer").
+	err := svc.DB.Preload("Agency").Preload("Customer").Preload("Processor").
 		Preload("Customer.AcademicStatus").Preload("Customer.AcademicStatus").Preload("Customer.Addresses").
 		Limit(1).Find(&oDetail, orderID).Error
 	if err != nil {
@@ -315,7 +317,7 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	var o []*order
 	unitCnt := "(select count(*) from units where order_id=orders.id) as unit_count"
 	mfCnt := "(select count(*) from master_files m inner join units u on u.id=m.unit_id where u.order_id=orders.id) as master_file_count"
-	err := filterQ.Preload("Agency").Preload("Customer").Preload("Customer.AcademicStatus").Omit("units_count", "master_files_count").
+	err := filterQ.Preload("Agency").Preload("Customer").Preload("Customer.AcademicStatus").Preload("Processor").Omit("units_count", "master_files_count").
 		Select("orders.*", unitCnt, mfCnt).
 		Offset(startIndex).Limit(pageSize).Order(orderStr).Find(&o).Error
 	if err != nil {
@@ -385,6 +387,31 @@ func (svc *serviceContext) addOrderAuditEvent(o *order, msg string, staffIDStr s
 		log.Printf("ERROR: invalid staff id for audit event: %s", staffIDStr)
 		return
 	}
+}
+
+func (svc *serviceContext) setOrderProcessor(c *gin.Context) {
+	oID := c.Param("id")
+	staffID, _ := strconv.ParseInt(c.Query("staff"), 10, 64)
+	if staffID == 0 {
+		log.Printf("ERROR: staff param required for to set processor for order %s", oID)
+		c.String(http.StatusBadRequest, "staff param is required")
+		return
+	}
+	oDetail, err := svc.loadOrder(oID)
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve order %s to set processor %s", oID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	oDetail.ProcessorID = &staffID
+	err = svc.DB.Model(oDetail).Select("ProcessorID").Updates(oDetail).Error
+	if err != nil {
+		log.Printf("ERROR: unable to set processor for order %d: %s", oDetail.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	oDetail, _ = svc.loadOrder(oID)
+	c.JSON(http.StatusOK, oDetail)
 }
 
 func (svc *serviceContext) completeOrder(c *gin.Context) {

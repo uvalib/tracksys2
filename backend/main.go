@@ -11,7 +11,7 @@ import (
 )
 
 // Version of the service
-const Version = "0.9.17"
+const Version = "1.0.0"
 
 func main() {
 	// Load cfg
@@ -76,6 +76,7 @@ func main() {
 		api.POST("/orders/:id/resume", svc.resumeOrder)
 		api.POST("/orders/:id/cancel", svc.cancelOrder)
 		api.POST("/orders/:id/complete", svc.completeOrder)
+		api.POST("/orders/:id/processor", svc.setOrderProcessor)
 		api.POST("/invoices/:id/update", svc.updateInvoice)
 
 		api.GET("/jobs", svc.getJobStatuses)
