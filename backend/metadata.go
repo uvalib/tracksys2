@@ -78,7 +78,8 @@ type metadata struct {
 	CreatorName          *string             `json:"creatorName"`
 	CreatorDeathDate     *uint64             `json:"creatorDeathDate"`
 	DescMetadata         *string             `json:"descMetadata"`
-	CollectionID         *string             `json:"collectionID"`
+	CollectionID         *string             `json:"collectionID"`    // internal usage to track a collection ID
+	CollectionFacet      *string             `json:"collectionFacet"` // used at index to put item in collection in DL; EX: Ganon Project, McGregor
 	UseRightID           *int64              `json:"-"`
 	UseRight             *useRight           `gorm:"foreignKey:UseRightID" json:"useRight"`
 	UseRightRationale    string              `json:"useRightRationale"`
@@ -219,6 +220,8 @@ type metadataRequest struct {
 	UseRightID           int64  `json:"useRight"`
 	UseRightRationale    string `json:"useRightRationale"`
 	DPLA                 bool   `json:"inDPLA"`
+	CollectionID         string `json:"collectionID"`
+	CollectionFacet      string `json:"CollectionFacet"`
 }
 
 var modsTemplate = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -250,6 +253,12 @@ func (svc *serviceContext) createMetadata(c *gin.Context) {
 	newMD := metadata{Type: req.Type, Title: req.Title, IsPersonalItem: req.PersonalItem, IsManuscript: req.Manuscript, CreatedAt: &createTime}
 	if req.Author != "" {
 		newMD.CreatorName = &req.Author
+	}
+	if req.CollectionID != "" {
+		newMD.CollectionID = &req.CollectionID
+	}
+	if req.CollectionFacet != "" {
+		newMD.CollectionFacet = &req.CollectionFacet
 	}
 	if req.OCRHint > 0 {
 		newMD.OCRHintID = &req.OCRHint
@@ -434,6 +443,14 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 	if req.UseRightRationale != "" {
 		md.UseRightRationale = req.UseRightRationale
 		fields = append(fields, "UseRightRationale")
+	}
+	if req.CollectionID != "" {
+		md.CollectionID = &req.CollectionID
+		fields = append(fields, "CollectionID")
+	}
+	if req.CollectionFacet != "" {
+		md.CollectionFacet = &req.CollectionFacet
+		fields = append(fields, "CollectionFacet")
 	}
 
 	if md.Type == "SirsiMetadata" {

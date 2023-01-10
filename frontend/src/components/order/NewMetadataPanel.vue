@@ -49,6 +49,11 @@
       </Panel>
       <Panel v-if="info.type != 'ExternalMetadata'" header="Digital Library Information">
          <div class="split">
+            <FormKit label="Collection ID" type="text" v-model="info.collectionID"/>
+            <span class="sep"/>
+            <FormKit label="Collection Facet" type="text" v-model="info.collectionFacet"/>
+         </div>
+         <div class="split">
             <FormKit label="In DPLA" type="select" :options="yesNo" v-model="info.inDPLA"/>
             <span class="sep"/>
             <FormKit label="Availability Policy" outer-class="first" type="select" :options="availabilityPolicies" v-model="info.availabilityPolicy" required/>
@@ -95,6 +100,8 @@ const info = ref({
    useRight: 1,
    useRightRationale: "",
    inDPLA: false,
+   collectionID: "",
+   collectionFacet: "",
 })
 
 onMounted(() => {
@@ -116,6 +123,8 @@ onMounted(() => {
    info.value.useRight = 1
    info.value.useRightRationale = ""
    info.value.inDPLA = false
+   info.value.collectionID = ""
+   info.value.collectionFacet = ""
 })
 
 const submitClass = computed(() => {

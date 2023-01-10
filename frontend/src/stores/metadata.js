@@ -31,6 +31,7 @@ export const useMetadataStore = defineStore('metadata', {
          creatorDeathDate: "",
          availabilityPolicy: null,
          collectionID: "",
+         collectionFacet: "",
          dateDLIngest: null,
          dateDLUpdate: null,
       },
@@ -93,7 +94,6 @@ export const useMetadataStore = defineStore('metadata', {
          year: "",
          publicationPlace: "",
          location: "",
-         collectionID: "",
          error: "",
          searching: false,
       },
@@ -116,7 +116,6 @@ export const useMetadataStore = defineStore('metadata', {
          this.sirsiMatch.callNumber = ""
          this.sirsiMatch.title = ""
          this.sirsiMatch.creatorName = ""
-         this.sirsiMatch.collectionID = ""
          this.sirsiMatch.error = ""
          this.sirsiMatch.searching = false
          this.asMatch.error = ""
@@ -159,7 +158,6 @@ export const useMetadataStore = defineStore('metadata', {
             this.sirsiMatch.year =  response.data.year
             this.sirsiMatch.publicationPlace =  response.data.publicationPlace
             this.sirsiMatch.location =  response.data.location
-            this.sirsiMatch.collectionID =  response.data.collectionID
             this.sirsiMatch.searching = false
          }).catch( e => {
             this.sirsiMatch.searching = false
@@ -292,6 +290,7 @@ export const useMetadataStore = defineStore('metadata', {
          }
          this.dl.availabilityPolicy = details.metadata.availabilityPolicy
          this.dl.collectionID = details.metadata.collectionID
+         this.dl.collectionFacet = details.metadata.collectionFacet
          this.dl.dateDLIngest = details.metadata.dateDLIngest
          this.dl.dateDLUpdate = details.metadata.dateDLUpdate
 

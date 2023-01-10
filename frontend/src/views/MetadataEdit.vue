@@ -51,15 +51,20 @@
             </div>
          </Panel>
          <Panel v-if="metadataStore.detail.type != 'ExternalMetadata'" header="Digital Library Information">
-         <div class="split">
-            <FormKit label="In DPLA" type="select" :options="yesNo" v-model="edited.inDPLA"/>
-            <span class="sep"/>
-            <FormKit label="Availability Policy" outer-class="first" type="select" :options="availabilityPolicies" v-model="edited.availabilityPolicy" required/>
-            <span class="sep"/>
-            <FormKit label="Right Statement" outer-class="first" type="select" :options="useRights" v-model="edited.useRight" required/>
-         </div>
-         <FormKit label="Use Right Rationale" type="textarea" :rows="2" v-model="edited.useRightRationale"/>
-      </Panel>
+            <div class="split">
+               <FormKit label="Collection ID" type="text" v-model="edited.collectionID"/>
+               <span class="sep"/>
+               <FormKit label="Collection Facet" type="text" v-model="edited.collectionFacet"/>
+            </div>
+            <div class="split">
+               <FormKit label="In DPLA" type="select" :options="yesNo" v-model="edited.inDPLA"/>
+               <span class="sep"/>
+               <FormKit label="Availability Policy" outer-class="first" type="select" :options="availabilityPolicies" v-model="edited.availabilityPolicy" required/>
+               <span class="sep"/>
+               <FormKit label="Right Statement" outer-class="first" type="select" :options="useRights" v-model="edited.useRight" required/>
+            </div>
+            <FormKit label="Use Right Rationale" type="textarea" :rows="2" v-model="edited.useRightRationale"/>
+         </Panel>
          <div class="acts">
             <DPGButton label="Cancel" class="p-button-secondary" @click="cancelEdit()"/>
             <FormKit type="submit" label="Save" :disabled="!validated" :wrapper-class="submitClass"/>
@@ -98,6 +103,8 @@ const edited = ref({
    useRight: 1,
    useRightRationale: "",
    inDPLA: false,
+   collectionID: "",
+   collectionFacet: ""
 })
 
 const pageHeader = computed( () => {
@@ -199,8 +206,16 @@ onMounted( async () =>{
    }
    edited.value.useRightRationale = metadataStore.dl.useRightRationale
    edited.value.inDPLA = metadataStore.dl.inDPLA
+   edited.value.collectionID = metadataStore.dl.collectionID
+   edited.value.collectionFacet = metadataStore.dl.collectionFacet
    if ( metadataStore.detail.type == "ExternalMetadata") {
       validated.value = metadataStore.archivesSpace.error != ""
+   }
+   if ( metadataStore.detail.type == "SirsiMetadata" && (edited.value.catalogKey != "" || edited.value.barcode !="")) {
+      validated.value = true
+   }
+   if ( metadataStore.detail.type == "XmlMetadata" ) {
+      validated.value = true
    }
 })
 

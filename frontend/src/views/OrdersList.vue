@@ -46,10 +46,10 @@
                <span class="fee" v-if="slotProps.data.fee !== undefined">${{parseFloat(slotProps.data.fee).toFixed(2)}}</span>
             </template>
          </Column>
-         <Column field="lastName" header="Customer" class="nowrap" >
+         <Column field="lastName" header="Customer">
             <template #body="slotProps">
-               {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
-               <span class="dimmed" v-if="slotProps.data.customer.academicStatus">({{slotProps.data.customer.academicStatus.name}})</span>
+               <div class="nowrap">{{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}</div>
+               <div class="dimmed" v-if="slotProps.data.customer.academicStatus">({{slotProps.data.customer.academicStatus.name}})</div>
             </template>
          </Column>
          <Column field="agency.name" header="Agency" />
@@ -208,10 +208,12 @@ button.p-button.create {
          span.status {
             width: 100%;
          }
-         span.dimmed {
-            margin-left: 3px;
+         .dimmed {
             display:inline-block;
             color: #ccc;
+         }
+         span.dimmed {
+            margin-left: 3px;
          }
          span.sta
          :deep(td), :deep(th) {
