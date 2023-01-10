@@ -238,7 +238,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			searchQ = searchQ.Where(
 				svc.DB.Where("metadata.id=?", qStr).Or("pid=?", qStr).Or("title like ?", matchAny).
 					Or("barcode=?", qStr).Or("catalog_key=?", qStr).Or("call_number like ?", matchAny).
-					Or("creator_name like ?", matchAny),
+					Or("creator_name like ?", matchAny).Or("collection_id like ?", matchStart).Or("collection_facet like ?", matchStart),
 			)
 		} else {
 			if field == "title" || field == "creator_name" || field == "call_number" {

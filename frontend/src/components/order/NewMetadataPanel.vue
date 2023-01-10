@@ -51,7 +51,7 @@
          <div class="split">
             <FormKit label="Collection ID" type="text" v-model="info.collectionID"/>
             <span class="sep"/>
-            <FormKit label="Collection Facet" type="text" v-model="info.collectionFacet"/>
+            <FormKit label="Collection Facet" type="select" :options="collectionFacets" v-model="info.collectionFacet" placeholder="Select a facet"/>
          </div>
          <div class="split">
             <FormKit label="In DPLA" type="select" :options="yesNo" v-model="info.inDPLA"/>
@@ -138,6 +138,13 @@ const availabilityPolicies = computed(() => {
    let out = []
    systemStore.availabilityPolicies.forEach( o => {
       out.push({label: o.name, value: o.id})
+   })
+   return out
+})
+const collectionFacets = computed(() => {
+   let out = []
+   systemStore.collectionFacets.forEach( o => {
+      out.push({label: o.name, value: o.name})
    })
    return out
 })

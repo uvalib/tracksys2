@@ -54,7 +54,7 @@
             <div class="split">
                <FormKit label="Collection ID" type="text" v-model="edited.collectionID"/>
                <span class="sep"/>
-               <FormKit label="Collection Facet" type="text" v-model="edited.collectionFacet"/>
+               <FormKit label="Collection Facet" type="select" :options="collectionFacets" v-model="edited.collectionFacet" placeholder="Select a facet"/>
             </div>
             <div class="split">
                <FormKit label="In DPLA" type="select" :options="yesNo" v-model="edited.inDPLA"/>
@@ -120,6 +120,13 @@ const pageHeader = computed( () => {
    }
    return "ArchivesSpace "+baseHdr
 
+})
+const collectionFacets = computed(() => {
+   let out = []
+   systemStore.collectionFacets.forEach( o => {
+      out.push({label: o.name, value: o.name})
+   })
+   return out
 })
 const useRights = computed(() => {
    let out = []

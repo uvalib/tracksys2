@@ -17,6 +17,7 @@ export const useSystemStore = defineStore('system', {
       academicStatuses: [],
       agencies: [],
       availabilityPolicies: [],
+      collectionFacets: [],
       categories: [],
       containerTypes: [],
       externalSystems: [],
@@ -66,6 +67,7 @@ export const useSystemStore = defineStore('system', {
             this.agencies = response.data.controlledVocabularies.agencies
             this.availabilityPolicies = response.data.controlledVocabularies.availabilityPolicies
             this.categories = response.data.controlledVocabularies.categories
+            this.collectionFacets = response.data.controlledVocabularies.collectionFacets
             this.containerTypes = response.data.controlledVocabularies.containerTypes
             this.externalSystems = response.data.controlledVocabularies.externalSystems
             this.intendedUses = response.data.controlledVocabularies.intendedUses
