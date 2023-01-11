@@ -98,5 +98,11 @@ func (svc *serviceContext) deleteJobStatuses(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
+	err = svc.DB.Where("job_status_id in ?", delReq.Jobs).Delete(&event{}).Error
+	if err != nil {
+		log.Printf("ERROR: unable to delete jobs %v: %s", delReq.Jobs, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
 	c.JSON(http.StatusOK, delReq)
 }

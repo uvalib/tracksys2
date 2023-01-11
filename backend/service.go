@@ -133,6 +133,83 @@ func initializeService(version string, cfg *configData) *serviceContext {
 	return &ctx
 }
 
+func (svc *serviceContext) cleanupExpiredData(c *gin.Context) {
+	log.Printf("INFO: cleanup job logs and deleted messages older than 1 month")
+	lastMonth := time.Now().AddDate(0, -3, 0)
+	out := struct {
+		DeletedJobs     int64 `json:"deletedJobs"`
+		DeletedMessages int64 `json:"deletedMessages"`
+	}{
+		DeletedJobs:     0,
+		DeletedMessages: 0,
+	}
+
+	log.Printf("INFO: scan for jopb statuses to delete")
+	var oldStatuses []jobStatus
+	err := svc.DB.Where("status=? and ended_at < ?", "finished", lastMonth).Find(&oldStatuses).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get count of old jobs: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	out.DeletedJobs = int64(len(oldStatuses))
+	if out.DeletedJobs > 0 {
+		log.Printf("INFO: delete %d expired jobs", out.DeletedJobs)
+		jsIDs := make([]uint64, 0)
+		for _, js := range oldStatuses {
+			jsIDs = append(jsIDs, js.ID)
+		}
+		err = svc.DB.Where("id in ?", jsIDs).Delete(&jobStatus{}).Error
+		if err != nil {
+			log.Printf("ERROR: unable to delete old jobs: %s", err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+		err = svc.DB.Where("job_status_id in ?", jsIDs).Delete(&event{}).Error
+		if err != nil {
+			log.Printf("ERROR: unable to delete old job events: %s", err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	log.Printf("INFO: clean up orphaned job status events")
+	qstr := "select distinct e.id from events e where job_status_id not in (select id from job_statuses js)"
+	orphans := make([]int64, 0)
+	err = svc.DB.Raw(qstr).Scan(&orphans).Error
+	if err != nil {
+		log.Printf("ERROR: unable to find orphaned events: %s", err.Error())
+	} else {
+		if len(orphans) > 0 {
+			err = svc.DB.Delete(&event{}, orphans).Error
+			if err != nil {
+				log.Printf("ERROR: unable to delete orphaned job events: %s", err.Error())
+			} else {
+				log.Printf("INFO: deleted %d orphaned events", len(orphans))
+			}
+		} else {
+			log.Printf("INFO: no orphaned events to clean up")
+		}
+	}
+
+	log.Printf("INFO: scan for messages to delete")
+	err = svc.DB.Table("messages").Where("deleted=? and deleted_at < ?", 1, lastMonth).Count(&out.DeletedMessages).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get count of old messages: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: delete %d deleted messages", out.DeletedMessages)
+	err = svc.DB.Exec("DELETE from messages where deleted=? and deleted_at < ?", 1, lastMonth).Error
+	if err != nil {
+		log.Printf("ERROR: unable to delete messages: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
 func (svc *serviceContext) getConfig(c *gin.Context) {
 	log.Printf("INFO: get service configuration")
 	type searchField struct {
