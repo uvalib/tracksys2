@@ -42,6 +42,7 @@ export const useUserStore = defineStore('user', {
    actions: {
       signout() {
          localStorage.removeItem("ts2_jwt")
+         localStorage.removeItem("tsPriorURL")
          this.jwt = ""
          this.firstName = ""
          this.lastName = ""

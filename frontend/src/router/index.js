@@ -136,8 +136,16 @@ router.beforeEach((to, _from, next) => {
    if (to.path === '/granted') {
       let jwtStr = VueCookies.get("ts2_jwt")
       userStore.setJWT(jwtStr)
-      next("/")
+      let priorURL = localStorage.getItem('tsPriorURL')
+      localStorage.removeItem("tsPriorURL")
+      if ( priorURL && priorURL != "/granted" && priorURL != "/") {
+         console.log("RESTORE "+priorURL)
+         next(priorURL)
+      } else {
+         next("/")
+      }
    } else if (to.name !== 'not_found' && to.name !== 'forbidden' && to.name !== "signedout") {
+      localStorage.setItem("tsPriorURL", to.fullPath)
       let jwtStr = localStorage.getItem('ts2_jwt')
       if (jwtStr) {
          userStore.setJWT(jwtStr)
