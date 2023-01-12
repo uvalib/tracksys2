@@ -63,7 +63,14 @@ export const useUserStore = defineStore('user', {
             this.role = parsed.role
 
             // add interceptor to put bearer token in header
+            const system = useSystemStore()
             axios.interceptors.request.use(config => {
+               let url = config.url
+               if ( url.match(system.iiifManifestURL) || url.match(system.jobsURL) ) {
+                  console.log("SKIP AUTH HEADER")
+                  return config
+               }
+               console.log("ADD AUTH HEADER")
                config.headers['Authorization'] = 'Bearer ' + jwt
                return config
             }, error => {
@@ -71,7 +78,6 @@ export const useUserStore = defineStore('user', {
             })
 
             // Catch 401 errors and redirect to an expired auth page
-            const system = useSystemStore()
             axios.interceptors.response.use(
                res => res,
                err => {
