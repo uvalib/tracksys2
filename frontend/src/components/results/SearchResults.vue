@@ -17,6 +17,7 @@
 
 <script setup>
 import { useSearchStore } from '@/stores/search'
+import { useSystemStore } from '@/stores/system'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import MetadataResults from './MetadataResults.vue'
@@ -24,22 +25,49 @@ import OrdersResults from './OrdersResults.vue'
 import MasterFilesResults from './MasterFilesResults.vue'
 import ComponentsResults from './ComponentsResults.vue'
 import { useRoute, useRouter } from 'vue-router'
+import { onMounted, watch } from 'vue'
 
 const searchStore = useSearchStore()
+const systemStore = useSystemStore()
 const route = useRoute()
 const router = useRouter()
 
-function tabChanged() {
-   let tabs = ['orders', 'metadata', 'masterfiles', 'components']
-   let query = Object.assign({}, route.query)
-   query.scope = tabs[searchStore.activeResultsIndex]
-   let fp = searchStore.filtersAsQueryParam(query.scope)
-   if (fp != "") {
-      query.filters = fp
-   } else {
-      delete query.filters
+watch(() => systemStore.working, (newVal) => {
+   if ( newVal == false) {
+      showTargetView()
    }
-   router.push({query})
+})
+
+onMounted( () => {
+   showTargetView()
+})
+
+function showTargetView() {
+   let query = Object.assign({}, route.query)
+   if (query.view) {
+      if ( query.view != searchStore.view) {
+         router.push({query})
+      }
+      searchStore.setActiveView(query.view)
+   } else {
+      searchStore.setActiveView("")
+   }
+}
+
+function tabChanged() {
+   /// DOESN"T WORKL!!!
+   if (searchStore.scope == "all") {
+      let tabs = ['orders', 'metadata', 'masterfiles', 'components']
+      let query = Object.assign({}, route.query)
+      query.view = tabs[searchStore.activeResultsIndex]
+      let fp = searchStore.filtersAsQueryParam(query.view)
+      if (fp != "") {
+         query.filters = fp
+      } else {
+         delete query.filters
+      }
+      router.push({query})
+   }
 }
 </script>
 

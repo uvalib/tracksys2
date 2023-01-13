@@ -132,7 +132,6 @@ function onFilter(event) {
    })
    let query = Object.assign({}, route.query)
    query.filters = searchStore.filtersAsQueryParam("masterfiles")
-   query.scope = "masterfiles"
    router.push({query})
    searchStore.executeSearch("masterfiles")
 }

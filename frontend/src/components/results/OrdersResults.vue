@@ -164,7 +164,6 @@ function onFilter(event) {
    })
    let query = Object.assign({}, route.query)
    query.filters = searchStore.filtersAsQueryParam("orders")
-   query.scope = "orders"
    router.push({query})
    searchStore.executeSearch("orders")
 }

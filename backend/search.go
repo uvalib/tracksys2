@@ -83,18 +83,24 @@ type searchResults struct {
 }
 
 type filterData struct {
-	Filter string `json:"filter"`
+	Type   string   `json:"type"`
+	Params []string `json:"params"`
 }
 
 func (svc *serviceContext) searchRequest(c *gin.Context) {
+	// get the query and tag it for starts with and contains searches
 	qStr := c.Query("q")
 	matchStart := fmt.Sprintf("%s%%", qStr)
 	matchAny := fmt.Sprintf("%%%s%%", qStr)
+
+	// setup pagination
 	startIndex, _ := strconv.Atoi(c.Query("start"))
 	pageSize, _ := strconv.Atoi(c.Query("limit"))
 	if pageSize == 0 {
 		pageSize = 15
 	}
+
+	// limit search scope to an item type
 	scope := c.Query("scope")
 	if scope == "" {
 		scope = "all"
@@ -104,6 +110,8 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		c.String(http.StatusBadRequest, "invalid search scope")
 		return
 	}
+
+	// search specific fields?
 	field := c.Query("field")
 	if field == "" {
 		field = "all"
@@ -112,9 +120,12 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 
 	// extract filters into json structs
 	filterStr := c.Query("filters")
+	log.Printf("INFO: raw filters %s", filterStr)
 	var filterQ *gorm.DB
+	var filterTarget string
 	if filterStr != "" {
-		filters := make([]filterData, 0)
+		log.Printf("INFO: parse filters from query string")
+		var filters filterData
 		err := json.Unmarshal([]byte(filterStr), &filters)
 		if err != nil {
 			log.Printf("ERROR: unable to parse filters %s: %s", filterStr, err.Error())
@@ -122,10 +133,13 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			return
 		}
 
-		for idx, f := range filters {
-			bits := strings.Split(f.Filter, "|")
+		filterTarget = filters.Type
+		for idx, f := range filters.Params {
+			log.Printf("INFO: found filter %s", f)
+			bits := strings.Split(f, "|")
 			tgtField := bits[0]
 			tgtVal, _ := url.QueryUnescape(bits[2])
+			log.Printf("INFO: filter %s on %s", tgtField, tgtVal)
 			if tgtField == "type" {
 				typeBits := strings.Split(tgtVal, ":")
 				if len(typeBits) == 1 {
@@ -134,16 +148,32 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 					filterQ = svc.DB.Where("type=? and external_system_id=?", "ExternalMetadata", typeBits[1])
 				}
 			} else if tgtField == "virgo" {
-				if tgtVal == "true" {
-					filterQ = svc.DB.Where("date_dl_ingest is not null")
+				if idx == 0 {
+					if tgtVal == "true" {
+						filterQ = svc.DB.Where("date_dl_ingest is not null")
+					} else {
+						filterQ = svc.DB.Where("date_dl_ingest is null")
+					}
 				} else {
-					filterQ = svc.DB.Where("date_dl_ingest is null")
+					if tgtVal == "true" {
+						filterQ = filterQ.Where("date_dl_ingest is not null")
+					} else {
+						filterQ = filterQ.Where("date_dl_ingest is null")
+					}
 				}
 			} else if tgtField == "dpla" {
-				if tgtVal == "true" {
-					filterQ = svc.DB.Where("dpla=1")
+				if idx == 0 {
+					if tgtVal == "true" {
+						filterQ = svc.DB.Where("dpla=1")
+					} else {
+						filterQ = svc.DB.Where("dpla=0")
+					}
 				} else {
-					filterQ = svc.DB.Where("dpla=0")
+					if tgtVal == "true" {
+						filterQ = filterQ.Where("dpla=1")
+					} else {
+						filterQ = filterQ.Where("dpla=0")
+					}
 				}
 			} else {
 				op := "="
@@ -186,7 +216,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
 		}
 
-		if filterQ != nil {
+		if filterTarget == "components" && filterQ != nil {
 			searchQ = searchQ.Where(filterQ)
 		}
 
@@ -217,7 +247,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 				Where("t.tag like ?", matchAny)
 		}
 
-		if filterQ != nil {
+		if filterTarget == "masterfiles" && filterQ != nil {
 			searchQ = searchQ.Where(filterQ)
 		}
 
@@ -248,13 +278,13 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			}
 		}
 
-		if filterQ != nil {
+		if filterTarget == "metadata" && filterQ != nil {
 			searchQ = searchQ.Where(filterQ)
 		}
 
 		searchQ.Count(&resp.Metadata.Total)
 		searchQ = searchQ.Preload("ExternalSystem")
-		err := searchQ.Offset(startIndex).Limit(pageSize).Find(&resp.Metadata.Hits).Error
+		err := searchQ.Debug().Offset(startIndex).Limit(pageSize).Find(&resp.Metadata.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: metadata search failed: %s", err.Error())
 		}
@@ -289,7 +319,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			searchQ = searchQ.Where(fmt.Sprintf("%s like ?", field), matchAny)
 		}
 
-		if filterQ != nil {
+		if filterTarget == "orders" && filterQ != nil {
 			searchQ = searchQ.Where(filterQ)
 		}
 

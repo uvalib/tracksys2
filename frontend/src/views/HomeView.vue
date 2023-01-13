@@ -23,10 +23,10 @@
       </div>
       <div class="search">
          <FormKit type="form" id="global-search" :actions="false" @submit="doSearch">
-            <FormKit type="select" label="" v-model="searchStore.scope" outer-class="select-wrap" @change="scopeChanged"
-               :options="{ all: 'All items', orders: 'Orders', masterfiles: 'Master Files', metadata: 'Metadata', components: 'Components'}"
+            <FormKit type="select" label="" v-model="selectedScope" outer-class="select-wrap" @change="scopeChanged"
+               :options="{ all: 'All items', orders: 'Orders', metadata: 'Metadata', masterfiles: 'Master Files', components: 'Components'}"
             />
-            <FormKit type="select" label="" v-model="searchStore.field" :options="scopeFields" outer-class="select-wrap"/>
+            <FormKit type="select" label="" v-model="selectedField" :options="scopeFields" outer-class="select-wrap"/>
             <FormKit label="" type="search" placeholder="Find Tracksys items..." v-model="searchStore.query" outer-class="searchbar" />
             <FormKit type="submit" label="Search" wrapper-class="submit-button" />
             <FormKit type="button" v-if="searchStore.searched"  label="Reset search" @click="resetSearch()" wrapper-class="reset-button"/>
@@ -67,9 +67,11 @@ const metadataStore = useMetadataStore()
 const unitID = ref("")
 const unitError = ref("")
 const showCreateMetadata = ref(false)
+const selectedScope = ref("all")
+const selectedField = ref("all")
 
 const scopeFields = computed( () => {
-   let scope = searchStore.scope
+   let scope = selectedScope.value
    let allFields = searchStore.searchFields
    let fields = allFields[scope]
    if (fields) {
@@ -80,11 +82,14 @@ const scopeFields = computed( () => {
 
 function resetSearch() {
    searchStore.resetSearch()
+   selectedScope.value = "all"
+   selectedField.value = "all"
    let query = Object.assign({}, route.query)
    delete query.q
    delete query.scope
    delete query.field
    delete query.filters
+   delete query.view
    router.push({query})
 }
 
@@ -94,41 +99,55 @@ onBeforeMount( () => {
 
    let paramsDetected = false
    let paramsChanged = false
+
+   // detect and set view first as other params need it (like filters)
+   if ( route.query.view ) {
+      searchStore.view = route.query.view
+   }
    if ( route.query.q  ) {
+      console.log("QUERY DETECTED")
       paramsDetected = true
       if (searchStore.query != route.query.q) {
+         console.log("QUERY CHANGE "+searchStore.query+" vs new q "+route.query.q)
          searchStore.query = route.query.q
          paramsChanged = true
+
       }
    }
 
    if ( route.query.scope ) {
       paramsDetected = true
-      if (searchStore.scope != route.query.scope && searchStore.scope != "all") {
+      selectedScope.value = route.query.scope
+      console.log("SCOPE DETECTED "+route.query.scope)
+      if (searchStore.scope != route.query.scope ) {
+         console.log("SCOPE CHANGE "+searchStore.scope+" vs new q "+route.query.scope)
          paramsChanged = true
          searchStore.scope = route.query.scope
-         if ( route.query.filters ) {
-            searchStore.setFilter(route.query.scope, route.query.filters)
-         }
       }
    } else {
       searchStore.scope = "all"
    }
 
+   if ( route.query.filters ) {
+      console.log("FOUND FILTERS IN QUERY")
+      searchStore.setFilter(route.query.filters)
+   }
+
    if ( route.query.field &&  searchStore.field != route.query.field) {
+      selectedField.value = route.query.field
       searchStore.field = route.query.field
       paramsDetected = true
    }
 
    if (paramsChanged) {
-      searchStore.executeSearch(searchStore.scope)
+      searchStore.executeSearch()
    } else if ( paramsDetected == false) {
       searchStore.resetSearch()
    }
 })
 
 function scopeChanged() {
-   searchStore.field = "all"
+   selectedField.value = "all"
 }
 
 async function doUnitSearch() {
@@ -145,15 +164,23 @@ async function doUnitSearch() {
 
 function doSearch() {
    if (searchStore.query.length > 0) {
+      unitError.value = ""
+
+      // set scope when search is done otherwise the UI changes when the dropdown changes
+      if (searchStore.scope != selectedScope.value) {
+         searchStore.scope = selectedScope.value
+         searchStore.view = ""
+      }
+      searchStore.field = selectedField.value
+
+      // convert the search store into query params so it can be shared / bookmarked
       let query = Object.assign({}, route.query)
       query.q = searchStore.query
-      delete query.scope
-      if (searchStore.scope != "all") {
-         query.scope = searchStore.scope
-      }
-      delete query.field
-      if (searchStore.field != "all") {
-         query.field = searchStore.field
+      query.scope = searchStore.scope
+      query.field = searchStore.field
+      delete query.view
+      if (searchStore.view != "" && searchStore.view != "all") {
+         query.view = searchStore.view
       }
 
       let filterQP = searchStore.filtersAsQueryParam(searchStore.scope)
@@ -165,7 +192,8 @@ function doSearch() {
 
       router.push({query})
 
-      searchStore.executeSearch(searchStore.scope)
+      // do the search last
+      searchStore.executeSearch()
    }
 }
 

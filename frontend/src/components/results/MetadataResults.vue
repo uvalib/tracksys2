@@ -207,7 +207,6 @@ function onFilter(event) {
    })
    let query = Object.assign({}, route.query)
    query.filters = searchStore.filtersAsQueryParam("metadata")
-   query.scope = "metadata"
    router.push({query})
    searchStore.executeSearch("metadata")
 }
