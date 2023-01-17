@@ -27,7 +27,7 @@
                :options="{ all: 'All items', orders: 'Orders', metadata: 'Metadata', masterfiles: 'Master Files', components: 'Components'}"
             />
             <FormKit type="select" label="" v-model="selectedField" :options="scopeFields" outer-class="select-wrap"/>
-            <FormKit label="" type="search" placeholder="Find Tracksys items..." v-model="searchStore.query" outer-class="searchbar" />
+            <FormKit label="" type="search" placeholder="Find Tracksys items..." v-model="newQuery" outer-class="searchbar" />
             <FormKit type="submit" label="Search" wrapper-class="submit-button" />
             <FormKit type="button" v-if="searchStore.searched"  label="Reset search" @click="resetSearch()" wrapper-class="reset-button"/>
          </FormKit>
@@ -67,8 +67,10 @@ const metadataStore = useMetadataStore()
 const unitID = ref("")
 const unitError = ref("")
 const showCreateMetadata = ref(false)
+
 const selectedScope = ref("all")
 const selectedField = ref("all")
+const newQuery = ref("")
 
 const scopeFields = computed( () => {
    let scope = selectedScope.value
@@ -80,10 +82,68 @@ const scopeFields = computed( () => {
    return [{label: 'All fields', value: "all"}]
 })
 
+onBeforeMount( () => {
+   document.title = `Tracksys2`
+   dashboard.getStatistics()
+
+   let paramsChanged = false
+
+   // detect and set scope first as it affects all other aspects of the search
+   if ( route.query.scope ) {
+      selectedScope.value = route.query.scope
+      if (searchStore.scope != route.query.scope ) {
+         // console.log("SCOPE CHANGE "+searchStore.scope+" vs new q "+route.query.scope)
+         paramsChanged = true
+         searchStore.scope = route.query.scope
+      }
+
+      // if scope anything but all, ensure view matches it
+      if ( route.query.scope != "all" ) {
+         searchStore.setActiveView(route.query.scope)
+      }
+   } else {
+      searchStore.scope = "all"
+      selectedScope.value = "all"
+   }
+
+   // view is set next because it controls which filters get applied
+   if ( route.query.view ) {
+      searchStore.view = route.query.view
+   }
+   if ( route.query.q  ) {
+      // paramsDetected = true
+      newQuery.value = route.query.q
+      if (searchStore.query != route.query.q) {
+         // console.log("QUERY CHANGE "+searchStore.query+" vs new q "+route.query.q)
+         searchStore.query = route.query.q
+         paramsChanged = true
+      }
+   } else {
+      newQuery.value = ""
+   }
+
+   if ( route.query.field ) {
+      selectedField.value = route.query.field
+      if ( searchStore.field != route.query.field ) {
+         searchStore.field = route.query.field
+         paramsChanged = true
+      }
+   }
+
+   if ( route.query.filters ) {
+      searchStore.setFilter(route.query.filters)
+   }
+
+   if (paramsChanged) {
+      searchStore.executeSearch()
+   }
+})
+
 function resetSearch() {
    searchStore.resetSearch()
    selectedScope.value = "all"
    selectedField.value = "all"
+   newQuery.value = ""
    let query = Object.assign({}, route.query)
    delete query.q
    delete query.scope
@@ -92,59 +152,6 @@ function resetSearch() {
    delete query.view
    router.push({query})
 }
-
-onBeforeMount( () => {
-   document.title = `Tracksys2`
-   dashboard.getStatistics()
-
-   let paramsDetected = false
-   let paramsChanged = false
-
-   // detect and set view first as other params need it (like filters)
-   if ( route.query.view ) {
-      searchStore.view = route.query.view
-   }
-   if ( route.query.q  ) {
-      console.log("QUERY DETECTED")
-      paramsDetected = true
-      if (searchStore.query != route.query.q) {
-         console.log("QUERY CHANGE "+searchStore.query+" vs new q "+route.query.q)
-         searchStore.query = route.query.q
-         paramsChanged = true
-
-      }
-   }
-
-   if ( route.query.scope ) {
-      paramsDetected = true
-      selectedScope.value = route.query.scope
-      console.log("SCOPE DETECTED "+route.query.scope)
-      if (searchStore.scope != route.query.scope ) {
-         console.log("SCOPE CHANGE "+searchStore.scope+" vs new q "+route.query.scope)
-         paramsChanged = true
-         searchStore.scope = route.query.scope
-      }
-   } else {
-      searchStore.scope = "all"
-   }
-
-   if ( route.query.filters ) {
-      console.log("FOUND FILTERS IN QUERY")
-      searchStore.setFilter(route.query.filters)
-   }
-
-   if ( route.query.field &&  searchStore.field != route.query.field) {
-      selectedField.value = route.query.field
-      searchStore.field = route.query.field
-      paramsDetected = true
-   }
-
-   if (paramsChanged) {
-      searchStore.executeSearch()
-   } else if ( paramsDetected == false) {
-      searchStore.resetSearch()
-   }
-})
 
 function scopeChanged() {
    selectedField.value = "all"
@@ -163,15 +170,23 @@ async function doUnitSearch() {
 }
 
 function doSearch() {
-   if (searchStore.query.length > 0) {
+   if (newQuery.value.length > 0) {
       unitError.value = ""
 
-      // set scope when search is done otherwise the UI changes when the dropdown changes
-      if (searchStore.scope != selectedScope.value) {
-         searchStore.scope = selectedScope.value
-         searchStore.view = ""
-      }
+      // this is only called when clicking search. reset everything.
+      searchStore.resetSearch()
+
+      // promote local changes to the store. these will be used in the search. This promotion is necessary
+      // because the UI would change before search is clicked otherwise.
+      searchStore.scope = selectedScope.value
       searchStore.field = selectedField.value
+      searchStore.query = newQuery.value
+      if ( searchStore.scope != "all") {
+         // if the scope is narrowed to a single type, the view must be too.
+         // In that case, there is only 1 result. Set the active result index to 0.
+         console.log("doSearch set active view")
+         searchStore.setActiveView(selectedScope.value)
+      }
 
       // convert the search store into query params so it can be shared / bookmarked
       let query = Object.assign({}, route.query)
@@ -179,20 +194,15 @@ function doSearch() {
       query.scope = searchStore.scope
       query.field = searchStore.field
       delete query.view
-      if (searchStore.view != "" && searchStore.view != "all") {
-         query.view = searchStore.view
-      }
-
+      delete query.filters
       let filterQP = searchStore.filtersAsQueryParam(searchStore.scope)
       if (filterQP != "") {
          query.filters = filterQP
-      } else {
-         delete query.filters
       }
 
       router.push({query})
 
-      // do the search last
+      // do the search last. This will pick a view and upodate the URL to include it.
       searchStore.executeSearch()
    }
 }

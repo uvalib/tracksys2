@@ -73,7 +73,11 @@ export const useSearchStore = defineStore('search', {
       setGlobalSearchFields( data ) {
          this.searchFields = data
       },
-      resetResults() {
+      resetSearch() {
+         this.query = ""
+         this.scope = "all"
+         this.field = "all"
+
          this.components.start = 0
          this.components.limit = 15
          this.components.total = 0
@@ -100,15 +104,9 @@ export const useSearchStore = defineStore('search', {
 
          this.activeResultsIndex = 0
          this.view = ""
-      },
-      resetSearch() {
-         this.query = ""
-         this.scope = "all"
-         this.field = "all"
          this.searched = false
-         this.activeResultsIndex = 0
-         this.resetResults()
       },
+
       async unitExists( unitID) {
          const system = useSystemStore()
          system.working = true
@@ -126,11 +124,9 @@ export const useSearchStore = defineStore('search', {
       },
 
       setFilter( filterQueryParm) {
-         // TODO FIX... TOO MUCH PARSING??
          let parsedFilters = []
          let filterObj = JSON.parse(filterQueryParm)
-         let parsedParams = JSON.parse(filterObj.params)
-         parsedParams.forEach( f => {
+         filterObj.params.forEach( f => {
             let bits = f.split("|") // ex: title|contains|charlottesville
             parsedFilters.push({field: bits[0].trim(), match: bits[1].trim(), value: bits[2].trim()})
          })
@@ -148,9 +144,10 @@ export const useSearchStore = defineStore('search', {
       executeSearch( scopeOverride ) {
          const system = useSystemStore()
          system.working = true
+         // console.log("exec search. scopeOverride: ["+scopeOverride+", scope: "+this.scope+", view: "+this.view)
 
          // this lets secondary queries on specific item types with different filter and paginiation settings
-         // Ex; initial scope is all, but user is viewing masterfiles and gots to next page. Override scope to masterfiles
+         // Ex; initial scope is all, but user is viewing masterfiles and goes to next page. Override scope to masterfiles
          // and apply the pagination changes
          let tgtScope = scopeOverride
          if ( !tgtScope ) {
@@ -170,11 +167,10 @@ export const useSearchStore = defineStore('search', {
             url += `&start=${this.metadata.start}&limit=${this.metadata.limit}`
          } else if (tgtScope == "orders") {
             url += `&start=${this.orders.start}&limit=${this.orders.limit}`
-         } else {
-            this.resetResults()
          }
 
-         let filterParam = this.filtersAsQueryParam(tgtScope)
+         // filter is always based on active view
+         let filterParam = this.filtersAsQueryParam(this.view)
          if ( filterParam != "") {
             url += `&filters=${filterParam}`
          }
@@ -197,8 +193,7 @@ export const useSearchStore = defineStore('search', {
                this.orders.hits = response.data.orders.hits
                this.orders.total = response.data.orders.total
             }
-            if ( this.scope == "all" && this.view == "" ) {
-               console.log("pick view based on results")
+            if ( this.scope == "all" ) {
                if ( this.orders.total > 0) {
                   this.activeResultsIndex = 0
                   this.view = "orders"
@@ -215,13 +210,12 @@ export const useSearchStore = defineStore('search', {
             }
             system.working = false
             this.searched = true
-         })/*.catch( e => {
+         }).catch( e => {
             system.setError(e)
-         })*/
+         })
       },
 
       setActiveView( viewName ) {
-         console.log("set view "+viewName )
          this.view = viewName
          if (this.scope == "all") {
             if (viewName == "orders") {
