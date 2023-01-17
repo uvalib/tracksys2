@@ -132,8 +132,8 @@ const filters = ref( {
 
 const yesNo = computed(() => {
    let out = []
-   out.push( {label: "No", value: false} )
-   out.push( {label: "Yes", value: true} )
+   out.push( {label: "No", value: "false"} )
+   out.push( {label: "Yes", value: "true"} )
    return out
 })
 const mdTypes = computed(() => {
