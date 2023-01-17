@@ -101,7 +101,7 @@
             <DataDisplay label="Order Units" :value="`${detail.relatedUnits}`">
                <div class="related-unit-ids">
                   <template v-for="(uid,idx) in detail.relatedUnits" :key="`related-${uid}`">
-                     <template v-if="idx > 0"><span class="comma">,</span></template>
+                     <template v-if="idx > 0"><span class="sep"></span></template>
                      <router-link :to="`/units/${uid}`" v-if="uid != detail.id">{{uid}}</router-link>
                      <span class="current-unit" v-else>{{uid}}</span>
                   </template>
@@ -299,8 +299,9 @@ div.unit-acts {
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
-.comma {
+.sep {
       margin-right: 5px;
+      display: inline-block;
    }
    .current-unit {
       font-weight: bold;

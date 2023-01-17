@@ -88,6 +88,10 @@ onBeforeMount( () => {
 
    let paramsChanged = false
 
+   newQuery.value = ""
+   selectedField.value = "all"
+   selectedScope.value = "all"
+
    // detect and set scope first as it affects all other aspects of the search
    if ( route.query.scope ) {
       selectedScope.value = route.query.scope
