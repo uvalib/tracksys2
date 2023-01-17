@@ -9,7 +9,7 @@
                </li>
             </ul>
          <div class="filter-acts">
-            <DPGButton label="Clear all" class="p-button-secondary" @click="clearFilters()"/>
+            <DPGButton label="Clear all" class="p-button-secondary" @click="clearFilters"/>
          </div>
       </div>
    </div>
@@ -132,6 +132,10 @@ function onFilter(event) {
    })
    let query = Object.assign({}, route.query)
    query.filters = searchStore.filtersAsQueryParam("components")
+   delete query.filters
+   if ( searchStore.components.filters.length > 0) {
+      query.filters = searchStore.filtersAsQueryParam("components")
+   }
    router.push({query})
    searchStore.executeSearch("components")
 }
