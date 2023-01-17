@@ -49,17 +49,18 @@ function showTargetView() {
          router.push({query})
       }
       searchStore.setActiveView(query.view)
-   } else {
-      searchStore.setActiveView("")
+   } else if ( searchStore.view ) {
+      query.view = searchStore.view
+      router.push({query})
    }
 }
 
 function tabChanged() {
-   /// DOESN"T WORKL!!!
    if (searchStore.scope == "all") {
       let tabs = ['orders', 'metadata', 'masterfiles', 'components']
       let query = Object.assign({}, route.query)
       query.view = tabs[searchStore.activeResultsIndex]
+      searchStore.view = query.view
       let fp = searchStore.filtersAsQueryParam(query.view)
       if (fp != "") {
          query.filters = fp
