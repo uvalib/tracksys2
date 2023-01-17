@@ -9,7 +9,7 @@
                </li>
             </ul>
          <div class="filter-acts">
-            <DPGButton label="Clear filters" class="p-button-secondary" @click="clearFilters()"/>
+            <DPGButton label="Clear filters" class="p-button-secondary" @click="clearFilters"/>
          </div>
       </div>
    </div>
@@ -132,8 +132,8 @@ const filters = ref( {
 
 const yesNo = computed(() => {
    let out = []
-   out.push( {label: "No", value: false} )
-   out.push( {label: "Yes", value: true} )
+   out.push( {label: "No", value: "false"} )
+   out.push( {label: "Yes", value: "true"} )
    return out
 })
 const mdTypes = computed(() => {
@@ -207,7 +207,10 @@ function onFilter(event) {
    })
    let query = Object.assign({}, route.query)
    query.filters = searchStore.filtersAsQueryParam("metadata")
-   query.scope = "metadata"
+   delete query.filters
+   if ( searchStore.metadata.filters.length > 0) {
+      query.filters = searchStore.filtersAsQueryParam("metadata")
+   }
    router.push({query})
    searchStore.executeSearch("metadata")
 }

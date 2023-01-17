@@ -9,6 +9,7 @@ export const useSearchStore = defineStore('search', {
       field: "all",
       searched: false,
       unitValid: false,
+      view: "",               // name of the view for below. used in client query params
       activeResultsIndex: 0,  // results are presented in this order: Orders, Metadata, MasterFiles, Components
       components: {
          start: 0,
@@ -46,23 +47,23 @@ export const useSearchStore = defineStore('search', {
             state.orders.total > 0 || state.components.total > 0
       },
       filtersAsQueryParam: state => {
-         return (searchOrigin) => {
+         return (filterTarget) => {
             let tgtFilters = null
-            if (searchOrigin == "components") {
+            if (filterTarget == "components") {
                tgtFilters = state.components.filters
-            } else if (searchOrigin == "masterfiles") {
+            } else if (filterTarget == "masterfiles") {
                tgtFilters = state.masterFiles.filters
-            } else if (searchOrigin == "metadata") {
+            } else if (filterTarget == "metadata") {
                tgtFilters = state.metadata.filters
-            } else if (searchOrigin == "orders") {
+            } else if (filterTarget == "orders") {
                tgtFilters = state.orders.filters
             } else {
                return ""
             }
             if (tgtFilters != null && tgtFilters.length > 0) {
-               let params = []
-               tgtFilters.forEach( fv => params.push(`{"filter":"${fv.field}|${fv.match}|${encodeURIComponent(fv.value)}"}`) )
-               return `[${params.join(",")}]`
+               let out = {type: filterTarget, params: []}
+               tgtFilters.forEach( fv => out.params.push(`${fv.field}|${fv.match}|${fv.value}`) )
+               return JSON.stringify(out)
             }
             return ""
          }
@@ -72,7 +73,11 @@ export const useSearchStore = defineStore('search', {
       setGlobalSearchFields( data ) {
          this.searchFields = data
       },
-      resetResults() {
+      resetSearch() {
+         this.query = ""
+         this.scope = "all"
+         this.field = "all"
+
          this.components.start = 0
          this.components.limit = 15
          this.components.total = 0
@@ -98,15 +103,10 @@ export const useSearchStore = defineStore('search', {
          this.orders.filters = []
 
          this.activeResultsIndex = 0
-      },
-      resetSearch() {
-         this.query = ""
-         this.scope = "all"
-         this.field = "all"
+         this.view = ""
          this.searched = false
-         this.activeResultsIndex = 0
-         this.resetResults()
       },
+
       async unitExists( unitID) {
          const system = useSystemStore()
          system.working = true
@@ -122,70 +122,91 @@ export const useSearchStore = defineStore('search', {
             this.unitValid = false
          })
       },
-      setFilter( scope, filterQueryParm) {
+
+      setFilter( filterQueryParm) {
          let parsedFilters = []
          let filterObj = JSON.parse(filterQueryParm)
-         filterObj.forEach( f => {
-            let bits = f.filter.split("|") // ex: title|contains|charlottesville
+         filterObj.params.forEach( f => {
+            let bits = f.split("|") // ex: title|contains|charlottesville
             parsedFilters.push({field: bits[0].trim(), match: bits[1].trim(), value: bits[2].trim()})
          })
-         if (scope == "components") {
+         if (filterObj.type == "components") {
             this.components.filters = parsedFilters
-         } else if (scope == "masterfiles") {
+         } else if (filterObj.type == "masterfiles") {
             this.masterFiles.filters = parsedFilters
-         } else if (scope == "metadata") {
+         } else if (filterObj.type == "metadata") {
             this.metadata.filters = parsedFilters
-         } else if (scope == "orders") {
+         } else if (filterObj.type == "orders") {
             this.orders.filters = parsedFilters
          }
       },
-      executeSearch(searchOrigin) {
+
+      executeSearch( scopeOverride ) {
          const system = useSystemStore()
          system.working = true
-         let tgtScope = this.scope
-         if (searchOrigin != "all") {
-            tgtScope = searchOrigin
+         // console.log("exec search. scopeOverride: ["+scopeOverride+", scope: "+this.scope+", view: "+this.view)
+
+         // this lets secondary queries on specific item types with different filter and paginiation settings
+         // Ex; initial scope is all, but user is viewing masterfiles and goes to next page. Override scope to masterfiles
+         // and apply the pagination changes
+         let tgtScope = scopeOverride
+         if ( !tgtScope ) {
+            tgtScope = this.scope
          }
+
          let url = `/api/search?scope=${tgtScope}&q=${encodeURIComponent(this.query)}`
          if (this.field != "all" ) {
             url += `&field=${this.field}`
          }
 
-         if (searchOrigin == "components") {
+         if (tgtScope == "components") {
             url += `&start=${this.components.start}&limit=${this.components.limit}`
-         } else if (searchOrigin == "masterfiles") {
+         } else if (tgtScope == "masterfiles") {
             url += `&start=${this.masterFiles.start}&limit=${this.masterFiles.limit}`
-         } else if (searchOrigin == "metadata") {
+         } else if (tgtScope == "metadata") {
             url += `&start=${this.metadata.start}&limit=${this.metadata.limit}`
-         } else if (searchOrigin == "orders") {
+         } else if (tgtScope == "orders") {
             url += `&start=${this.orders.start}&limit=${this.orders.limit}`
-         } else {
-            this.resetResults()
          }
 
-         let filterParam = this.filtersAsQueryParam(searchOrigin)
-         console.log("EXEC SEARCH in "+searchOrigin+ " FILTER "+filterParam)
+         // filter is always based on active view
+         let filterParam = this.filtersAsQueryParam(this.view)
          if ( filterParam != "") {
             url += `&filters=${filterParam}`
          }
 
          console.log("SEARCH URL "+url)
          axios.get(url).then(response => {
-            if (searchOrigin == "components" || searchOrigin == "all") {
+            if (tgtScope == "components" || tgtScope == "all") {
                this.components.hits = response.data.components.hits
                this.components.total = response.data.components.total
             }
-            if (searchOrigin == "masterfiles" || searchOrigin == "all") {
+            if (tgtScope == "masterfiles" || tgtScope == "all") {
                this.masterFiles.hits = response.data.masterFiles.hits
                this.masterFiles.total = response.data.masterFiles.total
             }
-            if (searchOrigin == "metadata" || searchOrigin == "all") {
+            if (tgtScope == "metadata" || tgtScope == "all") {
                this.metadata.hits = response.data.metadata.hits
                this.metadata.total = response.data.metadata.total
             }
-            if (searchOrigin == "orders" || searchOrigin == "all") {
+            if (tgtScope == "orders" || tgtScope == "all") {
                this.orders.hits = response.data.orders.hits
                this.orders.total = response.data.orders.total
+            }
+            if ( this.scope == "all" ) {
+               if ( this.orders.total > 0) {
+                  this.activeResultsIndex = 0
+                  this.view = "orders"
+               } else if  ( this.metadata.total > 0) {
+                  this.activeResultsIndex = 1
+                  this.view = "metadata"
+               } else if  ( this.masterFiles.total > 0) {
+                  this.activeResultsIndex = 2
+                  this.view = "masterfiles"
+               } else if  ( this.components.total > 0) {
+                  this.activeResultsIndex = 3
+                  this.view = "components"
+               }
             }
             system.working = false
             this.searched = true
@@ -193,5 +214,22 @@ export const useSearchStore = defineStore('search', {
             system.setError(e)
          })
       },
-	}
+
+      setActiveView( viewName ) {
+         this.view = viewName
+         if (this.scope == "all") {
+            if (viewName == "orders") {
+               this.activeResultsIndex = 0
+            } else  if (viewName == "metadata") {
+               this.activeResultsIndex = 1
+            } else  if (viewName == "masterfiles") {
+               this.activeResultsIndex = 2
+            } else  if (viewName == "components") {
+               this.activeResultsIndex = 3
+            }
+         } else {
+            this.activeResultsIndex = 0
+         }
+      }
+	},
 })
