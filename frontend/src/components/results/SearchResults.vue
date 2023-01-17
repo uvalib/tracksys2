@@ -45,13 +45,15 @@ onMounted( () => {
 function showTargetView() {
    let query = Object.assign({}, route.query)
    if (query.view) {
-      if ( query.view != searchStore.view) {
+      if ( query.view != searchStore.view && searchStore.scope == "all") {
          router.push({query})
       }
       searchStore.setActiveView(query.view)
    } else if ( searchStore.view ) {
-      query.view = searchStore.view
-      router.push({query})
+     if ( searchStore.scope == "all") {
+         query.view = searchStore.view
+         router.push({query})
+     }
    }
 }
 
