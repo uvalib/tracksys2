@@ -44,7 +44,8 @@ export const useMetadataStore = defineStore('metadata', {
          repo: "",
          collectionTitle: "",
          language: "",
-         dates: ""
+         dates: "",
+         publishedAt: ""
       },
       jstor: {
          id: "",
@@ -106,6 +107,16 @@ export const useMetadataStore = defineStore('metadata', {
       }
    }),
 	getters: {
+      hasMasterFiles: state => {
+         let hasFiles = false
+         state.related.units.some( u => {
+            if (u.masterFilesCount > 0) {
+               hasFiles = true
+            }
+            return hasFiles == true
+         })
+         return hasFiles
+      },
 	},
 	actions: {
       resetSearch() {
@@ -182,6 +193,18 @@ export const useMetadataStore = defineStore('metadata', {
          system.working = true
          return axios.post( `${system.jobsURL}/metadata/${this.detail.id}/publish` ).then( () => {
             this.getDetails(this.detail.id)
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      async publishToArchivesSpace( userID ) {
+         const system = useSystemStore()
+         system.working = true
+         let payload = {userID: `${userID}`, metadataID: `${this.detail.id}`}
+         let url = `${system.jobsURL}/archivesspace/publish`
+         return axios.post( url, payload ).then( () => {
+            this.archivesSpace.publishedAt = new Date().toISOString().split("T")[0]
             system.working = false
          }).catch( e => {
             system.setError(e)
@@ -265,6 +288,9 @@ export const useMetadataStore = defineStore('metadata', {
                   this.archivesSpace.collectionTitle = details.asDetails.collection_title
                   this.archivesSpace.language = details.asDetails.language
                   this.archivesSpace.dates = details.asDetails.dates
+                  if (details.asDetails.published_at) {
+                     this.archivesSpace.publishedAt = details.asDetails.published_at.split("T")[0]
+                  }
                } else {
                   this.archivesSpace.error = "Unable to get details for "+details.metadata.externalURI
                }

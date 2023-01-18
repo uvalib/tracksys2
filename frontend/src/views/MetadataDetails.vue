@@ -57,6 +57,11 @@
                <DataDisplay label="Level" :value="metadataStore.archivesSpace.level"/>
                <DataDisplay label="Created By" :value="metadataStore.archivesSpace.createdBy"/>
                <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
+               <DataDisplay v-if="metadataStore.archivesSpace.publishedAt" label="Published Date" :value="metadataStore.archivesSpace.publishedAt"/>
+               <DataDisplay v-else-if="metadataStore.hasMasterFiles==false" label="Published Date" value="No Master Files. Not Published."/>
+               <DataDisplay v-else label="Published Date" value="placeholder">
+                  <DPGButton label="Publish Now" class="as-publish" @click="publishToAS"/>
+               </DataDisplay>
             </dl>
             <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
          </template>
@@ -250,6 +255,13 @@ onBeforeMount( async () => {
    await metadataStore.getDetails( mdID )
 })
 
+async function publishToAS() {
+   await metadataStore.publishToArchivesSpace(userStore.ID)
+   if (systemStore.error == "") {
+      systemStore.toastMessage('Publish Success', 'This item has successfully been published to ArchivesSpace')
+   }
+}
+
 function deleteMetadata() {
    confirm.require({
       message: 'Are you sure you want delete this metadata? All data will be lost. This cannot be reversed.',
@@ -341,6 +353,10 @@ div.unit-acts {
    justify-content: flex-start;
    :deep(p-tabview) {
       margin: 0 !important;
+   }
+   button.as-publish {
+      font-size: 0.85em;
+      padding: 5px 15px;
    }
    a.virgo, a.supplemental {
       display: inline-block;

@@ -132,6 +132,7 @@ type asMetadata struct {
 	CollectionTitle string `json:"collection_title"`
 	Language        string `json:"language"`
 	Dates           string `json:"dates"`
+	PublishedAt     string `json:"published_at,omitempty"`
 }
 
 type jstorMetadata struct {
@@ -533,6 +534,7 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 			if getErr != nil {
 				log.Printf("ERROR: unable to get archivesSpace metadata for %s: %s", md.PID, getErr.Message)
 			} else {
+				log.Printf("INFO: raw as response: %s", raw)
 				var asData asMetadata
 				err := json.Unmarshal(raw, &asData)
 				if err != nil {

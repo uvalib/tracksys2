@@ -22,8 +22,13 @@
          </template>
          <template v-if="info.type == 'ExternalMetadata'">
             <p class="note"><b>IMPORTANT</b>: Only URIs containing /resources/, /accessions/ or /archival_objects/ are supported.</p>
+            <p class="note">Examples:</p>
+            <ul class="note">
+               <li>/repositories/uva-sc/resources/a_brief_survey_of_printing_history_and_practice_ma</li>
+               <li class="note">/repositories/3/resources/811</li>
+            </ul>
             <div class="split">
-               <FormKit label="External URI" type="text" v-model="info.externalURI" required @input="uriChanged"/>
+               <FormKit label="External URI" type="text" v-model="info.externalURI" required/>
                <span class="sep"/>
                <DPGButton @click="validateASMetadata" label="Validate" class="p-button-secondary" :loading="metadataStore.asMatch.searching"/>
             </div>
@@ -205,9 +210,6 @@ function typeChanged() {
 function xmlTitleChanged() {
    validated.value = ( info.value.title.length > 0)
 }
-function uriChanged() {
-   validated.value = false
-}
 async function validateASMetadata() {
    await metadataStore.validateArchivesSpaceURI(info.value.externalURI)
    if (metadataStore.asMatch.error == "") {
@@ -264,6 +266,9 @@ dl {
 }
 p.note {
    margin: 5px 0 0 0;
+}
+ul.note {
+   margin:5px 0 0 0;
 }
 
 .split {
