@@ -251,6 +251,7 @@ export const useMetadataStore = defineStore('metadata', {
 
       setMetadataDetails( details ) {
          // general info
+         this.$reset()
          this.detail.id = details.metadata.id
          this.detail.type = details.metadata.type
          this.detail.barcode = details.metadata.barcode
