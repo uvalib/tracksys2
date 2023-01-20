@@ -122,16 +122,6 @@ export const useUnitsStore = defineStore('units', {
          })
       },
 
-      regenerateIIIF() {
-         const system = useSystemStore()
-         let url = `${system.iiifManifestURL}/pid/${this.detail.metadata.pid}?refresh=true`
-         axios.get( url ).then( () => {
-            system.toastMessage("IIIF Manifest Regenerated", "The IIIF manifest for this unit has been regenerated.")
-         }).catch( e => {
-            system.setError(e)
-         })
-      },
-
       generateDeliverables() {
          const system = useSystemStore()
          let url = `${system.jobsURL}/units/${this.detail.id}/deliverables`

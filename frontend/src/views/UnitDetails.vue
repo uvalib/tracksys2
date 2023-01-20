@@ -63,8 +63,6 @@
                   class="p-button-secondary" label="Generate Deliverables" />
                <DPGButton v-if="detail.intendedUseID != 110 && detail.datePatronDeliverablesReady" @click="generateDeliverablesClicked"
                   class="p-button-secondary" label="Regenerate Deliverables" />
-               <DPGButton v-if="unitsStore.masterFiles.length > 0 && detail.status != 'error'" @click="regenerateIIIFClicked"
-                  class="p-button-secondary" label="Regenerate IIIF Manifest" />
                <template v-if="detail.status == 'done'">
                   <DPGButton v-if="detail.dateArchived" @click="downloadClicked" class="p-button-secondary" label="Download Unit From Archive" />
                </template>
@@ -231,9 +229,6 @@ function unitOCRClicked() {
 function unitPDFClicked() {
    let url = `${systemStore.pdfURL}/${unitsStore.detail.metadata.pid}?unit=${unitsStore.detail.id}`
    window.open(url)
-}
-function regenerateIIIFClicked() {
-   unitsStore.regenerateIIIF()
 }
 function downloadClicked() {
    unitsStore.downloadFromArchive( userStore.computeID )

@@ -293,7 +293,9 @@ function xmlUploader( event ) {
 
 async function publishClicked() {
    await metadataStore.publish()
-   systemStore.toastMessage('Publish Success', 'This item has successfully been published to Virgo')
+   if (systemStore.error == "") {
+      systemStore.toastMessage('Publish Success', 'This item has successfully been published to Virgo')
+   }
 }
 
 function formatBoolean( flag) {
