@@ -149,6 +149,9 @@
                <TabPanel header="Units">
                   <RelatedUnits :units="metadataStore.related.units" :showMetadata="false"/>
                </TabPanel>
+               <TabPanel v-if="metadataStore.related.masterFiles.length > 0" header="Master Files">
+                  <RelatedMasterFiles :masterFiles="metadataStore.related.masterFiles" />
+               </TabPanel>
             </TabView>
          </Panel>
       </div>
@@ -170,6 +173,7 @@ import TabPanel from 'primevue/tabpanel'
 import dayjs from 'dayjs'
 import RelatedOrders from '../components/related/RelatedOrders.vue'
 import RelatedUnits from '../components/related/RelatedUnits.vue'
+import RelatedMasterFiles from '../components/related/RelatedMasterFiles.vue'
 import FileUpload from 'primevue/fileupload'
 import { useConfirm } from "primevue/useconfirm"
 

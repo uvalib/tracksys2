@@ -81,7 +81,8 @@ export const useMetadataStore = defineStore('metadata', {
       virgoURL: "",
       related: {
          units: [],
-         orders: []
+         orders: [],
+         masterFiles: []
       },
       searchHits: [],
       totalSearchHits: 0,
@@ -108,6 +109,7 @@ export const useMetadataStore = defineStore('metadata', {
    }),
 	getters: {
       hasMasterFiles: state => {
+         if ( state.related.masterFiles.length > 0 ) return true
          let hasFiles = false
          state.related.units.some( u => {
             if (u.masterFilesCount > 0) {
@@ -329,7 +331,7 @@ export const useMetadataStore = defineStore('metadata', {
          this.other.ocrLanguageHint = details.metadata.ocrLanguageHint
          this.other.preservationTier = details.metadata.preservationTier
 
-         this.setRelatedItems(details.units)
+         this.setRelatedItems(details.units, details.masterFiles)
       },
       async getDetails( metadataID ) {
          if (this.detail.id == metadataID) return
@@ -371,9 +373,13 @@ export const useMetadataStore = defineStore('metadata', {
          })
       },
 
-      setRelatedItems( units ) {
+      setRelatedItems( units, masterFiles ) {
          this.related.units = []
          this.related.orders = []
+         this.related.masterFiles = []
+         if ( masterFiles ) {
+            this.related.masterFiles = masterFiles
+         }
          let orderIDs = []
          units.forEach( r => {
             let u = {
