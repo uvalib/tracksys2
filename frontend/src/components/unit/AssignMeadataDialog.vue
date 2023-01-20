@@ -4,7 +4,7 @@
       <FormKit type="form" id="assign-metadata" :actions="false" @submit="assignMetadata">
          <div class="lookup">
             <FormKit label="Metadata ID" type="text" v-model="metadataID" required autofocus outer-class="first" />
-            <LookupDialog target="metadata" @selected="metadataSelected" />
+            <LookupDialog target="metadata" @selected="metadataSelected" :create="true" />
          </div>
          <div class="acts">
             <DPGButton @click="hide" label="Cancel" class="p-button-secondary"/>
