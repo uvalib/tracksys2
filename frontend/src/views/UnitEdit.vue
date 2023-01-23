@@ -17,14 +17,14 @@
                         <label>Order ID</label>
                         <div class="item">
                            <span>{{displayOrderID}}</span>
-                           <LookupDialog target="orders" @selected="orderSelected" />
+                           <LookupDialog target="orders" @selected="orderSelected" class="small-button" />
                         </div>
                      </div>
                      <div class="related">
                         <label>Metadata ID</label>
                         <div class="item">
                            <span>{{displayMetadataID}}</span>
-                           <LookupDialog target="metadata" @selected="metadataSelected" :create="true" />
+                           <LookupDialog target="metadata" @selected="metadataSelected" :create="true"  class="small-button" />
                         </div>
                      </div>
                   </div>
@@ -216,6 +216,12 @@ async function submitChanges() {
             flex-flow: row nowrap;
             justify-content: flex-start;
             align-items: center;
+            margin-top: 10px;
+            :deep(button.small-button) {
+               padding: 3px 15px;
+               font-size: 0.85em;
+               margin-left: 10px;
+            }
          }
       }
    }

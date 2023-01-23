@@ -16,8 +16,10 @@
             <template v-if="detail.metadata && detail.dateArchived != null && detail.reorder == false">
                <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
             </template>
-            <AssignMeadataDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :ids="selectedIDs" />
-            <AssignComponentDialog  v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :ids="selectedIDs" />
+            <template  v-if="userStore.isAdmin || userStore.isSupervisor">
+               <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
+               <LookupDialog :disabled="!filesSelected" label="Assign Componment" @selected="assignComponent" target="component" />
+            </template>
          </div>
          <DataTable :value="unitsStore.masterFiles" ref="unitMasterFilesTable" dataKey="id"
             showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
@@ -70,9 +72,8 @@ import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useConfirm } from "primevue/useconfirm"
 import RenumberDialog from './RenumberDialog.vue'
-import AssignMeadataDialog from './AssignMeadataDialog.vue'
 import CloneMasterFiles from './CloneMasterFiles.vue'
-import AssignComponentDialog from './AssignComponentDialog.vue'
+import LookupDialog from './LookupDialog.vue'
 
 const confirm = useConfirm()
 const systemStore = useSystemStore()
@@ -187,6 +188,14 @@ function onSelectAllChange(event) {
    else {
       selectedMasterFiles.value = []
    }
+}
+
+async function assignMetadata( metadataID ) {
+   await unitsStore.assignMetadata(metadataID, selectedIDs.value)
+}
+
+async function assignComponent( componentID ) {
+   await unitsStore.assignComponent(componentID, selectedIDs.value)
 }
 
 </script>

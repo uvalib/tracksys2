@@ -1,13 +1,13 @@
 <template>
-   <DPGButton @click="show" icon="pi pi-search" class="p-button-rounded p-button-text" />
+   <DPGButton @click="show" class="p-button-secondary lookup-button" :label="props.label" :disabled="props.disabled" :class="props.class" />
    <Dialog v-model:visible="isOpen" :modal="true" :header="dialogTitle">
       <div class="lookup" v-if="mode=='lookup'">
-         <input type="text" v-model="query"  @keydown.stop.prevent.enter="lookupRecords" autofocus/>
+         <input type="text" v-model="query"  @keydown.stop.prevent.enter="lookupRecords" autofocus :placeholder="searchPlaceholder"/>
          <DPGButton @click="lookupRecords" label="Lookup" class="p-button-secondary"/>
          <DPGButton @click="createMetadata" label="Create" class="p-button-secondary" v-if="props.create"/>
       </div>
       <NewMetadataPanel v-else @canceled="metadataCreateCanceled" @created="metadataCreated" />
-      <template v-if="searched">
+      <template v-if="searched && mode=='lookup'">
          <div class="no-results"
             v-if="(target=='metadata' && metadataStore.totalSearchHits == 0) || (target=='orders' && ordersStore.totalLookupHits == 0) || (target=='component' && componentsStore.totalLookupHits == 0)">
             No matching records found.
@@ -22,7 +22,7 @@
                   <Column field="id" header="ID" :sortable="true"/>
                   <Column field="pid" header="PID" :sortable="true"/>
                   <Column field="type" header="Type" :sortable="true"/>
-                  <Column field="title" header="title" :sortable="true" >
+                  <Column field="title" header="Title" :sortable="true" >
                      <template #body="slotProps">{{truncateTitle(slotProps.data.title)}}</template>
                   </Column>
                   <Column field="callNumber" header="Call Number" :sortable="true"/>
@@ -70,7 +70,7 @@
          <div class="acts" v-if="mode=='lookup'">
             <DPGButton @click="hide" label="Cancel" class="p-button-secondary"/>
             <span class="spacer"></span>
-            <DPGButton @click="okClicked" label="Select" :disabled="selectedHit == null" />
+            <DPGButton @click="okClicked" label="Select" :disabled="!selectedHit" />
          </div>
       </template>
    </Dialog>
@@ -95,6 +95,18 @@ const props = defineProps({
    create: {
       type: Boolean,
       default: false
+   },
+   label: {
+      type: String,
+      default: "Lookup"
+   },
+   disabled: {
+      type: Boolean,
+      default: false
+   },
+   class: {
+      type: String,
+      default: "wombat"
    }
 })
 
@@ -110,16 +122,28 @@ const selectedHit = ref()
 
 function createMetadata() {
    mode.value = "create"
+   searched.value = false
+   query.value = ""
+   selectedHit.value = null
 }
 function metadataCreateCanceled() {
    mode.value = "lookup"
-   hide()
 }
 function metadataCreated() {
    selectedHit.value = metadataStore.searchHits[0]
    emit("selected", selectedHit.value.id)
    hide()
 }
+
+const searchPlaceholder = computed(() => {
+   if (props.target == "metadata") {
+      return "Lookup metadata..."
+   }
+   if (props.target == "component") {
+      return "Lookup component..."
+   }
+   return "Lookup order..."
+})
 
 const dialogTitle = computed(() => {
    if (props.target == "metadata") {
@@ -133,6 +157,8 @@ const dialogTitle = computed(() => {
 })
 
 async function lookupRecords() {
+   selectedHit.value = null
+   searched.value = false
    if (props.target == "metadata") {
       await metadataStore.lookup( query.value )
    } else if  (props.target == "component") {
@@ -164,6 +190,9 @@ function show() {
 </script>
 
 <style lang="scss" scoped>
+button.lookup-button {
+   margin-left: 5px;
+}
 div.lookup {
    display: flex;
    flex-flow: row nowrap;

@@ -15,7 +15,7 @@
                      <label>Metadata ID</label>
                      <div class="item">
                         <span>{{displayMetadataID}}</span>
-                        <LookupDialog target="metadata" @selected="metadataSelected" />
+                        <LookupDialog target="metadata" @selected="metadataSelected" class="small-button"/>
                      </div>
                   </div>
                   <template v-if="edited.updateLocation">
@@ -145,6 +145,12 @@ async function submitChanges() {
          flex-flow: row nowrap;
          justify-content: flex-start;
          align-items: center;
+         margin-top: 10px;
+         :deep(button.small-button) {
+            padding: 3px 15px;
+            font-size: 0.85em;
+            margin-left: 10px;
+         }
       }
    }
 
