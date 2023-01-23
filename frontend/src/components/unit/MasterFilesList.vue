@@ -29,7 +29,11 @@
             v-model:selection="selectedMasterFiles" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
          >
             <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
-            <Column field="pid" header="PID"/>
+            <Column field="metadata.title" header="Metadata">
+               <template #body="slotProps">
+                  <router-link :to="`/metadata/${slotProps.data.metadata.id}`">{{slotProps.data.metadata.title}}</router-link>
+               </template>
+            </Column>
             <Column field="filename" header="File Name"/>
             <Column field="title" header="Title"/>
             <Column field="description" header="Description"/>
@@ -206,6 +210,10 @@ async function assignComponent( componentID ) {
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
+
+   .p-datatable-sm {
+      font-size: 0.9em;
+   }
 
    .master-file-acts {
       font-size: 0.85em;
