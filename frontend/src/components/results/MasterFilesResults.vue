@@ -22,7 +22,7 @@
       :lazy="true" :paginator="searchStore.masterFiles.total > 15" @page="onPage($event)"
       :rows="searchStore.masterFiles.limit" :totalRecords="searchStore.masterFiles.total"
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      :rowsPerPageOptions="[15,30,100]"
+      :rowsPerPageOptions="[15,30,100]" :first="searchStore.masterFiles.start"
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >
       <template #header>

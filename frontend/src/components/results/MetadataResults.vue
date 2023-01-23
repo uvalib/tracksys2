@@ -22,7 +22,7 @@
       :lazy="true" :paginator="showPaginator" @page="onMetadataPage($event)"
       :rows="searchStore.metadata.limit" :totalRecords="searchStore.metadata.total"
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      :rowsPerPageOptions="[15,30,100]"
+      :rowsPerPageOptions="[15,30,100]" :first="searchStore.metadata.start"
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >
       <template #header>

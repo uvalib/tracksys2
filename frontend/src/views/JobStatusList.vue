@@ -10,7 +10,7 @@
          :rows="jobsStore.searchOpts.limit" :totalRecords="jobsStore.totalJobs"
          v-model:selection="selectedJobs" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         :rowsPerPageOptions="[10,30,100]"
+         :rowsPerPageOptions="[10,30,100]" :first="jobsStore.searchOpts.start"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
          <Column selectionMode="multiple" headerStyle="width: 3em"></Column>

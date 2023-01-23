@@ -22,7 +22,7 @@
          :lazy="true" :paginator="true" @page="onPage($event)"
          :rows="ordersStore.searchOpts.limit" :totalRecords="ordersStore.total"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         :rowsPerPageOptions="[10,30,100]"
+         :rowsPerPageOptions="[10,30,100]" :first="ordersStore.searchOpts.start"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
          <Column field="id" header="ID" :sortable="true">

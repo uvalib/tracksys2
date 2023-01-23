@@ -71,10 +71,10 @@ export const useJobsStore = defineStore('jobs', {
             system.setError(e)
          })
       },
-      deleteJobs( delIDs ) {
+      async deleteJobs( delIDs ) {
          const system = useSystemStore()
          system.working = true
-         axios.delete(`/api/jobs/`, {data: {jobs: delIDs}}).then(response => {
+         await axios.delete(`/api/jobs/`, {data: {jobs: delIDs}}).then(response => {
             response.data.jobs.forEach( jobID => {
                let idx = this.jobs.findIndex( j => j.id == jobID)
                if (idx >= 0) {

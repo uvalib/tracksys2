@@ -22,7 +22,7 @@
       :lazy="true" :paginator="searchStore.components.total > 15" @page="onPage($event)"
       :rows="searchStore.components.limit" :totalRecords="searchStore.components.total"
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      :rowsPerPageOptions="[15,30,100]"
+      :rowsPerPageOptions="[15,30,100]" :first="searchStore.components.start"
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >
       <template #header>

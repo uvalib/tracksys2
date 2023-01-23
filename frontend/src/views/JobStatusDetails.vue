@@ -1,5 +1,8 @@
 <template>
    <h2>Job {{route.params.id}} Processing Log</h2>
+   <div class="job-acts">
+      <DPGButton label="Delete" @click="deleteJobLog" />
+   </div>
    <div class="status">
       <template v-if="jobsStore.details.error">
          <b class="error">FAILED:</b><span>{{jobsStore.details.error}}</span>
@@ -30,10 +33,13 @@
 <script setup>
 import { onMounted} from 'vue'
 import { useJobsStore } from '@/stores/jobs'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useConfirm } from "primevue/useconfirm"
 
 const route = useRoute()
+const router = useRouter()
 const jobsStore = useJobsStore()
+const confirm = useConfirm()
 
 function getAssociatedObjectLink( objName ) {
    if (objName.split(" ").length != 2) {
@@ -57,9 +63,31 @@ onMounted(() => {
    jobsStore.getJobDetails(route.params.id)
    document.title = `Job #${route.params.id}`
 })
+
+function deleteJobLog() {
+   confirm.require({
+      message: 'Are you sure you want delete this job log? All data will be lost. This cannot be reversed.',
+      header: 'Confirm Delete Job Log',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         await jobsStore.deleteJobs([ parseInt(route.params.id,10) ])
+         router.push("/jobs")
+      }
+   })
+}
 </script>
 
 <style scoped lang="scss">
+div.job-acts {
+   position: absolute;
+   right:15px;
+   top: 15px;
+   button.p-button {
+      margin-right: 5px;
+      font-size: 0.9em;
+   }
+}
    .status {
       padding: 0 25px 10px 25px;
       text-align: left;
