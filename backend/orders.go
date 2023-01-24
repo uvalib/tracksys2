@@ -306,8 +306,9 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	if queryStr != "" {
 		queryAny := fmt.Sprintf("%%%s%%", queryStr)
 		queryStart := fmt.Sprintf("%s%%", queryStr)
-		qObj = svc.DB.Where("order_title like ?", queryAny).Or("staff_notes like ?", queryAny).
-			Or("special_instructions like ?", queryAny).Or("c.last_name like ?", queryStart).Or("a.name like ?", queryStart)
+		qObj = svc.DB.Where("order_title like ?", queryAny).Or("orders.staff_notes like ?", queryAny).
+			Or("orders.special_instructions like ?", queryAny).Or("c.last_name like ?", queryStart).
+			Or("a.name like ?", queryStart).Or("orders.id like ?", queryStart)
 		filterQ = filterQ.Where(qObj)
 	}
 
