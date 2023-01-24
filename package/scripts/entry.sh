@@ -17,6 +17,7 @@ cd bin; ./tracksys2                \
    -apollo $APOLLO_URL             \
    -pdf $PDF_SERVICE_URL           \
    -tsapi $TSAPI                   \
+   -xmlhook $XML_INDEX_HOOK        \
    -dbhost $DBHOST                 \
    -dbport $DBPORT                 \
    -dbname $DBNAME                 \

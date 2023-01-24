@@ -27,6 +27,7 @@ type configData struct {
 	curioURL        string
 	pdfURL          string
 	tracksysAPIURL  string
+	xmlIndexURL     string
 	devAuthUser     string
 	jwtKey          string
 }
@@ -45,6 +46,7 @@ func getConfiguration() *configData {
 	flag.StringVar(&config.tracksysAPIURL, "tsapi", "https://tracksys-api-ws.internal.lib.virginia.edu", "URL for TrackSys API")
 	flag.StringVar(&config.jobsURL, "jobs", "http://dockerprod1.lib.virginia.edu:8710", "URL for job processing")
 	flag.StringVar(&config.apolloURL, "apollo", "https://apollo.lib.virginia.edu", "URL for Apollo")
+	flag.StringVar(&config.xmlIndexURL, "xmlhook", "https://virgo4-image-tracksys-reprocess-ws.internal.lib.virginia.edu/api/reindex", "XML index webhook")
 
 	// DB connection params
 	flag.StringVar(&config.db.Host, "dbhost", "", "Database host")
@@ -85,6 +87,7 @@ func getConfiguration() *configData {
 	log.Printf("[CONFIG] iiif          = [%s]", config.iiifURL)
 	log.Printf("[CONFIG] curio         = [%s]", config.curioURL)
 	log.Printf("[CONFIG] pdf           = [%s]", config.pdfURL)
+	log.Printf("[CONFIG] xmlhook       = [%s]", config.xmlIndexURL)
 	log.Printf("[CONFIG] dbuser        = [%s]", config.db.User)
 	log.Printf("[CONFIG] dbhost        = [%s]", config.db.Host)
 	log.Printf("[CONFIG] dbport        = [%d]", config.db.Port)

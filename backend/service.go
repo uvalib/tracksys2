@@ -30,6 +30,7 @@ type externalSystems struct {
 	PDF      string
 	Virgo    string
 	TSAPI    string
+	XMLIndex string
 }
 
 // serviceContext contains common data used by all handlers
@@ -93,6 +94,7 @@ func initializeService(version string, cfg *configData) *serviceContext {
 			Virgo:    cfg.virgoURL,
 			TSAPI:    cfg.tracksysAPIURL,
 			Jobs:     cfg.jobsURL,
+			XMLIndex: cfg.xmlIndexURL,
 		},
 		JWTKey:      cfg.jwtKey,
 		DevAuthUser: cfg.devAuthUser}
