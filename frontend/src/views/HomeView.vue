@@ -1,6 +1,7 @@
 <template>
    <h2>Home</h2>
    <div class="actions" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
+      <DPGButton v-if="userStore.isAdmin" label="Create Collection Facet" class="create" @click="showCreateCollectionDialog()"/>
       <DPGButton label="Create Metadata" class="create" @click="createMetadata()"/>
       <DPGButton label="Create Order" class="create" @click="createOrder()"/>
    </div>
@@ -42,6 +43,17 @@
    <Dialog v-model:visible="showCreateMetadata" :modal="true" header="Create Metadata" @hide="createMetadataClosed" :style="{width: '750px'}">
       <NewMetadataPanel @canceled="createMetadataClosed" @created="metadataCreated" />
    </Dialog>
+   <Dialog v-model:visible="showCreateCollection" :modal="true" header="Create Collection Facet" @hide="createCollectionClosed" :style="{width: '450px'}">
+      <p>Enter the name of the new collection facet</p>
+      <input type="text" v-model="newCollectionFacet" autofocus/>
+      <template #footer>
+         <div class="acts">
+            <DPGButton @click="createCollectionClosed" label="Cancel" class="p-button-secondary"/>
+            <span class="spacer"></span>
+            <DPGButton @click="createCollection()" label="Create" :disabled="newCollectionFacet.length == 0"/>
+         </div>
+      </template>
+   </Dialog>
 </template>
 
 <script setup>
@@ -67,6 +79,8 @@ const metadataStore = useMetadataStore()
 const unitID = ref("")
 const unitError = ref("")
 const showCreateMetadata = ref(false)
+const showCreateCollection = ref(false)
+const newCollectionFacet = ref("")
 
 const selectedScope = ref("all")
 const selectedField = ref("all")
@@ -214,7 +228,17 @@ function doSearch() {
 function createOrder() {
    router.push("/orders/new")
 }
-
+function showCreateCollectionDialog() {
+   newCollectionFacet.value = ""
+   showCreateCollection.value = true
+}
+async function createCollection() {
+   await systemStore.createCollectionFacet(newCollectionFacet.value)
+   showCreateCollection.value = false
+}
+function createCollectionClosed() {
+   showCreateCollection.value = false
+}
 function createMetadata() {
    showCreateMetadata.value = true
 }

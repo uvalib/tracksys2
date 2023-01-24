@@ -11,7 +11,7 @@ import (
 )
 
 // Version of the service
-const Version = "1.1.3"
+const Version = "1.1.4"
 
 func main() {
 	// Load cfg
@@ -35,6 +35,8 @@ func main() {
 
 	api := router.Group("/api", svc.authMiddleware)
 	{
+		api.POST("/collection-facet", svc.addCollectionFacet)
+
 		api.GET("/components/:id", svc.getComponentTree)
 		api.GET("/components/:id/masterfiles", svc.getComponentMasterFiles)
 

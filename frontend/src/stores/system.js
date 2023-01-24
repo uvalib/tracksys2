@@ -87,5 +87,15 @@ export const useSystemStore = defineStore('system', {
             }
          })
       },
+      async createCollectionFacet( newFacet ) {
+         this.working = true
+         let data = {facet: newFacet}
+         return axios.post("/api/collection-facet", data).then(response => {
+            this.collectionFacets = response.data
+            this.working = false
+         }).catch( err => {
+            this.setError(  err )
+         })
+      }
 	}
 })

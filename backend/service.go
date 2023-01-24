@@ -60,8 +60,10 @@ type category struct {
 }
 
 type collectionFacet struct {
-	ID   uint64 `json:"id"`
-	Name string `json:"name"`
+	ID        uint64    `json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
 }
 
 type containerType struct {
@@ -131,6 +133,37 @@ func initializeService(version string, cfg *configData) *serviceContext {
 	}
 	log.Printf("INFO: HTTP Client created")
 	return &ctx
+}
+
+func (svc *serviceContext) addCollectionFacet(c *gin.Context) {
+	var req struct {
+		Facet string `json:"facet"`
+	}
+	err := c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid sad collection facet request: %s", err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	log.Printf("INFO: add new facet %s", req.Facet)
+	newFacet := collectionFacet{Name: req.Facet, CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	err = svc.DB.Create(&newFacet).Error
+	if err != nil {
+		log.Printf("ERROR: unable to create collection faccet %s: %s", req.Facet, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: load collections facets after creating new facet %s", req.Facet)
+	var out []collectionFacet
+	err = svc.DB.Order("name asc").Find(&out).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get updated facets: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, out)
 }
 
 func (svc *serviceContext) cleanupExpiredData(c *gin.Context) {
@@ -282,7 +315,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 	log.Printf("INFO: load collection facets")
 	err = svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.CollectionFacets).Error
 	if err != nil {
-		log.Printf("ERROR: unable to get categories: %s", err.Error())
+		log.Printf("ERROR: unable to get collection facets: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
