@@ -799,5 +799,21 @@ func (svc *serviceContext) uploadXMLMetadata(c *gin.Context) {
 		return
 	}
 
+	if md.DateDLIngest != nil || md.DateDLUpdate != nil {
+		log.Printf("INFO: call xml reindexing hook for previously published metadata %s", md.PID)
+		_, putErr := svc.putRequest(fmt.Sprintf("%s/%d", svc.ExternalSystems.XMLIndex, md.ID))
+		if putErr != nil {
+			log.Printf("ERROR: request to reindex %s failed: %d:%s", md.PID, putErr.StatusCode, putErr.Message)
+		} else {
+			log.Printf("INFO: %s was successfully queued for reindex; update dates", md.PID)
+			now := time.Now()
+			md.DateDLUpdate = &now
+			err = svc.DB.Model(&md).Select("DateDLUpdate").Updates(md).Error
+			if err != nil {
+				log.Printf("ERROR: update xml publish date for %s failed: %s", md.PID, err.Error())
+			}
+		}
+	}
+
 	c.String(http.StatusOK, *md.DescMetadata)
 }
