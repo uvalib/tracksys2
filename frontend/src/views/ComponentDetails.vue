@@ -6,6 +6,7 @@
             <div class="cmp-header">
                <span class="title">Component Hierarchy</span>
                <span class="hint">Scroll down to view related master files</span>
+               <DPGButton label="Export JSON" class="p-button-secondary" @click="exportJSON()"/>
             </div>
          </template>
          <Tree :value="componentsStore.nodes" :expandedKeys="expandedKeys"
@@ -64,6 +65,16 @@ onBeforeMount( async () => {
    await componentsStore.getComponentTree(cID)
    expandSelectedComponent( cID )
 })
+
+function exportJSON() {
+   const fileURL = window.URL.createObjectURL(new Blob([JSON.stringify(componentsStore.nodes, null, 3)], { type: 'application/json' }))
+   const fileLink = document.createElement('a')
+   fileLink.href =  fileURL
+   fileLink.setAttribute('download', `comopnent.json`)
+   document.body.appendChild(fileLink)
+   fileLink.click()
+   window.URL.revokeObjectURL(fileURL)
+}
 
 function componentSelected( tgtComponent ) {
    let cID = parseInt(tgtComponent.key, 10)
@@ -129,6 +140,7 @@ function findNode( currNode, tgtKey) {
       display: flex;
       flex-flow: row nowrap;
       justify-content: space-between;
+      align-items: center;
       width: 100%;
       .title {
          font-weight: 600;
@@ -136,6 +148,11 @@ function findNode( currNode, tgtKey) {
       .hint {
          font-size: 0.9em;
          color: #aaa;
+      }
+      button {
+         font-size: 0.85em;
+         padding: 3px 15px;
+         margin: 0;
       }
    }
    .master-files {
