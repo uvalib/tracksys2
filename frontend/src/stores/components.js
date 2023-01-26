@@ -80,14 +80,12 @@ export const useComponentsStore = defineStore('components', {
             if (response.data.masterFiles) {
                this.relatedMasterFiles = response.data.masterFiles
             }
-            console.log(JSON.stringify(this.nodes))
             system.working = false
          }).catch( e => {
             system.setError(e)
          })
       },
       loadRelatedMasterFiles( id ) {
-         console.log("LOAD MF FOR "+id)
          this.selectedComponent = id
          this.loadingMasterFiles = true
          this.relatedMasterFiles = []

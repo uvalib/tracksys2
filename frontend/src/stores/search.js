@@ -111,13 +111,10 @@ export const useSearchStore = defineStore('search', {
          const system = useSystemStore()
          system.working = true
          this.unitValid = false
-         console.log(unitID)
          return axios.get(`/api/units/${unitID}/exists`).then( () => {
-            console.log("VALID")
             this.unitValid = true
             system.working = false
          }).catch( () => {
-            console.log("NOT VALID")
             system.working = false
             this.unitValid = false
          })

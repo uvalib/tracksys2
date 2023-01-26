@@ -202,7 +202,6 @@ function doSearch() {
       if ( searchStore.scope != "all") {
          // if the scope is narrowed to a single type, the view must be too.
          // In that case, there is only 1 result. Set the active result index to 0.
-         console.log("doSearch set active view")
          searchStore.setActiveView(selectedScope.value)
       }
 
