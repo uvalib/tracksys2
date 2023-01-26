@@ -60,7 +60,7 @@
                <DataDisplay v-if="metadataStore.archivesSpace.publishedAt" label="Published Date" :value="metadataStore.archivesSpace.publishedAt"/>
                <DataDisplay v-else-if="metadataStore.hasMasterFiles==false" label="Published Date" value="No Master Files. Not Published."/>
                <DataDisplay v-else label="Published Date" value="placeholder">
-                  <DPGButton label="Publish Now" class="as-publish" @click="publishToAS"/>
+                  <DPGButton label="Publish Now" class="as-publish" @click="publishToAS" :loading="publishing"/>
                </DataDisplay>
             </dl>
             <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
@@ -128,7 +128,7 @@
             </template>
          </dl>
          <div v-if="canPublish" class="publish">
-            <DPGButton label="Publish to Virgo" autofocus class="p-button-secondary" @click="publishClicked()"/>
+            <DPGButton label="Publish to Virgo" autofocus class="p-button-secondary" @click="publishClicked()" :loading="publishing"/>
          </div>
       </Panel>
    </div>
@@ -159,7 +159,7 @@
 </template>
 
 <script setup>
-import { onBeforeMount, computed } from 'vue'
+import { onBeforeMount, computed, ref } from 'vue'
 import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useMetadataStore } from '@/stores/metadata'
@@ -183,6 +183,8 @@ const router = useRouter()
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
 const userStore = useUserStore()
+
+const publishing = ref(false)
 
 const canDelete = computed(() => {
    if (!userStore.isAdmin && !userStore.isSupervisor) return false
@@ -259,13 +261,6 @@ onBeforeMount( async () => {
    await metadataStore.getDetails( mdID )
 })
 
-async function publishToAS() {
-   await metadataStore.publishToArchivesSpace(userStore.ID)
-   if (systemStore.error == "") {
-      systemStore.toastMessage('Publish Success', 'This item has successfully been published to ArchivesSpace')
-   }
-}
-
 function deleteMetadata() {
    confirm.require({
       message: 'Are you sure you want delete this metadata? All data will be lost. This cannot be reversed.',
@@ -296,9 +291,20 @@ function xmlUploader( event ) {
 }
 
 async function publishClicked() {
+   publishing.value = true
    await metadataStore.publish()
+   publishing.value = false
    if (systemStore.error == "") {
       systemStore.toastMessage('Publish Success', 'This item has successfully been published to Virgo')
+   }
+}
+
+async function publishToAS() {
+   publishing.value = true
+   await metadataStore.publishToArchivesSpace(userStore.ID)
+   publishing.value = false
+   if (systemStore.error == "") {
+      systemStore.toastMessage('Publish Success', 'This item has successfully been published to ArchivesSpace')
    }
 }
 
