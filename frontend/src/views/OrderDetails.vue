@@ -13,27 +13,8 @@
                <DataDisplay label="Status" :value="detail.status">
                   <div class="status">
                      <span :class="`status ${detail.status}`">{{displayStatus(detail.status)}}</span>
-                     <DPGButton icon="pi pi-info-circle" class="p-button-rounded p-button-text"
-                        @click="toggleEvents" aria-haspopup="true" aria-controls="events-panel" />
                   </div>
                </DataDisplay>
-               <OverlayPanel ref="events" id="events-panel" :showCloseIcon="true">
-                  <DataTable :value="ordersStore.events" ref="eventsTable" dataKey="id" :lazy="false"
-                     stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-                  >
-                     <Column header="Date">
-                        <template #body="slotProps">
-                           {{formatDateTime(slotProps.data.createdAt)}}
-                        </template>
-                     </Column>
-                     <Column header="User">
-                        <template #body="slotProps">
-                           {{slotProps.data.staffMember.firstName}} {{slotProps.data.staffMember.lastName}}
-                        </template>
-                     </Column>
-                     <Column field="details" header="Details" />
-                  </DataTable>
-               </OverlayPanel>
                <DataDisplay v-if="detail.status=='completed'" label="Date Completed" :value="formatDateTime(detail.dateCompleted)"/>
                <DataDisplay v-if="detail.customer" label="Customer" :value="customerInfo">
                   <div class="customer">
@@ -191,8 +172,6 @@
 <script setup>
 import Dialog from 'primevue/dialog'
 import OverlayPanel from 'primevue/overlaypanel'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import { onBeforeMount, ref, computed } from 'vue'
@@ -224,7 +203,6 @@ const customerStore = useCustomersStore()
 const { detail } = storeToRefs(ordersStore)
 
 const showEmail = ref(false)
-const events = ref(null)
 const customer = ref(null)
 
 const customerInfo = computed(() => {
@@ -293,9 +271,6 @@ function editOrder() {
    router.push(`/orders/${route.params.id}/edit`)
 }
 
-function toggleEvents(e) {
-   events.value.toggle(e)
-}
 function toggleCustomer(e) {
    customer.value.toggle(e)
 }
@@ -384,28 +359,28 @@ function discardItem(item) {
 }
 
 function sendFeeEstimateCllicked() {
-   ordersStore.sendFeeEstimate( user.ID )
+   ordersStore.sendFeeEstimate()
 }
 function deferOrderClicked() {
-   ordersStore.deferOrder( user.ID )
+   ordersStore.deferOrder()
 }
 function resumeOrderClicked() {
-   ordersStore.resumeOrder( user.ID )
+   ordersStore.resumeOrder()
 }
 function approveOrderClicked() {
-   ordersStore.approveOrder( user.ID )
+   ordersStore.approveOrder()
 }
 function cancelOrderClicked() {
-   ordersStore.cancelOrder( user.ID )
+   ordersStore.cancelOrder()
 }
 function completeOrderClicked() {
-   ordersStore.completeOrder( user.ID )
+   ordersStore.completeOrder()
 }
 function payFeeClicked() {
-   ordersStore.feeAccepted( user.ID )
+   ordersStore.feeAccepted()
 }
 function declineFeeClicked() {
-   ordersStore.feeDeclined( user.ID )
+   ordersStore.feeDeclined()
 }
 function checkOrderComplete() {
    ordersStore.checkOrderComplete()

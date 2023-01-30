@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -40,17 +39,6 @@ type orderItem struct {
 	Location      string       `json:"location"`
 	SourceURL     string       `gorm:"column:source_url" json:"sourceURL"`
 	Converted     bool         `json:"converted"`
-}
-
-type auditEvent struct {
-	ID            int64       `json:"id"`
-	StaffMemberID int64       `json:"-"`
-	StaffMember   staffMember `gorm:"foreignKey:StaffMemberID" json:"staffMember"`
-	AuditableID   int64       `json:"-"`
-	AuditableType string      `json:"-"`
-	Event         uint        `json:"eventID"`
-	Details       string      `json:"details"`
-	CreatedAt     time.Time   `json:"createdAt"`
 }
 
 type order struct {
@@ -213,10 +201,9 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 	}
 
 	type oResp struct {
-		Order  *order       `json:"order"`
-		Units  []unit       `json:"units"`
-		Items  []orderItem  `json:"items"`
-		Events []auditEvent `json:"events"`
+		Order *order      `json:"order"`
+		Units []unit      `json:"units"`
+		Items []orderItem `json:"items"`
 	}
 	out := oResp{Order: oDetail}
 	err = svc.DB.Where("order_id=?", oID).Preload("IntendedUse").Preload("Metadata").Find(&out.Units).Error
@@ -226,10 +213,6 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 	err = svc.DB.Where("order_id=?", oID).Preload("IntendedUse").Find(&out.Items).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get items for order %s: %s", oID, err.Error())
-	}
-	err = svc.DB.Where("auditable_type=?", "Order").Where("auditable_id=?", oDetail.ID).Preload("StaffMember").Find(&out.Events).Error
-	if err != nil {
-		log.Printf("ERROR: unable to get audit events for order %s: %s", oID, err.Error())
 	}
 
 	c.JSON(http.StatusOK, out)
@@ -351,9 +334,6 @@ func (svc *serviceContext) acceptFee(c *gin.Context) {
 		return
 	}
 	log.Printf("INFO: staff %s accepts fee for order %d", staffID, oDetail.ID)
-	msg := fmt.Sprintf("Status %s to APPROVED because customer accepted fee", strings.ToUpper(oDetail.OrderStatus))
-	svc.addOrderAuditEvent(oDetail, msg, staffID)
-
 	now := time.Now()
 	oDetail.OrderStatus = "approved"
 	oDetail.DateOrderApproved = &now
@@ -371,23 +351,6 @@ func (svc *serviceContext) acceptFee(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, oDetail)
-}
-
-func (svc *serviceContext) addOrderAuditEvent(o *order, msg string, staffIDStr string) {
-	log.Printf("INFO: add audit event %s to order %d", msg, o.ID)
-
-	staffID, _ := strconv.ParseInt(staffIDStr, 10, 64)
-	if staffID > 0 {
-		ae := auditEvent{StaffMemberID: staffID, Event: 0, Details: msg, AuditableID: o.ID, AuditableType: "Order", CreatedAt: time.Now()}
-		err := svc.DB.Create(&ae).Error
-		if err != nil {
-			log.Printf("ERROR: unable to add audit event %+v: %s", ae, err.Error())
-			return
-		}
-	} else {
-		log.Printf("ERROR: invalid staff id for audit event: %s", staffIDStr)
-		return
-	}
 }
 
 func (svc *serviceContext) setOrderProcessor(c *gin.Context) {
@@ -455,7 +418,7 @@ func (svc *serviceContext) completeOrder(c *gin.Context) {
 	}
 
 	if patronOrder == true {
-		log.Printf("INFO: complete patron order %d", oDetail.ID)
+		log.Printf("INFO: staff %s completes patron order %d", staffID, oDetail.ID)
 		if oDetail.DateCustomerNotified == nil {
 			if oDetail.DatePatronDeliverablesComplete == nil {
 				log.Printf("INFO: order %d cannot be completed because deliverables have not been generated", oDetail.ID)
@@ -467,7 +430,7 @@ func (svc *serviceContext) completeOrder(c *gin.Context) {
 			return
 		}
 	} else {
-		log.Printf("INFO: complete digital collection building order %d", oDetail.ID)
+		log.Printf("INFO: staff %s completes digital collection building order %d", staffID, oDetail.ID)
 		if oDetail.DateArchivingComplete == nil {
 			if oDetail.DateFinalizationBegun == nil {
 				log.Printf("INFO: order %d cannot be completed because it has not been finalized", oDetail.ID)
@@ -483,8 +446,6 @@ func (svc *serviceContext) completeOrder(c *gin.Context) {
 	}
 
 	now := time.Now()
-	msg := fmt.Sprintf("Status %s to COMPLETED", strings.ToUpper(oDetail.OrderStatus))
-	svc.addOrderAuditEvent(oDetail, msg, staffID)
 	oDetail.OrderStatus = "completed"
 	oDetail.DateCompleted = &now
 	if oDetail.DateArchivingComplete == nil {
@@ -515,9 +476,6 @@ func (svc *serviceContext) approveOrder(c *gin.Context) {
 		return
 	}
 	log.Printf("INFO: staff %s approves order %d", staffID, oDetail.ID)
-	msg := fmt.Sprintf("Status %s to APPROVED", strings.ToUpper(oDetail.OrderStatus))
-	svc.addOrderAuditEvent(oDetail, msg, staffID)
-
 	now := time.Now()
 	oDetail.OrderStatus = "approved"
 	oDetail.DateOrderApproved = &now
@@ -552,9 +510,6 @@ func (svc *serviceContext) cancelOrder(c *gin.Context) {
 		return
 	}
 	log.Printf("INFO: staff %s cancels order %d", staffID, oDetail.ID)
-	msg := fmt.Sprintf("Status %s to CANCELED", strings.ToUpper(oDetail.OrderStatus))
-	svc.addOrderAuditEvent(oDetail, msg, staffID)
-
 	now := time.Now()
 	oDetail.OrderStatus = "canceled"
 	oDetail.DateCanceled = &now
@@ -583,9 +538,6 @@ func (svc *serviceContext) deferOrder(c *gin.Context) {
 		return
 	}
 	log.Printf("INFO: staff %s defers order %d", staffID, oDetail.ID)
-	msg := fmt.Sprintf("Status %s to DEFERRED", strings.ToUpper(oDetail.OrderStatus))
-	svc.addOrderAuditEvent(oDetail, msg, staffID)
-
 	now := time.Now()
 	oDetail.OrderStatus = "deferred"
 	oDetail.DateDeferred = &now
@@ -614,13 +566,10 @@ func (svc *serviceContext) resumeOrder(c *gin.Context) {
 		return
 	}
 	log.Printf("INFO: staff %s resumes order %d", staffID, oDetail.ID)
-	msg := fmt.Sprintf("Status %s to REQUESTED", strings.ToUpper(oDetail.OrderStatus))
 	oDetail.OrderStatus = "requested"
 	if oDetail.DateOrderApproved != nil {
-		msg = fmt.Sprintf("Status %s to APPROVED", strings.ToUpper(oDetail.OrderStatus))
 		oDetail.OrderStatus = "approved"
 	}
-	svc.addOrderAuditEvent(oDetail, msg, staffID)
 	err = svc.DB.Model(oDetail).Select("OrderStatus").Updates(oDetail).Error
 	if err != nil {
 		log.Printf("ERROR: unable to resume order %d: %s", oDetail.ID, err.Error())
@@ -645,9 +594,6 @@ func (svc *serviceContext) declineFee(c *gin.Context) {
 		return
 	}
 	log.Printf("INFO: staff %s declines fee for order %d", staffID, oDetail.ID)
-	msg := fmt.Sprintf("Status %s to CANCELED because customer declined fee", strings.ToUpper(oDetail.OrderStatus))
-	svc.addOrderAuditEvent(oDetail, msg, staffID)
-
 	now := time.Now()
 	oDetail.OrderStatus = "canceled"
 	oDetail.DateCanceled = &now
