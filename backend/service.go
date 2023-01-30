@@ -179,7 +179,7 @@ func (svc *serviceContext) cleanupExpiredData(c *gin.Context) {
 		DeletedMessages: 0,
 	}
 
-	log.Printf("INFO: scan for jopb statuses to delete")
+	log.Printf("INFO: scan for job statuses to delete")
 	var oldStatuses []jobStatus
 	err := svc.DB.Where("status=? and ended_at < ?", "finished", lastMonth).Find(&oldStatuses).Error
 	if err != nil {
@@ -199,31 +199,6 @@ func (svc *serviceContext) cleanupExpiredData(c *gin.Context) {
 			log.Printf("ERROR: unable to delete old jobs: %s", err.Error())
 			c.String(http.StatusInternalServerError, err.Error())
 			return
-		}
-		err = svc.DB.Where("job_status_id in ?", jsIDs).Delete(&event{}).Error
-		if err != nil {
-			log.Printf("ERROR: unable to delete old job events: %s", err.Error())
-			c.String(http.StatusInternalServerError, err.Error())
-			return
-		}
-	}
-
-	log.Printf("INFO: clean up orphaned job status events")
-	qstr := "select distinct e.id from events e where job_status_id not in (select id from job_statuses js)"
-	orphans := make([]int64, 0)
-	err = svc.DB.Raw(qstr).Scan(&orphans).Error
-	if err != nil {
-		log.Printf("ERROR: unable to find orphaned events: %s", err.Error())
-	} else {
-		if len(orphans) > 0 {
-			err = svc.DB.Delete(&event{}, orphans).Error
-			if err != nil {
-				log.Printf("ERROR: unable to delete orphaned job events: %s", err.Error())
-			} else {
-				log.Printf("INFO: deleted %d orphaned events", len(orphans))
-			}
-		} else {
-			log.Printf("INFO: no orphaned events to clean up")
 		}
 	}
 
