@@ -11,6 +11,7 @@ export const useJobsStore = defineStore('jobs', {
       searchOpts: {
          start: 0,
          limit: 30,
+         query: ""
       }
 	}),
 	getters: {
@@ -20,6 +21,9 @@ export const useJobsStore = defineStore('jobs', {
          const system = useSystemStore()
          system.working = true
          let url = `/api/jobs?start=${this.searchOpts.start}&limit=${this.searchOpts.limit}`
+         if ( this.searchOpts.query != "") {
+            url += `&q=${this.searchOpts.query}`
+         }
          axios.get( url ).then(response => {
             this.jobs = []
             response.data.jobs.forEach( js => {

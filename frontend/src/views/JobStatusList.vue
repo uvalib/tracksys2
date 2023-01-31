@@ -3,6 +3,13 @@
    <div class="job-status">
       <div class="toolbar">
          <DPGButton label="Delete selected" :disabled="selectedJobs.length == 0"  class="p-button-secondary" @click="deletAllClicked"/>
+         <span>
+            <span class="p-input-icon-right">
+               <i class="pi pi-search" />
+               <InputText v-model="jobsStore.searchOpts.query" placeholder="Job Status Search" @input="queryJobs()"/>
+            </span>
+            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="jobsStore.searchOpts.query.length == 0"/>
+         </span>
       </div>
       <DataTable :value="jobsStore.jobs" ref="jobsTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll"
@@ -45,6 +52,7 @@ import { onMounted, ref} from 'vue'
 import { useJobsStore } from '@/stores/jobs'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import InputText from 'primevue/inputtext'
 import { useConfirm } from "primevue/useconfirm"
 
 const jobsStore = useJobsStore()
@@ -53,6 +61,13 @@ const confirm = useConfirm()
 const selectedJobs = ref([])
 const selectAll = ref(false)
 
+function queryJobs() {
+   jobsStore.getJobs()
+}
+function clearSearch() {
+   jobsStore.searchOpts.query = ""
+   jobsStore.getJobs()
+}
 function deletAllClicked() {
    confirm.require({
       message: 'Are you sure you want delete the selected job status records? All data will be lost. This cannot be reversed.',
@@ -147,8 +162,18 @@ onMounted(() => {
          margin: 0 10px;
       }
       .toolbar {
-         padding: 10px 0;
-         font-size: 0.8em;
+         padding: 0 0 10px 0;
+         display: flex;
+         flex-flow: row nowrap;
+         justify-content: space-between;
+         label {
+            font-weight: bold;
+            margin-right: 5px;
+            display: inline-block;
+         }
+         button.p-button {
+            margin-left: 5px;
+         }
       }
       .p-datatable {
          font-size: 0.85em;

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -37,12 +38,25 @@ func (svc *serviceContext) getJobStatuses(c *gin.Context) {
 	if pageSize == 0 {
 		pageSize = 30
 	}
+	queryStr := c.Query("q")
+	var queryClause *gorm.DB
+	if queryStr != "" {
+		qLike := fmt.Sprintf("%s%%", queryStr)
+		queryClause = svc.DB.Where("name like ? or status=? or originator_id like ? or originator_type like ?", qLike, queryStr, qLike, qLike)
+	}
+
 	log.Printf("INFO: get job %d statuses starting from offset %d", pageSize, startIndex)
 	var total int64
-	svc.DB.Table("job_statuses").Count(&total)
-
 	var jobs []jobStatus
-	err := svc.DB.Offset(startIndex).Limit(pageSize).Order("started_at desc").Find(&jobs).Error
+	var err error
+	if queryClause != nil {
+		svc.DB.Where(queryClause).Table("job_statuses").Count(&total)
+		err = svc.DB.Where(queryClause).Offset(startIndex).Limit(pageSize).Order("started_at desc").Find(&jobs).Error
+	} else {
+		svc.DB.Table("job_statuses").Count(&total)
+		err = svc.DB.Offset(startIndex).Limit(pageSize).Order("started_at desc").Find(&jobs).Error
+	}
+
 	if err != nil {
 		log.Printf("ERROR: unable to get job statuses: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
