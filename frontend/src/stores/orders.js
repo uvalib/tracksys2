@@ -14,6 +14,7 @@ export const useOrdersStore = defineStore('orders', {
          sortField: "id",
          sortOrder: "desc",
          query: "",
+         ownerID: -1
       },
       detail: {
          id: 0,
@@ -334,6 +335,9 @@ export const useOrdersStore = defineStore('orders', {
          if ( so.query != "") {
             url += `&q=${encodeURIComponent(so.query)}`
          }
+         if ( this.ownerID > -1) {
+            url += `&owner=${this.ownerID}`
+         }
          axios.get( url ).then(response => {
             this.orders = []
             response.data.orders.forEach( js => {
@@ -536,6 +540,12 @@ export const useOrdersStore = defineStore('orders', {
          }).catch( e => {
             system.setError(e)
          })
+      },
+      setTargetOwner( ownerID) {
+         this.ownerID = ownerID
+      },
+      clearTargetOwner() {
+         this.ownerID = -1
       }
 	}
 })

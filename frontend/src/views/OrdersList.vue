@@ -7,6 +7,7 @@
             <label for="orders-filter">Filter:</label>
             <Dropdown id="orders-filter" v-model="ordersStore.searchOpts.filter" @change="getOrders()"
                :options="filters" optionLabel="name" optionValue="code" />
+            <ToggleButton v-model="assignedToMe" onIcon="" offIcon="" onLabel="Assigned to Me" offLabel="Assigned to Me" @change="ownerToggled()" />
          </span>
          <span>
             <span class="p-input-icon-right">
@@ -72,15 +73,18 @@
 <script setup>
 import { onBeforeMount, onMounted, ref, computed } from 'vue'
 import { useOrdersStore } from '@/stores/orders'
+import { useUserStore } from '@/stores/user'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
+import ToggleButton from 'primevue/togglebutton'
 
 const route = useRoute()
 const router = useRouter()
 const ordersStore = useOrdersStore()
+const userStore = useUserStore()
 
 const filters = ref([
    {name: "Active", code: "active"},
@@ -92,6 +96,8 @@ const filters = ref([
    {name: "Overdue", code: "overdue"},
    {name: "Ready for Delivery", code: "ready"}
 ])
+
+const assignedToMe = ref(false)
 
 const sortOrder = computed(() => {
    if (ordersStore.searchOpts.sortOrder == "desc") {
@@ -134,6 +140,15 @@ function queryOrders() {
    if (ordersStore.searchOpts.query.length > 3) {
       getOrders()
    }
+}
+
+function ownerToggled() {
+   if ( assignedToMe.value == true) {
+      ordersStore.setTargetOwner( userStore.ID )
+   } else {
+      ordersStore.clearTargetOwner()
+   }
+   getOrders()
 }
 
 function setQueryParams() {
@@ -200,6 +215,9 @@ button.p-button.create {
          }
          button.p-button {
             margin-left: 5px;
+         }
+         div.p-button.p-togglebutton {
+            margin-left: 10px;
          }
       }
 

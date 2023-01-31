@@ -283,6 +283,12 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 			Where("order_status != ? and order_status != ?", "canceled", "completed").Distinct("orders.id")
 	}
 
+	// filter by owner?
+	ownerID := c.Query("owner")
+	if ownerID != "" {
+		filterQ.Where("processor_id=?", ownerID)
+	}
+
 	// set up query...
 	queryStr := c.Query("q")
 	var qObj *gorm.DB
