@@ -71,7 +71,7 @@ import { useMetadataStore } from '@/stores/metadata'
 import { useOrdersStore } from '@/stores/orders'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import NewMetadataPanel from './NewMetadataPanel.vue'
+import NewMetadataPanel from '@/components/NewMetadataPanel.vue'
 
 const props = defineProps({
    label: {

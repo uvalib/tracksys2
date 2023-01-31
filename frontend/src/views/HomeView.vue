@@ -66,7 +66,7 @@ import SearchResults from '@/components/results/SearchResults.vue'
 import { ref, computed, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Dialog from 'primevue/dialog'
-import NewMetadataPanel from '../components/order/NewMetadataPanel.vue'
+import NewMetadataPanel from '@/components/NewMetadataPanel.vue'
 
 const searchStore = useSearchStore()
 const route = useRoute()

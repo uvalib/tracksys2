@@ -62,10 +62,12 @@
             <FormKit label="In DPLA" type="select" :options="yesNo" v-model="info.inDPLA"/>
             <span class="sep"/>
             <FormKit label="Availability Policy" outer-class="first" type="select" :options="availabilityPolicies" v-model="info.availabilityPolicy" required/>
-            <span class="sep"/>
-            <FormKit label="Right Statement" outer-class="first" type="select" :options="useRights" v-model="info.useRight" required/>
+            <template v-if="info.type == 'SirsiMetadata'">
+               <span class="sep"/>
+               <FormKit label="Right Statement" outer-class="first" type="select" :options="useRights" v-model="info.useRight" required/>
+            </template>
          </div>
-         <FormKit label="Use Right Rationale" type="textarea" :rows="2" v-model="info.useRightRationale"/>
+         <FormKit v-if="info.type == 'SirsiMetadata'" label="Use Right Rationale" type="textarea" :rows="2" v-model="info.useRightRationale"/>
       </Panel>
       <div class="acts">
          <DPGButton @click="cancelCreate" label="Cancel" class="p-button-secondary"/>
@@ -76,7 +78,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import DataDisplay from '../DataDisplay.vue'
+import DataDisplay from './DataDisplay.vue'
 import Panel from 'primevue/panel'
 import { useSystemStore } from "@/stores/system"
 import { useMetadataStore } from "@/stores/metadata"

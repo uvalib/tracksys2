@@ -110,8 +110,10 @@
             <DataDisplay label="PID" :value="metadataStore.dl.pid"/>
             <DataDisplay label="In Digital Library" :value="formatBoolean(metadataStore.dl.inDL)"/>
             <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.dl.inDPLA)"/>
-            <DataDisplay label="Right Statement" :value="useRight"/>
-            <DataDisplay label="Rights Rationale" :value="metadataStore.dl.useRightRationale"/>
+            <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
+               <DataDisplay label="Right Statement" :value="useRight"/>
+               <DataDisplay label="Rights Rationale" :value="metadataStore.dl.useRightRationale"/>
+            </template>
             <DataDisplay label="Creator Death Date" :value="metadataStore.dl.creatorDeathDate"/>
             <DataDisplay label="Availability Policy" :value="availabilityPolicy"/>
             <DataDisplay label="Collection ID" :value="metadataStore.dl.collectionID"/>

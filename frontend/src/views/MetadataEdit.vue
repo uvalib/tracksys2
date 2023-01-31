@@ -60,10 +60,12 @@
                <FormKit label="In DPLA" type="select" :options="yesNo" v-model="edited.inDPLA"/>
                <span class="sep"/>
                <FormKit label="Availability Policy" outer-class="first" type="select" :options="availabilityPolicies" v-model="edited.availabilityPolicy" required/>
-               <span class="sep"/>
-               <FormKit label="Right Statement" outer-class="first" type="select" :options="useRights" v-model="edited.useRight" required/>
+               <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
+                  <span class="sep"/>
+                  <FormKit label="Right Statement" outer-class="first" type="select" :options="useRights" v-model="edited.useRight" required/>
+               </template>
             </div>
-            <FormKit label="Use Right Rationale" type="textarea" :rows="2" v-model="edited.useRightRationale"/>
+            <FormKit v-if="metadataStore.detail.type == 'SirsiMetadata'" label="Use Right Rationale" type="textarea" :rows="2" v-model="edited.useRightRationale"/>
          </Panel>
          <div class="acts">
             <DPGButton label="Cancel" class="p-button-secondary" @click="cancelEdit()"/>
