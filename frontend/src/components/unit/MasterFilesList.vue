@@ -10,7 +10,7 @@
                <DPGButton label="Delete Selected" @click="deleteClicked()" class="p-button-secondary" :disabled="!filesSelected" />
             </template>
             <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
-            <template v-if="detail.metadata && detail.dateArchived != null && detail.reorder == false">
+            <template v-if="detail.dateArchived != null || (detail.reorder && detail.datePatronDeliverablesReady)">
                <DPGButton label="Download Selected" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
             </template>
             <template v-if="detail.metadata && detail.dateArchived != null && detail.reorder == false">
