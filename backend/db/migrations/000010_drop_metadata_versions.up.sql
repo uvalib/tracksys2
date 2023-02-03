@@ -1,0 +1,1 @@
+DROP TABLE iF EXISTS `metadata_versions`;
