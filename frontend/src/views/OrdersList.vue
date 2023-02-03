@@ -137,9 +137,7 @@ function clearSearch() {
 }
 
 function queryOrders() {
-   if (ordersStore.searchOpts.query.length > 3) {
-      getOrders()
-   }
+   getOrders()
 }
 
 function ownerToggled() {
