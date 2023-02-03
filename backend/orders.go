@@ -827,7 +827,15 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-	log.Printf("INFO: order %d updated", oDetail.ID)
+	if oDetail.OrderStatus == "canceled" {
+		log.Printf("INFO: order %d was canceled; cancel all associated units", oDetail.ID)
+		err = svc.DB.Model(unit{}).Where("order_id = ?", oDetail.ID).Updates(unit{UnitStatus: "canceled"}).Error
+		if err != nil {
+			log.Printf("ERROR: unable to cancel units related to canceled order %d: %s", oDetail.ID, err.Error())
+		}
+	} else {
+		log.Printf("INFO: order %d updated", oDetail.ID)
+	}
 	svc.DB.Preload("Agency").Preload("Customer").Find(&oDetail, orderID)
 	c.JSON(http.StatusOK, oDetail)
 }
