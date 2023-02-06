@@ -261,9 +261,11 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 	}
 
 	log.Printf("INFO: get related units and orders for metadata %d", resp.Metadata.ID)
+	// NOTE: Manually calculate the master files count and return it as num_master_files instead of using the inaccurate cache
+	mfCnt := "(select count(*) from master_files m inner join units u on u.id=m.unit_id where u.metadata_id=units.metadata_id) as num_master_files"
 	err = svc.DB.Where("metadata_id=?", resp.Metadata.ID).Preload("IntendedUse").
 		Preload("Order").Preload("Order.Customer").Preload("Order.Agency").
-		Find(&resp.Units).Error
+		Select("units.*", mfCnt).Find(&resp.Units).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get related units for %d: %s", resp.Metadata.ID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())

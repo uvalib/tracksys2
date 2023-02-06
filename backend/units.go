@@ -72,10 +72,10 @@ type unit struct {
 	ThrowAway                   bool         `json:"throwAway"`
 	OCRMasterFiles              bool         `gorm:"column:ocr_master_files" json:"ocrMasterFiles"`
 	MasterFiles                 []masterFile `gorm:"foreignKey:UnitID" json:"masterFiles"`
+	NumMasterFiles              uint         `json:"masterFilesCount"` // not the cached master_files_count
 	Attachments                 []attachment `gorm:"foreignKey:UnitID" json:"attachments"`
 	SpecialInstructions         string       `json:"specialInstructions"`
 	StaffNotes                  string       `json:"staffNotes"`
-	MasterFilesCount            uint         `json:"masterFilesCount"`
 	DateArchived                *time.Time   `json:"dateArchived"`
 	DatePatronDeliverablesReady *time.Time   `json:"datePatronDeliverablesReady"`
 	DateDLDeliverablesReady     *time.Time   `gorm:"column:date_dl_deliverables_ready" json:"dateDLDeliverablesReady"`

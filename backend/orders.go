@@ -206,7 +206,9 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 		Items []orderItem `json:"items"`
 	}
 	out := oResp{Order: oDetail}
-	err = svc.DB.Where("order_id=?", oID).Preload("IntendedUse").Preload("Metadata").Find(&out.Units).Error
+	// NOTE: Manually calculate the master files count and return it as num_master_files instead of using the inaccurate cache
+	mfCnt := "(select count(*) from master_files m inner join units u on u.id=m.unit_id where u.id=units.id) as num_master_files"
+	err = svc.DB.Debug().Where("order_id=?", oID).Preload("IntendedUse").Preload("Metadata").Select("units.*", mfCnt).Find(&out.Units).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get units for order %s: %s", oID, err.Error())
 	}
@@ -305,6 +307,9 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	filterQ.Count(&total)
 
 	var o []*order
+	// NOTE: the DB originally had fields named units_count and master_files_count which cached counts. These were often wrong
+	// so they are ignored below. Instead, calculate the actual counts and store them in slightly differet names (not plural) to
+	// avoid conflicts with the cached fields. The cached fields are ignored
 	unitCnt := "(select count(*) from units where order_id=orders.id) as unit_count"
 	mfCnt := "(select count(*) from master_files m inner join units u on u.id=m.unit_id where u.order_id=orders.id) as master_file_count"
 	err := filterQ.Preload("Agency").Preload("Customer").Preload("Customer.AcademicStatus").Preload("Processor").Omit("units_count", "master_files_count").
