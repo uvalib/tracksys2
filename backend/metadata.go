@@ -553,12 +553,11 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 			out.Error = err.Error()
 		} else {
 			out.Extended = parsedDetail
-			if md.DateDLIngest != nil {
-				if md.CatalogKey != nil {
-					out.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
-				} else {
-					out.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
-				}
+			if md.Type == "SirsiMetadata" && md.CatalogKey != nil {
+				out.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
+			}
+			if md.Type == "XmlMetadata" && md.DateDLIngest != nil {
+				out.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
 			}
 			log.Printf("INFO: look for metdata %d exemplar", mdID)
 			var exemplar masterFile
