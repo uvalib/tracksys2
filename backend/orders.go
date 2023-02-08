@@ -312,7 +312,7 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	// avoid conflicts with the cached fields. The cached fields are ignored
 	unitCnt := "(select count(*) from units where order_id=orders.id) as unit_count"
 	mfCnt := "(select count(*) from master_files m inner join units u on u.id=m.unit_id where u.order_id=orders.id) as master_file_count"
-	err := filterQ.Preload("Agency").Preload("Customer").Preload("Customer.AcademicStatus").Preload("Processor").Omit("units_count", "master_files_count").
+	err := filterQ.Preload("Agency").Preload("Customer").Preload("Customer.AcademicStatus").Preload("Processor").
 		Select("orders.*", unitCnt, mfCnt).
 		Offset(startIndex).Limit(pageSize).Order(orderStr).Find(&o).Error
 	if err != nil {

@@ -54,7 +54,7 @@ function sendClicked() {
       return
    }
    if (props.mode == "order") {
-      ordersStore.sendEmail(sendToCustomer.value, sendToAlt.value, altEmail.value)
+      ordersStore.sendEmail(user.ID, sendToCustomer.value, sendToAlt.value, altEmail.value)
    } else {
       ordersStore.resendFeeEstimate( user.ID, sendToCustomer.value, sendToAlt.value, altEmail.value)
    }

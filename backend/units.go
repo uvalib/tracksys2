@@ -354,8 +354,10 @@ func (svc *serviceContext) getUnitCloneSources(c *gin.Context) {
 	}
 
 	var units []unit
-	err = svc.DB.Where("master_files_count>0 and reorder=false and id<>? and throw_away=false", tgtUnit.ID).
-		Where("metadata_id = ?", tgtUnit.MetadataID).Find(&units).Error
+	err = svc.DB.Omit("num_master_files").
+		Joins("inner join master_files m on m.unit_id = units.id").
+		Where("reorder=? and units.id<>? and throw_away=? and units.metadata_id=?", false, tgtUnit.ID, false, tgtUnit.MetadataID).
+		Distinct("units.id").Find(&units).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get source units for clone of unit %s: %s", tgtUnitID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())

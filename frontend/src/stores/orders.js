@@ -255,18 +255,24 @@ export const useOrdersStore = defineStore('orders', {
          })
       },
 
-      async sendEmail( toCustomer, toAlt = false, altAddress = "") {
+      async sendEmail( staffID, toCustomer, toAlt = false, altAddress = "") {
          const system = useSystemStore()
          system.working = true
          let url = `${system.jobsURL}/orders/${this.detail.id}/email/send`
          if (toCustomer) {
             await axios.post( url )
+            await axios.post( `/api/orders/${this.detail.id}/complete?staff=${staffID}` ).then( (resp) => {
+               this.detail.dateCompleted = resp.data.dateCompleted
+               this.detail.dateArchivingComplete = resp.data.dateArchivingComplete
+               this.detail.status = resp.data.status
+               system.toastMessage("Email Sent", `Email has been sent to ${this.detail.customer.email} and order marked as complete.`)
+            })
          }
          if ( toAlt ) {
             url = `${url}?alt=${altAddress}`
             await axios.post( url  )
+            system.toastMessage("Email Sent", `Order email has been sent to ${altAddress}`)
          }
-         system.toastMessage("Email Sent", "Order email has been sent to the selected recipients")
          system.working = false
       },
 
