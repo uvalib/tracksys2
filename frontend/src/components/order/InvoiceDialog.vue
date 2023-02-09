@@ -67,7 +67,7 @@ function submitChanges() {
 
 function formatFee( fee ) {
    if (fee) {
-      return `$${fee}.00`
+      return `$${fee}`
    }
    return ""
 }
