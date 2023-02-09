@@ -70,7 +70,6 @@ type metadata struct {
 	ID                   int64               `json:"id"`
 	PID                  string              `gorm:"column:pid" json:"pid"`
 	Type                 string              `json:"type"`
-	ParentMetadataID     uint64              `gorm:"column:parent_metadata_id" json:"parentID"`
 	Title                string              `json:"title"`
 	Barcode              *string             `json:"barcode"`
 	CallNumber           *string             `json:"callNumber"`
@@ -78,8 +77,10 @@ type metadata struct {
 	CreatorName          *string             `json:"creatorName"`
 	CreatorDeathDate     *uint64             `json:"creatorDeathDate"`
 	DescMetadata         *string             `json:"descMetadata"`
-	CollectionID         *string             `json:"collectionID"`    // internal usage to track a collection ID
-	CollectionFacet      *string             `json:"collectionFacet"` // used at index to put item in collection in DL; EX: Ganon Project, McGregor
+	ParentMetadataID     uint64              `json:"parentID,omitempty"` // id of the collection that this record belongs to
+	IsCollection         bool                `json:"isCollection"`       // flag to indicate that this record is a collection and has child metadata records
+	CollectionID         *string             `json:"collectionID"`       // internal usage to track a collection ID
+	CollectionFacet      *string             `json:"collectionFacet"`    // used at index to put item in collection in DL; EX: Ganon Project, McGregor
 	UseRightID           *int64              `json:"-"`
 	UseRight             *useRight           `gorm:"foreignKey:UseRightID" json:"useRight"`
 	UseRightRationale    string              `json:"useRightRationale"`
@@ -194,6 +195,7 @@ type uvaMAP struct {
 
 type metadataDetailResponse struct {
 	Metadata     *metadata         `json:"metadata"`
+	Collection   *metadata         `json:"collectionRecord"`
 	Units        []*unit           `json:"units"`
 	MasterFiles  []*masterFile     `json:"masterFiles,omitempty"`
 	Extended     *internalMetadata `json:"details"`
@@ -543,6 +545,21 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 	out := metadataDetailResponse{Metadata: &md, Units: make([]*unit, 0)}
 	if md.ID == 0 {
 		return &out, nil
+	}
+
+	if md.ParentMetadataID > 0 {
+		log.Printf("INFO: load collection record %d for metadata %d", md.ParentMetadataID, md.ID)
+		var collectionMD metadata
+		err = svc.DB.Find(&collectionMD, md.ParentMetadataID).Error
+		if err != nil {
+			log.Printf("ERROR: unable to get collection record %d: %s", md.ParentMetadataID, err.Error())
+		} else {
+			if collectionMD.IsCollection == false {
+				log.Printf("INFO: metadata %d lists metadata %d as a parent, but that record is not flagged as a collection; ignoring", md.ID, md.ParentMetadataID)
+			} else {
+				out.Collection = &collectionMD
+			}
+		}
 	}
 
 	if md.Type == "SirsiMetadata" || md.Type == "XmlMetadata" {

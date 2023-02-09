@@ -137,7 +137,7 @@ function metadataCreateCanceled() {
    mode.value = "unit"
 }
 function metadataCreated() {
-   metadataSearch.value = metadataStore.dl.pid
+   metadataSearch.value = metadataStore.detail.pid
    searched.value = true
    selectedMetadata.value = metadataStore.searchHits[0]
    mode.value = "unit"

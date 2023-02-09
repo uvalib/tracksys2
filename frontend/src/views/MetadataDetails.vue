@@ -33,11 +33,16 @@
                <DataDisplay label="Location" :value="metadataStore.detail.location"/>
             </template>
 
-            <DataDisplay label="Manuscript/Unpublished Item" :value="formatBoolean(metadataStore.other.isManuscript)"/>
-            <DataDisplay label="Personal Item" :value="formatBoolean(metadataStore.other.isPersonalItem)"/>
+            <DataDisplay label="Manuscript/Unpublished Item" :value="formatBoolean(metadataStore.detail.isManuscript)"/>
+            <DataDisplay label="Personal Item" :value="formatBoolean(metadataStore.detail.isPersonalItem)"/>
             <DataDisplay label="OCR Hint" :value="ocrHint"/>
-            <DataDisplay label="OCR Language Hint" :value="metadataStore.other.ocrLanguageHint"/>
+            <DataDisplay label="OCR Language Hint" :value="metadataStore.detail.ocrLanguageHint"/>
             <DataDisplay label="Preservation Tier" :value="preservationTier"/>
+            <DataDisplay v-if="metadataStore.related.collection" label="Collection" :value="metadataStore.related.collection.id">
+               <router-link :to="`/metadata/${metadataStore.related.collection.id}`">
+                  {{ metadataStore.related.collection.title }}
+               </router-link>
+            </DataDisplay>
          </dl>
          <template v-if="externalSystem == 'ArchivesSpace'">
             <dl>
@@ -107,17 +112,17 @@
       </Panel>
       <Panel header="Digital Library Information">
          <dl>
-            <DataDisplay label="PID" :value="metadataStore.dl.pid"/>
-            <DataDisplay label="In Digital Library" :value="formatBoolean(metadataStore.dl.inDL)"/>
-            <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.dl.inDPLA)"/>
+            <DataDisplay label="PID" :value="metadataStore.detail.pid"/>
+            <DataDisplay label="In Digital Library" :value="formatBoolean(metadataStore.detail.inDL)"/>
+            <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.detail.inDPLA)"/>
             <!-- <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
                <DataDisplay label="Right Statement" :value="useRight"/>
-               <DataDisplay label="Rights Rationale" :value="metadataStore.dl.useRightRationale"/>
+               <DataDisplay label="Rights Rationale" :value="metadataStore.detail.useRightRationale"/>
             </template> -->
-            <DataDisplay label="Creator Death Date" :value="metadataStore.dl.creatorDeathDate"/>
+            <DataDisplay label="Creator Death Date" :value="metadataStore.detail.creatorDeathDate"/>
             <DataDisplay label="Availability Policy" :value="availabilityPolicy"/>
-            <DataDisplay label="Collection ID" :value="metadataStore.dl.collectionID"/>
-            <DataDisplay label="Collection Facet" :value="metadataStore.dl.collectionFacet"/>
+            <DataDisplay label="Collection ID" :value="metadataStore.detail.collectionID"/>
+            <DataDisplay label="Collection Facet" :value="metadataStore.detail.collectionFacet"/>
             <DataDisplay v-if="metadataStore.detail.supplementalURL" label="Supplemental System" :value="metadataStore.detail.supplementalURL">
                <a :href="metadataStore.detail.supplementalURL" target="_blank" class="supplemental">
                   {{metadataStore.detail.supplementalSystem}}<i class="icon fas fa-external-link"></i>
@@ -125,8 +130,8 @@
             </DataDisplay>
             <template v-if="metadataStore.detail.type != 'ExternalMetadata'">
                <DataDisplay :spacer="true"/>
-               <DataDisplay label="Date DL Ingest" :value="formatDate(metadataStore.dl.dateDLIngest)"/>
-               <DataDisplay label="Date DL Update" :value="formatDate(metadataStore.dl.dateDLUpdate)"/>
+               <DataDisplay label="Date DL Ingest" :value="formatDate(metadataStore.detail.dateDLIngest)"/>
+               <DataDisplay label="Date DL Update" :value="formatDate(metadataStore.detail.dateDLUpdate)"/>
             </template>
          </dl>
          <div v-if="canPublish" class="publish">
@@ -207,7 +212,7 @@ const externalSystem = computed(() => {
 })
 
 const canPublish = computed(() => {
-   if (metadataStore.dl.dateDLIngest) {
+   if (metadataStore.detail.dateDLIngest) {
       return true
    } else {
       if (metadataStore.detail.type == 'XmlMetadata' || metadataStore.detail.type == 'SirsiMetadata') {
@@ -224,29 +229,29 @@ const canPublish = computed(() => {
 })
 
 const availabilityPolicy = computed(() => {
-   if ( metadataStore.dl.availabilityPolicy ) {
-      return metadataStore.dl.availabilityPolicy.name
+   if ( metadataStore.detail.availabilityPolicy ) {
+      return metadataStore.detail.availabilityPolicy.name
    }
    return ""
 })
 
 const preservationTier = computed(() => {
-   if ( metadataStore.other.preservationTier ) {
-      return metadataStore.other.preservationTier.name
+   if ( metadataStore.detail.preservationTier ) {
+      return metadataStore.detail.preservationTier.name
    }
    return ""
 })
 
 const ocrHint = computed(() => {
-   if ( metadataStore.other.ocrHint ) {
-      return metadataStore.other.ocrHint.name
+   if ( metadataStore.detail.ocrHint ) {
+      return metadataStore.detail.ocrHint.name
    }
    return ""
 })
 
 // const useRight = computed(() => {
-//    if (metadataStore.dl.useRight ) {
-//       return metadataStore.dl.useRight.name
+//    if (metadataStore.detail.useRight ) {
+//       return metadataStore.detail.useRight.name
 //    }
 //    return ""
 // })
@@ -283,7 +288,7 @@ function downloadXMLClicked() {
    const fileURL = window.URL.createObjectURL(new Blob([metadataStore.detail.xmlMetadata], { type: 'application/xml' }))
    const fileLink = document.createElement('a')
    fileLink.href =  fileURL
-   fileLink.setAttribute('download', `${metadataStore.dl.pid}.xml`)
+   fileLink.setAttribute('download', `${metadataStore.detail.pid}.xml`)
    document.body.appendChild(fileLink)
    fileLink.click()
    window.URL.revokeObjectURL(fileURL)

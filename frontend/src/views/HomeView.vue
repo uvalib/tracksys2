@@ -242,7 +242,7 @@ function createMetadata() {
    showCreateMetadata.value = true
 }
 function metadataCreated() {
-   systemStore.toastMessage("Metadata Created", `Metadata ${metadataStore.dl.pid}: ${metadataStore.detail.title} has been created.`)
+   systemStore.toastMessage("Metadata Created", `Metadata ${metadataStore.detail.pid}: ${metadataStore.detail.title} has been created.`)
    showCreateMetadata.value = false
 }
 function createMetadataClosed() {

@@ -75,7 +75,7 @@
    </div>
 </template>
 
-<script setup>
+<script setup lang="js">
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted, ref, computed } from 'vue'
 import { useMetadataStore } from '@/stores/metadata'
@@ -194,29 +194,29 @@ onMounted( async () =>{
    edited.value.callNumber = metadataStore.detail.callNumber
    edited.value.catalogKey = metadataStore.detail.catalogKey
    edited.value.barcode = metadataStore.detail.barcode
-   edited.value.personalItem = metadataStore.other.isPersonalItem
-   edited.value.manuscript = metadataStore.other.isManuscript
+   edited.value.personalItem = metadataStore.detail.isPersonalItem
+   edited.value.manuscript = metadataStore.detail.isManuscript
    edited.value.ocrHint = 0
-   if (metadataStore.other.ocrHint) {
-      edited.value.ocrHint = metadataStore.other.ocrHint.id
+   if (metadataStore.detail.ocrHint) {
+      edited.value.ocrHint = metadataStore.detail.ocrHint.id
    }
-   edited.value.ocrLanguageHint = metadataStore.other.ocrLanguageHint
+   edited.value.ocrLanguageHint = metadataStore.detail.ocrLanguageHint
    edited.value.preservationTier = 0
-   if (metadataStore.other.preservationTier) {
-      edited.value.ocrHint = metadataStore.other.preservationTier.id
+   if (metadataStore.detail.preservationTier) {
+      edited.value.ocrHint = metadataStore.detail.preservationTier.id
    }
    edited.value.availabilityPolicy = 0
-   if (metadataStore.dl.availabilityPolicy) {
-      edited.value.availabilityPolicy = metadataStore.dl.availabilityPolicy.id
+   if (metadataStore.detail.availabilityPolicy) {
+      edited.value.availabilityPolicy = metadataStore.detail.availabilityPolicy.id
    }
    edited.value.useRight=0
-   if (metadataStore.dl.useRight) {
-      edited.value.useRight = metadataStore.dl.useRight.id
+   if (metadataStore.detail.useRight) {
+      edited.value.useRight = metadataStore.detail.useRight.id
    }
-   edited.value.useRightRationale = metadataStore.dl.useRightRationale
-   edited.value.inDPLA = metadataStore.dl.inDPLA
-   edited.value.collectionID = metadataStore.dl.collectionID
-   edited.value.collectionFacet = metadataStore.dl.collectionFacet
+   edited.value.useRightRationale = metadataStore.detail.useRightRationale
+   edited.value.inDPLA = metadataStore.detail.inDPLA
+   edited.value.collectionID = metadataStore.detail.collectionID
+   edited.value.collectionFacet = metadataStore.detail.collectionFacet
    if ( metadataStore.detail.type == "ExternalMetadata") {
       validated.value = metadataStore.archivesSpace.error != ""
    }

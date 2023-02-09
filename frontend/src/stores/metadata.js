@@ -7,6 +7,7 @@ export const useMetadataStore = defineStore('metadata', {
 	state: () => ({
       detail: {
          id: 0,
+         pid: "",
          type: "",
          barcode: "",
          catalogKey: "",
@@ -21,10 +22,14 @@ export const useMetadataStore = defineStore('metadata', {
          supplementalURL: "",
          supplementalSystem: "",
          externalURI: "",
-         externalSystem: null
-      },
-      dl: {
-         pid: "",
+         externalSystem: null,
+         parentID: 0,
+         isCollection: false,
+         isManuscript: false,
+         isPersonalItem: false,
+         ocrHint: null,
+         ocrLanguageHint: "",
+         preservationTier: null,
          inDL: false,
          inDPLA: false,
          useRight: null,
@@ -69,21 +74,14 @@ export const useMetadataStore = defineStore('metadata', {
          itemURL: "",
          collectionURL: "",
       },
-      other: {
-         parentID: 0,
-         isManuscript: false,
-         isPersonalItem: false,
-         ocrHint: null,
-         ocrLanguageHint: "",
-         preservationTier: null,
-      },
       thumbURL: "",
       viewerURL: "",
       virgoURL: "",
       related: {
          units: [],
          orders: [],
-         masterFiles: []
+         masterFiles: [],
+         collection: null
       },
       searchHits: [],
       totalSearchHits: 0,
@@ -195,10 +193,10 @@ export const useMetadataStore = defineStore('metadata', {
          const system = useSystemStore()
          return axios.post( `${system.jobsURL}/metadata/${this.detail.id}/publish` ).then( () => {
             var now = dayjs().format("YYYY-MM-DD hh:mm A")
-            if ( this.dl.dateDLIngest ) {
-               this.dl.dateDLUpdate = now
+            if ( this.detail.dateDLIngest ) {
+               this.detail.dateDLUpdate = now
             } else {
-               this.dl.dateDLIngest = now
+               this.detail.dateDLIngest = now
             }
          }).catch( e => {
             system.setError(e)
@@ -222,7 +220,7 @@ export const useMetadataStore = defineStore('metadata', {
             this.setMetadataDetails(response.data)
             this.searchHits = [ {
                id: this.detail.id,
-               pid: this.dl.pid,
+               pid: this.detail.pid,
                type: this.detail.type,
                barcode: this.detail.barcode,
                callNumber: this.detail.callNumber,
@@ -264,6 +262,14 @@ export const useMetadataStore = defineStore('metadata', {
          this.detail.callNumber = details.metadata.callNumber
          this.detail.title = details.metadata.title
          this.detail.creatorName = details.metadata.creatorName
+         this.detail.parentID = details.metadata.parentID
+         this.detail.isCollection = details.metadata.isCollection
+         this.detail.isManuscript = details.metadata.isManuscript
+         this.detail.isPersonalItem = details.metadata.isPersonalItem
+         this.detail.ocrHint = details.metadata.ocrHint
+         this.detail.ocrLanguageHint = details.metadata.ocrLanguageHint
+         this.detail.preservationTier = details.metadata.preservationTier
+
          if (this.detail.type == "XmlMetadata" || this.detail.type == "SirsiMetadata") {
             if ( details.details.title && details.details.title != "") {
                this.detail.title = details.details.title
@@ -312,29 +318,21 @@ export const useMetadataStore = defineStore('metadata', {
          }
 
          // DL info
-         this.dl.pid = details.metadata.pid
-         this.dl.inDL = (details.metadata.dateDLIngest != null)
-         this.dl.inDPLA = details.metadata.dpla
-         this.dl.useRight = details.metadata.useRight
-         this.dl.useRightRationale = details.metadata.useRightRationale
+         this.detail.pid = details.metadata.pid
+         this.detail.inDL = (details.metadata.dateDLIngest != null)
+         this.detail.inDPLA = details.metadata.dpla
+         this.detail.useRight = details.metadata.useRight
+         this.detail.useRightRationale = details.metadata.useRightRationale
          if ( details.metadata.creatorDeathDate > 0) {
-            this.dl.creatorDeathDate = `${details.metadata.creatorDeathDate}`
+            this.detail.creatorDeathDate = `${details.metadata.creatorDeathDate}`
          }
-         this.dl.availabilityPolicy = details.metadata.availabilityPolicy
-         this.dl.collectionID = details.metadata.collectionID
-         this.dl.collectionFacet = details.metadata.collectionFacet
-         this.dl.dateDLIngest = details.metadata.dateDLIngest
-         this.dl.dateDLUpdate = details.metadata.dateDLUpdate
+         this.detail.availabilityPolicy = details.metadata.availabilityPolicy
+         this.detail.collectionID = details.metadata.collectionID
+         this.detail.collectionFacet = details.metadata.collectionFacet
+         this.detail.dateDLIngest = details.metadata.dateDLIngest
+         this.detail.dateDLUpdate = details.metadata.dateDLUpdate
 
-         // admin / other info
-         this.other.parentID = details.metadata.parentID
-         this.other.isManuscript = details.metadata.isManuscript
-         this.other.isPersonalItem = details.metadata.isPersonalItem
-         this.other.ocrHint = details.metadata.ocrHint
-         this.other.ocrLanguageHint = details.metadata.ocrLanguageHint
-         this.other.preservationTier = details.metadata.preservationTier
-
-         this.setRelatedItems(details.units, details.masterFiles)
+         this.setRelatedItems(details.units, details.masterFiles, details.collectionRecord)
       },
       async getDetails( metadataID ) {
          if (this.detail.id == metadataID) return
@@ -376,10 +374,15 @@ export const useMetadataStore = defineStore('metadata', {
          })
       },
 
-      setRelatedItems( units, masterFiles ) {
+      setRelatedItems( units, masterFiles, collection ) {
          this.related.units = []
          this.related.orders = []
          this.related.masterFiles = []
+         this.related.collection = null
+
+         if ( collection ) {
+            this.related.collection = collection
+         }
          if ( masterFiles ) {
             this.related.masterFiles = masterFiles
          }
