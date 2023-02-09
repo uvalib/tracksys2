@@ -75,7 +75,7 @@
    </div>
 </template>
 
-<script setup lang="js">
+<script setup>
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted, ref, computed } from 'vue'
 import { useMetadataStore } from '@/stores/metadata'
