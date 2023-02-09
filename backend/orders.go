@@ -769,7 +769,7 @@ func (svc *serviceContext) addUnitToOrder(c *gin.Context) {
 		ThrowAway: addReq.ThrowAway, IncludeInDL: addReq.IncludeInDL, CreatedAt: time.Now(), OrderID: tgtOrder.ID,
 		IntendedUseID: &iu.ID, IntendedUse: &iu, Metadata: &md,
 	}
-	err = svc.DB.Create(&newUnit).Error
+	err = svc.DB.Omit("num_master_files").Create(&newUnit).Error
 	if err != nil {
 		log.Printf("ERROR: unable to create new unit for order %s", orderID)
 		c.String(http.StatusInternalServerError, err.Error())
