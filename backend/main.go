@@ -36,6 +36,7 @@ func main() {
 	api := router.Group("/api", svc.authMiddleware)
 	{
 		api.POST("/collection-facet", svc.addCollectionFacet)
+		api.GET("/collections/:id", svc.getCollectionRecords)
 
 		api.GET("/components/:id", svc.getComponentTree)
 		api.GET("/components/:id/masterfiles", svc.getComponentMasterFiles)

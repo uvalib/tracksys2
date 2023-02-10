@@ -150,6 +150,9 @@
       <div class="details">
          <Panel header="Related Information">
             <TabView class="related">
+               <TabPanel header="Collection" v-if="metadataStore.detail.isCollection">
+                  <CollectionRecords :collectionID="metadataStore.detail.id"/>
+               </TabPanel>
                <TabPanel header="Orders">
                   <RelatedOrders :orders="metadataStore.related.orders" />
                </TabPanel>
@@ -183,6 +186,7 @@ import RelatedUnits from '../components/related/RelatedUnits.vue'
 import RelatedMasterFiles from '../components/related/RelatedMasterFiles.vue'
 import FileUpload from 'primevue/fileupload'
 import { useConfirm } from "primevue/useconfirm"
+import CollectionRecords from '../components/related/CollectionRecords.vue'
 
 const confirm = useConfirm()
 const route = useRoute()

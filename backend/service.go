@@ -137,37 +137,6 @@ func initializeService(version string, cfg *configData) *serviceContext {
 	return &ctx
 }
 
-func (svc *serviceContext) addCollectionFacet(c *gin.Context) {
-	var req struct {
-		Facet string `json:"facet"`
-	}
-	err := c.BindJSON(&req)
-	if err != nil {
-		log.Printf("ERROR: invalid sad collection facet request: %s", err.Error())
-		c.String(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	log.Printf("INFO: add new facet %s", req.Facet)
-	newFacet := collectionFacet{Name: req.Facet, CreatedAt: time.Now(), UpdatedAt: time.Now()}
-	err = svc.DB.Create(&newFacet).Error
-	if err != nil {
-		log.Printf("ERROR: unable to create collection faccet %s: %s", req.Facet, err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	log.Printf("INFO: load collections facets after creating new facet %s", req.Facet)
-	var out []collectionFacet
-	err = svc.DB.Order("name asc").Find(&out).Error
-	if err != nil {
-		log.Printf("ERROR: unable to get updated facets: %s", err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-	c.JSON(http.StatusOK, out)
-}
-
 func (svc *serviceContext) cleanupExpiredData(c *gin.Context) {
 	log.Printf("INFO: cleanup job logs and deleted messages older than 1 month")
 	lastMonth := time.Now().AddDate(0, -3, 0)

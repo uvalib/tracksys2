@@ -77,7 +77,7 @@ type metadata struct {
 	CreatorName          *string             `json:"creatorName"`
 	CreatorDeathDate     *uint64             `json:"creatorDeathDate"`
 	DescMetadata         *string             `json:"descMetadata"`
-	ParentMetadataID     uint64              `json:"parentID,omitempty"` // id of the collection that this record belongs to
+	ParentMetadataID     int64               `json:"parentID,omitempty"` // id of the collection that this record belongs to
 	IsCollection         bool                `json:"isCollection"`       // flag to indicate that this record is a collection and has child metadata records
 	CollectionID         *string             `json:"collectionID"`       // internal usage to track a collection ID
 	CollectionFacet      *string             `json:"collectionFacet"`    // used at index to put item in collection in DL; EX: Ganon Project, McGregor
