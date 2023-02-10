@@ -1,10 +1,5 @@
 <template>
-   <div v-if="collectionStore.working">
-   </div>
-   <div v-if="collectionStore.working == false && collectionStore.total == 0">
-      <h3>No collection records found</h3>
-   </div>
-   <div v-else class="results">
+   <div class="results">
       <div class="toolbar">
          <span>
             <span class="p-input-icon-right">
@@ -14,7 +9,10 @@
             <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="collectionStore.searchOpts.query.length == 0"/>
          </span>
       </div>
-      <DataTable :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
+      <div v-if="collectionStore.working == false && collectionStore.total == 0" class="none">
+         <h3>No collection records found</h3>
+      </div>
+      <DataTable v-if="collectionStore.total>0" :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
          :lazy="true" :paginator="collectionStore.total > 15" @page="onCollectionPage($event)"
          :rows="collectionStore.searchOpts.limit" :totalRecords="collectionStore.total"
@@ -27,7 +25,7 @@
                <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
             </template>
          </Column>
-         <Column field="pid" header="PID" />
+         <Column field="pid" header="PID" class="nowrap"/>
          <Column field="title" header="Title" />
       </DataTable>
    </div>
@@ -78,6 +76,9 @@ function clearSearch() {
    }
    th, td {
       font-size: 0.85em;
+   }
+   .none{
+      text-align: center;
    }
 }
 .toolbar {
