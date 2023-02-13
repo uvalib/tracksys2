@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
+
 import HomeView from '../views/HomeView.vue'
+import CollectionsList from '../views/CollectionsList.vue'
 import JobStatusList from '../views/JobStatusList.vue'
 import JobStatusDetails from '../views/JobStatusDetails.vue'
 import MasterFileDetails from '../views/MasterFileDetails.vue'
@@ -32,6 +34,11 @@ const router = createRouter({
          path: '/',
          name: 'home',
          component: HomeView
+      },
+      {
+         path: '/collections',
+         name: 'collections',
+         component: CollectionsList
       },
       {
          path: '/jobs',

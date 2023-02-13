@@ -9,13 +9,13 @@
             <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="collectionStore.searchOpts.query.length == 0"/>
          </span>
       </div>
-      <div v-if="collectionStore.working == false && collectionStore.total == 0" class="none">
+      <div v-if="collectionStore.working == false && collectionStore.totalRecords == 0" class="none">
          <h3>No collection records found</h3>
       </div>
-      <DataTable v-if="collectionStore.total>0" :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
+      <DataTable v-if="collectionStore.totalRecords>0" :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-         :lazy="true" :paginator="collectionStore.total > 15" @page="onCollectionPage($event)"
-         :rows="collectionStore.searchOpts.limit" :totalRecords="collectionStore.total"
+         :lazy="true" :paginator="collectionStore.totalRecords > 15" @page="onCollectionPage($event)"
+         :rows="collectionStore.searchOpts.limit" :totalRecords="collectionStore.totalRecords"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
          :rowsPerPageOptions="[15,30,100]" :first="collectionStore.searchOpts.start"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"

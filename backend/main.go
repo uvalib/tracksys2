@@ -36,6 +36,7 @@ func main() {
 	api := router.Group("/api", svc.authMiddleware)
 	{
 		api.POST("/collection-facet", svc.addCollectionFacet)
+		api.GET("/collections", svc.getCollections)
 		api.GET("/collections/:id", svc.getCollectionRecords)
 
 		api.GET("/components/:id", svc.getComponentTree)
@@ -118,6 +119,8 @@ func main() {
 	})
 
 	portStr := fmt.Sprintf(":%d", cfg.port)
-	log.Printf("INFO: start TrackSys2 on port %s with CORS support enabled", portStr)
+	versionMap := svc.lookupVersion()
+	versionStr := fmt.Sprintf("%s-%s", versionMap["version"], versionMap["build"])
+	log.Printf("INFO: start TrackSys2 v%s on port %s with CORS support enabled", versionStr, portStr)
 	log.Fatal(router.Run(portStr))
 }

@@ -6,13 +6,15 @@ export const useCollectionsStore = defineStore('collections', {
    state: () => ({
       working: false,
       records: [],
-      total: 0,
+      totalRecords: 0,
       colectionID: -1,
       searchOpts: {
          start: 0,
          limit: 30,
          query: "",
       },
+      collections: [],
+      totalCollections: 0,
    }),
    getters: {
 	},
@@ -20,10 +22,23 @@ export const useCollectionsStore = defineStore('collections', {
       setCollection( collectionID ) {
          this.collectionID = collectionID
          this.records = []
-         this.total = 0
+         this.totalRecords = 0
          this.searchOpts.start = 0
          this.searchOpts.limit = 30
          this.searchOpts.query = ""
+      },
+      getCollections() {
+         const system = useSystemStore()
+         system.working = true
+         this.collections = []
+         this.totalCollections = 0
+         axios.get( "/api/collections" ).then(response => {
+            this.totalCollections = response.data.total
+            this.collections = response.data.collections
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
       },
       getRecords( ) {
          this.working = true
@@ -34,7 +49,7 @@ export const useCollectionsStore = defineStore('collections', {
          }
          axios.get( url ).then(response => {
             this.records = response.data.records
-            this.total = response.data.total
+            this.totalRecords = response.data.total
             this.working = false
          }).catch( e => {
             const system = useSystemStore()

@@ -29,6 +29,7 @@ onMounted(() => {
       items.value = [
          {label: "Home", to: "/"},
          {label: "Orders", to: "/orders"},
+         {label: "Collections", to: "/collections"},
          {label: "Job Statuses", to: "/jobs"},
          {label: "Digitization", items: [
             {label: "Equipment", to: '/equipment'},

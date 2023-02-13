@@ -11,6 +11,46 @@ import (
 	"gorm.io/gorm"
 )
 
+func (svc *serviceContext) getCollections(c *gin.Context) {
+	log.Printf("INFO: get all collections")
+	type collectionHit struct {
+		ID          uint64 `json:"id"`
+		PID         string `gorm:"column:pid" json:"pid"`
+		Type        string `json:"type"`
+		Title       string `json:"title"`
+		CallNumber  string `json:"callNumber"`
+		Barcode     string `json:"barcode"`
+		CatalogKey  string `json:"catalogKey"`
+		CreatorName string `json:"creatorName"`
+		RecordCount int64  `json:"recordCount"`
+	}
+	var resp struct {
+		Total       int64           `json:"total"`
+		Collections []collectionHit `json:"collections"`
+	}
+
+	log.Printf("INFO: get collections count")
+	err := svc.DB.Table("metadata").Where("is_collection=?", true).Count(&resp.Total).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get collections count %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("INFO: get collections details")
+	err = svc.DB.Debug().Table("metadata").
+		Joins("inner join metadata mc on mc.parent_metadata_id = metadata.id").
+		Select("metadata.*", "count(mc.id) as record_count").
+		Where("metadata.is_collection=?", true).Group("metadata.id").Find(&resp.Collections).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get collections %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
 func (svc *serviceContext) getCollectionRecords(c *gin.Context) {
 	collectionID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	if collectionID == 0 {
