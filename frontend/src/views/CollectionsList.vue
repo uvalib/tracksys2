@@ -15,11 +15,11 @@
          </Column>
          <Column field="pid" header="PID" class="nowrap"/>
          <Column field="title" header="Title" />
-         <Column field="recordCount" header="Items" />
          <Column field="creatorName" header="Creator Name" />
          <Column field="barcode" header="Barcode" />
          <Column field="callNumber" header="Call Number" />
          <Column field="catalogKey" header="Catalog Key" />
+         <Column field="recordCount" header="Items" />
       </DataTable>
    </div>
 </template>

@@ -1,5 +1,5 @@
 <template>
-   <h2>Metadata {{route.params.id}}</h2>
+   <h2><span v-if="metadataStore.detail.isCollection" class="collection-tag">Collection</span>Metadata {{route.params.id}}</h2>
    <div class="unit-acts">
       <template  v-if="metadataStore.detail.type == 'XmlMetadata' && systemStore.working==false">
          <DPGButton label="Delete" class="edit" @click="deleteMetadata()" v-if="canDelete"/>
@@ -351,6 +351,10 @@ div.unit-acts {
          outline: 0;
       }
    }
+}
+.collection-tag {
+   display: inline-block;
+   margin-right: 10px;
 }
 .more-detail {
    padding: 0 35px 10px 35px;

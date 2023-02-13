@@ -306,6 +306,7 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 				}
 			}
 			if unique {
+				f.Unit.NumMasterFiles = uint(len(resp.MasterFiles))
 				resp.Units = append(resp.Units, f.Unit)
 			}
 		}
