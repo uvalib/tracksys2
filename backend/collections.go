@@ -51,7 +51,7 @@ func (svc *serviceContext) getCollections(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func (svc *serviceContext) getCollectionRecords(c *gin.Context) {
+func (svc *serviceContext) getCollectionItems(c *gin.Context) {
 	collectionID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	if collectionID == 0 {
 		log.Printf("ERROR: bad collection id %s in get collection records request", c.Param("id"))
@@ -105,6 +105,44 @@ func (svc *serviceContext) getCollectionRecords(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) removeCollectionItem(c *gin.Context) {
+	collectionID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	if collectionID == 0 {
+		log.Printf("ERROR: bad collection id %s in remove collection item request", c.Param("id"))
+		c.String(http.StatusBadRequest, fmt.Sprintf("invalid collection id %s", c.Param("id")))
+		return
+	}
+	itemID, _ := strconv.ParseInt(c.Param("item"), 10, 64)
+	if itemID == 0 {
+		log.Printf("ERROR: bad item id %s in remove collection item request", c.Param("item"))
+		c.String(http.StatusBadRequest, fmt.Sprintf("invalid collection item id %s", c.Param("item")))
+		return
+	}
+	var tgtItem metadata
+	err := svc.DB.Find(&tgtItem, itemID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to load collection item %d: %s", itemID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	if tgtItem.ParentMetadataID != collectionID {
+		log.Printf("ERROR: item %d is not part of collection %d", itemID, collectionID)
+		c.String(http.StatusBadRequest, fmt.Sprintf("item %d is not part of collection %d", itemID, collectionID))
+		return
+	}
+
+	now := time.Now()
+	tgtItem.ParentMetadataID = 0
+	tgtItem.UpdatedAt = &now
+	err = svc.DB.Model(&tgtItem).Select("ParentMetadataID", "UpdatedAt").Updates(tgtItem).Error
+	if err != nil {
+		log.Printf("ERROR: unable to remove %d from collection %d: %s", itemID, collectionID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.String(http.StatusOK, "removed")
 }
 
 func (svc *serviceContext) addCollectionFacet(c *gin.Context) {

@@ -54,7 +54,20 @@ export const useCollectionsStore = defineStore('collections', {
             system.setError(e)
          })
       },
-      getRecords( ) {
+      removeItem( item ) {
+         let url = `/api/collections/${this.collectionID}/items/${item.id}`
+         axios.delete( url ).then(() => {
+            let idx = this.records.findIndex( r => r.id == item.id)
+            if (idx > -1) {
+               this.records.splice(idx,1)
+            }
+            this.totalRecords-=1
+         }).catch( e => {
+            const system = useSystemStore()
+            system.setError(e)
+         })
+      },
+      getItems( ) {
          this.working = true
          let so = this.searchOpts
          let url = `/api/collections/${this.collectionID}?start=${so.start}&limit=${so.limit}`

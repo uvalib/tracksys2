@@ -37,7 +37,8 @@ func main() {
 	{
 		api.POST("/collection-facet", svc.addCollectionFacet)
 		api.GET("/collections", svc.getCollections)
-		api.GET("/collections/:id", svc.getCollectionRecords)
+		api.GET("/collections/:id", svc.getCollectionItems)
+		api.DELETE("/collections/:id/items/:item", svc.removeCollectionItem)
 
 		api.GET("/components/:id", svc.getComponentTree)
 		api.GET("/components/:id/masterfiles", svc.getComponentMasterFiles)

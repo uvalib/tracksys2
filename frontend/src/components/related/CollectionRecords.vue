@@ -27,6 +27,11 @@
          </Column>
          <Column field="pid" header="PID" class="nowrap"/>
          <Column field="title" header="Title" />
+         <Column header="" class="row-acts nowrap" v-if="userStore.isAdmin">
+            <template #body="slotProps">
+               <DPGButton icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary" @click="deleteItem(slotProps.data)"/>
+            </template>
+         </Column>
       </DataTable>
    </div>
 </template>
@@ -37,6 +42,11 @@ import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import { onBeforeMount } from 'vue'
 import { useCollectionsStore } from '@/stores/collections'
+import { useConfirm } from "primevue/useconfirm"
+import { useUserStore } from '../stores/user'
+
+const userStore = useUserStore()
+const confirm = useConfirm()
 
 const props = defineProps({
    collectionID: {
@@ -49,20 +59,31 @@ const collectionStore = useCollectionsStore()
 
 onBeforeMount( async () => {
    collectionStore.setCollection( props.collectionID )
-   await collectionStore.getRecords()
+   await collectionStore.getItems()
 })
 
 function onCollectionPage(event) {
    collectionStore.searchOpts.start = event.first
    collectionStore.searchOpts.limit = event.rows
-   collectionStore.getRecords()
+   collectionStore.getItems()
 }
 function queryCollection() {
-   collectionStore.getRecords()
+   collectionStore.getItems()
 }
 function clearSearch() {
    collectionStore.searchOpts.query = ""
-   collectionStore.getRecords()
+   collectionStore.getItems()
+}
+function deleteItem( item ) {
+   confirm.require({
+      message: `Remove "${item.pid} : ${item.title}" from this collection?`,
+      header: 'Confirm Remove Item',
+      icon: 'pi pi-question-circle',
+      rejectClass: 'p-button-secondary',
+      accept: () => {
+         collectionStore.removeItem(item)
+      }
+   })
 }
 
 </script>
@@ -75,6 +96,10 @@ function clearSearch() {
    }
    .none{
       text-align: center;
+   }
+   td.row-acts {
+      text-align: center;
+      width: 25px;
    }
 }
 .toolbar {
