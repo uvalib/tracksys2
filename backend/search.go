@@ -203,6 +203,8 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 
 	// query each type of object individually: components, master files, metadata and orders. Aggregate rresults in response struct
 	if scope == "all" || scope == "components" {
+		log.Printf("INFO: searching components for [%s]...", qStr)
+		startTime := time.Now()
 		searchQ := svc.DB.Table("components")
 		if field == "all" {
 			searchQ = searchQ.Where(
@@ -226,9 +228,14 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		if err != nil {
 			log.Printf("ERROR: component search failed: %s", err.Error())
 		}
+		elapsedNanoSec := time.Since(startTime)
+		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+		log.Printf("INFO: component search found %d hits. Elapsed Time: %d (ms)", resp.Components.Total, elapsedMS)
 	}
 
 	if scope == "all" || scope == "masterfiles" {
+		log.Printf("INFO: searching masterfiles for [%s]...", qStr)
+		startTime := time.Now()
 		searchQ := svc.DB.Table("master_files")
 		if field == "all" {
 			searchQ = searchQ.Where(
@@ -260,9 +267,14 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
 			mf.ImageURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
 		}
+		elapsedNanoSec := time.Since(startTime)
+		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+		log.Printf("INFO: masterfile search found %d hits. Elapsed Time: %d (ms)", resp.Components.Total, elapsedMS)
 	}
 
 	if scope == "all" || scope == "metadata" {
+		log.Printf("INFO: searching metadata for [%s]...", qStr)
+		startTime := time.Now()
 		searchQ := svc.DB.Table("metadata")
 		if field == "all" {
 			searchQ = searchQ.Where(
@@ -294,9 +306,14 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 				md.Virgo = true
 			}
 		}
+		elapsedNanoSec := time.Since(startTime)
+		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+		log.Printf("INFO: metadata search found %d hits. Elapsed Time: %d (ms)", resp.Components.Total, elapsedMS)
 	}
 
 	if (scope == "all" || scope == "orders") && field != "pid" {
+		log.Printf("INFO: searching orders for [%s]...", qStr)
+		startTime := time.Now()
 		searchQ := svc.DB.Table("orders")
 		if field == "all" {
 			searchQ = searchQ.
@@ -330,6 +347,9 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		if err != nil {
 			log.Printf("ERROR: order search failed: %s", err.Error())
 		}
+		elapsedNanoSec := time.Since(startTime)
+		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+		log.Printf("INFO: orders search found %d hits. Elapsed Time: %d (ms)", resp.Components.Total, elapsedMS)
 	}
 
 	c.JSON(http.StatusOK, resp)

@@ -70,12 +70,8 @@ function clearSearch() {
 <stype scoped lang="scss">
 .results {
    margin: 0;
-   font-size: 0.9em;
    td.nowrap, th {
       white-space: nowrap;
-   }
-   th, td {
-      font-size: 0.85em;
    }
    .none{
       text-align: center;
