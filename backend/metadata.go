@@ -469,10 +469,11 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		return
 	}
 	log.Printf("INFO: update metadata %d request with %+v", md.ID, req)
-	fields := []string{"DPLA", "IsManuscript", "IsPersonalItem"}
+	fields := []string{"DPLA", "IsManuscript", "IsPersonalItem", "IsCollection"}
 	md.DPLA = req.DPLA
 	md.IsManuscript = req.Manuscript
 	md.IsPersonalItem = req.PersonalItem
+	md.IsCollection = req.IsCollection
 	if req.OCRHint > 0 {
 		md.OCRHintID = &req.OCRHint
 		fields = append(fields, "OCRHintID")

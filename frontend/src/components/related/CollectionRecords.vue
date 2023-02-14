@@ -10,7 +10,7 @@
          </span>
       </div>
       <div v-if="collectionStore.working == false && collectionStore.totalRecords == 0" class="none">
-         <h3>No collection records found</h3>
+         <h3>No items found</h3>
       </div>
       <DataTable v-if="collectionStore.totalRecords>0" :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"

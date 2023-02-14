@@ -37,6 +37,10 @@
                <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
             </template>
             <div class="split">
+               <template v-if="userStore.isAdmin">
+                  <FormKit label="Collection" type="select" :options="yesNo" v-model="edited.isCollection"/>
+                  <span class="sep"/>
+               </template>
                <FormKit label="Personal Item" type="select" :options="yesNo" v-model="edited.personalItem"/>
                <span class="sep"/>
                <FormKit label="Manuscript" type="select" :options="yesNo" v-model="edited.manuscript"/>
@@ -80,6 +84,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { onMounted, ref, computed } from 'vue'
 import { useMetadataStore } from '@/stores/metadata'
 import { useSystemStore } from '@/stores/system'
+import { useUserStore } from '@/stores/user'
 import Panel from 'primevue/panel'
 import DataDisplay from '@/components/DataDisplay.vue'
 
@@ -87,6 +92,7 @@ const route = useRoute()
 const router = useRouter()
 const metadataStore = useMetadataStore()
 const systemStore = useSystemStore()
+const userStore = useUserStore()
 
 const validated = ref(false)
 const edited = ref({
@@ -106,13 +112,17 @@ const edited = ref({
    useRightRationale: "",
    inDPLA: false,
    collectionID: "",
-   collectionFacet: ""
+   collectionFacet: "",
+   isCollection: false
 })
 
 const pageHeader = computed( () => {
    let baseHdr = `Metadata ${route.params.id}`
    if ( systemStore.working){
       return baseHdr
+   }
+   if ( metadataStore.detail.isCollection) {
+      return "Collection "+ baseHdr
    }
    if ( metadataStore.detail.type == "SirsiMetadata") {
       return "Sirsi "+ baseHdr
@@ -215,6 +225,7 @@ onMounted( async () =>{
    }
    edited.value.useRightRationale = metadataStore.detail.useRightRationale
    edited.value.inDPLA = metadataStore.detail.inDPLA
+   edited.value.isCollection = metadataStore.detail.isCollection
    edited.value.collectionID = metadataStore.detail.collectionID
    edited.value.collectionFacet = metadataStore.detail.collectionFacet
    if ( metadataStore.detail.type == "ExternalMetadata") {
