@@ -43,7 +43,7 @@ import InputText from 'primevue/inputtext'
 import { onBeforeMount } from 'vue'
 import { useCollectionsStore } from '@/stores/collections'
 import { useConfirm } from "primevue/useconfirm"
-import { useUserStore } from '../stores/user'
+import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
 const confirm = useConfirm()
