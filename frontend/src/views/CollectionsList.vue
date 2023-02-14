@@ -1,5 +1,8 @@
 <template>
    <h2>Collections</h2>
+   <div class="actions" v-if="userStore.isAdmin" >
+      <DPGButton label="Create Collection" class="create" @click="createCollection()"/>
+   </div>
    <div class="collections">
       <DataTable :value="collectionStore.collections" ref="collectionRecordsTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
@@ -22,25 +25,58 @@
          <Column field="recordCount" header="Items" />
       </DataTable>
    </div>
+   <Dialog v-model:visible="showCreateCollection" :modal="true" header="Create Collection" @hide="createCollectionClosed" :style="{width: '750px'}">
+      <NewMetadataPanel @canceled="createCollectionClosed" @created="collectionCreated" :collection="true"/>
+   </Dialog>
 </template>
 
 <script setup>
 import { onMounted, ref} from 'vue'
-import { useCollectionsStore } from '@/stores/collections'
+import { useCollectionsStore } from '../stores/collections'
+import { useUserStore } from '../stores/user'
+import { useSystemStore } from '../stores/system'
+import { useMetadataStore } from '../stores/metadata'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import Dialog from 'primevue/dialog'
+import NewMetadataPanel from '@/components/NewMetadataPanel.vue'
 
 const collectionStore = useCollectionsStore()
+const userStore = useUserStore()
+const systemStore = useSystemStore()
+const metadataStore = useMetadataStore()
 
 const pageSize = ref(15)
+const showCreateCollection = ref(false)
 
 onMounted(() => {
    collectionStore.getCollections()
    document.title = `Collections`
 })
+
+function createCollection() {
+   showCreateCollection.value = true
+}
+function createCollectionClosed() {
+   showCreateCollection.value = false
+}
+function collectionCreated() {
+   collectionStore.addCollection(  metadataStore.detail )
+   systemStore.toastMessage("Collection Created", `A new collection metadata record has been created.`)
+   showCreateCollection.value = false
+}
 </script>
 
 <style scoped lang="scss">
+div.actions {
+   position: absolute;
+   right:15px;
+   top: 15px;
+   button.p-button {
+      margin-right: 5px;
+      font-size: 0.9em;
+   }
+}
 .collections {
    min-height: 600px;
    text-align: left;

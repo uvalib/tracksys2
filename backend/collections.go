@@ -39,7 +39,7 @@ func (svc *serviceContext) getCollections(c *gin.Context) {
 
 	log.Printf("INFO: get collections details")
 	err = svc.DB.Debug().Table("metadata").
-		Joins("inner join metadata mc on mc.parent_metadata_id = metadata.id").
+		Joins("left join metadata mc on mc.parent_metadata_id = metadata.id").
 		Select("metadata.*", "count(mc.id) as record_count").
 		Where("metadata.is_collection=?", true).Group("metadata.id").Find(&resp.Collections).Error
 	if err != nil {

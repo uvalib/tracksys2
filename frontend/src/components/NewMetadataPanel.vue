@@ -53,7 +53,7 @@
          </div>
       </Panel>
       <Panel v-if="info.type != 'ExternalMetadata'" header="Digital Library Information">
-         <div class="split">
+         <div class="split" v-if="props.collection == false">
             <FormKit label="Collection ID" type="text" v-model="info.collectionID"/>
             <span class="sep"/>
             <FormKit label="Collection Facet" type="select" :options="collectionFacets" v-model="info.collectionFacet" placeholder="Select a facet"/>
@@ -71,7 +71,7 @@
       </Panel>
       <div class="acts">
          <DPGButton @click="cancelCreate" label="Cancel" class="p-button-secondary"/>
-         <FormKit type="submit" label="Create Metadata" :disabled="!validated" :wrapper-class="submitClass"/>
+         <FormKit type="submit" :label="createLabel" :disabled="!validated" :wrapper-class="submitClass"/>
       </div>
    </FormKit>
 </template>
@@ -84,6 +84,13 @@ import { useSystemStore } from "@/stores/system"
 import { useMetadataStore } from "@/stores/metadata"
 
 const emit = defineEmits( ['canceled', 'created' ])
+
+const props = defineProps({
+   collection: {
+      type: Boolean,
+      default: false
+   },
+})
 
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
@@ -109,6 +116,7 @@ const info = ref({
    inDPLA: false,
    collectionID: "",
    collectionFacet: "",
+   isCollection: props.collection
 })
 
 onMounted(() => {
@@ -132,8 +140,13 @@ onMounted(() => {
    info.value.inDPLA = false
    info.value.collectionID = ""
    info.value.collectionFacet = ""
+   info.value.isCollection = props.collection
 })
 
+const createLabel = computed(() => {
+   if ( props.collection) return "Create Collection"
+   return "Create Metadata"
+})
 const submitClass = computed(() => {
    let c = "submit-button"
    if (validated.value === false ) {

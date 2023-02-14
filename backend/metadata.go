@@ -225,7 +225,8 @@ type metadataRequest struct {
 	UseRightRationale    string `json:"useRightRationale"`
 	DPLA                 bool   `json:"inDPLA"`
 	CollectionID         string `json:"collectionID"`
-	CollectionFacet      string `json:"CollectionFacet"`
+	CollectionFacet      string `json:"collectionFacet"`
+	IsCollection         bool   `json:"isCollection"`
 }
 
 var modsTemplate = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -331,7 +332,8 @@ func (svc *serviceContext) createMetadata(c *gin.Context) {
 
 	// create new record and set common attributes
 	createTime := time.Now()
-	newMD := metadata{Type: req.Type, Title: req.Title, IsPersonalItem: req.PersonalItem, IsManuscript: req.Manuscript, CreatedAt: &createTime}
+	newMD := metadata{Type: req.Type, Title: req.Title, IsPersonalItem: req.PersonalItem, IsManuscript: req.Manuscript,
+		IsCollection: req.IsCollection, CreatedAt: &createTime}
 	if req.Author != "" {
 		newMD.CreatorName = &req.Author
 	}

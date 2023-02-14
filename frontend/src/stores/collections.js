@@ -27,6 +27,20 @@ export const useCollectionsStore = defineStore('collections', {
          this.searchOpts.limit = 30
          this.searchOpts.query = ""
       },
+      addCollection( data ) {
+         let rec = {
+            barcode: data.barcode,
+            callNumber: data.callNumber,
+            catalogKey: data.catalogKey,
+            creatorName: data.creatorName,
+            id: data.id,
+            pid: data.pid,
+            recordCount: 0,
+            title: data.title,
+            type: data.type,
+         }
+         this.collections.push(rec)
+      },
       getCollections() {
          const system = useSystemStore()
          system.working = true
