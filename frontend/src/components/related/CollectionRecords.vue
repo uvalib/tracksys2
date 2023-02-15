@@ -2,7 +2,10 @@
    <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
    <div class="results">
       <div class="toolbar">
-         <LookupDialog label="Add Item" @selected="addItem" target="metadata" :create="false" :collection="collectionStore.colectionID" />
+         <span class="left">
+            <LookupDialog label="Add Item" @selected="addItem" target="metadata" :create="false" :collection="collectionStore.colectionID" />
+            <DPGButton label="Export" class="p-button-secondary" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
+         </span>
          <span class="search">
             <span class="p-input-icon-right">
                <i class="pi pi-search" />
@@ -50,6 +53,8 @@ import LookupDialog from '@/components/LookupDialog.vue'
 import WaitSpinner from '@/components/WaitSpinner.vue'
 
 const userStore = useUserStore()
+const collectionStore = useCollectionsStore()
+
 const confirm = useConfirm()
 
 const props = defineProps({
@@ -59,9 +64,8 @@ const props = defineProps({
    }
 })
 
-const collectionStore = useCollectionsStore()
-
 onBeforeMount( async () => {
+   console.log("SET COLLECTION TO "+props.collectionID)
    collectionStore.setCollection( props.collectionID )
    await collectionStore.getItems()
 })
@@ -91,6 +95,9 @@ function deleteItem( item ) {
          collectionStore.removeItem(item)
       }
    })
+}
+function exportCollection() {
+   collectionStore.exportCSV()
 }
 
 </script>

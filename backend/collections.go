@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
 	"net/http"
@@ -206,4 +207,31 @@ func (svc *serviceContext) addCollectionFacet(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, out)
+}
+
+func (svc *serviceContext) exportCollectionItems(c *gin.Context) {
+	collectionID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	if collectionID == 0 {
+		log.Printf("ERROR: bad collection id %s in add collection items request", c.Param("id"))
+		c.String(http.StatusBadRequest, fmt.Sprintf("invalid collection id %s", c.Param("id")))
+		return
+	}
+	log.Printf("INFO: export a list of pids for items in collection %d", collectionID)
+	var resp []metadata
+	err := svc.DB.Select("pid").Where("parent_metadata_id=?", collectionID).Find(&resp).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get collection %d items: %s", collectionID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.Header("Content-Type", "text/csv")
+	cw := csv.NewWriter(c.Writer)
+	csvHead := []string{"pid"}
+	cw.Write(csvHead)
+	for _, md := range resp {
+		line := []string{fmt.Sprintf("%s", md.PID)}
+		cw.Write(line)
+	}
+	cw.Flush()
 }

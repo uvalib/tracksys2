@@ -7,7 +7,7 @@ export const useCollectionsStore = defineStore('collections', {
       working: false,
       records: [],
       totalRecords: 0,
-      colectionID: -1,
+      collectionID: -1,
       searchOpts: {
          start: 0,
          limit: 30,
@@ -95,5 +95,19 @@ export const useCollectionsStore = defineStore('collections', {
             this.working = false
          })
       },
+      exportCSV() {
+         axios.get(`/api/collections/${this.collectionID}/export`, null, {responseType: "blob"}).then((response) => {
+            const fileURL = window.URL.createObjectURL(new Blob([response.data], { type: 'application/vnd.ms-excel' }))
+            const fileLink = document.createElement('a')
+            fileLink.href =  fileURL
+            fileLink.setAttribute('download', `collection-${this.collectionID}.csv`)
+            document.body.appendChild(fileLink)
+            fileLink.click()
+            window.URL.revokeObjectURL(fileURL)
+         }).catch((error) => {
+            const system = useSystemStore()
+            system.setError(error)
+         })
+      }
    }
 })
