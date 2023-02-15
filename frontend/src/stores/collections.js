@@ -54,6 +54,17 @@ export const useCollectionsStore = defineStore('collections', {
             system.setError(e)
          })
       },
+      addItems( items ) {
+         this.working = true
+         axios.post( `/api/collections/${this.collectionID}/items`, {items: items} ).then(() => {
+            this.working = false
+            this.getItems()
+         }).catch( e => {
+            const system = useSystemStore()
+            system.setError(e)
+            this.working = false
+         })
+      },
       removeItem( item ) {
          let url = `/api/collections/${this.collectionID}/items/${item.id}`
          axios.delete( url ).then(() => {

@@ -77,7 +77,7 @@ import { storeToRefs } from 'pinia'
 import { useConfirm } from "primevue/useconfirm"
 import RenumberDialog from './RenumberDialog.vue'
 import CloneMasterFiles from './CloneMasterFiles.vue'
-import LookupDialog from './LookupDialog.vue'
+import LookupDialog from '@/components/LookupDialog.vue'
 
 const confirm = useConfirm()
 const systemStore = useSystemStore()

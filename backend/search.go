@@ -100,6 +100,11 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		pageSize = 15
 	}
 
+	// when searcghing for items to be added to a collection, the request includes
+	// a param collection=true. if this is the case, exclude items that are already part of a collection
+	// these items will have their parent_metadata_id set greater than zero
+	excludeCollectionItems, _ := strconv.ParseBool(c.Query("collection"))
+
 	// limit search scope to an item type
 	scope := c.Query("scope")
 	if scope == "" {
@@ -292,6 +297,10 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 
 		if filterTarget == "metadata" && filterQ != nil {
 			searchQ = searchQ.Where(filterQ)
+		}
+		if excludeCollectionItems {
+			// only pick from records with no parent metadata id (items not in a collection)
+			searchQ = searchQ.Where("parent_metadata_id=?", 0)
 		}
 
 		searchQ.Count(&resp.Metadata.Total)

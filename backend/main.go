@@ -39,6 +39,7 @@ func main() {
 		api.GET("/collections", svc.getCollections)
 		api.GET("/collections/:id", svc.getCollectionItems)
 		api.DELETE("/collections/:id/items/:item", svc.removeCollectionItem)
+		api.POST("/collections/:id/items", svc.addCollectionItems)
 
 		api.GET("/components/:id", svc.getComponentTree)
 		api.GET("/components/:id/masterfiles", svc.getComponentMasterFiles)

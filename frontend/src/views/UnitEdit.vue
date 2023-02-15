@@ -77,7 +77,7 @@ import { onMounted, ref, computed } from 'vue'
 import { useUnitsStore } from '@/stores/units'
 import { useSystemStore } from '@/stores/system'
 import Panel from 'primevue/panel'
-import LookupDialog from '../components/unit/LookupDialog.vue'
+import LookupDialog from '@/components/LookupDialog.vue'
 
 const route = useRoute()
 const router = useRouter()

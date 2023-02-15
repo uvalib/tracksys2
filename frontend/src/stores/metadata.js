@@ -179,9 +179,12 @@ export const useMetadataStore = defineStore('metadata', {
             }
          })
       },
-      async lookup( query ) {
+      async lookup( query, collectionID ) {
          const system = useSystemStore()
          let url = `/api/search?scope=metadata&q=${encodeURIComponent(query)}&start=0&limit=30`
+         if ( collectionID) {
+            url += "&collection=true"
+         }
          return axios.get(url).then(response => {
             this.searchHits = response.data.metadata.hits
             this.totalSearchHits = response.data.metadata.total

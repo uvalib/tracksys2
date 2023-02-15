@@ -1,7 +1,9 @@
 <template>
+   <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
    <div class="results">
       <div class="toolbar">
-         <span>
+         <LookupDialog label="Add Item" @selected="addItem" target="metadata" :create="false" :collection="collectionStore.colectionID" />
+         <span class="search">
             <span class="p-input-icon-right">
                <i class="pi pi-search" />
                <InputText v-model="collectionStore.searchOpts.query" placeholder="Collection Search" @input="queryCollection()"/>
@@ -44,6 +46,8 @@ import { onBeforeMount } from 'vue'
 import { useCollectionsStore } from '@/stores/collections'
 import { useConfirm } from "primevue/useconfirm"
 import { useUserStore } from '@/stores/user'
+import LookupDialog from '@/components/LookupDialog.vue'
+import WaitSpinner from '@/components/WaitSpinner.vue'
 
 const userStore = useUserStore()
 const confirm = useConfirm()
@@ -73,6 +77,9 @@ function queryCollection() {
 function clearSearch() {
    collectionStore.searchOpts.query = ""
    collectionStore.getItems()
+}
+function addItem( metadataID ) {
+  collectionStore.addItems( [metadataID] )
 }
 function deleteItem( item ) {
    confirm.require({
@@ -106,7 +113,10 @@ function deleteItem( item ) {
    padding: 0 0 10px 0;
    display: flex;
    flex-flow: row nowrap;
-   justify-content: flex-end;
+   justify-content: space-between;
+   .search {
+      margin-left: auto;
+   }
    label {
       font-weight: bold;
       margin-right: 5px;
