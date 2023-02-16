@@ -21,6 +21,7 @@ type configData struct {
 	projectsURL     string
 	iiifManifestURL string
 	iiifURL         string
+	ilsURL          string
 	jobsURL         string
 	apolloURL       string
 	jstorURL        string
@@ -41,6 +42,7 @@ func getConfiguration() *configData {
 	flag.StringVar(&config.virgoURL, "virgo", "https://search.lib.virginia.edu", "Virgo URL")
 	flag.StringVar(&config.iiifManifestURL, "iiifman", "https://iiifman.lib.virginia.edu", "IIIF manifest URL")
 	flag.StringVar(&config.iiifURL, "iiif", "https://iiif.lib.virginia.edu/iiif", "IIIF URL")
+	flag.StringVar(&config.ilsURL, "ils", "https://ils-connector.lib.virginia.edu", "ILS Connector API URL")
 	flag.StringVar(&config.curioURL, "curio", "https://curio.lib.virginia.edu", "Curio URL")
 	flag.StringVar(&config.pdfURL, "pdf", "https://pdfservice.lib.virginia.edu/pdf", "PDF service URL")
 	flag.StringVar(&config.tracksysAPIURL, "tsapi", "https://tracksys-api-ws.internal.lib.virginia.edu", "URL for TrackSys API")
@@ -85,6 +87,7 @@ func getConfiguration() *configData {
 	log.Printf("[CONFIG] apollo        = [%s]", config.apolloURL)
 	log.Printf("[CONFIG] iiifman       = [%s]", config.iiifManifestURL)
 	log.Printf("[CONFIG] iiif          = [%s]", config.iiifURL)
+	log.Printf("[CONFIG] ils           = [%s]", config.ilsURL)
 	log.Printf("[CONFIG] curio         = [%s]", config.curioURL)
 	log.Printf("[CONFIG] pdf           = [%s]", config.pdfURL)
 	log.Printf("[CONFIG] xmlhook       = [%s]", config.xmlIndexURL)

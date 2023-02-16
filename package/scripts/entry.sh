@@ -12,6 +12,7 @@ cd bin; ./tracksys2                \
    -virgo $VIRGO_URL               \
    -iiifman $IIIFMAN_SERVICE_URL   \
    -iiif $IIIF_SERVICE_URL         \
+   -ils $ILS_CONNECTOR_URL         \
    -curio $CURIO_SERVICE_URL       \
    -jobs $JOBS_URL                 \
    -apollo $APOLLO_URL             \

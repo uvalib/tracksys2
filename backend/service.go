@@ -22,6 +22,7 @@ import (
 type externalSystems struct {
 	IIIFMan  string
 	IIIF     string
+	ILS      string
 	Reports  string
 	Projects string
 	Curio    string
@@ -86,6 +87,7 @@ func initializeService(version string, cfg *configData) *serviceContext {
 		ExternalSystems: externalSystems{
 			IIIFMan:  cfg.iiifManifestURL,
 			IIIF:     cfg.iiifURL,
+			ILS:      cfg.ilsURL,
 			Reports:  cfg.reportsURL,
 			Projects: cfg.projectsURL,
 			Curio:    cfg.curioURL,
