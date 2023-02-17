@@ -64,10 +64,10 @@
                <FormKit label="In DPLA" type="select" :options="yesNo" v-model="edited.inDPLA"/>
                <span class="sep"/>
                <FormKit label="Availability Policy" outer-class="first" type="select" :options="availabilityPolicies" v-model="edited.availabilityPolicy" required/>
-               <!-- <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
-                  <span class="sep"/>
-                  <FormKit label="Right Statement" outer-class="first" type="select" :options="useRights" v-model="edited.useRight" required/>
-               </template> -->
+            </div>
+            <div class="use-right" v-if="metadataStore.detail.type == 'SirsiMetadata'">
+               <FormKit label="Use Right" outer-class="first" type="select" :options="useRights" v-model="edited.useRight" required/>
+               <p>{{ rightStatement }}</p>
             </div>
          </Panel>
          <div class="acts">
@@ -138,13 +138,20 @@ const collectionFacets = computed(() => {
    })
    return out
 })
-// const useRights = computed(() => {
-//    let out = []
-//    systemStore.useRights.forEach( o => {
-//       out.push({label: o.name, value: o.id})
-//    })
-//    return out
-// })
+const rightStatement = computed(() => {
+   let ur = systemStore.useRights.find( r => r.id == edited.value.useRight)
+   if (ur) {
+      return ur.statement
+   }
+   return "Unknown"
+})
+const useRights = computed(() => {
+   let out = []
+   systemStore.useRights.forEach( o => {
+      out.push({label: o.name, value: o.id})
+   })
+   return out
+})
 const yesNo = computed(() => {
    let out = []
    out.push( {label: "No", value: false} )
@@ -227,7 +234,7 @@ onMounted( async () =>{
    if (metadataStore.detail.availabilityPolicy) {
       edited.value.availabilityPolicy = metadataStore.detail.availabilityPolicy.id
    }
-   edited.value.useRight=0
+   edited.value.useRight=1
    if (metadataStore.detail.useRight) {
       edited.value.useRight = metadataStore.detail.useRight.id
    }

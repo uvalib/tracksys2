@@ -81,9 +81,6 @@ type metadata struct {
 	IsCollection         bool                `json:"isCollection"`       // flag to indicate that this record is a collection and has child metadata records
 	CollectionID         *string             `json:"collectionID"`       // internal usage to track a collection ID
 	CollectionFacet      *string             `json:"collectionFacet"`    // used at index to put item in collection in DL; EX: Ganon Project, McGregor
-	UseRightID           *int64              `json:"-"`
-	UseRight             *useRight           `gorm:"foreignKey:UseRightID" json:"useRight"`
-	UseRightRationale    string              `json:"useRightRationale"`
 	OCRHintID            *int64              `json:"-"`
 	OCRHint              *ocrHint            `gorm:"foreignKey:OCRHintID" json:"ocrHint"`
 	OCRLanguageHint      string              `json:"ocrLanguageHint"`
@@ -110,16 +107,20 @@ func (m *metadata) AfterCreate(tx *gorm.DB) (err error) {
 	return tx.Model(m).Update("pid", fmt.Sprintf("tsb:%d", m.ID)).Error
 }
 
-type internalMetadata struct {
-	Title            string `json:"title"`
-	CallNumber       string `json:"callNumber"`
-	CreatorName      string `json:"creatorName"`
-	CreatorType      string `json:"creatorType"`
-	Year             string `json:"year"`
-	PublicationPlace string `json:"publicationPlace"`
-	Location         string `json:"location"`
-	PreviewURL       string `json:"previewURL"`
-	ObjectURL        string `json:"objectURL"`
+type extendedMetadata struct {
+	Title             string `json:"title"`
+	CallNumber        string `json:"callNumber"`
+	CreatorName       string `json:"creatorName"`
+	CreatorType       string `json:"creatorType"`
+	Year              string `json:"year"`
+	PublicationPlace  string `json:"publicationPlace"`
+	Location          string `json:"location"`
+	PreviewURL        string `json:"previewURL"`
+	ObjectURL         string `json:"objectURL"`
+	UseRightName      string `json:"useRightName"`
+	UseRightURI       string `json:"useRightURI"`
+	UseRightStatement string `json:"useRightStatement"`
+	VirgoURL          string `json:"virgoURL"`
 }
 
 type asMetadata struct {
@@ -198,11 +199,10 @@ type metadataDetailResponse struct {
 	Collection   *metadata         `json:"collectionRecord"`
 	Units        []*unit           `json:"units"`
 	MasterFiles  []*masterFile     `json:"masterFiles,omitempty"`
-	Extended     *internalMetadata `json:"details"`
+	Extended     *extendedMetadata `json:"extended"`
 	ArchiveSpace *asMetadata       `json:"asDetails"`
 	JSTOR        *jstorMetadata    `json:"jstorDetails"`
 	Apollo       *apolloMetadata   `json:"apolloDetails"`
-	VirgoURL     string            `json:"virgoURL"`
 	Error        string            `json:"error"`
 }
 
@@ -222,7 +222,6 @@ type metadataRequest struct {
 	PreservationTierID   int64  `json:"preservationTier"`
 	AvailabilityPolicyID int64  `json:"availabilityPolicy"`
 	UseRightID           int64  `json:"useRight"`
-	UseRightRationale    string `json:"useRightRationale"`
 	DPLA                 bool   `json:"inDPLA"`
 	CollectionID         string `json:"collectionID"`
 	CollectionFacet      string `json:"collectionFacet"`
@@ -356,8 +355,6 @@ func (svc *serviceContext) createMetadata(c *gin.Context) {
 	// For non-external, set digital library attributes
 	if req.Type != "ExternalMetadata" {
 		newMD.AvailabilityPolicyID = &req.AvailabilityPolicyID
-		newMD.UseRightID = &req.UseRightID
-		newMD.UseRightRationale = req.UseRightRationale
 		newMD.DPLA = req.DPLA
 	}
 
@@ -382,6 +379,12 @@ func (svc *serviceContext) createMetadata(c *gin.Context) {
 		log.Printf("ERROR: unable to create metadata record: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
+	}
+
+	// after the record has been created, send use right data to sirsi
+	if req.Type == "SirsiMetadata" && req.UseRightID != 1 && req.UseRightID != 11 {
+		log.Printf("INFO: new metadata has a use right set; sending the informaton to sirsi")
+		svc.sendUseRightToSirsi(&newMD, req.UseRightID)
 	}
 
 	log.Printf("INFO: load full details of newly created metadata record %d", newMD.ID)
@@ -490,14 +493,6 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		md.AvailabilityPolicyID = &req.AvailabilityPolicyID
 		fields = append(fields, "AvailabilityPolicyID")
 	}
-	if req.UseRightID > 0 {
-		md.UseRightID = &req.UseRightID
-		fields = append(fields, "UseRightID")
-	}
-	if req.UseRightRationale != "" {
-		md.UseRightRationale = req.UseRightRationale
-		fields = append(fields, "UseRightRationale")
-	}
 	if req.CollectionID != "" {
 		md.CollectionID = &req.CollectionID
 		fields = append(fields, "CollectionID")
@@ -527,6 +522,12 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		return
 	}
 
+	// after a successful update, send any updated use right info to sirsi
+	if md.Type == "SirsiMetadata" && req.UseRightID > 0 && req.UseRightID != 1 && req.UseRightID != 11 {
+		log.Printf("INFO: metadata %d updated with use right info; send to sirsi", md.ID)
+		svc.sendUseRightToSirsi(&md, req.UseRightID)
+	}
+
 	log.Printf("INFO: metadata %d updated, reloadaing details", md.ID)
 	resp, err := svc.loadMetadataDetails(md.ID)
 	if err != nil {
@@ -537,9 +538,37 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 	c.JSON(http.StatusOK, *resp)
 }
 
+func (svc *serviceContext) sendUseRightToSirsi(md *metadata, useRightID int64) {
+	var ur useRight
+	err := svc.DB.First(&ur, useRightID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to load use right %d: %s", useRightID, err.Error())
+		return
+	}
+
+	var ilsReq struct {
+		ResourceURI string `json:"resource_uri"`
+		Name        string `json:"name"`
+		URI         string `json:"uri"`
+		Statement   string `json:"statement"`
+	}
+	ilsReq.ResourceURI = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
+	ilsReq.Name = ur.Name
+	ilsReq.URI = ur.URI
+	ilsReq.Statement = ur.Statement
+
+	url := fmt.Sprintf("%s/v4/metadata/%s/update_rights", svc.ExternalSystems.ILS, *md.CatalogKey)
+	ilsResp, ilsErr := svc.postJSON(url, ilsReq)
+	if ilsErr != nil {
+		log.Printf("ERROR: ils connector rights request failed %d: %s", ilsErr.StatusCode, ilsErr.Message)
+		return
+	}
+	log.Printf("INFO: ils rights updated success: %s", ilsResp)
+}
+
 func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailResponse, error) {
 	var md metadata
-	err := svc.DB.Preload("UseRight").Preload("OCRHint").Preload("AvailabilityPolicy").
+	err := svc.DB.Preload("OCRHint").Preload("AvailabilityPolicy").
 		Preload("ExternalSystem").Preload("SupplementalSystem").
 		Preload("PreservationTier").Limit(1).Find(&md, mdID).Error
 	if err != nil {
@@ -575,10 +604,10 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 		} else {
 			out.Extended = parsedDetail
 			if md.Type == "SirsiMetadata" && md.CatalogKey != nil {
-				out.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
+				out.Extended.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
 			}
 			if md.Type == "XmlMetadata" && md.DateDLIngest != nil {
-				out.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
+				out.Extended.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
 			}
 			log.Printf("INFO: look for metdata %d exemplar", mdID)
 			var exemplar masterFile
@@ -670,7 +699,7 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 	return &out, nil
 }
 
-func (svc *serviceContext) getUVAMapData(pid string) (*internalMetadata, error) {
+func (svc *serviceContext) getUVAMapData(pid string) (*extendedMetadata, error) {
 	url := fmt.Sprintf("%s/api/metadata/%s?type=uvamap", svc.ExternalSystems.TSAPI, pid)
 	resp, err := svc.getRequest(url)
 	if err != nil {
@@ -681,7 +710,7 @@ func (svc *serviceContext) getUVAMapData(pid string) (*internalMetadata, error) 
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse uvamp response: %s", parseErr.Error())
 	}
-	var detail internalMetadata
+	var detail extendedMetadata
 	for _, f := range uvamap.Doc.Field {
 		switch f.Name {
 		case "displayTitle":
@@ -706,6 +735,26 @@ func (svc *serviceContext) getUVAMapData(pid string) (*internalMetadata, error) 
 			if f.Access == "raw object" {
 				detail.ObjectURL = f.Text
 			}
+		// TODO NEED THE ACTUAL FIELDS NAMES FROM PERRY
+		case "useRightName":
+			detail.UseRightName = f.Text
+		case "useRightURI":
+			detail.UseRightURI = f.Text
+		case "useRightStatement":
+			detail.UseRightStatement = f.Text
+		}
+	}
+
+	if detail.UseRightName == "" {
+		log.Printf("INFO: no use right data found in uvamap data; default to CNE")
+		var cne useRight
+		dbErr := svc.DB.First(&cne, 1).Error
+		if err != nil {
+			log.Printf("ERROR: unable to load CNE data: %s", dbErr.Error())
+		} else {
+			detail.UseRightName = cne.Name
+			detail.UseRightURI = cne.URI
+			detail.UseRightStatement = cne.Statement
 		}
 	}
 

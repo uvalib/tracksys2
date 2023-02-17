@@ -62,12 +62,11 @@
             <FormKit label="In DPLA" type="select" :options="yesNo" v-model="info.inDPLA"/>
             <span class="sep"/>
             <FormKit label="Availability Policy" outer-class="first" type="select" :options="availabilityPolicies" v-model="info.availabilityPolicy" required/>
-            <!-- <template v-if="info.type == 'SirsiMetadata'">
-               <span class="sep"/>
-               <FormKit label="Right Statement" outer-class="first" type="select" :options="useRights" v-model="info.useRight" required/>
-            </template> -->
          </div>
-         <!-- <FormKit v-if="info.type == 'SirsiMetadata'" label="Use Right Rationale" type="textarea" :rows="2" v-model="info.useRightRationale"/> -->
+         <div class="use-right" v-if="info.type == 'SirsiMetadata'">
+            <FormKit label="Use Right" outer-class="first" type="select" :options="useRights" v-model="info.useRight" required/>
+            <p>{{ rightStatement }}</p>
+         </div>
       </Panel>
       <div class="acts">
          <DPGButton @click="cancelCreate" label="Cancel" class="p-button-secondary"/>
@@ -112,7 +111,6 @@ const info = ref({
    preservationTier: 0,
    availabilityPolicy: 1,
    useRight: 1,
-   useRightRationale: "",
    inDPLA: false,
    collectionID: "",
    collectionFacet: "",
@@ -136,7 +134,6 @@ onMounted(() => {
    info.value.preservationTier = 0
    info.value.availabilityPolicy = 1
    info.value.useRight = 1
-   info.value.useRightRationale = ""
    info.value.inDPLA = false
    info.value.collectionID = ""
    info.value.collectionFacet = ""
@@ -196,13 +193,20 @@ const metadataTypes = computed(() => {
    out.push( {label: "ArchivesSpace", value: "ExternalMetadata"} )
    return out
 })
-// const useRights = computed(() => {
-//    let out = []
-//    systemStore.useRights.forEach( o => {
-//       out.push({label: o.name, value: o.id})
-//    })
-//    return out
-// })
+const rightStatement = computed(() => {
+   let ur = systemStore.useRights.find( r => r.id == info.value.useRight)
+   if (ur) {
+      return ur.statement
+   }
+   return "Unknown"
+})
+const useRights = computed(() => {
+   let out = []
+   systemStore.useRights.forEach( o => {
+      out.push({label: o.name, value: o.id})
+   })
+   return out
+})
 const yesNo = computed(() => {
    let out = []
    out.push( {label: "No", value: false} )

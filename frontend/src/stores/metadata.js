@@ -32,8 +32,9 @@ export const useMetadataStore = defineStore('metadata', {
          preservationTier: null,
          inDL: false,
          inDPLA: false,
-         useRight: null,
-         useRightRationale: "",
+         useRightName: "",
+         useRightURI: "",
+         useRightStatement: "",
          creatorDeathDate: "",
          availabilityPolicy: null,
          collectionID: "",
@@ -274,19 +275,22 @@ export const useMetadataStore = defineStore('metadata', {
          this.detail.preservationTier = details.metadata.preservationTier
 
          if (this.detail.type == "XmlMetadata" || this.detail.type == "SirsiMetadata") {
-            if ( details.details.title && details.details.title != "") {
-               this.detail.title = details.details.title
+            if ( details.extended.title && details.extended.title != "") {
+               this.detail.title = details.extended.title
             }
-            if ( details.details.creatorName && details.details.creatorName != "") {
-               this.detail.creatorName = details.details.creatorName
+            if ( details.extended.creatorName && details.extended.creatorName != "") {
+               this.detail.creatorName = details.extended.creatorName
             }
-            this.detail.creatorNameType = details.details.creatorType
-            this.detail.year = details.details.year
-            this.detail.publicationPlace = details.details.publicationPlace
-            this.detail.location = details.details.location
-            this.thumbURL = details.details.previewURL
-            this.viewerURL = details.details.objectURL
-            this.virgoURL = details.virgoURL
+            this.detail.creatorNameType = details.extended.creatorType
+            this.detail.year = details.extended.year
+            this.detail.publicationPlace = details.extended.publicationPlace
+            this.detail.location = details.extended.location
+            this.detail.useRightName =  details.extended.useRightName
+            this.detail.useRightURI =  details.extended.useRightURI
+            this.detail.useRightStatement =  details.extended.useRightStatement
+            this.thumbURL = details.extended.previewURL
+            this.viewerURL = details.extended.objectURL
+            this.virgoURL = details.extended.virgoURL
             this.detail.xmlMetadata = details.metadata.descMetadata
          } else  {
             this.detail.externalSystem = details.metadata.externalSystem
@@ -324,8 +328,6 @@ export const useMetadataStore = defineStore('metadata', {
          this.detail.pid = details.metadata.pid
          this.detail.inDL = (details.metadata.dateDLIngest != null)
          this.detail.inDPLA = details.metadata.dpla
-         this.detail.useRight = details.metadata.useRight
-         this.detail.useRightRationale = details.metadata.useRightRationale
          if ( details.metadata.creatorDeathDate > 0) {
             this.detail.creatorDeathDate = `${details.metadata.creatorDeathDate}`
          }

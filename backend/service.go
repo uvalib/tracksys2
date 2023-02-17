@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -451,6 +453,28 @@ func (svc *serviceContext) putRequest(url string) ([]byte, *RequestError) {
 }
 func (svc *serviceContext) postFormRequest(url string, payload *url.Values) ([]byte, *RequestError) {
 	return svc.sendRequest("POST", url, payload)
+}
+
+func (svc *serviceContext) postJSON(url string, jsonPayload interface{}) ([]byte, *RequestError) {
+	log.Printf("INFO: POST json request: %s", url)
+	startTime := time.Now()
+
+	payload, _ := json.Marshal(jsonPayload)
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	req.Header.Add("Content-type", "application/json")
+
+	rawResp, rawErr := svc.HTTPClient.Do(req)
+	resp, err := handleAPIResponse(url, rawResp, rawErr)
+	elapsedNanoSec := time.Since(startTime)
+	elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+
+	if err != nil {
+		log.Printf("ERROR: Failed response from POST %s - %d:%s. Elapsed Time: %d (ms)",
+			url, err.StatusCode, err.Message, elapsedMS)
+	} else {
+		log.Printf("INFO: Successful POST response from %s. Elapsed Time: %d (ms)", url, elapsedMS)
+	}
+	return resp, err
 }
 
 func (svc *serviceContext) sendRequest(verb string, url string, payload *url.Values) ([]byte, *RequestError) {
