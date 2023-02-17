@@ -69,7 +69,6 @@
                   <FormKit label="Right Statement" outer-class="first" type="select" :options="useRights" v-model="edited.useRight" required/>
                </template> -->
             </div>
-            <!-- <FormKit v-if="metadataStore.detail.type == 'SirsiMetadata'" label="Use Right Rationale" type="textarea" :rows="2" v-model="edited.useRightRationale"/> -->
          </Panel>
          <div class="acts">
             <DPGButton label="Cancel" class="p-button-secondary" @click="cancelEdit()"/>
@@ -109,7 +108,6 @@ const edited = ref({
    preservationTier: 0,
    availabilityPolicy: 1,
    useRight: 1,
-   useRightRationale: "",
    inDPLA: false,
    collectionID: "",
    collectionFacet: "",
@@ -202,8 +200,18 @@ onMounted( async () =>{
    edited.value.externalURI = metadataStore.detail.externalURI
    edited.value.title = metadataStore.detail.title
    edited.value.callNumber = metadataStore.detail.callNumber
-   edited.value.catalogKey = metadataStore.detail.catalogKey
-   edited.value.barcode = metadataStore.detail.barcode
+
+   // NOTE: catalogKey and barcode may be null as they are optional data members
+   // but the lookup code does not handle null values. make sure they are empty string instead
+   edited.value.catalogKey = ""
+   if (  metadataStore.detail.catalogKey ) {
+      edited.value.catalogKey = metadataStore.detail.catalogKey
+   }
+   edited.value.barcode = ""
+   if (  metadataStore.detail.barcode ) {
+      edited.value.barcode = metadataStore.detail.barcode
+   }
+
    edited.value.personalItem = metadataStore.detail.isPersonalItem
    edited.value.manuscript = metadataStore.detail.isManuscript
    edited.value.ocrHint = 0
@@ -223,7 +231,6 @@ onMounted( async () =>{
    if (metadataStore.detail.useRight) {
       edited.value.useRight = metadataStore.detail.useRight.id
    }
-   edited.value.useRightRationale = metadataStore.detail.useRightRationale
    edited.value.inDPLA = metadataStore.detail.inDPLA
    edited.value.isCollection = metadataStore.detail.isCollection
    edited.value.collectionID = metadataStore.detail.collectionID
