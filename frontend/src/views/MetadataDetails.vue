@@ -10,9 +10,9 @@
       <DPGButton label="Edit" @click="editMetadata()"  v-if="canEdit"/>
    </div>
    <div class="details" v-if="systemStore.working==false">
-      <div v-if="metadataStore.thumbURL" class="thumb">
-         <a :href="metadataStore.viewerURL" target="_blank">
-            <img :src="metadataStore.thumbURL" />
+      <div v-if="metadataStore.detail.thumbURL" class="thumb">
+         <a :href="metadataStore.detail.viewerURL" target="_blank">
+            <img :src="metadataStore.detail.thumbURL" />
          </a>
       </div>
       <Panel header="General Information">
@@ -20,7 +20,7 @@
             <DataDisplay label="Type" :value="metadataStore.detail.type"/>
             <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey" v-if="metadataStore.detail.type == 'SirsiMetadata'">
                <span>{{metadataStore.detail.catalogKey}}</span>
-               <a class="virgo" :href="metadataStore.virgoURL" target="_blank">VIRGO<i class="icon fas fa-external-link"></i></a>
+               <a class="virgo" :href="metadataStore.detail.virgoURL" target="_blank">VIRGO<i class="icon fas fa-external-link"></i></a>
             </DataDisplay>
             <DataDisplay label="Barcode" :value="metadataStore.detail.barcode" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
             <DataDisplay label="Call Number" :value="metadataStore.detail.callNumber" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>

@@ -41,6 +41,9 @@ export const useMetadataStore = defineStore('metadata', {
          collectionFacet: "",
          dateDLIngest: null,
          dateDLUpdate: null,
+         thumbURL: "",
+         viewerURL: "",
+         virgoURL: "",
       },
       archivesSpace: {
          id: "",
@@ -75,9 +78,6 @@ export const useMetadataStore = defineStore('metadata', {
          itemURL: "",
          collectionURL: "",
       },
-      thumbURL: "",
-      viewerURL: "",
-      virgoURL: "",
       related: {
          units: [],
          orders: [],
@@ -231,7 +231,6 @@ export const useMetadataStore = defineStore('metadata', {
                catalogKey: this.detail.catalogKey,
                creatorName: this.detail.creatorName,
                title: this.detail.title,
-               virgoURL: "",
             }]
             this.totalSearchHits = 1
             system.working = false
@@ -274,25 +273,32 @@ export const useMetadataStore = defineStore('metadata', {
          this.detail.ocrLanguageHint = details.metadata.ocrLanguageHint
          this.detail.preservationTier = details.metadata.preservationTier
 
-         if (this.detail.type == "XmlMetadata" || this.detail.type == "SirsiMetadata") {
-            if ( details.extended.title && details.extended.title != "") {
-               this.detail.title = details.extended.title
+         if (details.thumbURL) {
+            this.detail.thumbURL = details.thumbURL
+         }
+         if (details.viewerURL) {
+            this.detail.viewerURL = details.viewerURL
+         }
+
+         if (this.detail.type == "SirsiMetadata") {
+            if ( details.sirsiDetails.title && details.sirsiDetails.title != "") {
+               this.detail.title = details.sirsiDetails.title
             }
-            if ( details.extended.creatorName && details.extended.creatorName != "") {
-               this.detail.creatorName = details.extended.creatorName
+            if ( details.sirsiDetails.creatorName && details.sirsiDetails.creatorName != "") {
+               this.detail.creatorName = details.sirsiDetails.creatorName
             }
-            this.detail.creatorNameType = details.extended.creatorType
-            this.detail.year = details.extended.year
-            this.detail.publicationPlace = details.extended.publicationPlace
-            this.detail.location = details.extended.location
-            this.detail.useRightName =  details.extended.useRightName
-            this.detail.useRightURI =  details.extended.useRightURI
-            this.detail.useRightStatement =  details.extended.useRightStatement
-            this.thumbURL = details.extended.previewURL
-            this.viewerURL = details.extended.objectURL
-            this.virgoURL = details.extended.virgoURL
+            this.detail.creatorNameType = details.sirsiDetails.creatorType
+            this.detail.year = details.sirsiDetails.year
+            this.detail.publicationPlace = details.sirsiDetails.publicationPlace
+            this.detail.location = details.sirsiDetails.location
+            this.detail.useRightName =  details.sirsiDetails.useRightName
+            this.detail.useRightURI =  details.sirsiDetails.useRightURI
+            this.detail.useRightStatement =  details.sirsiDetails.useRightStatement
+            this.detail.virgoURL = details.sirsiDetails.virgoURL
             this.detail.xmlMetadata = details.metadata.descMetadata
-         } else  {
+         }
+
+         if (this.detail.type == "ExternalMetadata") {
             this.detail.externalSystem = details.metadata.externalSystem
             this.detail.externalURI = details.metadata.externalURI
             if (details.metadata.externalSystem.name == "ArchivesSpace" ) {
@@ -319,6 +325,7 @@ export const useMetadataStore = defineStore('metadata', {
                this.apollo = details.apolloDetails
             }
          }
+
          if (details.metadata.supplementalURI) {
             this.detail.supplementalURL = `${details.metadata.supplementalSystem.publicURL}/${details.metadata.supplementalURI}`
             this.detail.supplementalSystem = details.metadata.supplementalSystem.name

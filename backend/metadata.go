@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"errors"
 	"fmt"
 	"log"
@@ -107,7 +106,7 @@ func (m *metadata) AfterCreate(tx *gorm.DB) (err error) {
 	return tx.Model(m).Update("pid", fmt.Sprintf("tsb:%d", m.ID)).Error
 }
 
-type extendedMetadata struct {
+type sirsiMetadata struct {
 	Title             string `json:"title"`
 	CallNumber        string `json:"callNumber"`
 	CreatorName       string `json:"creatorName"`
@@ -115,8 +114,6 @@ type extendedMetadata struct {
 	Year              string `json:"year"`
 	PublicationPlace  string `json:"publicationPlace"`
 	Location          string `json:"location"`
-	PreviewURL        string `json:"previewURL"`
-	ObjectURL         string `json:"objectURL"`
 	UseRightName      string `json:"useRightName"`
 	UseRightURI       string `json:"useRightURI"`
 	UseRightStatement string `json:"useRightStatement"`
@@ -195,15 +192,17 @@ type uvaMAP struct {
 }
 
 type metadataDetailResponse struct {
-	Metadata     *metadata         `json:"metadata"`
-	Collection   *metadata         `json:"collectionRecord"`
-	Units        []*unit           `json:"units"`
-	MasterFiles  []*masterFile     `json:"masterFiles,omitempty"`
-	Extended     *extendedMetadata `json:"extended"`
-	ArchiveSpace *asMetadata       `json:"asDetails"`
-	JSTOR        *jstorMetadata    `json:"jstorDetails"`
-	Apollo       *apolloMetadata   `json:"apolloDetails"`
-	Error        string            `json:"error"`
+	Metadata     *metadata       `json:"metadata"`
+	Collection   *metadata       `json:"collectionRecord"`
+	Units        []*unit         `json:"units"`
+	MasterFiles  []*masterFile   `json:"masterFiles,omitempty"`
+	Sirsi        *sirsiMetadata  `json:"sirsiDetails"`
+	ArchiveSpace *asMetadata     `json:"asDetails"`
+	JSTOR        *jstorMetadata  `json:"jstorDetails"`
+	Apollo       *apolloMetadata `json:"apolloDetails"`
+	ThumbURL     string          `json:"thumbURL,omitempty"`
+	ViewerURL    string          `json:"viewerURL,omitempty"`
+	Error        string          `json:"error"`
 }
 
 type metadataRequest struct {
@@ -596,34 +595,50 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 	}
 
 	if md.Type == "SirsiMetadata" || md.Type == "XmlMetadata" {
-		log.Printf("INFO: get extended sirsi/xml metadata for %d", md.ID)
-		parsedDetail, err := svc.getUVAMapData(md.PID)
+		log.Printf("INFO: set viewer url for sirs/xml metadata")
+		out.ViewerURL = fmt.Sprintf("%s/view/%s", svc.ExternalSystems.Curio, md.PID)
+
+		log.Printf("INFO: look for metadata %d exemplar", mdID)
+		var exemplar masterFile
+		err = svc.DB.Where("metadata_id=? and exemplar=?", mdID, 1).Limit(1).Find(&exemplar).Error
 		if err != nil {
-			log.Printf("ERROR: unable to get extended metadata for sirsi/xml %s: %s", md.PID, err.Error())
-			out.Error = err.Error()
+			log.Printf("ERROR: unable to find exemplar for metadata %d: %s", mdID, err.Error())
 		} else {
-			out.Extended = parsedDetail
-			if md.Type == "SirsiMetadata" && md.CatalogKey != nil {
-				out.Extended.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
-			}
-			if md.Type == "XmlMetadata" && md.DateDLIngest != nil {
-				out.Extended.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
-			}
-			log.Printf("INFO: look for metdata %d exemplar", mdID)
-			var exemplar masterFile
-			err = svc.DB.Where("metadata_id=? and exemplar=?", mdID, 1).Limit(1).Find(&exemplar).Error
-			if err != nil {
-				log.Printf("ERROR: unable to find exemplar for metadata %d: %s", mdID, err.Error())
+			if exemplar.ID > 0 {
+				log.Printf("INFO: metadata %d has exemplar [%s]", mdID, exemplar.PID)
+				out.ThumbURL = fmt.Sprintf("%s/%s/full/!240,385/0/default.jpg", svc.ExternalSystems.IIIF, exemplar.PID)
 			} else {
-				if exemplar.ID > 0 {
-					log.Printf("INFO: metadata %d has exemplar [%s]", mdID, exemplar.PID)
-					out.Extended.PreviewURL = fmt.Sprintf("%s/%s/full/!240,385/0/default.jpg", svc.ExternalSystems.IIIF, exemplar.PID)
-				} else {
-					log.Printf("INFO: metadata %d does not have an exemplar", mdID)
-				}
+				log.Printf("INFO: metadata %d does not have an exemplar", mdID)
 			}
 		}
-	} else {
+	}
+
+	if md.Type == "SirsiMetadata" {
+		log.Printf("INFO: lookup sirsi metadata  details for %d", md.ID)
+		sirsiResp, err := svc.doSirsiLookup(*md.CatalogKey, *md.Barcode)
+		if err != nil {
+			log.Printf("ERROR: lookup sirsi details for %s failed: %s", md.PID, err.Error())
+			out.Error = err.Error()
+		} else {
+			out.Sirsi = &sirsiMetadata{
+				Title:             sirsiResp.Title,
+				CallNumber:        sirsiResp.CallNumber,
+				CreatorName:       sirsiResp.CreatorName,
+				CreatorType:       sirsiResp.CreatorType,
+				Year:              sirsiResp.Year,
+				PublicationPlace:  sirsiResp.PublicationPlace,
+				Location:          sirsiResp.Location,
+				UseRightName:      sirsiResp.UseRightName,
+				UseRightURI:       sirsiResp.UseRightURI,
+				UseRightStatement: sirsiResp.UseRightStatement,
+			}
+			if md.Type == "SirsiMetadata" && md.CatalogKey != nil {
+				out.Sirsi.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
+			}
+		}
+	}
+
+	if md.Type == "ExternalMetadata" {
 		if md.ExternalSystem.Name == "ArchivesSpace" {
 			log.Printf("INFO: get external ArchivesSpace metadata for %s", md.PID)
 			raw, getErr := svc.getRequest(fmt.Sprintf("%s/archivesspace/lookup?pid=%s&uri=%s", svc.ExternalSystems.Jobs, md.PID, *md.ExternalURI))
@@ -697,68 +712,6 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 	}
 
 	return &out, nil
-}
-
-func (svc *serviceContext) getUVAMapData(pid string) (*extendedMetadata, error) {
-	url := fmt.Sprintf("%s/api/metadata/%s?type=uvamap", svc.ExternalSystems.TSAPI, pid)
-	resp, err := svc.getRequest(url)
-	if err != nil {
-		return nil, fmt.Errorf("%d %s", err.StatusCode, err.Message)
-	}
-	var uvamap uvaMAP
-	parseErr := xml.Unmarshal(resp, &uvamap)
-	if err != nil {
-		return nil, fmt.Errorf("unable to parse uvamp response: %s", parseErr.Error())
-	}
-	var detail extendedMetadata
-	for _, f := range uvamap.Doc.Field {
-		switch f.Name {
-		case "displayTitle":
-			detail.Title = f.Text
-		case "callNumber":
-			detail.CallNumber = f.Text
-		case "creator":
-			detail.CreatorName = f.Text
-			detail.CreatorType = f.Type
-		case "keyDate":
-			detail.Year = f.Text
-		case "physLocation":
-			detail.Location = f.Text
-		case "pubProdDistPlace":
-			if detail.PublicationPlace == "" {
-				detail.PublicationPlace = f.Text
-			} else {
-				joined := fmt.Sprintf("%s, %s", f.Text, detail.PublicationPlace)
-				detail.PublicationPlace = joined
-			}
-		case "uri":
-			if f.Access == "raw object" {
-				detail.ObjectURL = f.Text
-			}
-		// TODO NEED THE ACTUAL FIELDS NAMES FROM PERRY
-		case "useRightName":
-			detail.UseRightName = f.Text
-		case "useRightURI":
-			detail.UseRightURI = f.Text
-		case "useRightStatement":
-			detail.UseRightStatement = f.Text
-		}
-	}
-
-	if detail.UseRightName == "" {
-		log.Printf("INFO: no use right data found in uvamap data; default to CNE")
-		var cne useRight
-		dbErr := svc.DB.First(&cne, 1).Error
-		if err != nil {
-			log.Printf("ERROR: unable to load CNE data: %s", dbErr.Error())
-		} else {
-			detail.UseRightName = cne.Name
-			detail.UseRightURI = cne.URI
-			detail.UseRightStatement = cne.Statement
-		}
-	}
-
-	return &detail, nil
 }
 
 func (svc *serviceContext) validateArchivesSpaceMetadata(c *gin.Context) {

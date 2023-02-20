@@ -38,16 +38,19 @@ type marcMetadata struct {
 }
 
 type sirsiResponse struct {
-	CatalogKey       string `json:"catalogKey"`
-	Barcode          string `json:"barcode"`
-	CallNumber       string `json:"callNumber"`
-	Title            string `json:"title"`
-	CreatorName      string `json:"creatorName"`
-	CreatorType      string `json:"creatorType"`
-	Year             string `json:"year"`
-	PublicationPlace string `json:"publicationPlace"`
-	Location         string `json:"location"`
-	CollectionID     string `json:"collectionID"`
+	CatalogKey        string `json:"catalogKey"`
+	Barcode           string `json:"barcode"`
+	CallNumber        string `json:"callNumber"`
+	Title             string `json:"title"`
+	CreatorName       string `json:"creatorName"`
+	CreatorType       string `json:"creatorType"`
+	Year              string `json:"year"`
+	PublicationPlace  string `json:"publicationPlace"`
+	Location          string `json:"location"`
+	CollectionID      string `json:"collectionID"`
+	UseRightName      string `json:"useRightName"`
+	UseRightURI       string `json:"useRighURI"`
+	UseRightStatement string `json:"useRightStatement"`
 }
 
 func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
@@ -58,6 +61,14 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 		c.String(http.StatusBadRequest, "barcode or ckey required")
 		return
 	}
+	resp, err := svc.doSirsiLookup(catKey, barcode)
+	if err != nil {
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) doSirsiLookup(catKey, barcode string) (*sirsiResponse, error) {
 	// prefer catkey over barcode
 	qp := fmt.Sprintf("barcode=%s", barcode)
 	if catKey != "" {
@@ -65,27 +76,22 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 		cKey := re.ReplaceAll([]byte(catKey), []byte(""))
 		qp = fmt.Sprintf("ckey=%s", cKey)
 	}
+
 	log.Printf("INFO: lookup sirsi marc metadata with [%s]", qp)
 	url := fmt.Sprintf("https://ils.lib.virginia.edu/uhtbin/getMarc?%s&type=xml", qp)
 	rawResp, err := svc.getRequest(url)
 	if err != nil {
-		log.Printf("ERROR: getMarc failed %d: %s", err.StatusCode, err.Message)
-		c.String(err.StatusCode, err.Message)
-		return
+		return nil, fmt.Errorf("getMarc failed %d: %s", err.StatusCode, err.Message)
 	}
 
 	var parsed marcMetadata
 	parseErr := xml.Unmarshal(rawResp, &parsed)
 	if parseErr != nil {
-		log.Printf("ERROR: invalid response from %s: %s", url, parseErr.Error())
-		c.String(http.StatusInternalServerError, parseErr.Error())
-		return
+		return nil, parseErr
 	}
 
 	if len(parsed.ControlFields) == 0 && len(parsed.DataFields) == 0 {
-		log.Printf("INFO: no matches found for %s", url)
-		c.String(http.StatusNotFound, "no matches found in sirsi")
-		return
+		return nil, fmt.Errorf("no matches found in sirsi")
 	}
 
 	log.Printf("INFO: extract fields from raw marc response")
@@ -93,7 +99,6 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 
 	// catkey is in 001 of control fields. find it first
 	for _, cf := range parsed.ControlFields {
-		log.Printf("INFO: CF %s", cf.Tag)
 		if cf.Tag == "001" {
 			resp.CatalogKey = cf.Value
 			break
@@ -166,6 +171,22 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 			}
 		}
 
+		if df.Tag == "856" {
+			// use rights are held in 856 r (uri), t (name/statement), u (item uri)
+			for _, sf := range df.Subfields {
+				if sf.Code == "t" {
+					if resp.UseRightName == "" {
+						resp.UseRightName = strings.TrimSpace(sf.Value)
+					} else {
+						resp.UseRightStatement = strings.TrimSpace(sf.Value)
+					}
+				}
+				if sf.Code == "r" {
+					resp.UseRightURI = strings.TrimSpace(sf.Value)
+				}
+			}
+		}
+
 		if df.Tag == "999" {
 			// 999 repeats, 1 per barcode. Match the queried barcode or just pick first
 			// subfields: i=barcode,l=location, a=call number
@@ -193,5 +214,18 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 		resp.CollectionID = resp.CallNumber
 	}
 
-	c.JSON(http.StatusOK, resp)
+	if resp.UseRightName == "" {
+		log.Printf("INFO: no use right data found in sirsi response; default to CNE")
+		var cne useRight
+		dbErr := svc.DB.First(&cne, 1).Error
+		if err != nil {
+			log.Printf("ERROR: unable to load CNE data: %s", dbErr.Error())
+		} else {
+			resp.UseRightName = cne.Name
+			resp.UseRightURI = cne.URI
+			resp.UseRightStatement = cne.Statement
+		}
+	}
+
+	return &resp, nil
 }
