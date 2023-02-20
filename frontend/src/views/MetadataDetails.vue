@@ -257,13 +257,6 @@ const ocrHint = computed(() => {
    return ""
 })
 
-// const useRight = computed(() => {
-//    if (metadataStore.detail.useRight ) {
-//       return metadataStore.detail.useRight.name
-//    }
-//    return ""
-// })
-
 onBeforeRouteUpdate(async (to) => {
    let mdID = to.params.id
    document.title = `Metadata #${mdID}`

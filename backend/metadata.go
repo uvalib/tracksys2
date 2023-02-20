@@ -380,7 +380,7 @@ func (svc *serviceContext) createMetadata(c *gin.Context) {
 		return
 	}
 
-	// after the record has been created, send use right data to sirsi
+	// after the record has been created, send use right data to sirsi... but only if it is something other than CNE or UND
 	if req.Type == "SirsiMetadata" && req.UseRightID != 1 && req.UseRightID != 11 {
 		log.Printf("INFO: new metadata has a use right set; sending the informaton to sirsi")
 		svc.sendUseRightToSirsi(&newMD, req.UseRightID)
@@ -522,7 +522,7 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 	}
 
 	// after a successful update, send any updated use right info to sirsi
-	if md.Type == "SirsiMetadata" && req.UseRightID > 0 && req.UseRightID != 1 && req.UseRightID != 11 {
+	if md.Type == "SirsiMetadata" && req.UseRightID > 0 {
 		log.Printf("INFO: metadata %d updated with use right info; send to sirsi", md.ID)
 		svc.sendUseRightToSirsi(&md, req.UseRightID)
 	}

@@ -113,6 +113,7 @@ const edited = ref({
    collectionFacet: "",
    isCollection: false
 })
+const originalUseRight = ref(1)
 
 const pageHeader = computed( () => {
    let baseHdr = `Metadata ${route.params.id}`
@@ -234,10 +235,15 @@ onMounted( async () =>{
    if (metadataStore.detail.availabilityPolicy) {
       edited.value.availabilityPolicy = metadataStore.detail.availabilityPolicy.id
    }
+
+   // set use right based on current metadata settings and preserve original setting
    edited.value.useRight=1
-   if (metadataStore.detail.useRight) {
-      edited.value.useRight = metadataStore.detail.useRight.id
+   if (metadataStore.detail.useRightName) {
+      let ur = systemStore.useRights.find( r => r.name == metadataStore.detail.useRightName)
+      edited.value.useRight = ur.id
    }
+   originalUseRight.value = edited.value.useRight
+
    edited.value.inDPLA = metadataStore.detail.inDPLA
    edited.value.isCollection = metadataStore.detail.isCollection
    edited.value.collectionID = metadataStore.detail.collectionID
@@ -281,6 +287,19 @@ function cancelEdit() {
 }
 
 async function submitChanges() {
+   // SEE IF UR changed from CNE / UND to sotething else, or if RR chanegd from something valid to CNE/UND
+   // in these cases, send the new ID. Otehrwise send a 0 so backend ignores the request.
+   let origCNE = (originalUseRight.value == 1 || edited.value.useRight.value == 11)
+   let updatedCNE = ( edited.value.useRight == 1 ||  edited.value.useRight == 11)
+   if (origCNE && updatedCNE ) {
+      // no change from CNE... don't send
+      edited.value.useRight = 0
+   } else {
+      if ( originalUseRight.value == edited.value.useRight) {
+         // no change. do not send
+         edited.value.useRight = 0
+      }
+   }
    await metadataStore.submitEdit( edited.value )
    if (systemStore.showError == false) {
       router.push(`/metadata/${metadataStore.detail.id}`)
