@@ -78,7 +78,7 @@ func (svc *serviceContext) doSirsiLookup(catKey, barcode string) (*sirsiResponse
 	}
 
 	log.Printf("INFO: lookup sirsi marc metadata with [%s]", qp)
-	url := fmt.Sprintf("https://ils.lib.virginia.edu/uhtbin/getMarc?%s&type=xml", qp)
+	url := fmt.Sprintf("%s?%s&type=xml", svc.ExternalSystems.Sirsi, qp)
 	rawResp, err := svc.getRequest(url)
 	if err != nil {
 		return nil, fmt.Errorf("getMarc failed %d: %s", err.StatusCode, err.Message)

@@ -27,7 +27,7 @@ type configData struct {
 	jstorURL        string
 	curioURL        string
 	pdfURL          string
-	tracksysAPIURL  string
+	sirsiURL        string
 	xmlIndexURL     string
 	devAuthUser     string
 	jwtKey          string
@@ -45,7 +45,7 @@ func getConfiguration() *configData {
 	flag.StringVar(&config.ilsURL, "ils", "https://ils-connector.lib.virginia.edu", "ILS Connector API URL")
 	flag.StringVar(&config.curioURL, "curio", "https://curio.lib.virginia.edu", "Curio URL")
 	flag.StringVar(&config.pdfURL, "pdf", "https://pdfservice.lib.virginia.edu/pdf", "PDF service URL")
-	flag.StringVar(&config.tracksysAPIURL, "tsapi", "https://tracksys-api-ws.internal.lib.virginia.edu", "URL for TrackSys API")
+	flag.StringVar(&config.sirsiURL, "sirsi", "https://ils.lib.virginia.edu/uhtbin/getMarc", "URL for Sirsi get MARC API")
 	flag.StringVar(&config.jobsURL, "jobs", "http://dockerprod1.lib.virginia.edu:8710", "URL for job processing")
 	flag.StringVar(&config.apolloURL, "apollo", "https://apollo.lib.virginia.edu", "URL for Apollo")
 	flag.StringVar(&config.xmlIndexURL, "xmlhook", "https://virgo4-image-tracksys-reprocess-ws.internal.lib.virginia.edu/api/reindex", "XML index webhook")
@@ -79,7 +79,7 @@ func getConfiguration() *configData {
 	}
 
 	log.Printf("[CONFIG] port          = [%d]", config.port)
-	log.Printf("[CONFIG] tsapi         = [%s]", config.tracksysAPIURL)
+	log.Printf("[CONFIG] sirsi         = [%s]", config.sirsiURL)
 	log.Printf("[CONFIG] reports       = [%s]", config.reportsURL)
 	log.Printf("[CONFIG] projects      = [%s]", config.projectsURL)
 	log.Printf("[CONFIG] virgo         = [%s]", config.virgoURL)
