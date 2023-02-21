@@ -143,11 +143,6 @@ func (svc *serviceContext) doSirsiLookup(catKey, barcode string) (*sirsiResponse
 					trimmedTitle := strings.TrimSpace(sf.Value)
 					resp.Title = titleRegex.ReplaceAllString(trimmedTitle, "")
 				}
-				if sf.Code == "b" || sf.Code == "c" {
-					sub := strings.TrimSpace(sf.Value)
-					sub = titleRegex.ReplaceAllString(sub, "")
-					resp.Title += fmt.Sprintf("\n%s", sub)
-				}
 			}
 		}
 		if df.Tag == "260" {
