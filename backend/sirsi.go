@@ -112,7 +112,7 @@ func (svc *serviceContext) doSirsiLookup(catKey, barcode string) (*sirsiResponse
 	}
 
 	// the remaining data ins in the datafields
-	subtitleRegex := regexp.MustCompile(`\s*\/$`)              // strip trailing /
+	titleRegex := regexp.MustCompile(`\s*\/$`)                 // strip trailing /
 	pubRegex := regexp.MustCompile(`(?:^\[|\]$|\.$|\]\.$|:$)`) // strip [] and trailing . or :
 	for _, df := range parsed.DataFields {
 		if df.Tag == "100" {
@@ -140,12 +140,13 @@ func (svc *serviceContext) doSirsiLookup(catKey, barcode string) (*sirsiResponse
 			// Title; main is in 245a, subtitle in 245b
 			for _, sf := range df.Subfields {
 				if sf.Code == "a" {
-					resp.Title = strings.TrimSpace(sf.Value)
+					trimmedTitle := strings.TrimSpace(sf.Value)
+					resp.Title = titleRegex.ReplaceAllString(trimmedTitle, "")
 				}
-				if sf.Code == "b" {
+				if sf.Code == "b" || sf.Code == "c" {
 					sub := strings.TrimSpace(sf.Value)
-					sub = strings.TrimSpace(subtitleRegex.ReplaceAllString(sub, ""))
-					resp.Title += fmt.Sprintf(" %s", sub)
+					sub = titleRegex.ReplaceAllString(sub, "")
+					resp.Title += fmt.Sprintf("\n%s", sub)
 				}
 			}
 		}
