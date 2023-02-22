@@ -55,7 +55,12 @@ export const useUnitsStore = defineStore('units', {
             this.detail = response.data
             system.working = false
          }).catch( e => {
-            system.setError(e)
+            if (e.response && e.response.status == 404) {
+               this.router.push("/not_found")
+               system.working = false
+            } else {
+               system.setError(e)
+            }
          })
       },
 

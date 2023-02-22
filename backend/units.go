@@ -109,10 +109,15 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 	log.Printf("INFO: get unit %s details", unitID)
 	var unitDetail unit
 	err := svc.DB.Preload("IntendedUse").Preload("Attachments").Preload("Order").
-		Preload("Metadata").Preload("Metadata.OCRHint").Find(&unitDetail, unitID).Error
+		Preload("Metadata").Preload("Metadata.OCRHint").First(&unitDetail, unitID).Error
 	if err != nil {
-		log.Printf("ERROR: unable to get detauls for unit %s: %s", unitID, err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("INFO: unit %s not found", unitID)
+			c.String(http.StatusNotFound, fmt.Sprintf("%s not found", unitID))
+		} else {
+			log.Printf("ERROR: unable to get detauls for unit %s: %s", unitID, err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 

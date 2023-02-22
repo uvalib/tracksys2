@@ -63,7 +63,9 @@ onBeforeMount( async () => {
    let cID = route.params.id
    document.title = componentsStore.title
    await componentsStore.getComponentTree(cID)
-   expandSelectedComponent( cID )
+   if (componentsStore.selectedComponent > -1) {
+      expandSelectedComponent( cID )
+   }
 })
 
 function exportJSON() {

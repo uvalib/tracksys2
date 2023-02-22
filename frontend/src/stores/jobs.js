@@ -56,6 +56,7 @@ export const useJobsStore = defineStore('jobs', {
          const system = useSystemStore()
          system.working = true
          axios.get(`/api/jobs/${jobID}`).then(response => {
+            console.log(response)
             this.details.events = []
             this.details.error = response.data.error
             this.details.status = response.data.status
@@ -72,7 +73,12 @@ export const useJobsStore = defineStore('jobs', {
             }
             system.working = false
          }).catch( e => {
-            system.setError(e)
+            if (e.response && e.response.status == 404) {
+               this.router.push("/not_found")
+               system.working = false
+            } else {
+               system.setError(e)
+            }
          })
       },
       async deleteJobs( delIDs ) {

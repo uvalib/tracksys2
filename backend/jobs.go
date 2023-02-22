@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -78,10 +79,15 @@ func (svc *serviceContext) getJobDetails(c *gin.Context) {
 	js := jobStatus{ID: uint64(jobID)}
 	err := svc.DB.Preload("Events", func(db *gorm.DB) *gorm.DB {
 		return db.Order("events.created_at ASC")
-	}).Find(&js).Error
+	}).First(&js).Error
 	if err != nil {
-		log.Printf("ERROR: unable to get job details: %s", err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("INFO: job %d not found: %s", jobID, err.Error())
+			c.String(http.StatusNotFound, err.Error())
+		} else {
+			log.Printf("ERROR: unable to get job details: %s", err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 

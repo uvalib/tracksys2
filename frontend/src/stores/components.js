@@ -82,7 +82,13 @@ export const useComponentsStore = defineStore('components', {
             }
             system.working = false
          }).catch( e => {
-            system.setError(e)
+            if (e.response && e.response.status == 404) {
+               this.selectedComponent = -1
+               this.router.push("/not_found")
+               system.working = false
+            } else {
+               system.setError(e)
+            }
          })
       },
       loadRelatedMasterFiles( id ) {

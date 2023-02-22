@@ -41,7 +41,7 @@ func (svc *serviceContext) getComponentTree(c *gin.Context) {
 	log.Printf("INFO: get component tree for component %d", cID)
 	var tgtCmp *component
 	subQ := "(select count(*) from master_files m where component_id=components.id) as mf_cnt"
-	err := svc.DB.Preload("ComponentType").Select("components.*", subQ).Find(&tgtCmp, cID).Error
+	err := svc.DB.Preload("ComponentType").Select("components.*", subQ).First(&tgtCmp, cID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Printf("INFO: component %d not found", cID)
