@@ -142,6 +142,9 @@ export const useMetadataStore = defineStore('metadata', {
          return axios.get(`/api/metadata/archivesspace?uri=${encodeURIComponent(uri)}`).then(response => {
             this.asMatch.validatedURL = response.data.uri
             this.asMatch.title = response.data.detail.title
+            if (response.data.detail.dates) {
+               this.asMatch.title = `${this.asMatch.title}, ${response.data.detail.dates}`
+            }
             this.asMatch.id = response.data.detail.id
             this.asMatch.searching = false
          }).catch( e => {

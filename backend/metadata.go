@@ -511,7 +511,8 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 	}
 	if md.Type == "ExternalMetadata" && md.ExternalSystem.Name == "ArchivesSpace" {
 		md.ExternalURI = &req.ExternalURI
-		fields = append(fields, "ExternalURI")
+		md.Title = req.Title
+		fields = append(fields, "ExternalURI", "Title")
 	}
 
 	err = svc.DB.Model(&md).Select(fields).Updates(md).Error
@@ -721,6 +722,8 @@ func (svc *serviceContext) validateArchivesSpaceMetadata(c *gin.Context) {
 		c.String(http.StatusBadRequest, "uri param is required")
 		return
 	}
+
+	// validate URI and convert symbolic names to numeric
 	log.Printf("INFO: validate archivesspace uri %s", uri)
 	raw, getErr := svc.getRequest(fmt.Sprintf("%s/archivesspace/validate?url=%s", svc.ExternalSystems.Jobs, uri))
 	if getErr != nil {
@@ -742,6 +745,7 @@ func (svc *serviceContext) validateArchivesSpaceMetadata(c *gin.Context) {
 		c.String(getErr.StatusCode, getErr.Message)
 		return
 	}
+	log.Printf("INFO: detail %s", rawDetail)
 	parseErr := json.Unmarshal(rawDetail, &resp.Detail)
 	if parseErr != nil {
 		log.Printf("ERROR: unable to parse archivespace details for %s: %s", resp.URI, parseErr.Error())
