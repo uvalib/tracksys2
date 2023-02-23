@@ -298,6 +298,9 @@ export const useMetadataStore = defineStore('metadata', {
             this.detail.useRightURI =  details.sirsiDetails.useRightURI
             this.detail.useRightStatement =  details.sirsiDetails.useRightStatement
             this.detail.virgoURL = details.sirsiDetails.virgoURL
+         }
+
+         if ( this.detail.type == "XmlMetadata") {
             this.detail.xmlMetadata = details.metadata.descMetadata
          }
 
