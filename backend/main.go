@@ -13,6 +13,61 @@ import (
 // Version of the service
 const Version = "1.3.3"
 
+// func (svc *serviceContext) scriptHack(c *gin.Context) {
+// 	f, err := os.Open("./data/as_records.csv")
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 	}
+// 	defer f.Close()
+// 	csvReader := csv.NewReader(f)
+// 	asRecs, err := csvReader.ReadAll()
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 	}
+
+// 	out, err := os.Create("./data/as_update.sql")
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 	}
+
+// 	priorURI := ""
+// 	priorID := ""
+// 	dupPrinted := false
+// 	for _, rec := range asRecs {
+// 		if rec[2] == priorURI {
+// 			if dupPrinted == false {
+// 				log.Printf("DUPLICATE URI: %s : %s", priorID, priorURI)
+// 				dupPrinted = true
+// 			}
+// 			log.Printf("DUPLICATE URI: %s : %s", rec[0], rec[2])
+// 			// continue
+// 		} else {
+// 			priorURI = rec[2]
+// 			priorID = rec[0]
+// 			dupPrinted = false
+// 		}
+// 		tgtURL := fmt.Sprintf("https://dpg-jobs.lib.virginia.edu/archivesspace/lookup?uri=%s", rec[2])
+// 		log.Printf("%s : %s", rec[0], tgtURL)
+
+// 		rawDetail, getErr := svc.getRequest(tgtURL)
+// 		if getErr != nil {
+// 			log.Fatal(fmt.Sprintf("get AS data failed %d: %s", getErr.StatusCode, getErr.Message))
+// 		}
+// 		var asObj asMetadata
+// 		parseErr := json.Unmarshal(rawDetail, &asObj)
+// 		if parseErr != nil {
+// 			log.Fatal(parseErr.Error())
+// 		}
+
+// 		newTitle := asObj.Title
+// 		if asObj.Dates != "" {
+// 			newTitle = fmt.Sprintf("%s, %s", asObj.Title, asObj.Dates)
+// 		}
+// 		sql := fmt.Sprintf("update metadata set title = \"%s\" where id = %s;\n", newTitle, rec[0])
+// 		out.WriteString(sql)
+// 	}
+// }
+
 func main() {
 	// Load cfg
 	log.Printf("===> TrackSys2 is starting up <===")
@@ -32,6 +87,8 @@ func main() {
 	router.GET("/authenticate", svc.authenticate)
 	router.GET("/config", svc.getConfig)
 	router.POST("/cleanup", svc.cleanupExpiredData)
+
+	// router.GET("/script", svc.scriptHack)
 
 	api := router.Group("/api", svc.authMiddleware)
 	{

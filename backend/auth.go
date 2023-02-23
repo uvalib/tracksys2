@@ -72,7 +72,7 @@ func (svc *serviceContext) authenticate(c *gin.Context) {
 		Role:      sm.roleString(),
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
-			Issuer:    "dpgimaging",
+			Issuer:    "tracksys2",
 		},
 	}
 

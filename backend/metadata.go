@@ -738,6 +738,17 @@ func (svc *serviceContext) validateArchivesSpaceMetadata(c *gin.Context) {
 	}
 	resp.URI = string(raw)
 
+	log.Printf("INFO: ensure no duplicate records are created for validated uri %s", resp.URI)
+	var dups []metadata
+	err := svc.DB.Where("external_uri=?", resp.URI).Select("id").Find(&dups).Error
+	if err != nil {
+		log.Printf("ERROR: unable to detect if %s is already present: %s", resp.URI, err.Error())
+	} else if len(dups) > 0 {
+		log.Printf("ERROR: as uri %s already exists", resp.URI)
+		c.String(http.StatusBadRequest, fmt.Sprintf("%s already exists in record %d", uri, dups[0].ID))
+		return
+	}
+
 	log.Printf("INFO: lookup details for %s", resp.URI)
 	rawDetail, getErr := svc.getRequest(fmt.Sprintf("%s/archivesspace/lookup?uri=%s", svc.ExternalSystems.Jobs, resp.URI))
 	if getErr != nil {
