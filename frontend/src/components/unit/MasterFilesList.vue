@@ -3,7 +3,7 @@
       <Panel header="Master Files" v-if="unitsStore.masterFiles.length > 0">
          <DataTable :value="unitsStore.masterFiles" ref="unitMasterFilesTable" dataKey="id"
             showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
-            :lazy="false" :paginator="true" :alwaysShowPaginator="false" :rows="15"
+            :lazy="false" :paginator="true" :alwaysShowPaginator="true" :rows="15"
             :rowsPerPageOptions="[15,30,50,100]" paginatorPosition="both"
             paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
             currentPageReportTemplate="{first} - {last} of {totalRecords}"
@@ -143,6 +143,7 @@ function replaceClicked() {
       rejectClass: 'p-button-secondary',
       accept: async () => {
          unitsStore.replaceMasterFiles()
+         clearSelections()
       }
    })
 }
@@ -168,6 +169,7 @@ function deleteClicked() {
       rejectClass: 'p-button-secondary',
       accept: async () => {
          unitsStore.deleteMasterFiles(selectedFileNames.value)
+         clearSelections()
       }
    })
 }
@@ -199,10 +201,17 @@ function onSelectAllChange(event) {
 
 async function assignMetadata( metadataID ) {
    await unitsStore.assignMetadata(metadataID, selectedIDs.value)
+   clearSelections()
 }
 
 async function assignComponent( componentID ) {
    await unitsStore.assignComponent(componentID, selectedIDs.value)
+   clearSelections()
+}
+
+function clearSelections() {
+   selectAll.value = false
+   selectedMasterFiles.value = []
 }
 
 </script>
@@ -231,6 +240,9 @@ async function assignComponent( componentID ) {
    .master-file-acts {
       font-size: 0.85em;
       text-align: right;
+      button.p-button {
+         margin-left: 5px;
+      }
    }
 
    :deep(td.thumb) {
