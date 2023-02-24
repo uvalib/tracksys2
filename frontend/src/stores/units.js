@@ -119,7 +119,6 @@ export const useUnitsStore = defineStore('units', {
 
       getMasterFiles( unitID ) {
          const system = useSystemStore()
-         this.masterFiles = []
          axios.get( `/api/units/${unitID}/masterfiles` ).then(response => {
             this.masterFiles = response.data
          }).catch( e => {

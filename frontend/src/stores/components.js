@@ -42,7 +42,7 @@ function getNodeChildren( parentNode, children ) {
 
 export const useComponentsStore = defineStore('components', {
 	state: () => ({
-      selectedComponent: "",
+      selectedComponent: 0,
       nodes: [],
       relatedMasterFiles: [],
       loadingMasterFiles: false,
@@ -62,7 +62,7 @@ export const useComponentsStore = defineStore('components', {
          const system = useSystemStore()
          this.nodes = []
          system.working = true
-         this.selectedComponent = id
+         this.selectedComponent = parseInt(id,10)
          return axios.get( `/api/components/${id}` ).then(response => {
             let component = response.data.component
             let root = {
@@ -92,9 +92,8 @@ export const useComponentsStore = defineStore('components', {
          })
       },
       loadRelatedMasterFiles( id ) {
-         this.selectedComponent = id
+         this.selectedComponent = parseInt(id,10)
          this.loadingMasterFiles = true
-         this.relatedMasterFiles = []
          axios.get( `/api/components/${id}/masterfiles` ).then(response => {
             this.relatedMasterFiles = response.data
             this.loadingMasterFiles = false
@@ -110,6 +109,26 @@ export const useComponentsStore = defineStore('components', {
          return axios.get(url).then(response => {
             this.searchHits = response.data.components.hits
             this.totalSearchHits = response.data.components.total
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      downloadFromArchive( computeID, unitID, files ) {
+         const system = useSystemStore()
+         let payload = {computeID: computeID, files: files}
+         let url = `${system.jobsURL}/units/${unitID}/copy`
+         axios.post(url, payload).then( () => {
+            system.toastMessage("Archive Download", `Master files are being downloaded from the archive.`)
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      assignMetadata( metadataID, unitID, masterFileIDs) {
+         const system = useSystemStore()
+         let data = {ids: masterFileIDs, metadataID:  parseInt(metadataID,10) }
+         axios.post(`${system.jobsURL}/units/${unitID}/masterfiles/metadata`, data).then( () => {
+            this.loadRelatedMasterFiles( this.selectedComponent )
+            system.toastMessage("Assign Metadata Success", 'The selected master files have been assigned new metadata.')
          }).catch( e => {
             system.setError(e)
          })

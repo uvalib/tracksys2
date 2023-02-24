@@ -52,7 +52,6 @@ func (svc *serviceContext) getComponentTree(c *gin.Context) {
 		}
 		return
 	}
-	log.Printf("COUNT: %d", tgtCmp.MasterFileCount)
 
 	var topComponent *component
 	if tgtCmp.Ancestry == "" {

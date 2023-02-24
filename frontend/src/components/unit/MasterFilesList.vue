@@ -280,11 +280,6 @@ function clearSelections() {
 :deep(.p-datatable-wrapper.sticky) {
    position: relative;
 }
-:deep(.p-paginator-bottom)  {
-   div.p-paginator.p-component {
-      padding: 15px 0 0 0;
-   }
-}
 :deep(.p-paginator-top)  {
    div.p-paginator.p-component {
       padding: 0 0 15px 0;
