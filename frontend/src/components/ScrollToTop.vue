@@ -65,7 +65,7 @@ onUnmounted( async () => {
    padding: 0px 0px 4px 0px;
    width: 56px;
    height: 56px;
-   z-index: 9999;
+   z-index: 1000;
 }
 .scroll-to-top.mobile {
    position: fixed;

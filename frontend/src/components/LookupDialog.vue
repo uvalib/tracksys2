@@ -1,6 +1,6 @@
 <template>
    <DPGButton @click="show" class="p-button-secondary lookup-button" :label="props.label" :disabled="props.disabled" :class="props.class" />
-   <Dialog v-model:visible="isOpen" :modal="true" :header="dialogTitle">
+   <Dialog v-model:visible="isOpen" :modal="true" :header="dialogTitle" style="width: 80%;z-index: 9999" position="top" :maximizable="true">
       <div class="lookup" v-if="mode=='lookup'">
          <input type="text" v-model="query"  @keydown.stop.prevent.enter="lookupRecords" autofocus :placeholder="searchPlaceholder"/>
          <DPGButton @click="lookupRecords" label="Lookup" class="p-button-secondary"/>
@@ -23,7 +23,7 @@
                   <Column field="pid" header="PID" :sortable="true"/>
                   <Column field="type" header="Type" :sortable="true"/>
                   <Column field="title" header="Title" :sortable="true" >
-                     <template #body="slotProps">{{truncateTitle(slotProps.data.title)}}</template>
+                     <template #body="slotProps">{{slotProps.data.title}}</template>
                   </Column>
                   <Column field="callNumber" header="Call Number" :sortable="true"/>
                   <Column field="barcode" header="Barcode" :sortable="true"/>
@@ -37,7 +37,7 @@
                   <Column field="id" header="ID" :sortable="true"/>
                   <Column field="pid" header="PID" :sortable="true"/>
                   <Column field="title" header="Title" :sortable="true" >
-                     <template #body="slotProps">{{truncateTitle(slotProps.data.title)}}</template>
+                     <template #body="slotProps">{{slotProps.data.title}}</template>
                   </Column>
                   <Column field="label" header="Label" :sortable="true" >
                      <template #body="slotProps">{{truncateTitle(slotProps.data.label)}}</template>
@@ -224,10 +224,10 @@ div.hits {
    :deep(table.p-datatable-table) {
       font-size: 0.75em !important;
    }
-   .scroller {
-      max-height: 250px;
-      overflow-y: scroll;
-   }
+   // .scroller {
+   //    max-height: 250px;
+   //    overflow-y: scroll;
+   // }
 }
 .acts {
    display: flex;
