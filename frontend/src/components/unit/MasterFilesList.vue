@@ -4,13 +4,13 @@
          <DataTable :value="unitsStore.masterFiles" ref="unitMasterFilesTable" dataKey="id"
             showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
             :lazy="false" :paginator="true" :alwaysShowPaginator="true" :rows="15"
-            :rowsPerPageOptions="[15,30,50,100]" paginatorPosition="both"
+            :rowsPerPageOptions="[15,30,50,100]" paginatorPosition="top"
             paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
             currentPageReportTemplate="{first} - {last} of {totalRecords}"
             v-model:selection="selectedMasterFiles" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
          >
             <template #paginatorstart>
-               <div class="master-file-acts">
+               <div class="master-file-acts" id="sticky-toolbar">
                   <template v-if="detail.reorder==false && userStore.isAdmin">
                      <DPGButton label="Add" @click="addClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
                      <DPGButton label="Replace" @click="replaceClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
@@ -68,7 +68,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSystemStore } from '@/stores/system'
 import { useUnitsStore } from '@/stores/units'
 import { useUserStore } from '@/stores/user'
@@ -91,6 +91,10 @@ const router = useRouter()
 const selectedMasterFiles = ref([])
 const selectAll = ref(false)
 const cloneMasterFiles = ref(false)
+const toolbarTop = ref(0)
+const toolbarHeight = ref(0)
+const toolbarWidth = ref(0)
+const toolbar = ref(null)
 
 const { detail } = storeToRefs(unitsStore)
 
@@ -111,6 +115,62 @@ const selectedIDs = computed(() => {
    })
    return ids
 })
+
+onMounted(() => {
+   setTimeout( () => {
+      let tb = null
+      let tbs = document.getElementsByClassName("p-paginator-top")
+      if ( tbs ) {
+         tb = tbs[0]
+      }
+      if ( tb) {
+         toolbar.value = tb
+         toolbarHeight.value = tb.offsetHeight
+         toolbarWidth.value = tb.offsetWidth
+         toolbarTop.value = 0
+
+         // walk the parents of the toolbar and add each top value
+         // to find the top of the toolbar relative to document top
+         let ele = tb
+         if (ele.offsetParent) {
+            do {
+               toolbarTop.value += ele.offsetTop
+               ele = ele.offsetParent
+            } while (ele)
+         }
+      }
+   }, 1000)
+   window.addEventListener("scroll", scrollHandler)
+})
+
+onUnmounted(() => {
+   window.removeEventListener("scroll", scrollHandler)
+})
+
+function scrollHandler( ) {
+   if ( toolbar.value) {
+      if ( window.scrollY <= toolbarTop.value ) {
+         if ( toolbar.value.classList.contains("sticky") ) {
+            toolbar.value.classList.remove("sticky")
+            let dts = document.getElementsByClassName("p-datatable-wrapper")
+            if ( dts ) {
+               dts[0].classList.add("sticky")
+               dts[0].style.top = `0px`
+            }
+         }
+      } else {
+         if ( toolbar.value.classList.contains("sticky") == false ) {
+            let dts = document.getElementsByClassName("p-datatable-wrapper")
+            if ( dts ) {
+               dts[0].classList.add("sticky")
+               dts[0].style.top = `${toolbarHeight.value}px`
+            }
+            toolbar.value.classList.add("sticky")
+            toolbar.value.style.width = `${toolbarWidth.value}px`
+         }
+      }
+   }
+}
 
 function cloneClicked() {
    cloneMasterFiles.value = true
@@ -217,6 +277,9 @@ function clearSelections() {
 </script>
 
 <style scoped lang="scss">
+:deep(.p-datatable-wrapper.sticky) {
+   position: relative;
+}
 :deep(.p-paginator-bottom)  {
    div.p-paginator.p-component {
       padding: 15px 0 0 0;
@@ -225,6 +288,16 @@ function clearSelections() {
 :deep(.p-paginator-top)  {
    div.p-paginator.p-component {
       padding: 0 0 15px 0;
+   }
+}
+:deep(.p-paginator-top.sticky) {
+   position: fixed;
+   z-index: 1000;
+   top: 0;
+   div.p-paginator.p-component {
+      padding: 0 0 10px 0;
+      border-bottom: 2px solid var(--uvalib-grey-lightest);
+      border-radius: 0;
    }
 }
 .details {
@@ -244,7 +317,6 @@ function clearSelections() {
          margin-left: 5px;
       }
    }
-
    :deep(td.thumb) {
       width: 160px !important;
       text-align: center !important;
