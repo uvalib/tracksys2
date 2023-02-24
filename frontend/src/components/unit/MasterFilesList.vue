@@ -1,33 +1,36 @@
 <template>
    <div class="details">
       <Panel header="Master Files" v-if="unitsStore.masterFiles.length > 0">
-         <div class="master-file-acts">
-            <template v-if="detail.reorder==false && userStore.isAdmin">
-               <DPGButton label="Add" @click="addClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
-               <DPGButton label="Replace" @click="replaceClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
-            </template>
-            <template v-if="userStore.isAdmin && (detail.dateArchived==null || detail.reorder || detail.dateDLDeliverablesReady == null)">
-               <DPGButton label="Delete Selected" @click="deleteClicked()" class="p-button-secondary" :disabled="!filesSelected" />
-            </template>
-            <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
-            <template v-if="detail.dateArchived != null || (detail.reorder && detail.datePatronDeliverablesReady)">
-               <DPGButton label="Download Selected" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
-            </template>
-            <template v-if="detail.metadata && detail.dateArchived != null && detail.reorder == false">
-               <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
-            </template>
-            <template  v-if="userStore.isAdmin || userStore.isSupervisor">
-               <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
-               <LookupDialog :disabled="!filesSelected" label="Assign Componment" @selected="assignComponent" target="component" />
-            </template>
-         </div>
          <DataTable :value="unitsStore.masterFiles" ref="unitMasterFilesTable" dataKey="id"
             showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
-            :lazy="false" :paginator="unitsStore.masterFiles.length > 15" :rows="15" :rowsPerPageOptions="[15,30,50,100]"
+            :lazy="false" :paginator="true" :alwaysShowPaginator="false" :rows="15"
+            :rowsPerPageOptions="[15,30,50,100]" paginatorPosition="both"
             paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
             currentPageReportTemplate="{first} - {last} of {totalRecords}"
             v-model:selection="selectedMasterFiles" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
          >
+            <template #paginatorstart>
+               <div class="master-file-acts">
+                  <template v-if="detail.reorder==false && userStore.isAdmin">
+                     <DPGButton label="Add" @click="addClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
+                     <DPGButton label="Replace" @click="replaceClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
+                  </template>
+                  <template v-if="userStore.isAdmin && (detail.dateArchived==null || detail.reorder || detail.dateDLDeliverablesReady == null)">
+                     <DPGButton label="Delete Selected" @click="deleteClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+                  </template>
+                  <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
+                  <template v-if="detail.dateArchived != null || (detail.reorder && detail.datePatronDeliverablesReady)">
+                     <DPGButton label="Download Selected" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+                  </template>
+                  <template v-if="detail.metadata && detail.dateArchived != null && detail.reorder == false">
+                     <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+                  </template>
+                  <template  v-if="userStore.isAdmin || userStore.isSupervisor">
+                     <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
+                     <LookupDialog :disabled="!filesSelected" label="Assign Componment" @selected="assignComponent" target="component" />
+                  </template>
+               </div>
+            </template>
             <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
             <Column field="metadata.title" header="Metadata">
                <template #body="slotProps">
@@ -205,6 +208,16 @@ async function assignComponent( componentID ) {
 </script>
 
 <style scoped lang="scss">
+:deep(.p-paginator-bottom)  {
+   div.p-paginator.p-component {
+      padding: 15px 0 0 0;
+   }
+}
+:deep(.p-paginator-top)  {
+   div.p-paginator.p-component {
+      padding: 0 0 15px 0;
+   }
+}
 .details {
    padding: 0 25px 10px 25px;
    display: flex;
@@ -218,11 +231,6 @@ async function assignComponent( componentID ) {
    .master-file-acts {
       font-size: 0.85em;
       text-align: right;
-      padding: 0 0 15px 0;
-
-      button.p-button {
-         margin-left: 5px;
-      }
    }
 
    :deep(td.thumb) {

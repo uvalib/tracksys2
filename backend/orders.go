@@ -281,7 +281,7 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	} else if filter == "ready" {
 		filterQ = filterQ.Joins("inner join units u on u.order_id=orders.id").
 			Where("u.intended_use_id <> ?", 110).
-			Where("orders.email is not null and date_customer_notified is null").
+			Where("orders.email is not null and orders.email != ? and date_customer_notified is null", "").
 			Where("order_status != ? and order_status != ?", "canceled", "completed").Distinct("orders.id")
 	}
 
