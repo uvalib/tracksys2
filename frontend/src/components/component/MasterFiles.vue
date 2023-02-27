@@ -10,6 +10,7 @@
       >
          <template #paginatorstart>
             <div class="master-file-acts" id="sticky-toolbar">
+               <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
                <DPGButton label="Download Selected" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
                <template  v-if="userStore.isAdmin || userStore.isSupervisor">
                   <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
@@ -49,6 +50,7 @@
 import { useComponentsStore } from '@/stores/components'
 import { useUnitsStore } from '@/stores/units'
 import { useUserStore } from '@/stores/user'
+import { useSystemStore } from '@/stores/system'
 import Panel from 'primevue/panel'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -58,6 +60,7 @@ import LookupDialog from '@/components/LookupDialog.vue'
 const component = useComponentsStore()
 const unitsStore = useUnitsStore()
 const userStore = useUserStore()
+const systemStore = useSystemStore()
 
 const toolbarTop = ref(0)
 const toolbarHeight = ref(0)
@@ -143,6 +146,17 @@ function scrollHandler( ) {
 function downloadClicked() {
    component.downloadFromArchive(userStore.computeID, selectedMasterFiles.value[0].unitID, selectedFileNames.value)
    clearSelections()
+}
+function pdfClicked() {
+   let ids = []
+   selectedMasterFiles.value.forEach( s => {
+      ids.push(s.id)
+   })
+   let token = new Date().getTime()
+   let unitID = selectedMasterFiles.value[0].unitID
+   let mdPID = selectedMasterFiles.value[0].metadata.pid
+   let url = `${systemStore.pdfURL}/${mdPID}?unit=${unitID}&token=${token}&pages=${ids.join(',')}`
+   window.open(url)
 }
 async function assignMetadata( metadataID ) {
    await component.assignMetadata(metadataID, selectedMasterFiles.value[0].unitID, selectedIDs.value)
