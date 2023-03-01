@@ -164,6 +164,16 @@ func (svc *serviceContext) createProject(c *gin.Context) {
 		return
 	}
 
+	var projCnt int64
+	err = svc.DB.Table("projects").Where("unit_id=?", unitDetail.ID).Count(&projCnt).Error
+	if err != nil {
+		log.Printf("ERROR: unable to determine if a project already exists for unit %d: %s", unitDetail.ID, err.Error())
+	} else if projCnt > 0 {
+		log.Printf("INFO: unable to create project for unit %d as it already has a project", unitDetail.ID)
+		c.String(http.StatusConflict, "a project already exists for this unit")
+		return
+	}
+
 	var req struct {
 		WorkflowID      int64  `json:"workflowID"`
 		ContainerTypeID int64  `json:"containerTypeID"`
