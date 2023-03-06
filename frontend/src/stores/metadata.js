@@ -222,7 +222,6 @@ export const useMetadataStore = defineStore('metadata', {
       },
       async create( data ) {
          const system = useSystemStore()
-         system.working = true
          return axios.post("/api/metadata", data).then(response => {
             this.setMetadataDetails(response.data)
             this.searchHits = [ {
@@ -236,7 +235,6 @@ export const useMetadataStore = defineStore('metadata', {
                title: this.detail.title,
             }]
             this.totalSearchHits = 1
-            system.working = false
          }).catch( e => {
             system.setError(e)
          })
