@@ -11,7 +11,7 @@ import (
 )
 
 // Version of the service
-const Version = "1.3.5"
+const Version = "1.3.6"
 
 // func (svc *serviceContext) scriptHack(c *gin.Context) {
 // 	f, err := os.Open("./data/as_records.csv")

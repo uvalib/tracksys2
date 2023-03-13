@@ -550,12 +550,10 @@ func (svc *serviceContext) sendUseRightToSirsi(md *metadata, useRightID int64) {
 		ResourceURI string `json:"resource_uri"`
 		Name        string `json:"name"`
 		URI         string `json:"uri"`
-		Statement   string `json:"statement"`
 	}
 	ilsReq.ResourceURI = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
 	ilsReq.Name = ur.Name
 	ilsReq.URI = ur.URI
-	ilsReq.Statement = ur.Statement
 
 	url := fmt.Sprintf("%s/v4/metadata/%s/update_rights", svc.ExternalSystems.ILS, *md.CatalogKey)
 	ilsResp, ilsErr := svc.postJSON(url, ilsReq)
