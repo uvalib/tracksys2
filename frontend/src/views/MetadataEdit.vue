@@ -63,7 +63,8 @@
             <div class="split">
                <FormKit label="In DPLA" type="select" :options="yesNo" v-model="edited.inDPLA"/>
                <span class="sep"/>
-               <FormKit label="Availability Policy" outer-class="first" type="select" :options="availabilityPolicies" v-model="edited.availabilityPolicy" required/>
+               <FormKit label="Availability Policy" outer-class="first" type="select" :options="availabilityPolicies"
+                  v-model="edited.availabilityPolicy" required placeholder="Select an availability policy"/>
             </div>
             <div class="use-right" v-if="metadataStore.detail.type == 'SirsiMetadata'">
                <FormKit label="Use Right" outer-class="first" type="select" :options="useRights" v-model="edited.useRight" required/>
@@ -106,8 +107,8 @@ const edited = ref({
    ocrHint: 0,
    ocrLanguageHint: "",
    preservationTier: 0,
-   availabilityPolicy: 1,
-   useRight: 1,
+   availabilityPolicy: null,
+   useRight: null,
    inDPLA: false,
    collectionID: "",
    collectionFacet: "",
@@ -231,13 +232,13 @@ onMounted( async () =>{
    if (metadataStore.detail.preservationTier) {
       edited.value.ocrHint = metadataStore.detail.preservationTier.id
    }
-   edited.value.availabilityPolicy = 0
+   edited.value.availabilityPolicy = null
    if (metadataStore.detail.availabilityPolicy) {
       edited.value.availabilityPolicy = metadataStore.detail.availabilityPolicy.id
    }
 
    // set use right based on current metadata settings and preserve original setting
-   edited.value.useRight=1
+   edited.value.useRight=null
    if (metadataStore.detail.useRightName) {
       let ur = systemStore.useRights.find( r => r.name == metadataStore.detail.useRightName)
       edited.value.useRight = ur.id

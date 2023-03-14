@@ -274,7 +274,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		}
 		elapsedNanoSec := time.Since(startTime)
 		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: masterfile search found %d hits. Elapsed Time: %d (ms)", resp.Components.Total, elapsedMS)
+		log.Printf("INFO: masterfile search found %d hits. Elapsed Time: %d (ms)", resp.MasterFiles.Total, elapsedMS)
 	}
 
 	if scope == "all" || scope == "metadata" {
@@ -317,7 +317,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		}
 		elapsedNanoSec := time.Since(startTime)
 		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: metadata search found %d hits. Elapsed Time: %d (ms)", resp.Components.Total, elapsedMS)
+		log.Printf("INFO: metadata search found %d hits. Elapsed Time: %d (ms)", resp.Metadata.Total, elapsedMS)
 	}
 
 	if (scope == "all" || scope == "orders") && field != "pid" {
@@ -358,7 +358,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		}
 		elapsedNanoSec := time.Since(startTime)
 		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: orders search found %d hits. Elapsed Time: %d (ms)", resp.Components.Total, elapsedMS)
+		log.Printf("INFO: orders search found %d hits. Elapsed Time: %d (ms)", resp.Orders.Total, elapsedMS)
 	}
 
 	c.JSON(http.StatusOK, resp)
