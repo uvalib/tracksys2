@@ -91,9 +91,16 @@ type filterData struct {
 
 func (svc *serviceContext) searchRequest(c *gin.Context) {
 	// get the query and tag it for starts with and contains searches
-	qStr := c.Query("q")
+	qStr := strings.Trim(c.Query("q"), " ")
 	intQ, _ := strconv.ParseInt(qStr, 10, 64)
 	numericQuery := intQ > 0
+	pidQuery := strings.Index(qStr, "tsm:") == 0 || strings.Index(qStr, "tsb:") == 0 || strings.Index(qStr, "uva-lib:") == 0
+	if pidQuery {
+		log.Printf("INFO: query %s appears to be a pid; just search on pid columns", qStr)
+	}
+	if numericQuery {
+		log.Printf("INFO: query %s appears to be an id; use specialized id handling during search", qStr)
+	}
 
 	matchStart := fmt.Sprintf("%s%%", qStr)
 	matchAny := fmt.Sprintf("%%%s%%", qStr)
@@ -216,23 +223,29 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		log.Printf("INFO: searching components for [%s]...", qStr)
 		startTime := time.Now()
 		searchQ := svc.DB.Debug().Table("components")
-		if filterTarget == "components" && filterQ != nil {
-			searchQ = searchQ.Where(filterQ)
-		}
-
-		var fieldQ *gorm.DB
-		if field == "all" {
-			fieldQ = svc.DB.Or("pid=?", qStr).Or("title like ?", matchAny).Or("label like ?", matchAny).
-				Or("content_desc like ?", matchAny).Or("date like ?", matchAny).Or("ead_id_att=?", qStr)
-			if numericQuery {
-				fieldQ = fieldQ.Or("components.id=?", intQ)
+		if pidQuery == false {
+			if filterTarget == "components" && filterQ != nil {
+				searchQ = searchQ.Where(filterQ)
 			}
-		} else if field == "id" || field == "pid" || field == "ead_id_att" {
-			fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", field), qStr)
+
+			var fieldQ *gorm.DB
+			if field == "all" {
+				fieldQ = svc.DB.Or("pid=?", qStr).Or("title like ?", matchAny).Or("label like ?", matchAny).
+					Or("content_desc like ?", matchAny).Or("date like ?", matchAny).Or("ead_id_att=?", qStr)
+				if numericQuery {
+					fieldQ = fieldQ.Or("components.id=?", intQ)
+				}
+			} else if field == "id" {
+				fieldQ = svc.DB.Where("id=?", intQ)
+			} else if field == "pid" || field == "ead_id_att" {
+				fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", field), qStr)
+			} else {
+				fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", field), matchAny)
+			}
+			searchQ.Where(fieldQ)
 		} else {
-			fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", field), matchAny)
+			searchQ.Where("pid=?", qStr)
 		}
-		searchQ.Where(fieldQ)
 
 		searchQ.Count(&resp.Components.Total)
 		subQ := "(select count(*) from master_files m where component_id=components.id) as mf_cnt"
@@ -249,31 +262,36 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		log.Printf("INFO: searching masterfiles for [%s]...", qStr)
 		startTime := time.Now()
 		searchQ := svc.DB.Debug().Table("master_files")
-		if filterTarget == "masterfiles" && filterQ != nil {
-			searchQ = searchQ.Where(filterQ)
-		}
-
-		var fieldQ *gorm.DB
-		if field == "all" {
-			fieldQ = svc.DB.Or("pid=?", qStr).
-				Or("filename like ?", matchAny).Or("title like ?", matchAny).
-				Or("description like ?", matchAny)
-			if numericQuery {
-				fieldQ = fieldQ.Or("master_files.id=?", intQ).Or("unit_id=?", intQ)
+		if pidQuery == false {
+			if filterTarget == "masterfiles" && filterQ != nil {
+				searchQ = searchQ.Where(filterQ)
 			}
-		} else if field == "pid" || field == "unit_id" {
-			fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", field), qStr)
-		} else if field == "id" {
-			fieldQ = svc.DB.Where("id=?", intQ)
-		} else if field == "title" || field == "description" || field == "filename" {
-			fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", field), matchAny)
-		} else if field == "tag" {
-			searchQ = searchQ.
-				Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
-				Joins("left outer join tags t on mt.tag_id = t.id")
-			fieldQ = svc.DB.Where("t.tag like ?", matchAny)
+
+			var fieldQ *gorm.DB
+			if field == "all" {
+				if numericQuery {
+					fieldQ = svc.DB.Or("master_files.id=?", intQ).Or("unit_id=?", intQ)
+				} else {
+					fieldQ = svc.DB.Or("pid=?", qStr).
+						Or("filename like ?", matchAny).Or("title like ?", matchAny).
+						Or("description like ?", matchAny)
+				}
+			} else if field == "pid" {
+				fieldQ = svc.DB.Where("pid=?", qStr)
+			} else if field == "id" || field == "unit_id" {
+				fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", field), intQ)
+			} else if field == "title" || field == "description" || field == "filename" {
+				fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", field), matchAny)
+			} else if field == "tag" {
+				searchQ = searchQ.
+					Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
+					Joins("left outer join tags t on mt.tag_id = t.id")
+				fieldQ = svc.DB.Where("t.tag like ?", matchAny)
+			}
+			searchQ.Where(fieldQ)
+		} else {
+			searchQ.Where("pid=?", qStr)
 		}
-		searchQ.Where(fieldQ)
 
 		searchQ.Count(&resp.MasterFiles.Total)
 		err := searchQ.Preload("Metadata").Offset(startIndex).Limit(pageSize).Find(&resp.MasterFiles.Hits).Error
@@ -293,26 +311,30 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		log.Printf("INFO: searching metadata for [%s]...", qStr)
 		startTime := time.Now()
 		searchQ := svc.DB.Debug().Table("metadata")
-		if filterTarget == "metadata" && filterQ != nil {
-			searchQ = searchQ.Where(filterQ)
-		}
+		if pidQuery == false {
+			if filterTarget == "metadata" && filterQ != nil {
+				searchQ = searchQ.Where(filterQ)
+			}
 
-		var fieldQ *gorm.DB
-		if field == "all" {
-			fieldQ = svc.DB.Or("pid=?", qStr).Or("title like ?", matchAny).
-				Or("barcode=?", qStr).Or("catalog_key=?", qStr).Or("call_number like ?", matchAny).
-				Or("creator_name like ?", matchAny).Or("collection_id like ?", matchStart).Or("collection_facet like ?", matchStart)
-			if numericQuery {
-				fieldQ = fieldQ.Or("metadata.id=?", intQ)
-			}
-		} else {
-			if field == "title" || field == "creator_name" || field == "call_number" {
-				fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", field), matchAny)
+			var fieldQ *gorm.DB
+			if field == "all" {
+				fieldQ = svc.DB.Or("pid=?", qStr).Or("title like ?", matchAny).
+					Or("barcode=?", qStr).Or("catalog_key=?", qStr).Or("call_number like ?", matchAny).
+					Or("creator_name like ?", matchAny).Or("collection_id like ?", matchStart).Or("collection_facet like ?", matchStart)
+				if numericQuery {
+					fieldQ = fieldQ.Or("metadata.id=?", intQ)
+				}
 			} else {
-				fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", field), qStr)
+				if field == "title" || field == "creator_name" || field == "call_number" {
+					fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", field), matchAny)
+				} else {
+					fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", field), qStr)
+				}
 			}
+			searchQ.Where(fieldQ)
+		} else {
+			searchQ.Where("pid=?", qStr)
 		}
-		searchQ.Where(fieldQ)
 
 		if excludeCollectionItems {
 			// only pick from records with no parent metadata id (items not in a collection)
@@ -336,7 +358,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		log.Printf("INFO: metadata search found %d hits. Elapsed Time: %d (ms)", resp.Metadata.Total, elapsedMS)
 	}
 
-	if (scope == "all" || scope == "orders") && field != "pid" {
+	if (scope == "all" || scope == "orders") && field != "pid" && pidQuery == false {
 		log.Printf("INFO: searching orders for [%s]...", qStr)
 		startTime := time.Now()
 		searchQ := svc.DB.Debug().Table("orders").
@@ -354,7 +376,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 				fieldQ = fieldQ.Or("orders.id=?", intQ)
 			}
 		} else if field == "id" {
-			fieldQ = svc.DB.Where("id=?", intQ)
+			fieldQ = svc.DB.Where("orders.id=?", intQ)
 		} else if field == "last_name" {
 			fieldQ = svc.DB.Where("customers.last_name like ?", matchStart)
 		} else if field == "agency" {
