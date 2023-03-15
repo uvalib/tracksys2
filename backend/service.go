@@ -361,7 +361,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		},
 		"components": {
 			searchField{Field: "all", Label: "All fields"},
-			searchField{Field: "pid", Label: "PID"},
 			searchField{Field: "title", Label: "Title"},
 			searchField{Field: "label", Label: "Label"},
 			searchField{Field: "content_desc", Label: "Description"},
@@ -371,7 +370,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		},
 		"masterfiles": {
 			searchField{Field: "all", Label: "All fields"},
-			searchField{Field: "pid", Label: "PID"},
 			searchField{Field: "unit_id", Label: "Unit ID"},
 			searchField{Field: "filename", Label: "Filename"},
 			searchField{Field: "title", Label: "Title"},
@@ -380,7 +378,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		},
 		"metadata": {
 			searchField{Field: "all", Label: "All fields"},
-			searchField{Field: "pid", Label: "PID"},
 			searchField{Field: "title", Label: "Title"},
 			searchField{Field: "barcode", Label: "Barcode"},
 			searchField{Field: "call_number", Label: "Call number"},
@@ -389,7 +386,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		},
 		"orders": {
 			searchField{Field: "all", Label: "All fields"},
-			searchField{Field: "id", Label: "Order ID"},
 			searchField{Field: "order_title", Label: "Title"},
 			searchField{Field: "last_name", Label: "Customer last name"},
 			searchField{Field: "agency", Label: "Agency"},

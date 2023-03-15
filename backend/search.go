@@ -94,51 +94,64 @@ type searchFilter struct {
 	Query  *gorm.DB
 }
 
-func (svc *serviceContext) searchRequest(c *gin.Context) {
-	// get the query and tag it for starts with and contains searches
-	qStr := strings.Trim(c.Query("q"), " ")
-	intQ, _ := strconv.ParseInt(qStr, 10, 64)
-	numericQuery := intQ > 0
-	pidQuery := strings.Index(qStr, "tsm:") == 0 || strings.Index(qStr, "tsb:") == 0 || strings.Index(qStr, "uva-lib:") == 0
-	if pidQuery {
-		log.Printf("INFO: query %s appears to be a pid; just search on pid columns", qStr)
-	}
-	if numericQuery {
-		log.Printf("INFO: query %s appears to be an id; use specialized id handling during search", qStr)
-	}
+type searchContext struct {
+	Query                  string
+	QueryAny               string
+	QueryStart             string
+	QueryType              string // general, id or pid
+	IntQuery               int64
+	Scope                  string
+	Field                  string
+	Filter                 *searchFilter
+	StartIndex             int
+	PageSize               int
+	ExcludeCollectionItems bool
+}
 
-	matchStart := fmt.Sprintf("%s%%", qStr)
-	matchAny := fmt.Sprintf("%%%s%%", qStr)
+func (svc *serviceContext) searchRequest(c *gin.Context) {
+	// setup the search context, starting with the query param
+	q := strings.TrimSpace(c.Query("q"))
+	sc := searchContext{QueryType: "general", Query: q, QueryAny: fmt.Sprintf("%%%s%%", q), QueryStart: fmt.Sprintf("%s%%", q)}
+	sc.IntQuery, _ = strconv.ParseInt(sc.Query, 10, 64)
+	if sc.IntQuery > 0 {
+		log.Printf("INFO: query %s appears to be an id; use specialized id handling during search", sc.Query)
+		sc.QueryType = "id"
+	} else {
+		if strings.Index(q, "tsm:") == 0 || strings.Index(q, "tsb:") == 0 || strings.Index(q, "uva-lib:") == 0 {
+			log.Printf("INFO: query %s appears to be a pid; just search on pid columns", q)
+			sc.QueryType = "pid"
+		}
+	}
 
 	// setup pagination
-	startIndex, _ := strconv.Atoi(c.Query("start"))
-	pageSize, _ := strconv.Atoi(c.Query("limit"))
-	if pageSize == 0 {
-		pageSize = 15
+	sc.StartIndex, _ = strconv.Atoi(c.Query("start"))
+	sc.PageSize, _ = strconv.Atoi(c.Query("limit"))
+	if sc.PageSize == 0 {
+		sc.PageSize = 15
 	}
 
 	// when searcghing for items to be added to a collection, the request includes
 	// a param collection=true. if this is the case, exclude items that are already part of a collection
 	// these items will have their parent_metadata_id set greater than zero
-	excludeCollectionItems, _ := strconv.ParseBool(c.Query("collection"))
+	sc.ExcludeCollectionItems, _ = strconv.ParseBool(c.Query("collection"))
 
 	// limit search scope to an item type
-	scope := c.Query("scope")
-	if scope == "" {
-		scope = "all"
+	sc.Scope = c.Query("scope")
+	if sc.Scope == "" {
+		sc.Scope = "all"
 	}
-	if scope != "all" && scope != "masterfiles" && scope != "metadata" && scope != "orders" && scope != "components" {
-		log.Printf("ERROR: invalid search scope %s specified", scope)
+	if sc.Scope != "all" && sc.Scope != "masterfiles" && sc.Scope != "metadata" && sc.Scope != "orders" && sc.Scope != "components" {
+		log.Printf("ERROR: invalid search scope %s specified", sc.Scope)
 		c.String(http.StatusBadRequest, "invalid search scope")
 		return
 	}
 
 	// search specific fields?
-	field := c.Query("field")
-	if field == "" {
-		field = "all"
+	sc.Field = c.Query("field")
+	if sc.Field == "" {
+		sc.Field = "all"
 	}
-	log.Printf("INFO: search %s.%s for [%s] starting from %d limit %d", scope, field, qStr, startIndex, pageSize)
+	log.Printf("INFO: search %s.%s for [%s] starting from %d limit %d", sc.Scope, sc.Field, sc.Query, sc.StartIndex, sc.PageSize)
 
 	// extract filterdata into a db query that can be appended later
 	filter, err := svc.initFilter(c.Query("filters"))
@@ -157,37 +170,37 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	}
 
 	// query each type of object individually: components, master files, metadata and orders. Aggregate rresults in response struct
-	if scope == "all" || scope == "components" {
-		log.Printf("INFO: searching components for [%s]...", qStr)
+	if sc.Scope == "all" || sc.Scope == "components" {
+		log.Printf("INFO: searching components for [%s]...", sc.Query)
 		startTime := time.Now()
 		searchQ := svc.DB.Debug().Table("components")
-		if pidQuery == false {
+		if sc.QueryType != "pid" {
 			if filter.Target == "components" {
 				searchQ = searchQ.Where(filter.Query)
 			}
 
 			var fieldQ *gorm.DB
-			if field == "all" {
-				fieldQ = svc.DB.Or("pid=?", qStr).Or("title like ?", matchAny).Or("label like ?", matchAny).
-					Or("content_desc like ?", matchAny).Or("date like ?", matchAny).Or("ead_id_att=?", qStr)
-				if numericQuery {
-					fieldQ = fieldQ.Or("components.id=?", intQ)
+			if sc.Field == "all" {
+				fieldQ = svc.DB.Or("title like ?", sc.QueryAny).Or("label like ?", sc.QueryAny).
+					Or("content_desc like ?", sc.QueryAny).Or("date like ?", sc.QueryAny).Or("ead_id_att=?", sc.Query)
+				if sc.QueryType == "id" {
+					fieldQ = fieldQ.Or("components.id=?", sc.IntQuery)
 				}
-			} else if field == "id" {
-				fieldQ = svc.DB.Where("id=?", intQ)
-			} else if field == "pid" || field == "ead_id_att" {
-				fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", field), qStr)
+			} else if sc.Field == "id" {
+				fieldQ = svc.DB.Where("id=?", sc.IntQuery)
+			} else if sc.Field == "ead_id_att" {
+				fieldQ = svc.DB.Where("ead_id_att=?", sc.Query)
 			} else {
-				fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", field), matchAny)
+				fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
 			}
 			searchQ.Where(fieldQ)
 		} else {
-			searchQ.Where("pid=?", qStr)
+			searchQ.Where("pid=?", sc.Query)
 		}
 
 		searchQ.Count(&resp.Components.Total)
 		subQ := "(select count(*) from master_files m where component_id=components.id) as mf_cnt"
-		err := searchQ.Offset(startIndex).Limit(pageSize).Select("components.*", subQ).Find(&resp.Components.Hits).Error
+		err := searchQ.Offset(sc.StartIndex).Limit(sc.PageSize).Select("components.*", subQ).Find(&resp.Components.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: component search failed: %s", err.Error())
 		}
@@ -196,43 +209,40 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		log.Printf("INFO: component search found %d hits. Elapsed Time: %d (ms)", resp.Components.Total, elapsedMS)
 	}
 
-	if scope == "all" || scope == "masterfiles" {
-		log.Printf("INFO: searching masterfiles for [%s]...", qStr)
+	if sc.Scope == "all" || sc.Scope == "masterfiles" {
+		log.Printf("INFO: searching masterfiles for [%s]...", sc.Query)
 		startTime := time.Now()
 		searchQ := svc.DB.Debug().Table("master_files")
-		if pidQuery == false {
+		if sc.QueryType != "pid" {
 			if filter.Target == "masterfiles" {
 				searchQ = searchQ.Where(filter.Query)
 			}
 
 			var fieldQ *gorm.DB
-			if field == "all" {
-				if numericQuery {
-					fieldQ = svc.DB.Or("master_files.id=?", intQ).Or("unit_id=?", intQ)
+			if sc.Field == "all" {
+				if sc.QueryType == "id" {
+					fieldQ = svc.DB.Or("master_files.id=?", sc.IntQuery).Or("unit_id=?", sc.IntQuery)
 				} else {
-					fieldQ = svc.DB.Or("pid=?", qStr).
-						Or("filename like ?", matchAny).Or("title like ?", matchAny).
-						Or("description like ?", matchAny)
+					fieldQ = svc.DB.Or("filename like ?", sc.QueryAny).Or("title like ?", sc.QueryAny).
+						Or("description like ?", sc.QueryAny)
 				}
-			} else if field == "pid" {
-				fieldQ = svc.DB.Where("pid=?", qStr)
-			} else if field == "id" || field == "unit_id" {
-				fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", field), intQ)
-			} else if field == "title" || field == "description" || field == "filename" {
-				fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", field), matchAny)
-			} else if field == "tag" {
+			} else if sc.Field == "id" || sc.Field == "unit_id" {
+				fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", sc.Field), sc.IntQuery)
+			} else if sc.Field == "title" || sc.Field == "description" || sc.Field == "filename" {
+				fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
+			} else if sc.Field == "tag" {
 				searchQ = searchQ.
 					Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
 					Joins("left outer join tags t on mt.tag_id = t.id")
-				fieldQ = svc.DB.Where("t.tag like ?", matchAny)
+				fieldQ = svc.DB.Where("t.tag like ?", sc.QueryAny)
 			}
 			searchQ.Where(fieldQ)
 		} else {
-			searchQ.Where("pid=?", qStr)
+			searchQ.Where("pid=?", sc.Query)
 		}
 
 		searchQ.Count(&resp.MasterFiles.Total)
-		err := searchQ.Preload("Metadata").Offset(startIndex).Limit(pageSize).Find(&resp.MasterFiles.Hits).Error
+		err := searchQ.Preload("Metadata").Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.MasterFiles.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: masterfile search failed: %s", err.Error())
 		}
@@ -245,43 +255,43 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		log.Printf("INFO: masterfile search found %d hits. Elapsed Time: %d (ms)", resp.MasterFiles.Total, elapsedMS)
 	}
 
-	if scope == "all" || scope == "metadata" {
-		log.Printf("INFO: searching metadata for [%s]...", qStr)
+	if sc.Scope == "all" || sc.Scope == "metadata" {
+		log.Printf("INFO: searching metadata for [%s]...", sc.Query)
 		startTime := time.Now()
 		searchQ := svc.DB.Debug().Table("metadata")
-		if pidQuery == false {
+		if sc.QueryType != "pid" {
 			if filter.Target == "metadata" {
 				searchQ = searchQ.Where(filter.Query)
 			}
 
 			var fieldQ *gorm.DB
-			if field == "all" {
-				fieldQ = svc.DB.Or("pid=?", qStr).Or("title like ?", matchAny).
-					Or("barcode=?", qStr).Or("catalog_key=?", qStr).Or("call_number like ?", matchAny).
-					Or("creator_name like ?", matchAny).Or("collection_id like ?", matchStart).Or("collection_facet like ?", matchStart)
-				if numericQuery {
-					fieldQ = fieldQ.Or("metadata.id=?", intQ)
+			if sc.Field == "all" {
+				fieldQ = svc.DB.Or("title like ?", sc.QueryAny).
+					Or("barcode=?", sc.Query).Or("catalog_key=?", sc.Query).Or("call_number like ?", sc.QueryAny).
+					Or("creator_name like ?", sc.QueryAny).Or("collection_id like ?", sc.QueryStart).Or("collection_facet like ?", sc.QueryStart)
+				if sc.QueryType == "id" {
+					fieldQ = fieldQ.Or("metadata.id=?", sc.IntQuery)
 				}
 			} else {
-				if field == "title" || field == "creator_name" || field == "call_number" {
-					fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", field), matchAny)
+				if sc.Field == "title" || sc.Field == "creator_name" || sc.Field == "call_number" {
+					fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
 				} else {
-					fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", field), qStr)
+					fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", sc.Field), sc.Query)
 				}
 			}
 			searchQ.Where(fieldQ)
 		} else {
-			searchQ.Where("pid=?", qStr)
+			searchQ.Where("pid=?", sc.Query)
 		}
 
-		if excludeCollectionItems {
+		if sc.ExcludeCollectionItems {
 			// only pick from records with no parent metadata id (items not in a collection)
 			searchQ = searchQ.Where("parent_metadata_id=?", 0)
 		}
 
 		searchQ.Count(&resp.Metadata.Total)
 		searchQ = searchQ.Preload("ExternalSystem")
-		err := searchQ.Debug().Offset(startIndex).Limit(pageSize).Find(&resp.Metadata.Hits).Error
+		err := searchQ.Debug().Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Metadata.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: metadata search failed: %s", err.Error())
 		}
@@ -296,8 +306,8 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		log.Printf("INFO: metadata search found %d hits. Elapsed Time: %d (ms)", resp.Metadata.Total, elapsedMS)
 	}
 
-	if (scope == "all" || scope == "orders") && field != "pid" && pidQuery == false {
-		log.Printf("INFO: searching orders for [%s]...", qStr)
+	if (sc.Scope == "all" || sc.Scope == "orders") && sc.QueryType != "pid" {
+		log.Printf("INFO: searching orders for [%s]...", sc.Query)
 		startTime := time.Now()
 		searchQ := svc.DB.Debug().Table("orders").
 			Joins("inner join customers on customer_id = customers.id").
@@ -307,26 +317,27 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		}
 
 		var fieldQ *gorm.DB
-		if field == "all" {
-			fieldQ = svc.DB.Or("customers.last_name like ?", matchStart).Or("agencies.name like ?", matchStart).
-				Or("orders.staff_notes like ?", matchAny).Or("orders.special_instructions like ?", matchAny)
-			if numericQuery {
-				fieldQ = fieldQ.Or("orders.id=?", intQ)
+		if sc.Field == "all" {
+			if sc.QueryType == "id" {
+				fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
+			} else {
+				fieldQ = svc.DB.Or("customers.last_name like ?", sc.QueryStart).Or("agencies.name like ?", sc.QueryStart).
+					Or("orders.staff_notes like ?", sc.QueryAny).Or("orders.special_instructions like ?", sc.QueryAny)
 			}
-		} else if field == "id" {
-			fieldQ = svc.DB.Where("orders.id=?", intQ)
-		} else if field == "last_name" {
-			fieldQ = svc.DB.Where("customers.last_name like ?", matchStart)
-		} else if field == "agency" {
-			fieldQ = svc.DB.Where("agencies.name like ?", matchAny)
+		} else if sc.Field == "id" {
+			fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
+		} else if sc.Field == "last_name" {
+			fieldQ = svc.DB.Where("customers.last_name like ?", sc.QueryStart)
+		} else if sc.Field == "agency" {
+			fieldQ = svc.DB.Where("agencies.name like ?", sc.QueryAny)
 		} else {
-			fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", field), matchAny)
+			fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
 		}
 		searchQ.Where(fieldQ)
 
 		searchQ.Count(&resp.Orders.Total)
 		err := searchQ.Preload("Customer").Preload("Agency").
-			Offset(startIndex).Limit(pageSize).
+			Offset(sc.StartIndex).Limit(sc.PageSize).
 			Find(&resp.Orders.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: order search failed: %s", err.Error())
