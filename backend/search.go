@@ -89,6 +89,11 @@ type filterData struct {
 	Params []string `json:"params"`
 }
 
+type searchFilter struct {
+	Target string
+	Query  *gorm.DB
+}
+
 func (svc *serviceContext) searchRequest(c *gin.Context) {
 	// get the query and tag it for starts with and contains searches
 	qStr := strings.Trim(c.Query("q"), " ")
@@ -135,79 +140,12 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	}
 	log.Printf("INFO: search %s.%s for [%s] starting from %d limit %d", scope, field, qStr, startIndex, pageSize)
 
-	// extract filters into json structs
-	filterStr := c.Query("filters")
-	log.Printf("INFO: raw filters %s", filterStr)
-	var filterQ *gorm.DB
-	var filterTarget string
-	if filterStr != "" {
-		log.Printf("INFO: parse filters from query string")
-		var filters filterData
-		err := json.Unmarshal([]byte(filterStr), &filters)
-		if err != nil {
-			log.Printf("ERROR: unable to parse filters %s: %s", filterStr, err.Error())
-			c.String(http.StatusBadRequest, "invalid filters")
-			return
-		}
-
-		filterTarget = filters.Type
-		for idx, f := range filters.Params {
-			log.Printf("INFO: found filter %s", f)
-			bits := strings.Split(f, "|")
-			tgtField := bits[0]
-			tgtVal, _ := url.QueryUnescape(bits[2])
-			log.Printf("INFO: filter %s on %s", tgtField, tgtVal)
-			if tgtField == "type" {
-				typeBits := strings.Split(tgtVal, ":")
-				if len(typeBits) == 1 {
-					filterQ = svc.DB.Where("type=?", tgtVal)
-				} else {
-					filterQ = svc.DB.Where("type=? and external_system_id=?", "ExternalMetadata", typeBits[1])
-				}
-			} else if tgtField == "virgo" {
-				if idx == 0 {
-					if tgtVal == "true" {
-						filterQ = svc.DB.Where("date_dl_ingest is not null")
-					} else {
-						filterQ = svc.DB.Where("date_dl_ingest is null")
-					}
-				} else {
-					if tgtVal == "true" {
-						filterQ = filterQ.Where("date_dl_ingest is not null")
-					} else {
-						filterQ = filterQ.Where("date_dl_ingest is null")
-					}
-				}
-			} else if tgtField == "dpla" {
-				if idx == 0 {
-					if tgtVal == "true" {
-						filterQ = svc.DB.Where("dpla=1")
-					} else {
-						filterQ = svc.DB.Where("dpla=0")
-					}
-				} else {
-					if tgtVal == "true" {
-						filterQ = filterQ.Where("dpla=1")
-					} else {
-						filterQ = filterQ.Where("dpla=0")
-					}
-				}
-			} else {
-				op := "="
-				if bits[1] == "contains" {
-					tgtVal = fmt.Sprintf("%%%s%%", tgtVal)
-					op = "like"
-				} else if bits[1] == "startsWith" {
-					tgtVal = fmt.Sprintf("%s%%", tgtVal)
-					op = "like"
-				}
-				if idx == 0 {
-					filterQ = svc.DB.Where(fmt.Sprintf("%s %s ?", tgtField, op), tgtVal)
-				} else {
-					filterQ = filterQ.Where(fmt.Sprintf("%s %s ?", tgtField, op), tgtVal)
-				}
-			}
-		}
+	// extract filterdata into a db query that can be appended later
+	filter, err := svc.initFilter(c.Query("filters"))
+	if err != nil {
+		log.Printf("ERROR: %s", err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
 	}
 
 	// init empty results
@@ -224,8 +162,8 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		startTime := time.Now()
 		searchQ := svc.DB.Debug().Table("components")
 		if pidQuery == false {
-			if filterTarget == "components" && filterQ != nil {
-				searchQ = searchQ.Where(filterQ)
+			if filter.Target == "components" {
+				searchQ = searchQ.Where(filter.Query)
 			}
 
 			var fieldQ *gorm.DB
@@ -263,8 +201,8 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		startTime := time.Now()
 		searchQ := svc.DB.Debug().Table("master_files")
 		if pidQuery == false {
-			if filterTarget == "masterfiles" && filterQ != nil {
-				searchQ = searchQ.Where(filterQ)
+			if filter.Target == "masterfiles" {
+				searchQ = searchQ.Where(filter.Query)
 			}
 
 			var fieldQ *gorm.DB
@@ -312,8 +250,8 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		startTime := time.Now()
 		searchQ := svc.DB.Debug().Table("metadata")
 		if pidQuery == false {
-			if filterTarget == "metadata" && filterQ != nil {
-				searchQ = searchQ.Where(filterQ)
+			if filter.Target == "metadata" {
+				searchQ = searchQ.Where(filter.Query)
 			}
 
 			var fieldQ *gorm.DB
@@ -364,8 +302,8 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		searchQ := svc.DB.Debug().Table("orders").
 			Joins("inner join customers on customer_id = customers.id").
 			Joins("left outer join agencies on agency_id = agencies.id")
-		if filterTarget == "orders" && filterQ != nil {
-			searchQ = searchQ.Where(filterQ)
+		if filter.Target == "orders" {
+			searchQ = searchQ.Where(filter.Query)
 		}
 
 		var fieldQ *gorm.DB
@@ -399,4 +337,79 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) initFilter(filterStr string) (*searchFilter, error) {
+	log.Printf("INFO: raw filters [%s]", filterStr)
+	out := searchFilter{Target: "none"}
+
+	if filterStr != "" {
+		log.Printf("INFO: parse filters from query string")
+		var filters filterData
+		err := json.Unmarshal([]byte(filterStr), &filters)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse filter %s: %s", filterStr, err.Error())
+		}
+
+		out.Target = filters.Type
+		for idx, f := range filters.Params {
+			log.Printf("INFO: found filter %s", f)
+			bits := strings.Split(f, "|")
+			tgtField := bits[0]
+			tgtVal, _ := url.QueryUnescape(bits[2])
+			log.Printf("INFO: filter %s on %s", tgtField, tgtVal)
+
+			if tgtField == "type" {
+				typeBits := strings.Split(tgtVal, ":")
+				if len(typeBits) == 1 {
+					out.Query = svc.DB.Where("type=?", tgtVal)
+				} else {
+					out.Query = svc.DB.Where("type=? and external_system_id=?", "ExternalMetadata", typeBits[1])
+				}
+			} else if tgtField == "virgo" {
+				if idx == 0 {
+					if tgtVal == "true" {
+						out.Query = svc.DB.Where("date_dl_ingest is not null")
+					} else {
+						out.Query = svc.DB.Where("date_dl_ingest is null")
+					}
+				} else {
+					if tgtVal == "true" {
+						out.Query = out.Query.Where("date_dl_ingest is not null")
+					} else {
+						out.Query = out.Query.Where("date_dl_ingest is null")
+					}
+				}
+			} else if tgtField == "dpla" {
+				if idx == 0 {
+					if tgtVal == "true" {
+						out.Query = svc.DB.Where("dpla=1")
+					} else {
+						out.Query = svc.DB.Where("dpla=0")
+					}
+				} else {
+					if tgtVal == "true" {
+						out.Query = out.Query.Where("dpla=1")
+					} else {
+						out.Query = out.Query.Where("dpla=0")
+					}
+				}
+			} else {
+				op := "="
+				if bits[1] == "contains" {
+					tgtVal = fmt.Sprintf("%%%s%%", tgtVal)
+					op = "like"
+				} else if bits[1] == "startsWith" {
+					tgtVal = fmt.Sprintf("%s%%", tgtVal)
+					op = "like"
+				}
+				if idx == 0 {
+					out.Query = svc.DB.Where(fmt.Sprintf("%s %s ?", tgtField, op), tgtVal)
+				} else {
+					out.Query = out.Query.Where(fmt.Sprintf("%s %s ?", tgtField, op), tgtVal)
+				}
+			}
+		}
+	}
+	return &out, nil
 }
