@@ -42,6 +42,7 @@
             <InputText type="text" v-model="filterModel.value" placeholder="Unit ID"/>
          </template>
       </Column>
+      <Column field="metadata.callNumber" header="Call Number" class="nowrap" />
       <Column field="filename" header="Filename"/>
       <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
