@@ -173,7 +173,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	if sc.Scope == "all" || sc.Scope == "components" {
 		log.Printf("INFO: searching components for [%s]...", sc.Query)
 		startTime := time.Now()
-		searchQ := svc.DB.Debug().Table("components")
+		searchQ := svc.DB.Table("components")
 		if sc.QueryType != "pid" {
 			if filter.Target == "components" {
 				searchQ = searchQ.Where(filter.Query)
@@ -210,7 +210,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	if sc.Scope == "all" || sc.Scope == "masterfiles" {
 		log.Printf("INFO: searching masterfiles for [%s]...", sc.Query)
 		startTime := time.Now()
-		searchQ := svc.DB.Debug().Table("master_files").Joins("inner join metadata md on md.id=metadata_id")
+		searchQ := svc.DB.Table("master_files").Joins("inner join metadata md on md.id=metadata_id")
 		if sc.QueryType != "pid" {
 			if filter.Target == "masterfiles" {
 				searchQ = searchQ.Where(filter.Query)
@@ -221,14 +221,15 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 				if sc.QueryType == "id" {
 					fieldQ = svc.DB.Or("master_files.id=?", sc.IntQuery).Or("unit_id=?", sc.IntQuery)
 				} else {
-					fieldQ = svc.DB.Or("filename like ?", sc.QueryAny).Or("master_files.title like ?", sc.QueryAny).
-						Or("description like ?", sc.QueryAny).Or("md.call_number = ?", sc.Query)
+					fieldQ = svc.DB.Or("md.call_number = ?", sc.Query).
+						Or("master_files.title like ?", sc.QueryAny).
+						Or("description like ?", sc.QueryAny)
 				}
 			} else if sc.Field == "unit_id" {
 				fieldQ = svc.DB.Where("unit_id=?", sc.IntQuery)
 			} else if sc.Field == "call_number" {
 				fieldQ = svc.DB.Where("call_number=?", sc.Query)
-			} else if sc.Field == "title" || sc.Field == "description" || sc.Field == "filename" {
+			} else if sc.Field == "title" || sc.Field == "description" {
 				fieldQ = svc.DB.Where(fmt.Sprintf("master_files.%s like ?", sc.Field), sc.QueryAny)
 			} else if sc.Field == "tag" {
 				searchQ = searchQ.
@@ -258,7 +259,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	if sc.Scope == "all" || sc.Scope == "metadata" {
 		log.Printf("INFO: searching metadata for [%s]...", sc.Query)
 		startTime := time.Now()
-		searchQ := svc.DB.Debug().Table("metadata")
+		searchQ := svc.DB.Table("metadata")
 		if sc.QueryType != "pid" {
 			if filter.Target == "metadata" {
 				searchQ = searchQ.Where(filter.Query)
@@ -267,14 +268,16 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			var fieldQ *gorm.DB
 			if sc.Field == "all" {
 				fieldQ = svc.DB.Or("title like ?", sc.QueryAny).
-					Or("barcode=?", sc.Query).Or("catalog_key=?", sc.Query).Or("call_number like ?", sc.QueryAny).
-					Or("creator_name like ?", sc.QueryAny).Or("collection_id like ?", sc.QueryStart).Or("collection_facet like ?", sc.QueryStart)
+					Or("barcode=?", sc.Query).Or("catalog_key=?", sc.Query).Or("call_number like ?", sc.QueryStart).
+					Or("creator_name like ?", sc.QueryStart).Or("collection_id like ?", sc.QueryStart).Or("collection_facet like ?", sc.QueryStart)
 				if sc.QueryType == "id" {
 					fieldQ = fieldQ.Or("metadata.id=?", sc.IntQuery)
 				}
 			} else {
-				if sc.Field == "title" || sc.Field == "creator_name" || sc.Field == "call_number" {
+				if sc.Field == "title" || sc.Field == "creator_name" {
 					fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
+				} else if sc.Field == "call_number" {
+					fieldQ = svc.DB.Where("call_number=?", sc.Query)
 				} else {
 					fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", sc.Field), sc.Query)
 				}
@@ -291,7 +294,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 
 		searchQ.Count(&resp.Metadata.Total)
 		searchQ = searchQ.Preload("ExternalSystem")
-		err := searchQ.Debug().Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Metadata.Hits).Error
+		err := searchQ.Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Metadata.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: metadata search failed: %s", err.Error())
 		}
@@ -309,7 +312,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	if (sc.Scope == "all" || sc.Scope == "orders") && sc.QueryType != "pid" {
 		log.Printf("INFO: searching orders for [%s]...", sc.Query)
 		startTime := time.Now()
-		searchQ := svc.DB.Debug().Table("orders").
+		searchQ := svc.DB.Table("orders").
 			Joins("inner join customers on customer_id = customers.id").
 			Joins("left outer join agencies on agency_id = agencies.id")
 		if filter.Target == "orders" {
