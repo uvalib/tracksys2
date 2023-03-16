@@ -186,8 +186,6 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 				if sc.QueryType == "id" {
 					fieldQ = fieldQ.Or("components.id=?", sc.IntQuery)
 				}
-			} else if sc.Field == "id" {
-				fieldQ = svc.DB.Where("id=?", sc.IntQuery)
 			} else if sc.Field == "ead_id_att" {
 				fieldQ = svc.DB.Where("ead_id_att=?", sc.Query)
 			} else {
@@ -212,7 +210,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	if sc.Scope == "all" || sc.Scope == "masterfiles" {
 		log.Printf("INFO: searching masterfiles for [%s]...", sc.Query)
 		startTime := time.Now()
-		searchQ := svc.DB.Debug().Table("master_files")
+		searchQ := svc.DB.Debug().Table("master_files").Joins("inner join metadata md on md.id=metadata_id")
 		if sc.QueryType != "pid" {
 			if filter.Target == "masterfiles" {
 				searchQ = searchQ.Where(filter.Query)
@@ -223,13 +221,15 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 				if sc.QueryType == "id" {
 					fieldQ = svc.DB.Or("master_files.id=?", sc.IntQuery).Or("unit_id=?", sc.IntQuery)
 				} else {
-					fieldQ = svc.DB.Or("filename like ?", sc.QueryAny).Or("title like ?", sc.QueryAny).
-						Or("description like ?", sc.QueryAny)
+					fieldQ = svc.DB.Or("filename like ?", sc.QueryAny).Or("master_files.title like ?", sc.QueryAny).
+						Or("description like ?", sc.QueryAny).Or("md.call_number = ?", sc.Query)
 				}
-			} else if sc.Field == "id" || sc.Field == "unit_id" {
-				fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", sc.Field), sc.IntQuery)
+			} else if sc.Field == "unit_id" {
+				fieldQ = svc.DB.Where("unit_id=?", sc.IntQuery)
+			} else if sc.Field == "call_number" {
+				fieldQ = svc.DB.Where("call_number=?", sc.Query)
 			} else if sc.Field == "title" || sc.Field == "description" || sc.Field == "filename" {
-				fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
+				fieldQ = svc.DB.Where(fmt.Sprintf("master_files.%s like ?", sc.Field), sc.QueryAny)
 			} else if sc.Field == "tag" {
 				searchQ = searchQ.
 					Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").

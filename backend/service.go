@@ -356,8 +356,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 	resp.SearchFields = map[string][]searchField{
 		"all": {
 			searchField{Field: "all", Label: "All fields"},
-			searchField{Field: "id", Label: "ID"},
-			searchField{Field: "title", Label: "Title"},
 		},
 		"components": {
 			searchField{Field: "all", Label: "All fields"},
@@ -374,6 +372,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 			searchField{Field: "filename", Label: "Filename"},
 			searchField{Field: "title", Label: "Title"},
 			searchField{Field: "description", Label: "Description"},
+			searchField{Field: "call_number", Label: "Call number"},
 			searchField{Field: "tag", Label: "Tag"},
 		},
 		"metadata": {

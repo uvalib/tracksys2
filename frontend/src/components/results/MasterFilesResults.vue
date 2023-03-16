@@ -41,8 +41,15 @@
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Unit ID"/>
          </template>
+         <template #body="slotProps">
+            <router-link :to="`/units/${slotProps.data.unitID}`">{{slotProps.data.unitID}}</router-link>
+         </template>
       </Column>
-      <Column field="metadata.callNumber" header="Call Number" class="nowrap" />
+      <Column field="metadata.callNumber" header="Call Number" class="nowrap">
+         <template #body="slotProps">
+            <router-link :to="`/metadata/${slotProps.data.metadata.id}`">{{slotProps.data.metadata.callNumber}}</router-link>
+         </template>
+      </Column>
       <Column field="filename" header="Filename"/>
       <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
@@ -59,11 +66,6 @@
             <a :href="slotProps.data.imageURL" target="_blank">
                <img :src="slotProps.data.thumbnailURL" />
             </a>
-         </template>
-      </Column>
-      <Column header="" class="row-acts nowrap">
-         <template #body="slotProps">
-            <router-link :to="`/masterfiles/${slotProps.data.id}`">View</router-link>
          </template>
       </Column>
    </DataTable>
