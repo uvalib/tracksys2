@@ -45,7 +45,10 @@
             <router-link :to="`/units/${slotProps.data.unitID}`">{{slotProps.data.unitID}}</router-link>
          </template>
       </Column>
-      <Column field="metadata.callNumber" header="Call Number" class="nowrap">
+      <Column field="metadata.callNumber" header="Call Number" class="nowrap" filterField="call_number" :showFilterMatchModes="false">
+         <template #filter="{filterModel}">
+            <InputText type="text" v-model="filterModel.value" placeholder="Call Number"/>
+         </template>
          <template #body="slotProps">
             <router-link :to="`/metadata/${slotProps.data.metadata.id}`">{{slotProps.data.metadata.callNumber}}</router-link>
          </template>
@@ -90,6 +93,7 @@ const filters = ref( {
    'unit_id': {value: null, matchMode: FilterMatchMode.EQUALS},
    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'description': {value: null, matchMode: FilterMatchMode.CONTAINS},
+   'call_number': {value: searchStore.query, matchMode: FilterMatchMode.STARTS_WITH},
 })
 
 const selectedFilters = computed(() => {
@@ -118,12 +122,14 @@ function downloadCSV() {
 }
 
 function clearFilters() {
+   console.log(filters.value)
    Object.values(filters.value).forEach( fv => fv.value = null )
    searchStore.masterFiles.filters = []
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
    searchStore.executeSearch("masterfiles")
+   filters.value.call_number.value = searchStore.query
 }
 
 function onFilter(event) {

@@ -78,10 +78,10 @@ type orderResp struct {
 }
 
 type searchResults struct {
-	Components  componentResp  `json:"components"`
-	MasterFiles masterFileResp `json:"masterFiles"`
-	Metadata    metadataResp   `json:"metadata"`
-	Orders      orderResp      `json:"orders"`
+	Components  *componentResp  `json:"components"`
+	MasterFiles *masterFileResp `json:"masterFiles"`
+	Metadata    *metadataResp   `json:"metadata"`
+	Orders      *orderResp      `json:"orders"`
 }
 
 type filterData struct {
@@ -153,202 +153,21 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	}
 	log.Printf("INFO: search %s.%s for [%s] starting from %d limit %d", sc.Scope, sc.Field, sc.Query, sc.StartIndex, sc.PageSize)
 
-	// extract filterdata into a db query that can be appended later
-	filter, err := svc.initFilter(c.Query("filters"))
+	// extract filter data into a db query that can be appended later
+	var err error
+	sc.Filter, err = svc.initFilter(c.Query("filters"))
 	if err != nil {
 		log.Printf("ERROR: %s", err.Error())
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	// init empty results
-	resp := searchResults{
-		Components:  componentResp{Hits: make([]component, 0)},
-		MasterFiles: masterFileResp{Hits: make([]*masterFileHit, 0)},
-		Metadata:    metadataResp{Hits: make([]*metadataHit, 0)},
-		Orders:      orderResp{Hits: make([]orderHit, 0)},
-	}
-
 	// query each type of object individually: components, master files, metadata and orders. Aggregate rresults in response struct
-	if sc.Scope == "all" || sc.Scope == "components" {
-		log.Printf("INFO: searching components for [%s]...", sc.Query)
-		startTime := time.Now()
-		searchQ := svc.DB.Table("components")
-		if sc.QueryType != "pid" {
-			if filter.Target == "components" {
-				searchQ = searchQ.Where(filter.Query)
-			}
-
-			var fieldQ *gorm.DB
-			if sc.Field == "all" {
-				fieldQ = svc.DB.Or("title like ?", sc.QueryAny).Or("label like ?", sc.QueryAny).
-					Or("content_desc like ?", sc.QueryAny).Or("date like ?", sc.QueryAny).Or("ead_id_att=?", sc.Query)
-				if sc.QueryType == "id" {
-					fieldQ = fieldQ.Or("components.id=?", sc.IntQuery)
-				}
-			} else if sc.Field == "ead_id_att" {
-				fieldQ = svc.DB.Where("ead_id_att=?", sc.Query)
-			} else {
-				fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
-			}
-			searchQ.Where(fieldQ)
-		} else {
-			searchQ.Where("pid=?", sc.Query)
-		}
-
-		searchQ.Count(&resp.Components.Total)
-		subQ := "(select count(*) from master_files m where component_id=components.id) as mf_cnt"
-		err := searchQ.Offset(sc.StartIndex).Limit(sc.PageSize).Select("components.*", subQ).Find(&resp.Components.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: component search failed: %s", err.Error())
-		}
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: component search found %d hits. Elapsed Time: %d (ms)", resp.Components.Total, elapsedMS)
-	}
-
-	if sc.Scope == "all" || sc.Scope == "masterfiles" {
-		log.Printf("INFO: searching masterfiles for [%s]...", sc.Query)
-		startTime := time.Now()
-		searchQ := svc.DB.Table("master_files").Joins("inner join metadata md on md.id=metadata_id")
-		if sc.QueryType != "pid" {
-			if filter.Target == "masterfiles" {
-				searchQ = searchQ.Where(filter.Query)
-			}
-
-			var fieldQ *gorm.DB
-			if sc.Field == "all" {
-				if sc.QueryType == "id" {
-					fieldQ = svc.DB.Or("master_files.id=?", sc.IntQuery).Or("unit_id=?", sc.IntQuery)
-				} else {
-					fieldQ = svc.DB.Or("md.call_number = ?", sc.Query).
-						Or("master_files.title like ?", sc.QueryAny).
-						Or("description like ?", sc.QueryAny)
-				}
-			} else if sc.Field == "unit_id" {
-				fieldQ = svc.DB.Where("unit_id=?", sc.IntQuery)
-			} else if sc.Field == "call_number" {
-				fieldQ = svc.DB.Where("call_number=?", sc.Query)
-			} else if sc.Field == "title" || sc.Field == "description" {
-				fieldQ = svc.DB.Where(fmt.Sprintf("master_files.%s like ?", sc.Field), sc.QueryAny)
-			} else if sc.Field == "tag" {
-				searchQ = searchQ.
-					Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
-					Joins("left outer join tags t on mt.tag_id = t.id")
-				fieldQ = svc.DB.Where("t.tag like ?", sc.QueryAny)
-			}
-			searchQ.Where(fieldQ)
-		} else {
-			searchQ.Where("pid=?", sc.Query)
-		}
-
-		searchQ.Count(&resp.MasterFiles.Total)
-		err := searchQ.Preload("Metadata").Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.MasterFiles.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: masterfile search failed: %s", err.Error())
-		}
-		for _, mf := range resp.MasterFiles.Hits {
-			mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
-			mf.ImageURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
-		}
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: masterfile search found %d hits. Elapsed Time: %d (ms)", resp.MasterFiles.Total, elapsedMS)
-	}
-
-	if sc.Scope == "all" || sc.Scope == "metadata" {
-		log.Printf("INFO: searching metadata for [%s]...", sc.Query)
-		startTime := time.Now()
-		searchQ := svc.DB.Table("metadata")
-		if sc.QueryType != "pid" {
-			if filter.Target == "metadata" {
-				searchQ = searchQ.Where(filter.Query)
-			}
-
-			var fieldQ *gorm.DB
-			if sc.Field == "all" {
-				fieldQ = svc.DB.Or("title like ?", sc.QueryAny).
-					Or("barcode=?", sc.Query).Or("catalog_key=?", sc.Query).Or("call_number like ?", sc.QueryStart).
-					Or("creator_name like ?", sc.QueryStart).Or("collection_id like ?", sc.QueryStart).Or("collection_facet like ?", sc.QueryStart)
-				if sc.QueryType == "id" {
-					fieldQ = fieldQ.Or("metadata.id=?", sc.IntQuery)
-				}
-			} else {
-				if sc.Field == "title" || sc.Field == "creator_name" {
-					fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
-				} else if sc.Field == "call_number" {
-					fieldQ = svc.DB.Where("call_number=?", sc.Query)
-				} else {
-					fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", sc.Field), sc.Query)
-				}
-			}
-			searchQ.Where(fieldQ)
-		} else {
-			searchQ.Where("pid=?", sc.Query)
-		}
-
-		if sc.ExcludeCollectionItems {
-			// only pick from records with no parent metadata id (items not in a collection)
-			searchQ = searchQ.Where("parent_metadata_id=?", 0)
-		}
-
-		searchQ.Count(&resp.Metadata.Total)
-		searchQ = searchQ.Preload("ExternalSystem")
-		err := searchQ.Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Metadata.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: metadata search failed: %s", err.Error())
-		}
-		for _, md := range resp.Metadata.Hits {
-			if md.DateDlIngest != nil {
-				md.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, md.CatalogKey)
-				md.Virgo = true
-			}
-		}
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: metadata search found %d hits. Elapsed Time: %d (ms)", resp.Metadata.Total, elapsedMS)
-	}
-
-	if (sc.Scope == "all" || sc.Scope == "orders") && sc.QueryType != "pid" {
-		log.Printf("INFO: searching orders for [%s]...", sc.Query)
-		startTime := time.Now()
-		searchQ := svc.DB.Table("orders").
-			Joins("inner join customers on customer_id = customers.id").
-			Joins("left outer join agencies on agency_id = agencies.id")
-		if filter.Target == "orders" {
-			searchQ = searchQ.Where(filter.Query)
-		}
-
-		var fieldQ *gorm.DB
-		if sc.Field == "all" {
-			if sc.QueryType == "id" {
-				fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
-			} else {
-				fieldQ = svc.DB.Or("customers.last_name like ?", sc.QueryStart).Or("agencies.name like ?", sc.QueryStart).
-					Or("orders.staff_notes like ?", sc.QueryAny).Or("orders.special_instructions like ?", sc.QueryAny)
-			}
-		} else if sc.Field == "id" {
-			fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
-		} else if sc.Field == "last_name" {
-			fieldQ = svc.DB.Where("customers.last_name like ?", sc.QueryStart)
-		} else if sc.Field == "agency" {
-			fieldQ = svc.DB.Where("agencies.name like ?", sc.QueryAny)
-		} else {
-			fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
-		}
-		searchQ.Where(fieldQ)
-
-		searchQ.Count(&resp.Orders.Total)
-		err := searchQ.Preload("Customer").Preload("Agency").
-			Offset(sc.StartIndex).Limit(sc.PageSize).
-			Find(&resp.Orders.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: order search failed: %s", err.Error())
-		}
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: orders search found %d hits. Elapsed Time: %d (ms)", resp.Orders.Total, elapsedMS)
-	}
+	resp := searchResults{}
+	resp.MasterFiles = svc.queryMasterFiles(&sc)
+	resp.Components = svc.queryComponents(&sc)
+	resp.Metadata = svc.queryMetadata(&sc)
+	resp.Orders = svc.queryOrders(&sc)
 
 	c.JSON(http.StatusOK, resp)
 }
@@ -426,4 +245,200 @@ func (svc *serviceContext) initFilter(filterStr string) (*searchFilter, error) {
 		}
 	}
 	return &out, nil
+}
+
+func (svc *serviceContext) queryMasterFiles(sc *searchContext) *masterFileResp {
+	resp := masterFileResp{Hits: make([]*masterFileHit, 0)}
+	if sc.Scope == "all" || sc.Scope == "masterfiles" {
+		log.Printf("INFO: searching masterfiles for [%s]...", sc.Query)
+		startTime := time.Now()
+		searchQ := svc.DB.Table("master_files").Joins("inner join metadata md on md.id=metadata_id")
+		if sc.QueryType != "pid" {
+			if sc.Filter.Target == "masterfiles" {
+				searchQ = searchQ.Where(sc.Filter.Query)
+			}
+
+			var fieldQ *gorm.DB
+			if sc.Field == "all" {
+				if sc.QueryType == "id" {
+					fieldQ = svc.DB.Or("master_files.id=?", sc.IntQuery).Or("unit_id=?", sc.IntQuery)
+				} else {
+					fieldQ = svc.DB.Or("md.call_number like ?", sc.QueryStart).
+						Or("master_files.title like ?", sc.QueryAny).
+						Or("description like ?", sc.QueryAny)
+				}
+			} else if sc.Field == "unit_id" {
+				fieldQ = svc.DB.Where("unit_id=?", sc.IntQuery)
+			} else if sc.Field == "call_number" {
+				fieldQ = svc.DB.Where("call_number like ?", sc.QueryStart)
+			} else if sc.Field == "title" || sc.Field == "description" {
+				fieldQ = svc.DB.Where(fmt.Sprintf("master_files.%s like ?", sc.Field), sc.QueryAny)
+			} else if sc.Field == "tag" {
+				searchQ = searchQ.
+					Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
+					Joins("left outer join tags t on mt.tag_id = t.id")
+				fieldQ = svc.DB.Where("t.tag like ?", sc.QueryAny)
+			}
+			searchQ.Where(fieldQ)
+		} else {
+			searchQ.Where("pid=?", sc.Query)
+		}
+
+		searchQ.Count(&resp.Total)
+		err := searchQ.Preload("Metadata").Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Hits).Error
+		if err != nil {
+			log.Printf("ERROR: masterfile search failed: %s", err.Error())
+		}
+		for _, mf := range resp.Hits {
+			mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
+			mf.ImageURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
+		}
+		elapsedNanoSec := time.Since(startTime)
+		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+		log.Printf("INFO: masterfile search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+	}
+	return &resp
+}
+
+func (svc *serviceContext) queryMetadata(sc *searchContext) *metadataResp {
+	resp := metadataResp{Hits: make([]*metadataHit, 0)}
+	if sc.Scope == "all" || sc.Scope == "metadata" {
+		log.Printf("INFO: searching metadata for [%s]...", sc.Query)
+		startTime := time.Now()
+		searchQ := svc.DB.Table("metadata")
+		if sc.QueryType != "pid" {
+			if sc.Filter.Target == "metadata" {
+				searchQ = searchQ.Where(sc.Filter.Query)
+			}
+
+			var fieldQ *gorm.DB
+			if sc.Field == "all" {
+				fieldQ = svc.DB.Or("title like ?", sc.QueryAny).
+					Or("barcode=?", sc.Query).Or("catalog_key=?", sc.Query).Or("call_number like ?", sc.QueryStart).
+					Or("creator_name like ?", sc.QueryStart).Or("collection_id like ?", sc.QueryStart).Or("collection_facet like ?", sc.QueryStart)
+				if sc.QueryType == "id" {
+					fieldQ = fieldQ.Or("metadata.id=?", sc.IntQuery)
+				}
+			} else {
+				if sc.Field == "title" || sc.Field == "creator_name" {
+					fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
+				} else if sc.Field == "call_number" {
+					fieldQ = svc.DB.Where("call_number like ?", sc.QueryStart)
+				} else {
+					fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", sc.Field), sc.Query)
+				}
+			}
+			searchQ.Where(fieldQ)
+		} else {
+			searchQ.Where("pid=?", sc.Query)
+		}
+
+		if sc.ExcludeCollectionItems {
+			// only pick from records with no parent metadata id (items not in a collection)
+			searchQ = searchQ.Where("parent_metadata_id=?", 0)
+		}
+
+		searchQ.Count(&resp.Total)
+		searchQ = searchQ.Preload("ExternalSystem")
+		err := searchQ.Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Hits).Error
+		if err != nil {
+			log.Printf("ERROR: metadata search failed: %s", err.Error())
+		}
+		for _, md := range resp.Hits {
+			if md.DateDlIngest != nil {
+				md.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, md.CatalogKey)
+				md.Virgo = true
+			}
+		}
+		elapsedNanoSec := time.Since(startTime)
+		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+		log.Printf("INFO: metadata search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+	}
+	return &resp
+}
+
+func (svc *serviceContext) queryOrders(sc *searchContext) *orderResp {
+	resp := orderResp{Hits: make([]orderHit, 0)}
+	if (sc.Scope == "all" || sc.Scope == "orders") && sc.QueryType != "pid" {
+		log.Printf("INFO: searching orders for [%s]...", sc.Query)
+		startTime := time.Now()
+		searchQ := svc.DB.Table("orders").
+			Joins("inner join customers on customer_id = customers.id").
+			Joins("left outer join agencies on agency_id = agencies.id")
+		if sc.Filter.Target == "orders" {
+			searchQ = searchQ.Where(sc.Filter.Query)
+		}
+
+		var fieldQ *gorm.DB
+		if sc.Field == "all" {
+			if sc.QueryType == "id" {
+				fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
+			} else {
+				fieldQ = svc.DB.Or("customers.last_name like ?", sc.QueryStart).Or("agencies.name like ?", sc.QueryStart).
+					Or("orders.staff_notes like ?", sc.QueryAny).Or("orders.special_instructions like ?", sc.QueryAny)
+			}
+		} else if sc.Field == "id" {
+			fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
+		} else if sc.Field == "last_name" {
+			fieldQ = svc.DB.Where("customers.last_name like ?", sc.QueryStart)
+		} else if sc.Field == "agency" {
+			fieldQ = svc.DB.Where("agencies.name like ?", sc.QueryAny)
+		} else {
+			fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
+		}
+		searchQ.Where(fieldQ)
+
+		searchQ.Count(&resp.Total)
+		err := searchQ.Preload("Customer").Preload("Agency").
+			Offset(sc.StartIndex).Limit(sc.PageSize).
+			Find(&resp.Hits).Error
+		if err != nil {
+			log.Printf("ERROR: order search failed: %s", err.Error())
+		}
+		elapsedNanoSec := time.Since(startTime)
+		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+		log.Printf("INFO: orders search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+	}
+	return &resp
+}
+
+func (svc *serviceContext) queryComponents(sc *searchContext) *componentResp {
+	resp := componentResp{Hits: make([]component, 0)}
+	if sc.Scope == "all" || sc.Scope == "components" {
+		log.Printf("INFO: searching components for [%s]...", sc.Query)
+		startTime := time.Now()
+		searchQ := svc.DB.Table("components")
+		if sc.QueryType != "pid" {
+			if sc.Filter.Target == "components" {
+				searchQ = searchQ.Where(sc.Filter.Query)
+			}
+
+			var fieldQ *gorm.DB
+			if sc.Field == "all" {
+				fieldQ = svc.DB.Or("title like ?", sc.QueryAny).Or("label like ?", sc.QueryAny).
+					Or("content_desc like ?", sc.QueryAny).Or("date like ?", sc.QueryAny).Or("ead_id_att=?", sc.Query)
+				if sc.QueryType == "id" {
+					fieldQ = fieldQ.Or("components.id=?", sc.IntQuery)
+				}
+			} else if sc.Field == "ead_id_att" {
+				fieldQ = svc.DB.Where("ead_id_att=?", sc.Query)
+			} else {
+				fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
+			}
+			searchQ.Where(fieldQ)
+		} else {
+			searchQ.Where("pid=?", sc.Query)
+		}
+
+		searchQ.Count(&resp.Total)
+		subQ := "(select count(*) from master_files m where component_id=components.id) as mf_cnt"
+		err := searchQ.Offset(sc.StartIndex).Limit(sc.PageSize).Select("components.*", subQ).Find(&resp.Hits).Error
+		if err != nil {
+			log.Printf("ERROR: component search failed: %s", err.Error())
+		}
+		elapsedNanoSec := time.Since(startTime)
+		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+		log.Printf("INFO: component search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+	}
+	return &resp
 }
