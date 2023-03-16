@@ -97,7 +97,7 @@ const metadataStore = useMetadataStore()
 const validated = ref(false)
 const info = ref({
    type: "XmlMetadata",
-   externSystemID: null,
+   externalSystemID: 0,
    externalURI: "",
    title: "",
    callNumber: "",
@@ -120,7 +120,7 @@ const info = ref({
 onMounted(() => {
    validated.value = false
    info.value.type = "XmlMetadata"
-   info.value.externSystemID = null
+   info.value.externalSystemID = 0
    info.value.externalURI = ""
    info.value.title = ""
    info.value.callNumber = ""
@@ -220,10 +220,10 @@ const isLanguageDisabled = computed(() => {
 })
 
 function typeChanged() {
-   info.value.externSystemID = null
+   info.value.externalSystemID = 0
    validated.value = false
    if (info.value.type == "ExternalMetadata") {
-      info.value.externSystemID = 1
+      info.value.externalSystemID = 1
    }
 }
 function xmlTitleChanged() {
@@ -234,6 +234,7 @@ async function validateASMetadata() {
    if (metadataStore.asMatch.error == "") {
       validated.value = true
       info.value.externalURI = metadataStore.asMatch.validatedURL
+      info.value.externalSystemID = 1
       info.value.title = metadataStore.asMatch.title
    }
 }

@@ -207,7 +207,7 @@ type metadataDetailResponse struct {
 
 type metadataRequest struct {
 	Type                 string `json:"type"`
-	ExternalSystemID     int64  `json:"externSystemID"`
+	ExternalSystemID     int64  `json:"externalSystemID"`
 	ExternalURI          string `json:"externalURI"`
 	Title                string `json:"title"`
 	CallNumber           string `json:"callNumber"`
@@ -327,6 +327,14 @@ func (svc *serviceContext) createMetadata(c *gin.Context) {
 		return
 	}
 	log.Printf("INFO: create %s metadata request", req.Type)
+
+	if req.Type == "ExternalMetadata" && req.ExternalSystemID == 0 {
+		log.Printf("ERROR: invalid create metadata request; external system is missing the external system id")
+		c.String(http.StatusBadRequest, "external system identifier is missing")
+		return
+	}
+
+	log.Printf("INFO: create request details: %+v", req)
 
 	// create new record and set common attributes
 	createTime := time.Now()
