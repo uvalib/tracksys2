@@ -50,9 +50,10 @@
             <Column header="" class="row-acts">
                <template #body="slotProps">
                   <DPGButton label="View" class="p-button-secondary first" @click="viewClicked(slotProps.data)" />
-                  <DPGButton label="Download" class="p-button-secondary" @click="downloadFile(slotProps.data)"/>
+                  <DPGButton label="Download Image" class="p-button-secondary" @click="downloadFile(slotProps.data)"/>
+                  <DPGButton label="Download PDF" class="p-button-secondary" @click="downloadPDF(slotProps.data)"/>
                   <DPGButton v-if="slotProps.data.exemplar==false && (detail.intendedUse && detail.intendedUse.id == 110 || detail.includeInDL)"
-                     label="Exemplar" class="p-button-secondary" @click="exemplarClicked(slotProps.data)"/>
+                     label="Set Exemplar" class="p-button-secondary" @click="exemplarClicked(slotProps.data)"/>
                </template>
             </Column>
          </DataTable>
@@ -233,7 +234,10 @@ function deleteClicked() {
       }
    })
 }
-
+function downloadPDF(info) {
+   let url = `${systemStore.pdfURL}/${info.pid}`
+   window.open(url)
+}
 function downloadFile( info) {
    unitsStore.downloadFromArchive(userStore.computeID, info.filename )
 }

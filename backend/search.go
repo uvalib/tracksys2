@@ -78,10 +78,10 @@ type orderResp struct {
 }
 
 type searchResults struct {
-	Components  *componentResp  `json:"components"`
-	MasterFiles *masterFileResp `json:"masterFiles"`
-	Metadata    *metadataResp   `json:"metadata"`
-	Orders      *orderResp      `json:"orders"`
+	Components  componentResp  `json:"components"`
+	MasterFiles masterFileResp `json:"masterFiles"`
+	Metadata    metadataResp   `json:"metadata"`
+	Orders      orderResp      `json:"orders"`
 }
 
 type filterData struct {
@@ -106,6 +106,11 @@ type searchContext struct {
 	StartIndex             int
 	PageSize               int
 	ExcludeCollectionItems bool
+}
+
+type searchChannel struct {
+	Type    string
+	Results interface{}
 }
 
 func (svc *serviceContext) searchRequest(c *gin.Context) {
@@ -162,12 +167,50 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		return
 	}
 
-	// query each type of object individually: components, master files, metadata and orders. Aggregate rresults in response struct
+	// query each type of object individually: components, master files, metadata and orders
+	log.Printf("INFO: issue search requests...")
+	pendingCount := 4
+	channel := make(chan searchChannel)
+	startTime := time.Now()
+	go svc.queryMasterFiles(&sc, channel)
+	go svc.queryComponents(&sc, channel)
+	go svc.queryMetadata(&sc, channel)
+	go svc.queryOrders(&sc, channel)
+
+	log.Printf("INFO: await all searchs responses...")
 	resp := searchResults{}
-	resp.MasterFiles = svc.queryMasterFiles(&sc)
-	resp.Components = svc.queryComponents(&sc)
-	resp.Metadata = svc.queryMetadata(&sc)
-	resp.Orders = svc.queryOrders(&sc)
+	for pendingCount > 0 {
+		searchResp := <-channel
+		pendingCount--
+		if searchResp.Type == "masterFiles" {
+			log.Printf("INFO received master files search response")
+			mfResp, ok := searchResp.Results.(masterFileResp)
+			if ok {
+				resp.MasterFiles = mfResp
+			}
+		} else if searchResp.Type == "metadata" {
+			log.Printf("INFO received metadata search response")
+			mResp, ok := searchResp.Results.(metadataResp)
+			if ok {
+				resp.Metadata = mResp
+			}
+		} else if searchResp.Type == "components" {
+			log.Printf("INFO received components search response")
+			cResp, ok := searchResp.Results.(componentResp)
+			if ok {
+				resp.Components = cResp
+			}
+		} else if searchResp.Type == "orders" {
+			log.Printf("INFO received orders search response")
+			oResp, ok := searchResp.Results.(orderResp)
+			if ok {
+				resp.Orders = oResp
+			}
+		}
+	}
+	elapsedNanoSec := time.Since(startTime)
+	elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+	log.Printf("INFO: all responses received. Elapsed Time: %d (ms)", elapsedMS)
 
 	c.JSON(http.StatusOK, resp)
 }
@@ -247,7 +290,7 @@ func (svc *serviceContext) initFilter(filterStr string) (*searchFilter, error) {
 	return &out, nil
 }
 
-func (svc *serviceContext) queryMasterFiles(sc *searchContext) *masterFileResp {
+func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan searchChannel) {
 	resp := masterFileResp{Hits: make([]*masterFileHit, 0)}
 	if sc.Scope == "all" || sc.Scope == "masterfiles" {
 		log.Printf("INFO: searching masterfiles for [%s]...", sc.Query)
@@ -297,10 +340,10 @@ func (svc *serviceContext) queryMasterFiles(sc *searchContext) *masterFileResp {
 		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
 		log.Printf("INFO: masterfile search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
 	}
-	return &resp
+	channel <- searchChannel{Type: "masterFiles", Results: resp}
 }
 
-func (svc *serviceContext) queryMetadata(sc *searchContext) *metadataResp {
+func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchChannel) {
 	resp := metadataResp{Hits: make([]*metadataHit, 0)}
 	if sc.Scope == "all" || sc.Scope == "metadata" {
 		log.Printf("INFO: searching metadata for [%s]...", sc.Query)
@@ -354,10 +397,10 @@ func (svc *serviceContext) queryMetadata(sc *searchContext) *metadataResp {
 		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
 		log.Printf("INFO: metadata search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
 	}
-	return &resp
+	channel <- searchChannel{Type: "metadata", Results: resp}
 }
 
-func (svc *serviceContext) queryOrders(sc *searchContext) *orderResp {
+func (svc *serviceContext) queryOrders(sc *searchContext, channel chan searchChannel) {
 	resp := orderResp{Hits: make([]orderHit, 0)}
 	if (sc.Scope == "all" || sc.Scope == "orders") && sc.QueryType != "pid" {
 		log.Printf("INFO: searching orders for [%s]...", sc.Query)
@@ -399,10 +442,10 @@ func (svc *serviceContext) queryOrders(sc *searchContext) *orderResp {
 		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
 		log.Printf("INFO: orders search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
 	}
-	return &resp
+	channel <- searchChannel{Type: "orders", Results: resp}
 }
 
-func (svc *serviceContext) queryComponents(sc *searchContext) *componentResp {
+func (svc *serviceContext) queryComponents(sc *searchContext, channel chan searchChannel) {
 	resp := componentResp{Hits: make([]component, 0)}
 	if sc.Scope == "all" || sc.Scope == "components" {
 		log.Printf("INFO: searching components for [%s]...", sc.Query)
@@ -440,5 +483,5 @@ func (svc *serviceContext) queryComponents(sc *searchContext) *componentResp {
 		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
 		log.Printf("INFO: component search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
 	}
-	return &resp
+	channel <- searchChannel{Type: "components", Results: resp}
 }

@@ -59,11 +59,6 @@
       </Column>
       <Column field="eadID" header="EAD ID" />
       <Column field="masterFileCount" header="Master Files"/>
-      <Column header="" class="row-acts nowrap">
-         <template #body="slotProps">
-            <router-link :to="`/components/${slotProps.data.id}`">View</router-link>
-         </template>
-      </Column>
    </DataTable>
 </template>
 

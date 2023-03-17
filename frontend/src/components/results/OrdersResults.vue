@@ -72,11 +72,6 @@
             <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
          </template>
       </Column>
-      <Column header="" class="row-acts nowrap">
-         <template #body="slotProps">
-            <router-link :to="`/orders/${slotProps.data.id}`">View</router-link>
-         </template>
-      </Column>
    </DataTable>
 </template>
 

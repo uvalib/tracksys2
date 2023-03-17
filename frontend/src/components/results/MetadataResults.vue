@@ -93,11 +93,6 @@
             <span v-else>No</span>
          </template>
       </Column>
-      <Column header="" class="row-acts nowrap">
-         <template #body="slotProps">
-            <router-link :to="`/metadata/${slotProps.data.id}`">View</router-link>
-         </template>
-      </Column>
    </DataTable>
 </template>
 
