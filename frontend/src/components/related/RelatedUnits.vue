@@ -7,6 +7,7 @@
       :lazy="false" :paginator="props.units.length > 15" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
+      v-model:filters="filters" filterDisplay="menu"
    >
       <Column field="id" header="ID" :sortable="true">
          <template #body="slotProps">
@@ -20,8 +21,12 @@
          </template>
       </Column>
       <Column field="metadata.callNumber" header="Call Number" v-if="showMetadata" class="nowrap" />
-      <Column field="intendedUse.name" header="Intended Use"/>
-      <Column header="Date Patron Deliverables Ready">
+      <Column field="intendedUse.name" header="Intended Use" filterField="intendedUse.id" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <Dropdown v-model="filterModel.value" :options="systemStore.intendedUses" optionLabel="name" optionValue="id" placeholder="Select an intended use" />
+         </template>
+      </Column>
+      <Column field="datePatronDeliverablesReady"  header="Date Patron Deliverables Ready" :sortable="true">
          <template #body="slotProps">
             <span v-if="slotProps.data.datePatronDeliverablesReady">
                {{formatDate(slotProps.data.datePatronDeliverablesReady)}}
@@ -29,7 +34,7 @@
             <span v-else class="empty">N/A</span>
          </template>
       </Column>
-      <Column header="Date DL Deliverables Ready">
+      <Column field="dateDLDeliverablesReady" header="Date DL Deliverables Ready" :sortable="true">
          <template #body="slotProps">
             <span v-if="slotProps.data.dateDLDeliverablesReady">
                {{formatDate(slotProps.data.dateDLDeliverablesReady)}}
@@ -37,7 +42,10 @@
             <span v-else class="empty">N/A</span>
          </template>
       </Column>
-      <Column field="reorder" header="Reorder?">
+      <Column field="reorder" header="Reorder?" filterField="reorder" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <Dropdown v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a reorder status" />
+         </template>
          <template #body="slotProps">
             {{formatBoolean(slotProps.data.reorder)}}
          </template>
@@ -47,9 +55,15 @@
 </template>
 
 <script setup>
+import { ref,computed } from 'vue'
+import { FilterMatchMode } from 'primevue/api'
+import Dropdown from 'primevue/dropdown'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import dayjs from 'dayjs'
+import { useSystemStore } from '@/stores/system'
+
+const systemStore = useSystemStore()
 
 const props = defineProps({
    units: {
@@ -62,17 +76,30 @@ const props = defineProps({
    }
 })
 
-function formatBoolean( flag) {
+
+const yesNo = computed(() => {
+   let out = []
+   out.push( {label: "No", value: false} )
+   out.push( {label: "Yes", value: true} )
+   return out
+})
+
+const filters = ref( {
+   'intendedUse.id': {value: null, matchMode: FilterMatchMode.EQUALS},
+   'reorder': {value: null, matchMode: FilterMatchMode.EQUALS},
+})
+
+const formatBoolean = ( (flag) => {
    if (flag) return "Yes"
    return "No"
-}
+})
 
-function formatDate( date ) {
+const formatDate = (  (date ) => {
    if (date) {
       return dayjs(date).format("YYYY-MM-DD")
    }
    return ""
-}
+})
 
 </script>
 
