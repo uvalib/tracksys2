@@ -8,6 +8,7 @@
             paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
             currentPageReportTemplate="{first} - {last} of {totalRecords}"
             v-model:selection="selectedMasterFiles" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
+            v-model:filters="filters" filterDisplay="menu"
          >
             <template #paginatorstart>
                <div class="master-file-acts" id="sticky-toolbar">
@@ -32,14 +33,25 @@
                </div>
             </template>
             <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
-            <Column field="metadata.title" header="Metadata">
+            <Column field="metadata.title" header="Metadata" filterField="metadata.title" :showFilterMatchModes="false" >
+               <template #filter="{filterModel}">
+                  <InputText type="text" v-model="filterModel.value" placeholder="Metadata title"/>
+               </template>
                <template #body="slotProps">
                   <router-link :to="`/metadata/${slotProps.data.metadata.id}`">{{slotProps.data.metadata.title}}</router-link>
                </template>
             </Column>
             <Column field="filename" header="File Name"/>
-            <Column field="title" header="Title"/>
-            <Column field="description" header="Description"/>
+            <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
+               <template #filter="{filterModel}">
+                  <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
+               </template>
+            </Column>
+            <Column field="description" header="Description" filterField="description" :showFilterMatchModes="false" >
+               <template #filter="{filterModel}">
+                  <InputText type="text" v-model="filterModel.value" placeholder="Description"/>
+               </template>
+            </Column>
             <Column field="thumbnailURL" header="Thumb" class="thumb">
                <template #body="slotProps">
                   <a :href="slotProps.data.viewerURL" target="_blank">
@@ -82,6 +94,8 @@ import { useConfirm } from "primevue/useconfirm"
 import RenumberDialog from './RenumberDialog.vue'
 import CloneMasterFiles from './CloneMasterFiles.vue'
 import LookupDialog from '@/components/LookupDialog.vue'
+import InputText from 'primevue/inputtext'
+import { FilterMatchMode } from 'primevue/api'
 
 const confirm = useConfirm()
 const systemStore = useSystemStore()
@@ -98,6 +112,12 @@ const toolbarWidth = ref(0)
 const toolbar = ref(null)
 
 const { detail } = storeToRefs(unitsStore)
+
+const filters = ref( {
+   'metadata.title': {value: null, matchMode: FilterMatchMode.CONTAINS},
+   'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
+   'description': {value: null, matchMode: FilterMatchMode.CONTAINS},
+})
 
 const filesSelected = computed(() => {
    return selectedMasterFiles.value.length > 0
