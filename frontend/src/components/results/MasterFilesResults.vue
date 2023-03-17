@@ -93,7 +93,7 @@ const filters = ref( {
    'unit_id': {value: null, matchMode: FilterMatchMode.EQUALS},
    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'description': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'call_number': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
+   'call_number': {value: null, matchMode: FilterMatchMode.CONTAINS},
 })
 
 const selectedFilters = computed(() => {
@@ -135,11 +135,7 @@ function onFilter(event) {
    searchStore.masterFiles.filters = []
    Object.entries(event.filters).forEach(([key, data]) => {
       if (data.value && data.value != "") {
-         let value = data.value
-         if (key == "call_number" && (searchStore.field == "all" || searchStore.field == "call_number") ) {
-            value = searchStore.query + value
-         }
-         searchStore.masterFiles.filters.push({field: key, match: data.matchMode, value: value})
+         searchStore.masterFiles.filters.push({field: key, match: data.matchMode, value: data.value})
       }
    })
    let query = Object.assign({}, route.query)
