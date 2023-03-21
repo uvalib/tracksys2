@@ -18,11 +18,14 @@ import (
 )
 
 type apTrustStatus struct {
-	ID          int64     `json:"-"`
-	MetadataPID string    `gorm:"column:metadata_pid" json:"metadataPID"`
-	Etag        string    `json:"etag"`
-	ObjectID    string    `json:"objectID"`
-	FinishedAt  time.Time `json:"submittedAt"`
+	ID          int64      `json:"-"`
+	MetadataID  string     `gorm:"column:metadata_id" json:"-"`
+	Etag        string     `json:"etag"`
+	ObjectID    string     `json:"objectID"`
+	Status      string     `json:"status"`
+	Note        string     `json:"note"`
+	SubmittedAt time.Time  `json:"submittedAt"`
+	FinishedAt  *time.Time `json:"finishedAt"`
 }
 
 type availabilityPolicy struct {
@@ -93,6 +96,7 @@ type metadata struct {
 	SupplementalURI      *string             `json:"supplementalURI"`
 	PreservationTierID   *int64              `json:"-"`
 	PreservationTier     *preservationTier   `gorm:"foreignKey:PreservationTierID" json:"preservationTier"`
+	APTrustStatus        *apTrustStatus      `gorm:"foreignKey:MetadataID" json:"apTrustStatus,omitempty"`
 	DPLA                 bool                `gorm:"column:dpla" json:"dpla"`
 	IsManuscript         bool                `json:"isManuscript"`
 	IsPersonalItem       bool                `json:"isPersonalItem"`
@@ -580,7 +584,8 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 	var md metadata
 	err := svc.DB.Preload("OCRHint").Preload("AvailabilityPolicy").
 		Preload("ExternalSystem").Preload("SupplementalSystem").
-		Preload("PreservationTier").Limit(1).Find(&md, mdID).Error
+		Preload("APTrustStatus").Preload("PreservationTier").Limit(1).
+		Find(&md, mdID).Error
 	if err != nil {
 		return nil, err
 	}
