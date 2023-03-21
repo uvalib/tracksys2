@@ -22,6 +22,7 @@ import (
 )
 
 type externalSystems struct {
+	APTrust  string
 	IIIFMan  string
 	IIIF     string
 	ILS      string
@@ -87,6 +88,7 @@ type workflow struct {
 func initializeService(version string, cfg *configData) *serviceContext {
 	ctx := serviceContext{Version: version,
 		ExternalSystems: externalSystems{
+			APTrust:  cfg.apTrustURL,
 			IIIFMan:  cfg.iiifManifestURL,
 			IIIF:     cfg.iiifURL,
 			ILS:      cfg.ilsURL,

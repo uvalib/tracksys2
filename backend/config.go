@@ -29,6 +29,7 @@ type configData struct {
 	pdfURL          string
 	sirsiURL        string
 	xmlIndexURL     string
+	apTrustURL      string
 	devAuthUser     string
 	jwtKey          string
 }
@@ -37,6 +38,7 @@ func getConfiguration() *configData {
 	var config configData
 	flag.IntVar(&config.port, "port", 8080, "Port to offer service on (default 8085)")
 	flag.StringVar(&config.jwtKey, "jwtkey", "", "JWT signature key")
+	flag.StringVar(&config.apTrustURL, "aptrust", "https://repo.aptrust.org", "APTrust URL")
 	flag.StringVar(&config.reportsURL, "reports", "https://dpg-reporting.lib.virginia.edu", "DPG reports URL")
 	flag.StringVar(&config.projectsURL, "projects", "https://dpg-imaging.lib.virginia.edu", "DPG projects URL")
 	flag.StringVar(&config.virgoURL, "virgo", "https://search.lib.virginia.edu", "Virgo URL")
@@ -79,6 +81,7 @@ func getConfiguration() *configData {
 	}
 
 	log.Printf("[CONFIG] port          = [%d]", config.port)
+	log.Printf("[CONFIG] aptrust       = [%s]", config.apTrustURL)
 	log.Printf("[CONFIG] sirsi         = [%s]", config.sirsiURL)
 	log.Printf("[CONFIG] reports       = [%s]", config.reportsURL)
 	log.Printf("[CONFIG] projects      = [%s]", config.projectsURL)
