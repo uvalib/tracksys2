@@ -505,7 +505,11 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		fields = append(fields, "CollectionID")
 	}
 	if req.CollectionFacet != "" {
-		md.CollectionFacet = &req.CollectionFacet
+		if req.CollectionFacet == "none" {
+			md.CollectionFacet = nil
+		} else {
+			md.CollectionFacet = &req.CollectionFacet
+		}
 		fields = append(fields, "CollectionFacet")
 	}
 

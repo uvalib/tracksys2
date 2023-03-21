@@ -111,7 +111,7 @@ const edited = ref({
    useRight: null,
    inDPLA: false,
    collectionID: "",
-   collectionFacet: "",
+   collectionFacet: null,
    isCollection: false
 })
 const originalUseRight = ref(1)
@@ -134,7 +134,7 @@ const pageHeader = computed( () => {
 
 })
 const collectionFacets = computed(() => {
-   let out = []
+   let out = [{label: "None", value: "none"}]
    systemStore.collectionFacets.forEach( o => {
       out.push({label: o.name, value: o.name})
    })
