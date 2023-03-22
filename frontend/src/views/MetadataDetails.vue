@@ -32,6 +32,12 @@
                <DataDisplay label="Place of Publication" :value="metadataStore.detail.publicationPlace"/>
                <DataDisplay label="Location" :value="metadataStore.detail.location"/>
             </template>
+            <DataDisplay v-if="metadataStore.related.collection" label="Collection" :value="metadataStore.related.collection.id">
+               <router-link :to="`/metadata/${metadataStore.related.collection.id}`">
+                  {{ metadataStore.related.collection.title }}
+               </router-link>
+            </DataDisplay>
+            <DataDisplay :spacer="true"/>
 
             <DataDisplay label="Manuscript/Unpublished Item" :value="formatBoolean(metadataStore.detail.isManuscript)"/>
             <DataDisplay label="Personal Item" :value="formatBoolean(metadataStore.detail.isPersonalItem)"/>
@@ -50,12 +56,6 @@
                   </a>
                </DataDisplay>
             </template>
-
-            <DataDisplay v-if="metadataStore.related.collection" label="Collection" :value="metadataStore.related.collection.id">
-               <router-link :to="`/metadata/${metadataStore.related.collection.id}`">
-                  {{ metadataStore.related.collection.title }}
-               </router-link>
-            </DataDisplay>
          </dl>
          <template v-if="externalSystem == 'ArchivesSpace'">
             <dl>
