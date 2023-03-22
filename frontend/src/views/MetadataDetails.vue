@@ -38,6 +38,19 @@
             <DataDisplay label="OCR Hint" :value="ocrHint"/>
             <DataDisplay label="OCR Language Hint" :value="metadataStore.detail.ocrLanguageHint"/>
             <DataDisplay label="Preservation Tier" :value="preservationTier"/>
+            <template v-if="metadataStore.apTrustStatus.etag">
+               <DataDisplay :spacer="true" label="APTrust Details"/>
+               <DataDisplay label="Submitted" :value="formatDate(metadataStore.apTrustStatus.submittedAt)"/>
+               <DataDisplay label="Finished" :value="formatDate(metadataStore.apTrustStatus.finishedAt)"/>
+               <DataDisplay label="eTag" :value="metadataStore.apTrustStatus.etag"/>
+               <DataDisplay label="Object" :value="metadataStore.apTrustStatus.objectID">
+                  <a class="supplemental" :href="`${systemStore.apTrustURL}/${metadataStore.apTrustStatus.objectID}`" target="_blank">
+                     {{metadataStore.apTrustStatus.objectID}}
+                     <i class="icon fas fa-external-link"></i>
+                  </a>
+               </DataDisplay>
+            </template>
+
             <DataDisplay v-if="metadataStore.related.collection" label="Collection" :value="metadataStore.related.collection.id">
                <router-link :to="`/metadata/${metadataStore.related.collection.id}`">
                   {{ metadataStore.related.collection.title }}

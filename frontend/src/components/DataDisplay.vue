@@ -1,8 +1,11 @@
 <template>
-   <dt v-if="props.spacer" class="spacer"/>
-   <dt v-else>{{props.label}}:</dt>
-   <dd v-if="props.spacer"></dd>
+   <template v-if="props.spacer">
+      <dt v-if="props.label" class="spacer label">{{props.label}}</dt>
+      <dt v-else class="spacer"/>
+      <dd></dd>
+   </template>
    <template v-else>
+      <dt>{{props.label}}:</dt>
       <dd v-if="props.value">
          <slot>
             {{props.value}}
@@ -43,5 +46,12 @@ dt {
 }
 .spacer {
    height: 25px;
+}
+.spacer.label {
+   margin-top: 15px;
+   font-size: 1.15em;
+   color: #aaa;
+   margin-bottom: 5px;
+   font-weight: normal;
 }
 </style>

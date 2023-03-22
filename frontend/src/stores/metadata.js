@@ -45,6 +45,14 @@ export const useMetadataStore = defineStore('metadata', {
          viewerURL: "",
          virgoURL: "",
       },
+      apTrustStatus: {
+         etag: "",
+			objectID: "",
+			status: "",
+			note: "",
+			submittedAt: "",
+			finishedAt: ""
+      },
       archivesSpace: {
          id: "",
          createdBy: "",
@@ -279,6 +287,15 @@ export const useMetadataStore = defineStore('metadata', {
          }
          if (details.viewerURL) {
             this.detail.viewerURL = details.viewerURL
+         }
+
+         if ( details.metadata.apTrustStatus) {
+            this.apTrustStatus.etag = details.metadata.apTrustStatus.etag
+            this.apTrustStatus.objectID = details.metadata.apTrustStatus.objectID
+            this.apTrustStatus.status = details.metadata.apTrustStatus.status
+            this.apTrustStatus.note = details.metadata.apTrustStatus.note
+            this.apTrustStatus.submittedAt = details.metadata.apTrustStatus.submittedAt
+            this.apTrustStatus.finishedAt = details.metadata.apTrustStatus.finishedAt
          }
 
          if (this.detail.type == "SirsiMetadata") {
