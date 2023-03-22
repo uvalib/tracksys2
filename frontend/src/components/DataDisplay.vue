@@ -45,13 +45,15 @@ dt {
    color: #ccc;
 }
 .spacer {
-   height: 25px;
+   height: 20px;
 }
-.spacer.label {
-   margin-top: 15px;
+dt.spacer.label {
+   margin-top: 25px;
+   margin-bottom: 5px !important;
    font-size: 1.15em;
    color: #aaa;
    margin-bottom: 5px;
-   font-weight: normal;
+   font-weight: normal !important;
+   text-align: left !important;
 }
 </style>

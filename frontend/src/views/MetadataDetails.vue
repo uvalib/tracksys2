@@ -50,7 +50,7 @@
                <DataDisplay label="Finished" :value="formatDate(metadataStore.apTrustStatus.finishedAt)"/>
                <DataDisplay label="eTag" :value="metadataStore.apTrustStatus.etag"/>
                <DataDisplay label="Object" :value="metadataStore.apTrustStatus.objectID">
-                  <a class="supplemental" :href="`${systemStore.apTrustURL}/${metadataStore.apTrustStatus.objectID}`" target="_blank">
+                  <a class="supplemental" :href="`${systemStore.apTrustURL}/objects?identifier=${metadataStore.apTrustStatus.objectID}`" target="_blank">
                      {{metadataStore.apTrustStatus.objectID}}
                      <i class="icon fas fa-external-link"></i>
                   </a>
@@ -258,7 +258,7 @@ const availabilityPolicy = computed(() => {
 
 const preservationTier = computed(() => {
    if ( metadataStore.detail.preservationTier ) {
-      return metadataStore.detail.preservationTier.name
+      return `${metadataStore.detail.preservationTier.name}: ${metadataStore.detail.preservationTier.description}`
    }
    return ""
 })

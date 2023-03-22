@@ -51,7 +51,8 @@
                <FormKit label="OCR Language" type="select" :options="ocrLanguages" :disabled="isLanguageDisabled"
                   v-model="edited.ocrLanguageHint" placeholder="Select a language"/>
                <span class="sep"/>
-               <FormKit label="Preservation Tier" type="select" :options="preservationTiers" v-model="edited.preservationTier" placeholder="Select a tier"/>
+               <FormKit label="Preservation Tier" type="select" :options="preservationTiers"
+                  v-model="edited.preservationTier" placeholder="Select a tier" :disabled="edited.preservationTier > 1"/>
             </div>
          </Panel>
          <Panel v-if="metadataStore.detail.type != 'ExternalMetadata'" header="Digital Library Information">
@@ -106,7 +107,7 @@ const edited = ref({
    manuscript: false,
    ocrHint: 0,
    ocrLanguageHint: "",
-   preservationTier: 0,
+   preservationTier: "",
    availabilityPolicy: null,
    useRight: null,
    inDPLA: false,
@@ -175,7 +176,7 @@ const availabilityPolicies = computed(() => {
 const preservationTiers = computed(() => {
    let out = []
    systemStore.preservationTiers.forEach( o => {
-      out.push({label: o.name, value: o.id})
+      out.push({label: `${o.name}: ${o.description}`, value: o.id})
    })
    return out
 })
@@ -228,9 +229,9 @@ onMounted( async () =>{
       edited.value.ocrHint = metadataStore.detail.ocrHint.id
    }
    edited.value.ocrLanguageHint = metadataStore.detail.ocrLanguageHint
-   edited.value.preservationTier = 0
+   edited.value.preservationTier = ""
    if (metadataStore.detail.preservationTier) {
-      edited.value.ocrHint = metadataStore.detail.preservationTier.id
+      edited.value.preservationTier = metadataStore.detail.preservationTier.id
    }
    edited.value.availabilityPolicy = null
    if (metadataStore.detail.availabilityPolicy) {
