@@ -24,8 +24,8 @@
       </Column>
       <Column field="agency.name" header="Agency" class="nowrap" :sortable="true" filterField="agency.id" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
-            <Dropdown v-model="filterModel.value" :options="systemStore.agencies" optionLabel="name" optionValue="id" placeholder="Select anegency" />
-         </template>>
+            <Dropdown v-model="filterModel.value" :options="systemStore.agencies" optionLabel="name" optionValue="id" placeholder="Select agency" />
+         </template>
       </Column>
       <Column field="title" header="Order Title" filterField="title" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">

@@ -1,11 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -226,10 +229,7 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	if pageSize == 0 {
 		pageSize = 30
 	}
-	filter := c.Query("filter")
-	if filter == "" {
-		filter = "active"
-	}
+
 	sortBy := c.Query("by")
 	if sortBy == "" {
 		sortBy = "id"
@@ -251,44 +251,70 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 		sortField = "master_file_count"
 	}
 	orderStr := fmt.Sprintf("%s %s", sortField, sortOrder)
-	log.Printf("INFO: get %d %s orders starting from offset %d order %s", pageSize, filter, startIndex, orderStr)
+	log.Printf("INFO: get %d orders starting from offset %d order %s", pageSize, startIndex, orderStr)
 
 	// set up filtering....
-	filterQ := svc.DB.Table("orders").Joins("inner join customers c on c.id=orders.customer_id").Joins("left outer join agencies a on a.id = orders.agency_id")
-	dateNow := time.Now().Format("2006-01-02")
-	if filter == "active" {
-		filterQ = filterQ.Where("order_status!=? and order_status!=?", "canceled", "completed")
-	} else if filter == "await" {
-		filterQ = filterQ.Where("order_status=? or order_status=?", "requested", "await_fee")
-	} else if filter == "deferred" {
-		filterQ = filterQ.Where("order_status=?", "deferred")
-	} else if filter == "canceled" {
-		filterQ = filterQ.Where("order_status=?", "canceled")
-	} else if filter == "complete" {
-		filterQ = filterQ.Where("order_status=?", "completed")
-	} else if filter == "due_week" {
-		dateWeek := time.Now().AddDate(0, 0, 7).Format("2006-01-02")
-		filterQ = filterQ.Joins("inner join units u on u.order_id=orders.id").
-			Where("u.intended_use_id <> ?", 110).
-			Where("date_due>=?", dateNow).Where("date_due<=?", dateWeek).
-			Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled").Distinct("orders.id")
-	} else if filter == "overdue" {
-		oneYearAgo := time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
-		filterQ = filterQ.Joins("inner join units u on u.order_id=orders.id").
-			Where("u.intended_use_id <> ?", 110).
-			Where("date_request_submitted>?", oneYearAgo).Where("date_due<?", dateNow).
-			Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled").Distinct("orders.id")
-	} else if filter == "ready" {
-		filterQ = filterQ.Joins("inner join units u on u.order_id=orders.id").
-			Where("u.intended_use_id <> ?", 110).
-			Where("orders.email is not null and orders.email != ? and date_customer_notified is null", "").
-			Where("order_status != ? and order_status != ?", "canceled", "completed").Distinct("orders.id")
+	filterStr := c.Query("filters")
+	log.Printf("INFO: raw filters [%s]", filterStr)
+	var filters []string
+	err := json.Unmarshal([]byte(filterStr), &filters)
+	if err != nil {
+		log.Printf("ERROR: unable to parse filter payload %s: %s", filterStr, err.Error())
+		c.String(http.StatusBadRequest, fmt.Sprintf("invalid filters param: %s", filterStr))
+		return
 	}
 
-	// filter by owner?
+	filterQ := svc.DB.Table("orders").Joins("inner join customers c on c.id=orders.customer_id").
+		Joins("left outer join staff_members p on p.id = processor_id").
+		Joins("left outer join agencies a on a.id = orders.agency_id")
+	dateNow := time.Now().Format("2006-01-02")
 	ownerID := c.Query("owner")
 	if ownerID != "" {
 		filterQ.Where("processor_id=?", ownerID)
+	}
+
+	for _, filter := range filters {
+		bits := strings.Split(filter, "|") // target | comparison | value
+		tgtField := bits[0]
+		comparison := bits[1]
+		tgtVal, _ := url.QueryUnescape(bits[2])
+		log.Printf("INFO: filter %s %s %s", tgtField, comparison, tgtVal)
+		if tgtField == "status" {
+			if tgtVal == "active" {
+				filterQ = filterQ.Where("order_status!=? and order_status!=?", "canceled", "completed")
+			} else if tgtVal == "await" {
+				filterQ = filterQ.Where("order_status=? or order_status=?", "requested", "await_fee")
+			} else if tgtVal == "deferred" {
+				filterQ = filterQ.Where("order_status=?", "deferred")
+			} else if tgtVal == "canceled" {
+				filterQ = filterQ.Where("order_status=?", "canceled")
+			} else if tgtVal == "complete" {
+				filterQ = filterQ.Where("order_status=?", "completed")
+			} else if tgtVal == "due_week" {
+				dateWeek := time.Now().AddDate(0, 0, 7).Format("2006-01-02")
+				filterQ = filterQ.Joins("inner join units u on u.order_id=orders.id").
+					Where("u.intended_use_id <> ?", 110).
+					Where("date_due>=?", dateNow).Where("date_due<=?", dateWeek).
+					Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled").Distinct("orders.id")
+			} else if tgtVal == "overdue" {
+				oneYearAgo := time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
+				filterQ = filterQ.Joins("inner join units u on u.order_id=orders.id").
+					Where("u.intended_use_id <> ?", 110).
+					Where("date_request_submitted>?", oneYearAgo).Where("date_due<?", dateNow).
+					Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled").Distinct("orders.id")
+			} else if tgtVal == "ready" {
+				filterQ = filterQ.Joins("inner join units u on u.order_id=orders.id").
+					Where("u.intended_use_id <> ?", 110).
+					Where("orders.email is not null and orders.email != ? and date_customer_notified is null", "").
+					Where("order_status != ? and order_status != ?", "canceled", "completed").Distinct("orders.id")
+			}
+		} else if tgtField == "customer" {
+			filterQ = filterQ.Where("c.last_name like ?", fmt.Sprintf("%s%%", tgtVal))
+		} else if tgtField == "agency" {
+			filterQ = filterQ.Where("orders.agency_id = ?", tgtVal)
+		} else if tgtField == "processor" {
+			filterQ = filterQ.Where("p.last_name like ?", fmt.Sprintf("%s%%", tgtVal))
+		}
 	}
 
 	// set up query...
@@ -298,8 +324,7 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 		queryAny := fmt.Sprintf("%%%s%%", queryStr)
 		queryStart := fmt.Sprintf("%s%%", queryStr)
 		qObj = svc.DB.Where("order_title like ?", queryAny).Or("orders.staff_notes like ?", queryAny).
-			Or("orders.special_instructions like ?", queryAny).Or("c.last_name like ?", queryStart).
-			Or("a.name like ?", queryStart).Or("orders.id like ?", queryStart)
+			Or("orders.special_instructions like ?", queryAny).Or("orders.id like ?", queryStart)
 		filterQ = filterQ.Where(qObj)
 	}
 
@@ -312,7 +337,7 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	// avoid conflicts with the cached fields. The cached fields are ignored
 	unitCnt := "(select count(*) from units where order_id=orders.id) as unit_count"
 	mfCnt := "(select count(*) from master_files m inner join units u on u.id=m.unit_id where u.order_id=orders.id) as master_file_count"
-	err := filterQ.Preload("Agency").Preload("Customer").Preload("Customer.AcademicStatus").Preload("Processor").
+	err = filterQ.Preload("Agency").Preload("Customer").Preload("Customer.AcademicStatus").Preload("Processor").
 		Select("orders.*", unitCnt, mfCnt).
 		Offset(startIndex).Limit(pageSize).Order(orderStr).Find(&o).Error
 	if err != nil {

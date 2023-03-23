@@ -10,7 +10,7 @@ export const useOrdersStore = defineStore('orders', {
       searchOpts: {
          start: 0,
          limit: 30,
-         filter: "active",
+         filters: [],
          sortField: "id",
          sortOrder: "desc",
          query: "",
@@ -85,8 +85,44 @@ export const useOrdersStore = defineStore('orders', {
          })
          return hasDeliverables
       },
+      filtersAsQueryParam: state => {
+         let out = []
+         state.searchOpts.filters.forEach( fv => out.push(`${fv.field}|${fv.match}|${fv.value}`) )
+         return JSON.stringify(out)
+      }
    },
 	actions: {
+      getOrders() {
+         const system = useSystemStore()
+         system.working = true
+         let so = this.searchOpts
+         let url = `/api/orders?filters=${this.filtersAsQueryParam}&start=${so.start}&limit=${so.limit}&by=${so.sortField}&order=${so.sortOrder}`
+         if ( so.query != "") {
+            url += `&q=${encodeURIComponent(so.query)}`
+         }
+         if ( this.ownerID > -1) {
+            url += `&owner=${this.ownerID}`
+         }
+         axios.get( url ).then(response => {
+            this.orders = []
+            response.data.orders.forEach( js => {
+               js.dateDue = js.dateDue.split("T")[0]
+               js.dateSubmitted =  js.dateSubmitted.split("T")[0]
+               if (js.dateCustomerNotified) {
+                  js.dateCustomerNotified =  js.dateCustomerNotified.split("T")[0]
+               }
+               if (js.dateArchivingComplete) {
+                  js.dateArchivingComplete =  js.dateArchivingComplete.split("T")[0]
+               }
+               js.customerName = `${js.customer.lastName}, ${js.customer.firstName}`
+               this.orders.push(js)
+            })
+            this.total = response.data.total
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
       async lookup( query ) {
          const system = useSystemStore()
          let url = `/api/search?scope=orders&q=${encodeURIComponent(query)}&start=0&limit=30`
@@ -328,37 +364,6 @@ export const useOrdersStore = defineStore('orders', {
                tgtO.status = "await_fee"
                tgtO.dateFeeEstimateSent = this.detail.dateFeeEstimateSent
             }
-            system.working = false
-         }).catch( e => {
-            system.setError(e)
-         })
-      },
-      getOrders() {
-         const system = useSystemStore()
-         system.working = true
-         let so = this.searchOpts
-         let url = `/api/orders?filter=${so.filter}&start=${so.start}&limit=${so.limit}&by=${so.sortField}&order=${so.sortOrder}`
-         if ( so.query != "") {
-            url += `&q=${encodeURIComponent(so.query)}`
-         }
-         if ( this.ownerID > -1) {
-            url += `&owner=${this.ownerID}`
-         }
-         axios.get( url ).then(response => {
-            this.orders = []
-            response.data.orders.forEach( js => {
-               js.dateDue = js.dateDue.split("T")[0]
-               js.dateSubmitted =  js.dateSubmitted.split("T")[0]
-               if (js.dateCustomerNotified) {
-                  js.dateCustomerNotified =  js.dateCustomerNotified.split("T")[0]
-               }
-               if (js.dateArchivingComplete) {
-                  js.dateArchivingComplete =  js.dateArchivingComplete.split("T")[0]
-               }
-               js.customerName = `${js.customer.lastName}, ${js.customer.firstName}`
-               this.orders.push(js)
-            })
-            this.total = response.data.total
             system.working = false
          }).catch( e => {
             system.setError(e)

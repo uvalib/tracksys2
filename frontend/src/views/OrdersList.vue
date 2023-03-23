@@ -5,7 +5,7 @@
       <div class="toolbar">
          <span>
             <label for="orders-filter">Filter:</label>
-            <Dropdown id="orders-filter" v-model="ordersStore.searchOpts.filter" @change="getOrders()"
+            <Dropdown id="orders-filter" v-model="statusFilter" @change="getOrders()"
                :options="filters" optionLabel="name" optionValue="code" />
             <ToggleButton v-model="assignedToMe" onIcon="" offIcon="" onLabel="Assigned to Me" offLabel="Assigned to Me" @change="ownerToggled()" />
          </span>
@@ -25,6 +25,7 @@
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
          :rowsPerPageOptions="[10,30,100]" :first="ordersStore.searchOpts.start"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
+         v-model:filters="columnFilters" filterDisplay="menu" @filter="getOrders()"
       >
          <Column field="id" header="ID" :sortable="true">
             <template #body="slotProps">
@@ -47,23 +48,27 @@
                <span class="fee" v-if="slotProps.data.fee !== undefined">${{parseFloat(slotProps.data.fee).toFixed(2)}}</span>
             </template>
          </Column>
-         <Column field="lastName" header="Customer">
+         <Column field="lastName" header="Customer" filterField="customer" :showFilterMatchModes="false">
+            <template #filter="{filterModel}">
+               <InputText type="text" v-model="filterModel.value" placeholder="Last name"/>
+            </template>
             <template #body="slotProps">
                <div class="nowrap">{{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}</div>
                <div class="dimmed" v-if="slotProps.data.customer.academicStatus">({{slotProps.data.customer.academicStatus.name}})</div>
             </template>
          </Column>
-         <Column field="agency.name" header="Agency" />
-         <Column field="processor" header="Processor" class="nowrap" >
+         <Column field="agency.name" header="Agency" filterField="agency" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <Dropdown v-model="filterModel.value" :options="systemStore.agencies" optionLabel="name" optionValue="id" placeholder="Select agency" />
+         </template>
+      </Column>
+         <Column field="processor" header="Processor" class="nowrap" filterField="processor" :showFilterMatchModes="false">
+            <template #filter="{filterModel}">
+               <InputText type="text" v-model="filterModel.value" placeholder="Last name"/>
+            </template>
             <template #body="slotProps">
                <span v-if="slotProps.data.processor">{{slotProps.data.processor.lastName}}, {{slotProps.data.processor.firstName}}</span>
                <span v-else class="dimmed">None</span>
-            </template>
-         </Column>
-
-         <Column header="" class="row-acts">
-            <template #body="slotProps">
-               <router-link :to="`/orders/${slotProps.data.id}`">View</router-link>
             </template>
          </Column>
       </DataTable>
@@ -80,7 +85,10 @@ import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
 import ToggleButton from 'primevue/togglebutton'
+import { FilterMatchMode } from 'primevue/api'
+import { useSystemStore } from '@/stores/system'
 
+const systemStore = useSystemStore()
 const route = useRoute()
 const router = useRouter()
 const ordersStore = useOrdersStore()
@@ -97,6 +105,12 @@ const filters = ref([
    {name: "Ready for Delivery", code: "ready"}
 ])
 
+const columnFilters = ref( {
+   'customer': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
+   'processor': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
+   'agency': {value: null, matchMode: FilterMatchMode.EQUALS},
+})
+const statusFilter = ref("active")
 const assignedToMe = ref(false)
 
 const sortOrder = computed(() => {
@@ -110,8 +124,22 @@ onBeforeMount( () => {
    if ( route.query.q ) {
       ordersStore.searchOpts.query = route.query.q
    }
-   if ( route.query.filter ) {
-      ordersStore.searchOpts.filter = route.query.filter
+   ordersStore.searchOpts.filters = []
+   if ( route.query.filters ) {
+      let filters = JSON.parse(route.query.filters)
+      filters.forEach( filter => {
+         let bits = filter.split("|")
+         ordersStore.searchOpts.filters.push( {field: bits[0], match: bits[1], value: bits[2]} )
+         if ( bits[0] == "status") {
+            statusFilter.value = bits[2]
+         } else if ( bits[0] == "customer") {
+            columnFilters.value.customer.value = bits[2]
+         } else if ( bits[0] == "processor") {
+            columnFilters.value.processor.value = bits[2]
+         } else if ( bits[0] == "agency") {
+            columnFilters.value.agency.value = bits[2]
+         }
+      })
    }
    if ( route.query.sort  ) {
       let bits = route.query.sort.split(" ")
@@ -155,12 +183,18 @@ function setQueryParams() {
    if (ordersStore.searchOpts.query) {
       query.q = ordersStore.searchOpts.query
    }
-   query.filter = ordersStore.searchOpts.filter
+   query.filters = ordersStore.filtersAsQueryParam
    query.sort = `${ordersStore.searchOpts.sortField} ${ordersStore.searchOpts.sortOrder}`
    router.push({query})
 }
 
 function getOrders() {
+   ordersStore.searchOpts.filters = [{field: "status", value: statusFilter.value, match: FilterMatchMode.EQUALS}]
+   Object.entries(columnFilters.value).forEach(([key, data]) => {
+      if (data.value && data.value != "") {
+         ordersStore.searchOpts.filters.push({field: key, match: data.matchMode, value: data.value})
+      }
+   })
    setQueryParams()
    ordersStore.getOrders()
 }
