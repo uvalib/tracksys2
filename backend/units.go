@@ -72,7 +72,7 @@ type unit struct {
 	ThrowAway                   bool         `json:"throwAway"`
 	OCRMasterFiles              bool         `gorm:"column:ocr_master_files" json:"ocrMasterFiles"`
 	MasterFiles                 []masterFile `gorm:"foreignKey:UnitID" json:"masterFiles"`
-	NumMasterFiles              uint         `json:"masterFilesCount"` // not the cached master_files_count
+	NumMasterFiles              uint         `json:"masterFilesCount"`
 	Attachments                 []attachment `gorm:"foreignKey:UnitID" json:"attachments"`
 	SpecialInstructions         string       `json:"specialInstructions"`
 	StaffNotes                  string       `json:"staffNotes"`
@@ -124,7 +124,7 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 	var project struct {
 		ID int64
 	}
-	err = svc.DB.Table("projects").Select("id").Where("unit_id=?", unitID).First(&project).Error
+	err = svc.DB.Table("projects").Select("id").Where("unit_id=?", unitID).Limit(1).Find(&project).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get project id for unit %s: %s", unitID, err.Error())
 	} else {
@@ -133,11 +133,9 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 
 	log.Printf("INFO: check for recent errors for unit %d", unitDetail.ID)
 	var lastStatus jobStatus
-	err = svc.DB.Where("originator_type=?", "Unit").Where("originator_id=?", unitDetail.ID).Order("created_at desc").First(&lastStatus).Error
+	err = svc.DB.Where("originator_type=?", "Unit").Where("originator_id=?", unitDetail.ID).Order("created_at desc").Limit(1).Find(&lastStatus).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) == false {
-			log.Printf("ERROR: failed to find job statuses for unit %d", unitDetail.ID)
-		}
+		log.Printf("ERROR: failed to find job statuses for unit %d", unitDetail.ID)
 	} else {
 		if lastStatus.Status == "failure" {
 			le := lastError{ID: lastStatus.ID, Error: lastStatus.Error}
