@@ -17,7 +17,7 @@
       <h3>No matching master files found</h3>
    </div>
    <DataTable v-else :value="searchStore.masterFiles.hits" ref="masterFileHitsTable" dataKey="id"
-      stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+      stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm" :rowStyle="rowStyle"
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
       :lazy="true" :paginator="searchStore.masterFiles.total > 15" @page="onPage($event)"
       :rows="searchStore.masterFiles.limit" :totalRecords="searchStore.masterFiles.total"
@@ -43,6 +43,15 @@
          </template>
          <template #body="slotProps">
             <router-link :to="`/units/${slotProps.data.unitID}`">{{slotProps.data.unitID}}</router-link>
+         </template>
+      </Column>
+      <Column field="originalID" header="Clone" class="nowrap" filterField="clone" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <Dropdown v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
+         </template>
+         <template #body="slotProps">
+            <span v-if="slotProps.data.originalID > 0">Yes</span>
+            <span v-else>No</span>
          </template>
       </Column>
       <Column field="metadata.callNumber" header="Call Number" class="nowrap" filterField="call_number" :showFilterMatchModes="false">
@@ -81,6 +90,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import {FilterMatchMode} from 'primevue/api'
 import InputText from 'primevue/inputtext'
+import Dropdown from 'primevue/dropdown'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -90,10 +100,18 @@ const searchStore = useSearchStore()
 const masterFileHitsTable = ref()
 
 const filters = ref( {
+   'clone': {value: null, matchMode: FilterMatchMode.EQUALS},
    'unit_id': {value: null, matchMode: FilterMatchMode.EQUALS},
    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'description': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'call_number': {value: null, matchMode: FilterMatchMode.CONTAINS},
+})
+
+const yesNo = computed(() => {
+   let out = []
+   out.push( {label: "No", value: "false"} )
+   out.push( {label: "Yes", value: "true"} )
+   return out
 })
 
 const selectedFilters = computed(() => {
@@ -105,6 +123,12 @@ const selectedFilters = computed(() => {
    })
    return out
 })
+
+const rowStyle = (data) => {
+    if (data.originalID) {
+        return { background: '#f5f5f5' };
+    }
+}
 
 const hasFilter = computed(() => {
    let idx = Object.values(filters.value).findIndex( fv => fv.value && fv.value != "")

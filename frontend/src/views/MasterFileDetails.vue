@@ -1,5 +1,5 @@
 <template>
-   <h2>Master File {{route.params.id}}</h2>
+   <h2>Master File {{route.params.id}}<span class="clone" v-if="masterFiles.details.originalID>0">(Cloned from {{ masterFiles.details.originalID }})</span></h2>
    <div class="masterfile-acts">
       <DPGButton label="Previous" @click="prevImage()" v-if="masterFiles.prevID > 0"/>
       <DPGButton label="Next" @click="nextImage()" v-if="masterFiles.nextID > 0"/>
@@ -188,6 +188,12 @@ div.masterfile-acts {
       border: 0;
       padding: 0 10px;
    }
+}
+.clone {
+   display: inline-block;
+   margin-left: 10px;
+   font-weight: 199;
+   font-size: 0.9em;
 }
 .tags {
    font-size: 0.8em;

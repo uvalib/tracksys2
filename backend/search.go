@@ -25,6 +25,7 @@ type masterFileHit struct {
 	ImageURL     string   `gorm:"-" json:"imageURL"`
 	MetadataID   int64    `json:"-"`
 	Metadata     metadata `gorm:"foreignKey:MetadataID" json:"metadata"`
+	OriginalID   int64    `gorm:"column:original_mf_id" json:"originalID"`
 }
 
 type metadataHit struct {
@@ -269,6 +270,20 @@ func (svc *serviceContext) initFilter(filterStr string) (*searchFilter, error) {
 						out.Query = out.Query.Where("dpla=1")
 					} else {
 						out.Query = out.Query.Where("dpla=0")
+					}
+				}
+			} else if tgtField == "clone" {
+				if idx == 0 {
+					if tgtVal == "true" {
+						out.Query = svc.DB.Where("original_mf_id is not null")
+					} else {
+						out.Query = svc.DB.Where("original_mf_id is null")
+					}
+				} else {
+					if tgtVal == "true" {
+						out.Query = out.Query.Where("original_mf_id is not null")
+					} else {
+						out.Query = out.Query.Where("original_mf_id is null")
 					}
 				}
 			} else {
