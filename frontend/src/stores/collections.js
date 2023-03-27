@@ -15,6 +15,8 @@ export const useCollectionsStore = defineStore('collections', {
       },
       collections: [],
       totalCollections: 0,
+      bulkAdd: false,
+      metadataHits: []
    }),
    getters: {
 	},
@@ -26,6 +28,7 @@ export const useCollectionsStore = defineStore('collections', {
          this.searchOpts.start = 0
          this.searchOpts.limit = 30
          this.searchOpts.query = ""
+         this.metadataHits = []
       },
       addCollection( data ) {
          let rec = {
@@ -45,6 +48,7 @@ export const useCollectionsStore = defineStore('collections', {
          const system = useSystemStore()
          system.working = true
          this.collections = []
+         this.metadataHits = []
          this.totalCollections = 0
          axios.get( "/api/collections" ).then(response => {
             this.totalCollections = response.data.total
@@ -108,6 +112,30 @@ export const useCollectionsStore = defineStore('collections', {
             const system = useSystemStore()
             system.setError(error)
          })
+      },
+      toggleBulkAdd() {
+         this.bulkAdd = !this.bulkAdd
+      },
+      metadataSearch( query ) {
+         const system = useSystemStore()
+         let url = `/api/search?scope=metadata&q=${encodeURIComponent(query)}&collection=1`
+         this.metadataHits = []
+         axios.get(url).then(response => {
+            response.data.metadata.hits.forEach( mh => {
+               this.metadataHits.push(
+                  { id: mh.id, pid: mh.pid, title: mh.title, catalogKey: mh.catalogKey,
+                    callNumber: mh.callNumber, barcode: mh.barcode, masterFilesCount: mh.masterFilesCount }
+               )
+            })
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      addRecords( metadataIDs ) {
+         const system = useSystemStore()
+         let req = { items: metadataIDs}
+         let url = `${system.jobsURL}/collections/${this.collectionID}/add`
+         axios.post(url, req)
       }
    }
 })

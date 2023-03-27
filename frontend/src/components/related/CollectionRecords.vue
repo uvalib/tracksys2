@@ -1,43 +1,47 @@
 <template>
    <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
-   <div class="results">
-      <div class="toolbar">
-         <span class="left">
-            <LookupDialog label="Add Item" @selected="addItem" target="metadata" :create="false" :collection="collectionStore.colectionID" />
-            <DPGButton label="Export" class="p-button-secondary" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
-         </span>
-         <span class="search">
-            <span class="p-input-icon-right">
-               <i class="pi pi-search" />
-               <InputText v-model="collectionStore.searchOpts.query" placeholder="Collection Search" @input="queryCollection()"/>
+   <div class="collection">
+      <template v-if="collectionStore.bulkAdd == false">
+         <div class="toolbar">
+            <span class="left">
+               <LookupDialog label="Add Item" @selected="addItem" target="metadata" :create="false" :collection="collectionStore.collectionID" v-if="userStore.isAdmin"/>
+               <DPGButton label="Bulk Add" class="p-button-secondary" @click="bulkAddClicked()" v-if="userStore.isAdmin"/>
+               <DPGButton label="Export" class="p-button-secondary" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
             </span>
-            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="collectionStore.searchOpts.query.length == 0"/>
-         </span>
-      </div>
-      <div v-if="collectionStore.working == false && collectionStore.totalRecords == 0" class="none">
-         <h3>No items found</h3>
-      </div>
-      <DataTable v-if="collectionStore.totalRecords>0" :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
-         stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-         :lazy="true" :paginator="collectionStore.totalRecords > 15" @page="onCollectionPage($event)"
-         :rows="collectionStore.searchOpts.limit" :totalRecords="collectionStore.totalRecords"
-         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         :rowsPerPageOptions="[15,30,100]" :first="collectionStore.searchOpts.start"
-         currentPageReportTemplate="{first} - {last} of {totalRecords}"
-      >
-         <Column field="id" header="ID">
-            <template #body="slotProps">
-               <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
-            </template>
-         </Column>
-         <Column field="pid" header="PID" class="nowrap"/>
-         <Column field="title" header="Title" />
-         <Column header="" class="row-acts nowrap" v-if="userStore.isAdmin">
-            <template #body="slotProps">
-               <DPGButton icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary" @click="deleteItem(slotProps.data)"/>
-            </template>
-         </Column>
-      </DataTable>
+            <span class="search">
+               <span class="p-input-icon-right">
+                  <i class="pi pi-search" />
+                  <InputText v-model="collectionStore.searchOpts.query" placeholder="Collection Search" @input="queryCollection()"/>
+               </span>
+               <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="collectionStore.searchOpts.query.length == 0"/>
+            </span>
+         </div>
+         <div v-if="collectionStore.working == false && collectionStore.totalRecords == 0" class="none">
+            <h3>No items found</h3>
+         </div>
+         <DataTable v-if="collectionStore.totalRecords>0" :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
+            stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+            :lazy="true" :paginator="collectionStore.totalRecords > 15" @page="onCollectionPage($event)"
+            :rows="collectionStore.searchOpts.limit" :totalRecords="collectionStore.totalRecords"
+            paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
+            :rowsPerPageOptions="[15,30,100]" :first="collectionStore.searchOpts.start"
+            currentPageReportTemplate="{first} - {last} of {totalRecords}"
+         >
+            <Column field="id" header="ID">
+               <template #body="slotProps">
+                  <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
+               </template>
+            </Column>
+            <Column field="pid" header="PID" class="nowrap"/>
+            <Column field="title" header="Title" />
+            <Column header="" class="row-acts nowrap" v-if="userStore.isAdmin">
+               <template #body="slotProps">
+                  <DPGButton icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary" @click="deleteItem(slotProps.data)"/>
+               </template>
+            </Column>
+         </DataTable>
+      </template>
+      <CollectionBulkAdd v-else />
    </div>
 </template>
 
@@ -51,6 +55,7 @@ import { useConfirm } from "primevue/useconfirm"
 import { useUserStore } from '@/stores/user'
 import LookupDialog from '@/components/LookupDialog.vue'
 import WaitSpinner from '@/components/WaitSpinner.vue'
+import CollectionBulkAdd from './CollectionBulkAdd.vue'
 
 const userStore = useUserStore()
 const collectionStore = useCollectionsStore()
@@ -65,27 +70,31 @@ const props = defineProps({
 })
 
 onBeforeMount( async () => {
-   console.log("SET COLLECTION TO "+props.collectionID)
    collectionStore.setCollection( props.collectionID )
    await collectionStore.getItems()
 })
 
-function onCollectionPage(event) {
+const bulkAddClicked = (() => {
+   collectionStore.toggleBulkAdd()
+})
+
+const onCollectionPage = ((event) => {
    collectionStore.searchOpts.start = event.first
    collectionStore.searchOpts.limit = event.rows
    collectionStore.getItems()
-}
-function queryCollection() {
+})
+
+const queryCollection = (() => {
    collectionStore.getItems()
-}
-function clearSearch() {
+})
+const clearSearch = (() => {
    collectionStore.searchOpts.query = ""
    collectionStore.getItems()
-}
-function addItem( metadataID ) {
+})
+const addItem = (( metadataID ) => {
   collectionStore.addItems( [metadataID] )
-}
-function deleteItem( item ) {
+})
+const deleteItem = (( item ) => {
    confirm.require({
       message: `Remove "${item.pid} : ${item.title}" from this collection?`,
       header: 'Confirm Remove Item',
@@ -95,15 +104,15 @@ function deleteItem( item ) {
          collectionStore.removeItem(item)
       }
    })
-}
-function exportCollection() {
+})
+const exportCollection = (() => {
    collectionStore.exportCSV()
-}
+})
 
 </script>
 
 <stype scoped lang="scss">
-.results {
+.collection  {
    margin: 0;
    td.nowrap, th {
       white-space: nowrap;
