@@ -15,6 +15,8 @@
       </div>
       <PickList v-if="masterFiles" v-model="masterFiles" dataKey="id"
          listStyle="height:500px" :showSourceControls="false"
+         @move-to-source=" removeCloneItem()"
+         @move-all-to-source=" removeCloneItem()"
       >
          <template #sourceheader>
             Source Master Files
@@ -26,6 +28,7 @@
             <div class="master-file">
                <div>
                   <dl>
+                     <DataDisplay label="Unit ID" :value="slotProps.item.unitID" />
                      <DataDisplay label="Filename" :value="slotProps.item.filename" />
                      <DataDisplay label="Title" :value="slotProps.item.title" />
                   </dl>
@@ -42,7 +45,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch, nextTick } from 'vue'
 import { useUnitsStore } from '@/stores/units'
 import { useCloneStore } from '@/stores/clone'
 import PickList from 'primevue/picklist'
@@ -69,15 +72,27 @@ onMounted(() => {
    cloneStore.getSourceUnits( unitsStore.detail.id)
 })
 
-async function unitPicked() {
-   await cloneStore.getMasterFiles(selectedUnitID.value)
-   masterFiles.value=[cloneStore.masterFiles, []]
-}
+const removeCloneItem = (() => {
+   nextTick( () => {
+      masterFiles.value[0] = cloneStore.masterFiles.filter( isInCloneList )
+   })
+})
 
-function cancelClicked() {
+const isInCloneList = (( mf ) => {
+   let cloneIdx =  masterFiles.value[1].findIndex( cmf => cmf.id == mf.id)
+   return cloneIdx == -1
+})
+
+const unitPicked = ( async () => {
+   await cloneStore.getMasterFiles(selectedUnitID.value)
+   masterFiles.value[0] = cloneStore.masterFiles.filter( isInCloneList )
+})
+
+const cancelClicked = (() => {
    emit("canceled")
-}
-function cloneClicked() {
+})
+
+const cloneClicked = (() => {
    confirm.require({
       message: 'Clone selected master files into this unit?',
       header: 'Confirm Clone',
@@ -87,7 +102,7 @@ function cloneClicked() {
          cloneStore.cloneMasterFiles( unitsStore.detail.id, masterFiles.value[1])
       }
    })
-}
+})
 </script>
 
 <style scoped lang="scss">
