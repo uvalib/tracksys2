@@ -26,6 +26,7 @@ type masterFileHit struct {
 	MetadataID   int64    `json:"-"`
 	Metadata     metadata `gorm:"foreignKey:MetadataID" json:"metadata"`
 	OriginalID   int64    `gorm:"column:original_mf_id" json:"originalID"`
+	OriginalPID  string   `gorm:"column:original_pid" json:"originalPID"`
 }
 
 type metadataHit struct {
@@ -311,7 +312,9 @@ func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan sear
 	if sc.Scope == "all" || sc.Scope == "masterfiles" {
 		log.Printf("INFO: searching masterfiles for [%s]...", sc.Query)
 		startTime := time.Now()
-		searchQ := svc.DB.Table("master_files").Joins("inner join metadata md on md.id=metadata_id")
+		origQ := "(select pid from master_files mo where mo.id = master_files.original_mf_id) as original_pid"
+		searchQ := svc.DB.Debug().Table("master_files").Joins("inner join metadata md on md.id=metadata_id").Select("master_files.*", origQ)
+
 		if sc.QueryType != "pid" {
 			if sc.Filter.Target == "masterfiles" {
 				searchQ = searchQ.Where(sc.Filter.Query)
@@ -349,8 +352,12 @@ func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan sear
 			log.Printf("ERROR: masterfile search failed: %s", err.Error())
 		}
 		for _, mf := range resp.Hits {
-			mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
-			mf.ImageURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
+			imgPID := mf.PID
+			if mf.OriginalPID != "" {
+				imgPID = mf.OriginalPID
+			}
+			mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, imgPID)
+			mf.ImageURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, imgPID)
 		}
 		elapsedNanoSec := time.Since(startTime)
 		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
