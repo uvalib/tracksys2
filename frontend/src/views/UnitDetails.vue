@@ -140,6 +140,12 @@
       </Panel>
    </div>
    <MasterFilesList />
+   <Dialog v-model:visible="unitsStore.pdf.downloading" :modal="true" header="Generating PDF" :style="{width: '350px'}">
+      <div class="download">
+         <p>PDF generation in progress...</p>
+         <ProgressBar :value="unitsStore.pdf.percent"/>
+      </div>
+   </Dialog>
 </template>
 
 <script setup>
@@ -157,6 +163,8 @@ import Column from 'primevue/column'
 import CreateProjectDialog from '../components/unit/CreateProjectDialog.vue'
 import AddAttachmentDialog from '../components/unit/AddAttachmentDialog.vue'
 import MasterFilesList from '../components/unit/MasterFilesList.vue'
+import ProgressBar from 'primevue/progressbar'
+import Dialog from 'primevue/dialog'
 import { useConfirm } from "primevue/useconfirm"
 
 const confirm = useConfirm()
@@ -370,6 +378,12 @@ div.unit-acts {
          width: 100%;
          margin-bottom: 8px;
       }
+   }
+}
+.download {
+   padding: 5px 15px 15px 15px;
+   p {
+      margin:0 0 15px 0;
    }
 }
 </style>

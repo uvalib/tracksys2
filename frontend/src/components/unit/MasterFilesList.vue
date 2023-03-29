@@ -215,6 +215,10 @@ function pdfClicked() {
    let url = `${systemStore.pdfURL}/${unitsStore.detail.metadata.pid}?unit=${unitsStore.detail.id}&token=${token}&pages=${ids.join(',')}`
    window.open(url)
 }
+function downloadPDF(info) {
+   unitsStore.requestPDF( [info.id] )
+}
+
 function replaceClicked() {
    let unitDir = `${unitsStore.detail.id}`.padStart(9, '0')
    confirm.require({
@@ -253,10 +257,6 @@ function deleteClicked() {
          clearSelections()
       }
    })
-}
-function downloadPDF(info) {
-   let url = `${systemStore.pdfURL}/${info.pid}`
-   window.open(url)
 }
 function downloadFile( info) {
    unitsStore.downloadFromArchive(userStore.computeID, info.filename )

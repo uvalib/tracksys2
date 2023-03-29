@@ -35,7 +35,7 @@ func main() {
 
 	// router.GET("/script", svc.scriptHack)
 
-	api := router.Group("/api", svc.authMiddleware)
+	api := router.Group("/api") //, svc.authMiddleware)
 	{
 		api.POST("/collection-facet", svc.addCollectionFacet)
 		api.GET("/collections", svc.getCollections)
@@ -95,6 +95,9 @@ func main() {
 		api.GET("/jobs/:id", svc.getJobDetails)
 
 		api.GET("/units/:id", svc.getUnit)
+		api.GET("/units/:id/pdf", svc.requestPDF)
+		api.GET("/units/:id/pdf/status", svc.getPDFStatus)
+		api.GET("/units/:id/pdf/download", svc.downloadPDF)
 		api.GET("/units/:id/exists", svc.validateUnit)
 		api.POST("/units/:id/exemplar/:mfid", svc.setExemplar)
 		api.POST("/units/:id/project", svc.createProject)

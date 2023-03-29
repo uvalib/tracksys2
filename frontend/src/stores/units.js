@@ -22,7 +22,13 @@ export const useUnitsStore = defineStore('units', {
          relatedUnits: [],
       },
       masterFiles: [],
-      updateInProgress: false
+      updateInProgress: false,
+      pdf: {
+         downloading: false,
+         percent: 0,
+         intervalID: -1,
+         token: ""
+      }
    }),
 	getters: {
 	},
@@ -268,6 +274,79 @@ export const useUnitsStore = defineStore('units', {
                }
             })
             system.toastMessage("Exemplar", "New exemplar has been set.")
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
+      requestPDF( masterFileIDs ) {
+         if (this.pdf.downloading) return
+
+         const system = useSystemStore()
+         this.pdf.downloading = true
+         this.pdf.percent = 0
+         this.pdf.token = ""
+         axios.get(`/api/units/${this.detail.id}/pdf?pages=${masterFileIDs.join(",")}`).then( resp => {
+            if ( resp.data.status == "READY") {
+               this.pdf.percent = 100
+               this.pdf.token = resp.data.token
+               this.downloadPDF()
+            } else if ( resp.data.status == "FAILED") {
+               this.pdf.downloading = false
+               this.pdf.percent = 0
+               system.setError("Unable to download PDF")
+            } else {
+               // processing; start a interval to check status
+               this.pdf.token = resp.data.token
+               this.pdf.intervalID = setInterval( () => {
+                  let statusURL = `/api/units/${this.detail.id}/pdf/status`
+                  if (this.pdf.token != "") {
+                     statusURL += `?token=${this.pdf.token}`
+                  }
+                  axios.get(statusURL).then( resp => {
+                     console.log("PDF STATUS: "+resp.data)
+                     if ( resp.data == "READY") {
+                        console.log("DONE")
+                        this.pdf.percent = 100
+                        this.downloadPDF()
+                        clearInterval(this.pdf.intervalID)
+                     } else if ( resp.data == "FAILED") {
+                        this.pdf.downloading = false
+                        this.pdf.percent = 0
+                        system.setError("PDF generation failed")
+                        clearInterval(this.pdf.intervalID)
+                     } else {
+                        this.pdf.percent = parseInt(resp.status.replace("%", ""), 10)
+                     }
+                  }).catch( e => {
+                     system.setError(e)
+                     this.pdf.downloading = false
+                     this.pdf.percent = 0
+                  })
+               }, 1000)
+            }
+         }).catch( e => {
+            system.setError(e)
+            this.pdf.downloading = false
+            this.pdf.percent = 0
+         })
+      },
+
+      downloadPDF() {
+         let downloadURL = `/api/units/${this.detail.id}/pdf/download`
+         if (this.pdf.token != "") {
+            downloadURL += `?token=${this.pdf.token}`
+         }
+         console.log("DOWNLOAD "+downloadURL)
+         axios.get(downloadURL, {responseType: "blob"}).then((response) => {
+            var fileURL = window.URL.createObjectURL(response.data,{ type: 'application/pdf'})
+            var fileLink = document.createElement('a')
+            fileLink.href = fileURL
+            fileLink.setAttribute('download', `${this.detail.metadata.pid}.pdf`)
+            fileLink.click()
+            fileLink.remove()
+            window.URL.revokeObjectURL(fileURL)
+            this.pdf.downloading = false
          }).catch( e => {
             system.setError(e)
          })
