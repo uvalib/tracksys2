@@ -312,7 +312,7 @@ func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan sear
 	if sc.Scope == "all" || sc.Scope == "masterfiles" {
 		log.Printf("INFO: searching masterfiles for [%s]...", sc.Query)
 		startTime := time.Now()
-		origQ := "(select pid from master_files mo where mo.id = master_files.original_mf_id) as original_pid"
+		origQ := "(select mo.pid from master_files mo where mo.id = master_files.original_mf_id) as original_pid"
 		searchQ := svc.DB.Debug().Table("master_files").Joins("inner join metadata md on md.id=metadata_id").Select("master_files.*", origQ)
 
 		if sc.QueryType != "pid" {
@@ -343,7 +343,7 @@ func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan sear
 			}
 			searchQ.Where(fieldQ)
 		} else {
-			searchQ.Where("pid=?", sc.Query)
+			searchQ.Where("master_files.pid=?", sc.Query)
 		}
 
 		searchQ.Count(&resp.Total)
