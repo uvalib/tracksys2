@@ -128,6 +128,15 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		if strings.Index(q, "tsm:") == 0 || strings.Index(q, "tsb:") == 0 || strings.Index(q, "uva-lib:") == 0 {
 			log.Printf("INFO: query %s appears to be a pid; just search on pid columns", q)
 			sc.QueryType = "pid"
+		} else if strings.Index(q, "uva-lib-") == 0 {
+			log.Printf("INFO: query %s appears to be a uva-lib pid formatted with a dash; update format and search on pid columns", q)
+			sc.Query = strings.ReplaceAll(q, "uva-lib-", "uva-lib:")
+
+			sc.QueryType = "pid"
+		} else if strings.Index(q, "tsb-") == 0 {
+			log.Printf("INFO: query %s appears to be a tsb pid formatted with a dash; update format and search on pid columns", q)
+			sc.Query = strings.ReplaceAll(q, "tsb-", "tsb:")
+			sc.QueryType = "pid"
 		}
 	}
 
