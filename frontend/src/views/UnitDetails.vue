@@ -236,8 +236,7 @@ function unitOCRClicked() {
    unitsStore.startUnitOCR()
 }
 function unitPDFClicked() {
-   let url = `${systemStore.pdfURL}/${unitsStore.detail.metadata.pid}?unit=${unitsStore.detail.id}`
-   window.open(url)
+   unitsStore.requestPDF()
 }
 function downloadClicked() {
    unitsStore.downloadFromArchive( userStore.computeID )

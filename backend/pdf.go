@@ -25,11 +25,12 @@ func (svc *serviceContext) requestPDF(c *gin.Context) {
 	}
 
 	url := fmt.Sprintf("%s/%s?unit=%d&embed=1", svc.ExternalSystems.PDF, tgtUnit.Metadata.PID, unitID)
-	token := ""
+	token := fmt.Sprintf("%x", md5.Sum([]byte(c.Param("id"))))
 	if pagesStr != "" {
 		token = fmt.Sprintf("%x", md5.Sum([]byte(pagesStr)))
-		url += fmt.Sprintf("&pages=%s&token=%s", pagesStr, token)
+		url += fmt.Sprintf("&pages=%s", pagesStr)
 	}
+	url += fmt.Sprintf("&token=%s", token)
 
 	_, err := svc.getRequest(url)
 	if err != nil {
@@ -49,7 +50,7 @@ func (svc *serviceContext) requestPDF(c *gin.Context) {
 	// responses: READY, FAILED, PROCESSING, percentage% (includes the percent symbol)
 	out := struct {
 		Status string `json:"status"`
-		Token  string `json:"token,omitempty"`
+		Token  string `json:"token"`
 	}{
 		Status: resp,
 		Token:  token,

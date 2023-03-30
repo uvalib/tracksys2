@@ -211,9 +211,7 @@ function pdfClicked() {
    selectedMasterFiles.value.forEach( s => {
       ids.push(s.id)
    })
-   let token = new Date().getTime()
-   let url = `${systemStore.pdfURL}/${unitsStore.detail.metadata.pid}?unit=${unitsStore.detail.id}&token=${token}&pages=${ids.join(',')}`
-   window.open(url)
+   unitsStore.requestPDF( ids )
 }
 function downloadPDF(info) {
    unitsStore.requestPDF( [info.id] )

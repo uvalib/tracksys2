@@ -286,7 +286,11 @@ export const useUnitsStore = defineStore('units', {
          this.pdf.downloading = true
          this.pdf.percent = 0
          this.pdf.token = ""
-         axios.get(`/api/units/${this.detail.id}/pdf?pages=${masterFileIDs.join(",")}`).then( resp => {
+         let url = `/api/units/${this.detail.id}/pdf`
+         if ( masterFileIDs ) {
+            url += `?pages=${masterFileIDs.join(",")}`
+         }
+         axios.get(url).then( resp => {
             if ( resp.data.status == "READY") {
                this.pdf.percent = 100
                this.pdf.token = resp.data.token
@@ -316,7 +320,7 @@ export const useUnitsStore = defineStore('units', {
                         system.setError("PDF generation failed")
                         clearInterval(this.pdf.intervalID)
                      } else {
-                        this.pdf.percent = parseInt(resp.status.replace("%", ""), 10)
+                        this.pdf.percent = parseInt(resp.data.replace("%", ""), 10)
                      }
                   }).catch( e => {
                      system.setError(e)
