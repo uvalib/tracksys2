@@ -9,7 +9,8 @@ export const usePDFStore = defineStore('pdf', {
       includeText: false,
       percent: 0,
       intervalID: -1,
-      token: ""
+      token: "",
+      targetMasterFiles: []
    }),
 	getters: {
 	},
@@ -23,6 +24,7 @@ export const usePDFStore = defineStore('pdf', {
          this.token = ""
          this.unitID = unitID
          this.includeText = includeText
+         this.targetMasterFiles = masterFileIDs
 
          let url = `/api/units/${this.unitID}/pdf`
          if ( masterFileIDs.length > 0 ) {
@@ -75,15 +77,25 @@ export const usePDFStore = defineStore('pdf', {
       downloadPDF() {
          let downloadURL = `/api/units/${this.unitID}/pdf/download?token=${this.token}`
          if (this.includeText) {
-            downloadURL += `&text=1`
+            let pages = "all"
+            if ( this.targetMasterFiles.length > 0) {
+               pages = this.targetMasterFiles.join(",")
+            }
+            downloadURL += `&text=1&pages=${pages}`
          }
 
          const system = useSystemStore()
          axios.get(downloadURL, {responseType: "blob"}).then((response) => {
-            var fileURL = window.URL.createObjectURL(response.data, { type: 'application/pdf'})
+            let dataType = "application/zip"
+            let ext = "zip"
+            if ( response.headers['content-type'] == "application/pdf") {
+               dataType = "application/pdf"
+               ext = "pdf"
+            }
+            var fileURL = window.URL.createObjectURL(response.data, { type: dataType})
             var fileLink = document.createElement('a')
             fileLink.href = fileURL
-            fileLink.setAttribute('download', `unit-${this.unitID}.pdf`)
+            fileLink.setAttribute('download', `unit-${this.unitID}.${ext}`)
             fileLink.click()
             fileLink.remove()
             window.URL.revokeObjectURL(fileURL)

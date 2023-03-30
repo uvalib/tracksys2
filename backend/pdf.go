@@ -1,12 +1,17 @@
 package main
 
 import (
+	"archive/zip"
 	"crypto/md5"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"path"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -95,6 +100,8 @@ func (svc *serviceContext) checkPDFStatus(tgtUnit unit, token string) (string, e
 func (svc *serviceContext) downloadPDF(c *gin.Context) {
 	unitID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	token := c.Query("token")
+	includeText, _ := strconv.ParseBool(c.Query("text"))
+	pageStr := c.Query("pages")
 	log.Printf("INFO: download pdf for unit %d token [%s]", unitID, token)
 
 	var tgtUnit unit
@@ -117,13 +124,88 @@ func (svc *serviceContext) downloadPDF(c *gin.Context) {
 		c.String(err.StatusCode, err.Message)
 		return
 	}
-	// c.Data(http.StatusOK, "application/pdf", resp)
-	fileName := fmt.Sprintf("/tmp/%s.pdf", token)
-	writeErr := os.WriteFile(fileName, resp, 0644)
+
+	// Write the PDF to the temp director
+	destDir := fmt.Sprintf("/tmp/%s", token)
+	os.MkdirAll(destDir, 0777)
+	pdfFileName := filepath.Join(destDir, fmt.Sprintf("%s.pdf", token))
+	log.Printf("INFO: write PDF to %s", pdfFileName)
+	writeErr := os.WriteFile(pdfFileName, resp, 0644)
 	if writeErr != nil {
-		log.Printf("ERROR: unbale to write PDF: %s", writeErr.Error())
+		log.Printf("ERROR: unable to write PDF: %s", writeErr.Error())
+		c.String(http.StatusInternalServerError, writeErr.Error())
+		return
 	}
-	c.Header("Content-Type", "application/pdf")
-	c.File(fileName)
-	os.Remove(fileName)
+
+	if includeText == false {
+		c.Header("Content-Type", "application/pdf")
+		c.File(pdfFileName)
+		os.RemoveAll(destDir)
+		return
+	}
+
+	log.Printf("INFO: include text for masterfiles [%s]", pageStr)
+	textFileName := filepath.Join(destDir, fmt.Sprintf("%s.txt", token))
+	var textList []string
+
+	if pageStr == "all" {
+		dbErr := svc.DB.Debug().Table("master_files").Where("unit_id = ?", unitID).Select("transcription_text").Find(&textList).Error
+		if dbErr != nil {
+			log.Printf("ERROR: unable to get all master file text for unit %d: %s", unitID, dbErr.Error())
+		}
+	} else {
+		dbErr := svc.DB.Debug().Table("master_files").Where("id in ?", strings.Split(pageStr, ",")).Select("transcription_text").Find(&textList).Error
+		if dbErr != nil {
+			log.Printf("ERROR: unable to get master file text for unit %d, pages %s: %s", unitID, pageStr, dbErr.Error())
+		}
+	}
+
+	log.Printf("INFO: write transcription text to %s", textFileName)
+	txtFile, osErr := os.Create(textFileName)
+	if osErr != nil {
+		log.Printf("ERROR: unable to create file %s for transcription text: %s", textFileName, osErr.Error())
+	} else {
+		for _, txt := range textList {
+			txtFile.WriteString(txt)
+			txtFile.WriteString("\n\n")
+		}
+		txtFile.Close()
+	}
+
+	zipFileName := filepath.Join("/tmp/", fmt.Sprintf("%s.zip", token))
+	log.Printf("INFO: create zip of PDF/Text result %s", zipFileName)
+	zipFile, osErr := os.Create(zipFileName)
+	if osErr != nil {
+		log.Printf("ERROR: unable to create %s: %s", zipFileName, osErr.Error())
+		c.Header("Content-Type", "application/pdf")
+		c.File(pdfFileName)
+	} else {
+		zipWriter := zip.NewWriter(zipFile)
+		addFileToZip(zipWriter, destDir, fmt.Sprintf("%s.pdf", token))
+		if textFileName != "" {
+			addFileToZip(zipWriter, destDir, fmt.Sprintf("%s.txt", token))
+		}
+		zipWriter.Close()
+		zipFile.Close()
+		c.Header("Content-Type", "application/zip")
+		c.File(zipFileName)
+	}
+
+	log.Printf("INFO: cleaning up temp files")
+	os.Remove(zipFileName)
+	os.RemoveAll(destDir)
+}
+
+func addFileToZip(zw *zip.Writer, filePath string, fileName string) {
+	fileToZip, err := os.Open(path.Join(filePath, fileName))
+	if err != nil {
+		log.Printf("ERROR: unable to open %s for inclusion in zip: %s", filePath, err.Error())
+		return
+	}
+	defer fileToZip.Close()
+	zipFileWriter, err := zw.Create(fileName)
+	if _, err := io.Copy(zipFileWriter, fileToZip); err != nil {
+		log.Printf("ERROR: unable to copy contenst of  %s to zip: %s", filePath, err.Error())
+		return
+	}
 }

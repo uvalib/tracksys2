@@ -250,4 +250,10 @@ div.masterfile-acts {
       color: #ccc;
    }
 }
+.download {
+   padding: 5px 15px 15px 15px;
+   p {
+      margin:0 0 15px 0;
+   }
+}
 </style>
