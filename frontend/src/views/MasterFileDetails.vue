@@ -95,6 +95,12 @@
          <pre>{{masterFiles.details.transcription}}</pre>
       </Panel>
    </div>
+   <Dialog v-model:visible="pdfStore.downloading" :modal="true" header="Generating PDF" :style="{width: '350px'}">
+      <div class="download">
+         <p>PDF generation in progress...</p>
+         <ProgressBar :value="pdfStore.percent"/>
+      </div>
+   </Dialog>
 </template>
 
 <script setup>
@@ -102,8 +108,11 @@ import { onBeforeMount, computed } from 'vue'
 import { useMasterFilesStore } from '@/stores/masterfiles'
 import { useSystemStore } from '@/stores/system'
 import { useUserStore } from '@/stores/user'
+import { usePDFStore } from '@/stores/pdf'
 import { useRouter, useRoute,onBeforeRouteUpdate } from 'vue-router'
 import Panel from 'primevue/panel'
+import ProgressBar from 'primevue/progressbar'
+import Dialog from 'primevue/dialog'
 import dayjs from 'dayjs'
 import DataDisplay from '../components/DataDisplay.vue'
 import Fieldset from 'primevue/fieldset'
@@ -114,6 +123,7 @@ const router = useRouter()
 const masterFiles = useMasterFilesStore()
 const systemStore = useSystemStore()
 const userStore = useUserStore()
+const pdfStore = usePDFStore()
 
 const orientationName = computed( () => {
    let names = ["Normal", "Flip Y Axis", "Rotate 90&deg;", "Rotate 180&deg;", "Rotate 270&deg;"]
@@ -130,13 +140,6 @@ const location = computed(() => {
    return masterFiles.details.locations[0]
 })
 
-function prevImage() {
-   router.push(`/masterfiles/${masterFiles.prevID}`)
-}
-function nextImage() {
-   router.push(`/masterfiles/${masterFiles.nextID}`)
-}
-
 onBeforeRouteUpdate( async (to) => {
    let mfID = to.params.id
    masterFiles.getDetails(mfID)
@@ -148,24 +151,32 @@ onBeforeMount(() => {
    document.title = `Master File #${mfID}`
 })
 
-function downloadImage() {
+const prevImage = (() => {
+   router.push(`/masterfiles/${masterFiles.prevID}`)
+})
+
+const nextImage = (() => {
+   router.push(`/masterfiles/${masterFiles.nextID}`)
+})
+
+const downloadImage = (() => {
    masterFiles.downloadFromArchive( userStore.computeID )
-}
-function downloadPDF() {
-   let url = `${systemStore.pdfURL}/${masterFiles.details.pid}`
-   window.open(url)
-}
+})
 
-function editMasterFile() {
+const downloadPDF = (() => {
+   pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id] )
+})
+
+const editMasterFile = (() => {
    router.push(`/masterfiles/${route.params.id}/edit`)
-}
+})
 
-function formatDate( date ) {
+const formatDate = (( date ) => {
    if (date) {
       return dayjs(date).format("YYYY-MM-DD")
    }
    return ""
-}
+})
 </script>
 
 <style scoped lang="scss">

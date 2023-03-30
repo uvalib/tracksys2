@@ -140,10 +140,10 @@
       </Panel>
    </div>
    <MasterFilesList />
-   <Dialog v-model:visible="unitsStore.pdf.downloading" :modal="true" header="Generating PDF" :style="{width: '350px'}">
+   <Dialog v-model:visible="pdfStore.downloading" :modal="true" header="Generating PDF" :style="{width: '350px'}">
       <div class="download">
          <p>PDF generation in progress...</p>
-         <ProgressBar :value="unitsStore.pdf.percent"/>
+         <ProgressBar :value="pdfStore.percent"/>
       </div>
    </Dialog>
 </template>
@@ -154,6 +154,7 @@ import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useUnitsStore } from '@/stores/units'
 import { useUserStore } from '@/stores/user'
+import { usePDFStore } from '@/stores/pdf'
 import Panel from 'primevue/panel'
 import { storeToRefs } from "pinia"
 import DataDisplay from '../components/DataDisplay.vue'
@@ -173,6 +174,7 @@ const router = useRouter()
 const systemStore = useSystemStore()
 const unitsStore = useUnitsStore()
 const userStore = useUserStore()
+const pdfStore = usePDFStore()
 
 const { detail } = storeToRefs(unitsStore)
 
@@ -206,14 +208,14 @@ onBeforeMount(() => {
    document.title = `Unit #${uID}`
 })
 
-function flagString( flag ) {
+const flagString = (( flag ) => {
    if ( flag === true) {
       return "true"
    }
    return "false"
-}
+})
 
-async function completeClicked() {
+const completeClicked = ( async () => {
    let update = {
       status: "done",
       patronSourceURL: unitsStore.detail.patronSourceURL,
@@ -230,31 +232,34 @@ async function completeClicked() {
    }
    await unitsStore.submitEdit( update )
    systemStore.toastMessage("Unit Updated", "Unit has been marked as done.")
-}
+})
 
-function unitOCRClicked() {
+const unitOCRClicked = (() => {
    unitsStore.startUnitOCR()
-}
-function unitPDFClicked() {
-   unitsStore.requestPDF()
-}
-function downloadClicked() {
+})
+
+const unitPDFClicked = (() => {
+   pdfStore.requestPDF( unitsStore.detail.id )
+})
+
+const downloadClicked = (() => {
    unitsStore.downloadFromArchive( userStore.computeID )
-}
-function generateDeliverablesClicked() {
+})
+
+const generateDeliverablesClicked = (() => {
    unitsStore.generateDeliverables()
-}
+})
 
-function editUnit() {
+const editUnit = (() => {
    router.push(`/units/${route.params.id}/edit`)
-}
+})
 
-function downloadAttachment(item) {
+const downloadAttachment = ((item) => {
    let url = `${systemStore.jobsURL}/units/${unitsStore.detail.id}/attachments/${item.filename}`
    window.open(url)
-}
+})
 
-function deleteAttachment(item) {
+const deleteAttachment = ((item) => {
    confirm.require({
       message: 'Are you sure you want delete the selected attachment? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Attachment',
@@ -264,27 +269,27 @@ function deleteAttachment(item) {
          await unitsStore.deleteAttachment(item)
       }
    })
-}
+})
 
-function displayStatus( id) {
+const displayStatus = (( id) => {
    if (id == "await_fee") {
       return "Await Fee"
    }
    return id.charAt(0).toUpperCase() + id.slice(1)
-}
+})
 
-function displayFlag( f ) {
+const displayFlag = (( f ) => {
    if (f) return "Yes"
    return "No"
-}
+})
 
-function formatDate( dateStr ) {
+const formatDate = (( dateStr ) => {
    if (dateStr) {
       let d = dayjs(dateStr)
       return d.format("YYYY-MM-DD HH:mm A")
    }
    return ""
-}
+})
 
 </script>
 

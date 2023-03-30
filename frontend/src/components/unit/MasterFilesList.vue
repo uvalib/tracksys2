@@ -85,6 +85,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSystemStore } from '@/stores/system'
 import { useUnitsStore } from '@/stores/units'
 import { useUserStore } from '@/stores/user'
+import { usePDFStore } from '@/stores/pdf'
 import Panel from 'primevue/panel'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -101,6 +102,7 @@ const confirm = useConfirm()
 const systemStore = useSystemStore()
 const unitsStore = useUnitsStore()
 const userStore = useUserStore()
+const pdfStore = usePDFStore()
 const router = useRouter()
 
 const selectedMasterFiles = ref([])
@@ -211,10 +213,10 @@ function pdfClicked() {
    selectedMasterFiles.value.forEach( s => {
       ids.push(s.id)
    })
-   unitsStore.requestPDF( ids )
+   pdfStore.requestPDF( unitsStore.detail.id, ids )
 }
 function downloadPDF(info) {
-   unitsStore.requestPDF( [info.id] )
+   pdfStore.requestPDF(  unitsStore.detail.id, [info.id] )
 }
 
 function replaceClicked() {
