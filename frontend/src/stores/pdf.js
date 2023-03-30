@@ -6,6 +6,7 @@ export const usePDFStore = defineStore('pdf', {
 	state: () => ({
       unitID: 0,
       downloading: false,
+      includeText: false,
       percent: 0,
       intervalID: -1,
       token: ""
@@ -13,7 +14,7 @@ export const usePDFStore = defineStore('pdf', {
 	getters: {
 	},
 	actions: {
-      requestPDF( unitID, masterFileIDs ) {
+      requestPDF( unitID, masterFileIDs = [], includeText = false ) {
          if (this.downloading) return
 
          const system = useSystemStore()
@@ -21,21 +22,22 @@ export const usePDFStore = defineStore('pdf', {
          this.percent = 0
          this.token = ""
          this.unitID = unitID
+         this.includeText = includeText
+
          let url = `/api/units/${this.unitID}/pdf`
-         if ( masterFileIDs ) {
+         if ( masterFileIDs.length > 0 ) {
             url += `?pages=${masterFileIDs.join(",")}`
          }
          axios.get(url).then( resp => {
+            this.token = resp.data.token
             if ( resp.data.status == "READY") {
                this.percent = 100
-               this.token = resp.data.token
                this.downloadPDF()
             } else if ( resp.data.status == "FAILED") {
                this.downloading = false
                this.percent = 0
                system.setError("Unable to generate PDF")
             } else {
-               this.token = resp.data.token
                this.pollStatus()
             }
          }).catch( e => {
@@ -48,14 +50,9 @@ export const usePDFStore = defineStore('pdf', {
       pollStatus() {
          const system = useSystemStore()
          this.intervalID = setInterval( () => {
-            let statusURL = `/api/units/${this.unitID}/pdf/status`
-            if (this.token != "") {
-               statusURL += `?token=${this.token}`
-            }
+            let statusURL = `/api/units/${this.unitID}/pdf/status?token=${this.token}`
             axios.get(statusURL).then( resp => {
-               console.log("PDF STATUS: "+resp.data)
                if ( resp.data == "READY") {
-                  console.log("DONE")
                   this.percent = 100
                   this.downloadPDF()
                   clearInterval(this.intervalID)
@@ -76,9 +73,9 @@ export const usePDFStore = defineStore('pdf', {
       },
 
       downloadPDF() {
-         let downloadURL = `/api/units/${this.unitID}/pdf/download`
-         if (this.token != "") {
-            downloadURL += `?token=${this.token}`
+         let downloadURL = `/api/units/${this.unitID}/pdf/download?token=${this.token}`
+         if (this.includeText) {
+            downloadURL += `&text=1`
          }
 
          const system = useSystemStore()

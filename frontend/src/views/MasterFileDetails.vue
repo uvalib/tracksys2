@@ -117,6 +117,7 @@ import dayjs from 'dayjs'
 import DataDisplay from '../components/DataDisplay.vue'
 import Fieldset from 'primevue/fieldset'
 import TagsDialog from '../components/masterfile/TagsDialog.vue'
+import { useConfirm } from "primevue/useconfirm"
 
 const route = useRoute()
 const router = useRouter()
@@ -124,6 +125,7 @@ const masterFiles = useMasterFilesStore()
 const systemStore = useSystemStore()
 const userStore = useUserStore()
 const pdfStore = usePDFStore()
+const confirm = useConfirm()
 
 const orientationName = computed( () => {
    let names = ["Normal", "Flip Y Axis", "Rotate 90&deg;", "Rotate 180&deg;", "Rotate 270&deg;"]
@@ -164,7 +166,22 @@ const downloadImage = (() => {
 })
 
 const downloadPDF = (() => {
-   pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id] )
+   if ( masterFiles.hasText == false ) {
+      pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], false )
+   } else {
+      confirm.require({
+         message: `This master file has transcription or OCR text. Include it with the PDF?`,
+         header: 'Include Text',
+         icon: 'pi pi-question-circle',
+         rejectClass: 'p-button-secondary',
+         accept: () => {
+            pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], true )
+         },
+         reject: () => {
+            pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], false )
+         }
+      })
+   }
 })
 
 const editMasterFile = (() => {

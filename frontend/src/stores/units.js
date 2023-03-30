@@ -20,6 +20,7 @@ export const useUnitsStore = defineStore('units', {
          datePatronDeliverablesReady: "",
          dateDLDeliverablesReady: "",
          relatedUnits: [],
+         hasText: false
       },
       masterFiles: [],
       updateInProgress: false,
@@ -31,6 +32,9 @@ export const useUnitsStore = defineStore('units', {
       }
    }),
 	getters: {
+      hasText: state => {
+         return state.detail.hasText
+      }
 	},
 	actions: {
       clearDetails() {
@@ -48,6 +52,7 @@ export const useUnitsStore = defineStore('units', {
          this.detail.dateArchived = ""
          this.detail.datePatronDeliverablesReady = ""
          this.detail.dateDLDeliverablesReady = ""
+         this.detail.hasText = false
       },
       flagAsReorder() {
          this.detail.reorder = true

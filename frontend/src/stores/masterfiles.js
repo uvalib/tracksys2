@@ -12,6 +12,9 @@ export const useMasterFilesStore = defineStore('masterfiles', {
       prevID: 0
    }),
 	getters: {
+      hasText: state => {
+         return state.details.transcription
+      }
 	},
 	actions: {
       async getDetails( masterFileID ) {

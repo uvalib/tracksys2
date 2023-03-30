@@ -213,10 +213,28 @@ function pdfClicked() {
    selectedMasterFiles.value.forEach( s => {
       ids.push(s.id)
    })
-   pdfStore.requestPDF( unitsStore.detail.id, ids )
+   requestPDF( ids )
 }
+const requestPDF = (( masterFileIDs ) => {
+   if (unitsStore.hasText == false ) {
+      pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs )
+   } else {
+      confirm.require({
+         message: `This unit has transcription or OCR text. Include it with the PDF?`,
+         header: 'Include Text',
+         icon: 'pi pi-question-circle',
+         rejectClass: 'p-button-secondary',
+         accept: () => {
+            pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs, true )
+         },
+         reject: () => {
+            pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs )
+         }
+      })
+   }
+})
 function downloadPDF(info) {
-   pdfStore.requestPDF(  unitsStore.detail.id, [info.id] )
+   requestPDF( [info.id] )
 }
 
 function replaceClicked() {

@@ -83,7 +83,8 @@ type unit struct {
 	UpdatedAt                   time.Time    `json:"-"`
 	ProjectID                   int64        `gorm:"-" json:"projectID,omitempty"`
 	LastError                   *lastError   `gorm:"-" json:"lastError,omitempty"`
-	RelatedUnitIDs              []int64      `gorm:"-" json:"relatedUnits,,omitempty"`
+	RelatedUnitIDs              []int64      `gorm:"-" json:"relatedUnits,omitempty"`
+	HasText                     bool         `gorm:"-" json:"hasText"`
 }
 
 func (svc *serviceContext) validateUnit(c *gin.Context) {
@@ -129,6 +130,15 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 		log.Printf("ERROR: unable to get project id for unit %s: %s", unitID, err.Error())
 	} else {
 		unitDetail.ProjectID = project.ID
+	}
+
+	log.Printf("INFO: check if unit %d has any ocr/transcription text", unitDetail.ID)
+	var txtCnt int64
+	err = svc.DB.Table("master_files").Where("unit_id=? and transcription_text is not null", unitDetail.ID).Count(&txtCnt).Error
+	if err != nil {
+		log.Printf("ERROR: unabble to determine if unit %d has text associated with its masterfiles: %s", unitDetail.ID, err.Error())
+	} else {
+		unitDetail.HasText = txtCnt > 0
 	}
 
 	log.Printf("INFO: check for recent errors for unit %d", unitDetail.ID)

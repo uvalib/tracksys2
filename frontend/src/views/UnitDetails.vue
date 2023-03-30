@@ -239,7 +239,22 @@ const unitOCRClicked = (() => {
 })
 
 const unitPDFClicked = (() => {
-   pdfStore.requestPDF( unitsStore.detail.id )
+   if (unitsStore.hasText == false ) {
+      pdfStore.requestPDF( unitsStore.detail.id )
+   } else {
+      confirm.require({
+         message: `This unit has transcription or OCR text. Include it with the PDF?`,
+         header: 'Include Text',
+         icon: 'pi pi-question-circle',
+         rejectClass: 'p-button-secondary',
+         accept: () => {
+            pdfStore.requestPDF( unitsStore.detail.id, [], true )
+         },
+         reject: () => {
+            pdfStore.requestPDF( unitsStore.detail.id )
+         }
+      })
+   }
 })
 
 const downloadClicked = (() => {
