@@ -1,8 +1,8 @@
 <template>
    <h2>{{pageTitle}}</h2>
    <div class="unit-acts">
-      <DPGButton label="OCR"  @click="unitOCRClicked()" v-if="canOCR" />
-      <DPGButton label="PDF" @click="unitPDFClicked()" v-if="detail.metadata && unitsStore.masterFiles.length > 0 && detail.reorder==false" />
+      <DPGButton label="OCR"  @click="unitOCRClicked()" v-if="unitsStore.canOCR && (userStore.isAdmin || userStore.isSupervisor)" />
+      <DPGButton label="PDF" @click="unitPDFClicked()" v-if="unitsStore.canPDF" />
       <DPGButton label="Edit" @click="editUnit()"/>
    </div>
    <div v-if="detail.lastError" class="last-error">
@@ -63,14 +63,8 @@
                   class="p-button-secondary" label="Generate Deliverables" />
                <DPGButton v-if="detail.intendedUseID != 110 && detail.datePatronDeliverablesReady" @click="generateDeliverablesClicked"
                   class="p-button-secondary" label="Regenerate Deliverables" />
-               <template v-if="detail.status == 'done'">
-                  <DPGButton v-if="detail.dateArchived || (detail.reorder && detail.datePatronDeliverablesReady)"
-                     @click="downloadClicked" class="p-button-secondary" label="Download Unit From Archive" />
-               </template>
-               <template v-else>
-                  <DPGButton v-if="detail.reorder && detail.datePatronDeliverablesReady" @click="completeClicked"
-                     class="p-button-secondary" label="Complete Unit" />
-               </template>
+               <DPGButton v-if="unitsStore.canDownload" @click="downloadClicked" class="p-button-secondary" label="Download Unit From Archive" />
+               <DPGButton v-if="unitsStore.canComplete" @click="completeClicked" class="p-button-secondary" label="Complete Unit" />
             </div>
          </div>
 
@@ -187,12 +181,6 @@ const pageTitle = computed(() => {
       }
    }
    return t
-})
-const canOCR = computed(() => {
-   if ( !unitsStore.detail.metadata ) return false
-   if ( !unitsStore.detail.metadata.ocrHint) return false
-   let isCandidate = unitsStore.detail.metadata.ocrHint.ocrCandidate
-   return ( unitsStore.masterFiles.length > 0 && unitsStore.detail.reorder == false && isCandidate && (userStore.isAdmin || userStore.isSupervisor) )
 })
 
 onBeforeRouteUpdate(async (to) => {

@@ -34,6 +34,24 @@ export const useUnitsStore = defineStore('units', {
 	getters: {
       hasText: state => {
          return state.detail.hasText
+      },
+      canOCR: state => {
+         if ( !state.detail.metadata ) return false
+         if ( !state.detail.metadata.ocrHint) return false
+         let isCandidate = state.detail.metadata.ocrHint.ocrCandidate
+         return ( state.masterFiles.length > 0 && state.detail.reorder == false && isCandidate )
+      },
+      canPDF: state => {
+         if (state.detail.status != 'done') return false
+         return state.detail.dateArchived != null && state.detail.reorder == false
+      },
+      canDownload: state => {
+         if (state.detail.status != 'done') return false
+         return state.detail.dateArchived != null || (state.detail.reorder && state.detail.datePatronDeliverablesReady)
+      },
+      canComplete: state => {
+         if (state.detail.status == 'done') return false
+         return state.detail.reorder && state.detail.datePatronDeliverablesReady
       }
 	},
 	actions: {

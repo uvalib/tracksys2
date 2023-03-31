@@ -20,11 +20,11 @@
                      <DPGButton label="Delete Selected" @click="deleteClicked()" class="p-button-secondary" :disabled="!filesSelected" />
                   </template>
                   <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
-                  <template v-if="detail.dateArchived != null || (detail.reorder && detail.datePatronDeliverablesReady)">
+                  <template v-if="unitsStore.canDownload">
                      <DPGButton label="Download Selected" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
                   </template>
-                  <template v-if="detail.metadata && detail.dateArchived != null && detail.reorder == false">
-                     <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+                  <template v-if="unitsStore.canPDF">
+                     <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="filesSelected == false" />
                   </template>
                   <template  v-if="userStore.isAdmin || userStore.isSupervisor">
                      <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
@@ -62,8 +62,8 @@
             <Column header="" class="row-acts">
                <template #body="slotProps">
                   <DPGButton label="View" class="p-button-secondary first" @click="viewClicked(slotProps.data)" />
-                  <DPGButton label="Download Image" class="p-button-secondary" @click="downloadFile(slotProps.data)"/>
-                  <DPGButton label="Download PDF" class="p-button-secondary" @click="downloadPDF(slotProps.data)"/>
+                  <DPGButton label="Download Image" class="p-button-secondary" @click="downloadFile(slotProps.data)" v-if="unitsStore.canDownload"/>
+                  <DPGButton label="Download PDF" class="p-button-secondary" @click="downloadPDF(slotProps.data)" v-if="unitsStore.canPDF"/>
                   <DPGButton v-if="slotProps.data.exemplar==false && (detail.intendedUse && detail.intendedUse.id == 110 || detail.includeInDL)"
                      label="Set Exemplar" class="p-button-secondary" @click="exemplarClicked(slotProps.data)"/>
                </template>

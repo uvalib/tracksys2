@@ -4,7 +4,7 @@
       <DPGButton label="Previous" @click="prevImage()" v-if="masterFiles.prevID > 0"/>
       <DPGButton label="Next" @click="nextImage()" v-if="masterFiles.nextID > 0"/>
       <DPGButton label="Download Image" @click="downloadImage()"/>
-      <DPGButton label="Download PDF" @click="downloadPDF()"/>
+      <DPGButton label="Download PDF" @click="downloadPDF()" v-if="masterFiles.details.originalID==0"/>
       <DPGButton label="Edit" @click="editMasterFile()"/>
    </div>
    <div class="details" v-if="systemStore.working==false">
