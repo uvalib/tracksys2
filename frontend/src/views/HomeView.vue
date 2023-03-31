@@ -9,17 +9,17 @@
       <div class="stats">
          <div>
             <label>Orders due in one week:</label>
-            <router-link to="/orders?filter=due_week&sort=id+desc">{{dashboard.dueInOneWeek}}</router-link>
+            <router-link to='/orders??filters=["status|equals|due_week"]&sort=id+desc'>{{dashboard.dueInOneWeek}}</router-link>
          </div>
          <span class="sep"></span>
          <div>
             <label>Overdue orders:</label>
-            <router-link to="/orders?filter=overdue&sort=id+desc">{{dashboard.overdue}}</router-link>
+            <router-link to='/orders??filters=["status|equals|overdue"]&sort=id+desc'>{{dashboard.overdue}}</router-link>
          </div>
          <span class="sep"></span>
          <div>
             <label>Orders ready for delivery:</label>
-            <router-link to="/orders?filter=ready&sort=id+desc">{{dashboard.readyForDelivery}}</router-link>
+            <router-link to='/orders??filters=["status|equals|ready"]&sort=id+desc'>{{dashboard.readyForDelivery}}</router-link>
          </div>
       </div>
       <div class="search">
