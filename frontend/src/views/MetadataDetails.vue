@@ -233,6 +233,7 @@ const externalSystem = computed(() => {
 })
 
 const canPublish = computed(() => {
+   if ( metadataStore.detail.type == 'ExternalMetadata' ) return false
    if (metadataStore.detail.dateDLIngest) {
       return true
    } else {
