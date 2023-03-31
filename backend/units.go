@@ -134,7 +134,7 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 
 	log.Printf("INFO: check if unit %d has any ocr/transcription text", unitDetail.ID)
 	var txtCnt int64
-	err = svc.DB.Table("master_files").Where("unit_id=? and transcription_text is not null", unitDetail.ID).Count(&txtCnt).Error
+	err = svc.DB.Table("master_files").Where("unit_id=? and transcription_text is not null and transcription_text != ?", unitDetail.ID, "").Count(&txtCnt).Error
 	if err != nil {
 		log.Printf("ERROR: unabble to determine if unit %d has text associated with its masterfiles: %s", unitDetail.ID, err.Error())
 	} else {
