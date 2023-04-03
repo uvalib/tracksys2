@@ -76,11 +76,14 @@
                <DataDisplay label="Created By" :value="metadataStore.archivesSpace.createdBy"/>
                <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
                <DataDisplay v-if="metadataStore.archivesSpace.publishedAt" label="Published Date" :value="metadataStore.archivesSpace.publishedAt"/>
-               <DataDisplay v-else-if="metadataStore.hasMasterFiles==false" label="Published Date" value="No Master Files. Not Published."/>
-               <DataDisplay v-else label="Published Date" value="placeholder">
-                  <DPGButton label="Publish Now" class="as-publish" @click="publishToAS" :loading="publishing"/>
-               </DataDisplay>
             </dl>
+            <div v-if="!metadataStore.archivesSpace.publishedAt && metadataStore.hasMasterFiles" class="as-toolbar">
+               <DPGButton label="Publish (immediate)" class="as-publish" @click="publishToAS(true)" :loading="publishing"/>
+               <DPGButton label="Publish (reviewed)" class="as-publish" @click="publishToAS(false)" :loading="publishing"/>
+            </div>
+            <div v-else  class="as-toolbar">
+               <p>Not Published to ArchivesSpace. No Master Files.</p>
+            </div>
             <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
          </template>
          <dl v-if="externalSystem == 'JSTOR Forum'">
@@ -321,9 +324,9 @@ async function publishClicked() {
    }
 }
 
-async function publishToAS() {
+async function publishToAS( immediate ) {
    publishing.value = true
-   await metadataStore.publishToArchivesSpace(userStore.ID)
+   await metadataStore.publishToArchivesSpace(userStore.ID, immediate)
    publishing.value = false
    if (systemStore.error == "") {
       systemStore.toastMessage('Publish Success', 'This item has successfully been published to ArchivesSpace')
@@ -392,9 +395,18 @@ div.unit-acts {
    :deep(p-tabview) {
       margin: 0 !important;
    }
-   button.as-publish {
-      font-size: 0.85em;
-      padding: 5px 15px;
+   .as-toolbar {
+      text-align: right;
+      p {
+         text-align: center;
+         font-weight: bold;
+         margin: 10px 0 0 0;
+      }
+      button.as-publish {
+         font-size: 0.85em;
+         padding: 5px 15px;
+         margin-right: 10px;
+      }
    }
    a.virgo, a.supplemental {
       display: inline-block;

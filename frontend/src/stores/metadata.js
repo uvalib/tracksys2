@@ -217,10 +217,10 @@ export const useMetadataStore = defineStore('metadata', {
             system.setError(e)
          })
       },
-      async publishToArchivesSpace( userID ) {
+      async publishToArchivesSpace( userID, immediate ) {
          const system = useSystemStore()
          let payload = {userID: `${userID}`, metadataID: `${this.detail.id}`}
-         let url = `${system.jobsURL}/archivesspace/publish`
+         let url = `${system.jobsURL}/archivesspace/publish?immediate=${immediate}`
          return axios.post( url, payload ).then( () => {
             var now = dayjs().format("YYYY-MM-DD hh:mm A")
             this.archivesSpace.publishedAt = now
