@@ -210,7 +210,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		IIIFURL                string `json:"iiifURL"`
 		IIIFManifestURL        string `json:"iiifManifestURL"`
 		CurioURL               string `json:"curioURL"`
-		PdfURL                 string `json:"pdfURL"`
 		JobsURL                string `json:"jobsURL"`
 		ControlledVocabularies struct {
 			AcademicStatuses     []academicStatus     `json:"academicStatuses"`
@@ -237,7 +236,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		IIIFURL:         svc.ExternalSystems.IIIF,
 		IIIFManifestURL: svc.ExternalSystems.IIIFMan,
 		ReportsURL:      svc.ExternalSystems.Reports,
-		PdfURL:          svc.ExternalSystems.PDF,
 		ProjectsURL:     svc.ExternalSystems.Projects,
 		JobsURL:         svc.ExternalSystems.Jobs,
 	}
