@@ -77,13 +77,14 @@
                <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
                <DataDisplay v-if="metadataStore.archivesSpace.publishedAt" label="Published Date" :value="metadataStore.archivesSpace.publishedAt"/>
             </dl>
-            <div v-if="!metadataStore.archivesSpace.publishedAt && metadataStore.hasMasterFiles" class="as-toolbar">
+            <div v-if="metadataStore.hasMasterFiles == false"  class="as-toolbar">
+               <p>Not published to ArchivesSpace - no master files.</p>
+            </div>
+            <div v-else-if="!metadataStore.archivesSpace.publishedAt" class="as-toolbar">
                <DPGButton label="Publish (immediate)" class="as-publish" @click="publishToAS(true)" :loading="publishing"/>
                <DPGButton label="Publish (reviewed)" class="as-publish" @click="publishToAS(false)" :loading="publishing"/>
             </div>
-            <div v-else  class="as-toolbar">
-               <p>Not Published to ArchivesSpace. No Master Files.</p>
-            </div>
+
             <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
          </template>
          <dl v-if="externalSystem == 'JSTOR Forum'">
