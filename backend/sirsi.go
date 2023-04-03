@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"log"
@@ -30,11 +31,16 @@ type controlField struct {
 	Value   string   `xml:",chardata"`
 }
 
-type marcMetadata struct {
+type marcRecord struct {
 	XMLName       xml.Name       `xml:"record"`
 	Leader        string         `xml:"leader"`
 	ControlFields []controlField `xml:"controlfield"`
 	DataFields    []dataField    `xml:"datafield"`
+}
+
+type marcMetadata struct {
+	XMLName xml.Name `xml:"collection"`
+	Record  marcRecord
 }
 
 type sirsiResponse struct {
@@ -68,29 +74,51 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+type solrDocument struct {
+	FullRecord string `json:"fullrecord"`
+}
+
+type solrResponseHeader struct {
+	Status int `json:"status,omitempty"`
+}
+
+type solrResponseDocuments struct {
+	NumFound int            `json:"numFound,omitempty"`
+	Start    int            `json:"start,omitempty"`
+	Docs     []solrDocument `json:"docs,omitempty"`
+}
+
+type solrResponse struct {
+	Header   solrResponseHeader    `json:"responseHeader,omitempty"`
+	Response solrResponseDocuments `json:"response,omitempty"`
+}
+
 func (svc *serviceContext) doSirsiLookup(catKey, barcode string) (*sirsiResponse, error) {
 	// prefer catkey over barcode
-	qp := fmt.Sprintf("barcode=%s", barcode)
+	url := fmt.Sprintf("%s/select?fl=fullrecord&q=barcode_a:%s", svc.ExternalSystems.Solr, barcode)
 	if catKey != "" {
-		re := regexp.MustCompile(`^u`)
-		cKey := re.ReplaceAll([]byte(catKey), []byte(""))
-		qp = fmt.Sprintf("ckey=%s", cKey)
+		url = fmt.Sprintf("%s/select?fl=fullrecord&q=id:%s", svc.ExternalSystems.Solr, catKey)
 	}
 
-	log.Printf("INFO: lookup sirsi marc metadata with [%s]", qp)
-	url := fmt.Sprintf("%s?%s&type=xml", svc.ExternalSystems.Sirsi, qp)
-	rawResp, err := svc.getRequest(url)
+	respStr, err := svc.getRequest(url)
 	if err != nil {
-		return nil, fmt.Errorf("getMarc failed %d: %s", err.StatusCode, err.Message)
+		return nil, fmt.Errorf("getMarc from solr failed %d: %s", err.StatusCode, err.Message)
 	}
+
+	var solr solrResponse
+	jErr := json.Unmarshal(respStr, &solr)
+	if jErr != nil {
+		return nil, jErr
+	}
+	rawMarc := []byte(solr.Response.Docs[0].FullRecord)
 
 	var parsed marcMetadata
-	parseErr := xml.Unmarshal(rawResp, &parsed)
+	parseErr := xml.Unmarshal(rawMarc, &parsed)
 	if parseErr != nil {
 		return nil, parseErr
 	}
 
-	if len(parsed.ControlFields) == 0 && len(parsed.DataFields) == 0 {
+	if len(parsed.Record.ControlFields) == 0 && len(parsed.Record.DataFields) == 0 {
 		return nil, fmt.Errorf("no matches found in sirsi")
 	}
 
@@ -98,7 +126,7 @@ func (svc *serviceContext) doSirsiLookup(catKey, barcode string) (*sirsiResponse
 	resp := sirsiResponse{CatalogKey: catKey}
 
 	// catkey is in 001 of control fields. find it first
-	for _, cf := range parsed.ControlFields {
+	for _, cf := range parsed.Record.ControlFields {
 		if cf.Tag == "001" {
 			resp.CatalogKey = cf.Value
 			break
@@ -114,7 +142,7 @@ func (svc *serviceContext) doSirsiLookup(catKey, barcode string) (*sirsiResponse
 	// the remaining data ins in the datafields
 	titleRegex := regexp.MustCompile(`\s*\/$`)                 // strip trailing /
 	pubRegex := regexp.MustCompile(`(?:^\[|\]$|\.$|\]\.$|:$)`) // strip [] and trailing . or :
-	for _, df := range parsed.DataFields {
+	for _, df := range parsed.Record.DataFields {
 		if df.Tag == "100" {
 			for _, sf := range df.Subfields {
 				if sf.Code == "a" {

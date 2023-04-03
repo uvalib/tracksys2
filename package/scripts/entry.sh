@@ -18,7 +18,7 @@ cd bin; ./tracksys2                \
    -jobs $JOBS_URL                 \
    -apollo $APOLLO_URL             \
    -pdf $PDF_SERVICE_URL           \
-   -sirsi $SIRSI_API_URL           \
+   -solr $SOLR_URL                 \
    -xmlhook $XML_INDEX_HOOK        \
    -dbhost $DBHOST                 \
    -dbport $DBPORT                 \

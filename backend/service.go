@@ -33,7 +33,7 @@ type externalSystems struct {
 	Jobs     string
 	PDF      string
 	Virgo    string
-	Sirsi    string
+	Solr     string
 	XMLIndex string
 }
 
@@ -98,7 +98,7 @@ func initializeService(version string, cfg *configData) *serviceContext {
 			Apollo:   cfg.apolloURL,
 			PDF:      cfg.pdfURL,
 			Virgo:    cfg.virgoURL,
-			Sirsi:    cfg.sirsiURL,
+			Solr:     cfg.solrURL,
 			Jobs:     cfg.jobsURL,
 			XMLIndex: cfg.xmlIndexURL,
 		},
