@@ -14,6 +14,11 @@ export const useMasterFilesStore = defineStore('masterfiles', {
 	getters: {
       hasText: state => {
          return state.details.transcription
+      },
+      isOCRCandidate: state => {
+         if ( state.details.metadata == null) return false
+         if ( state.details.metadata.ocrHint == null ) return false
+         return state.details.metadata.ocrHint.ocrCandidate
       }
 	},
 	actions: {
@@ -74,6 +79,14 @@ export const useMasterFilesStore = defineStore('masterfiles', {
             }
          }).catch( e => {
             const system = useSystemStore()
+            system.setError(e)
+         })
+      },
+      ocr() {
+         let payload = {type: "masterfile", id: this.details.id}
+         axios.post(`${system.jobsURL}/ocr`, payload).then( () => {
+            system.toastMessage("OCR Started", `OCR nas been started form ${this.details.filename}. Check the Job Statuses page for updates.`)
+         }).catch( e => {
             system.setError(e)
          })
       }

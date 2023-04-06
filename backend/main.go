@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
@@ -11,7 +12,7 @@ import (
 )
 
 // Version of the service
-const Version = "1.5.0"
+const Version = "1.5.1"
 
 func main() {
 	// Load cfg
@@ -33,9 +34,9 @@ func main() {
 	router.GET("/config", svc.getConfig)
 	router.POST("/cleanup", svc.cleanupExpiredData)
 
-	// router.GET("/script", svc.scriptHack)
+	router.GET("/script", svc.scriptRunner)
 
-	api := router.Group("/api") //, svc.authMiddleware)
+	api := router.Group("/api", svc.authMiddleware)
 	{
 		api.POST("/collection-facet", svc.addCollectionFacet)
 		api.GET("/collections", svc.getCollections)
@@ -133,57 +134,55 @@ func main() {
 	log.Fatal(router.Run(portStr))
 }
 
-// func (svc *serviceContext) scriptHack(c *gin.Context) {
-// 	f, err := os.Open("./data/as_records.csv")
-// 	if err != nil {
-// 		log.Fatal(err.Error())
-// 	}
-// 	defer f.Close()
-// 	csvReader := csv.NewReader(f)
-// 	asRecs, err := csvReader.ReadAll()
-// 	if err != nil {
-// 		log.Fatal(err.Error())
-// 	}
+func (svc *serviceContext) scriptRunner(c *gin.Context) {
+	log.Printf("INFO: script runner called")
+	c.String(http.StatusNotImplemented, "no script is available")
+}
 
-// 	out, err := os.Create("./data/as_update.sql")
-// 	if err != nil {
-// 		log.Fatal(err.Error())
-// 	}
+// SAMPLE for updating AS date_dl_ingested
+//
+// log.Printf("INFO: update date_dl_ingest for published AS metadata records")
+// var asMD []metadata
+// err := svc.DB.Where("external_system_id=? and date_dl_ingest is null", 1).Find(&asMD).Error
+// if err != nil {
+// 	log.Printf("ERROR: unable to get AS metadata records: %s", err.Error())
+// 	c.String(http.StatusInternalServerError, err.Error())
+// 	return
+// }
 
-// 	priorURI := ""
-// 	priorID := ""
-// 	dupPrinted := false
-// 	for _, rec := range asRecs {
-// 		if rec[2] == priorURI {
-// 			if dupPrinted == false {
-// 				log.Printf("DUPLICATE URI: %s : %s", priorID, priorURI)
-// 				dupPrinted = true
-// 			}
-// 			log.Printf("DUPLICATE URI: %s : %s", rec[0], rec[2])
-// 			// continue
+// cnt := 0
+// errors := 0
+// for _, md := range asMD {
+// 	log.Printf("INFO: update %s: %s", md.PID, *md.ExternalURI)
+// 	raw, getErr := svc.getRequest(fmt.Sprintf("%s/archivesspace/lookup?pid=%s&uri=%s", svc.ExternalSystems.Jobs, md.PID, *md.ExternalURI))
+// 	if getErr != nil {
+// 		log.Printf("ERROR: unable to get archivesSpace metadata for %s: %s", md.PID, getErr.Message)
+// 	} else {
+// 		var parsed asMetadata
+// 		err := json.Unmarshal(raw, &parsed)
+// 		if err != nil {
+// 			log.Printf("ERROR: unable to parse AS response for %s: %s", md.PID, err.Error())
+// 			errors++
 // 		} else {
-// 			priorURI = rec[2]
-// 			priorID = rec[0]
-// 			dupPrinted = false
+// 			if parsed.PublishedAt != "" {
+// 				parsedDate, err := time.Parse("2006-01-02T15:04:05Z", parsed.PublishedAt)
+// 				if err != nil {
+// 					log.Printf("ERROR: unable to parse date %s: %s", parsed.PublishedAt, err.Error())
+// 					errors++
+// 				} else {
+// 					log.Printf("INFO: set AS published date: %v", parsedDate)
+// 					md.DateDLIngest = &parsedDate
+// 					err := svc.DB.Model(&md).Select("DateDLIngest").Updates(md).Error
+// 					if err != nil {
+// 						log.Printf("ERROR: unable to update %s: %s", md.PID, err.Error())
+// 						errors++
+// 					} else {
+// 						cnt++
+// 					}
+// 				}
+// 			}
 // 		}
-// 		tgtURL := fmt.Sprintf("https://dpg-jobs.lib.virginia.edu/archivesspace/lookup?uri=%s", rec[2])
-// 		log.Printf("%s : %s", rec[0], tgtURL)
-
-// 		rawDetail, getErr := svc.getRequest(tgtURL)
-// 		if getErr != nil {
-// 			log.Fatal(fmt.Sprintf("get AS data failed %d: %s", getErr.StatusCode, getErr.Message))
-// 		}
-// 		var asObj asMetadata
-// 		parseErr := json.Unmarshal(rawDetail, &asObj)
-// 		if parseErr != nil {
-// 			log.Fatal(parseErr.Error())
-// 		}
-
-// 		newTitle := asObj.Title
-// 		if asObj.Dates != "" {
-// 			newTitle = fmt.Sprintf("%s, %s", asObj.Title, asObj.Dates)
-// 		}
-// 		sql := fmt.Sprintf("update metadata set title = \"%s\" where id = %s;\n", newTitle, rec[0])
-// 		out.WriteString(sql)
 // 	}
 // }
+// log.Printf("INFO: %d records updated", len(asMD))
+// c.String(http.StatusOK, fmt.Sprintf("%d errors, %d records updated", errors, cnt))

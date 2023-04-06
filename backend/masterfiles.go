@@ -85,7 +85,8 @@ func (svc *serviceContext) getMasterFile(c *gin.Context) {
 	log.Printf("INFO: get master file %s details", mfID)
 	var mf masterFile
 	err := svc.DB.Preload("ImageTechMeta").Preload("DeaccessionedBy").Preload("Tags").
-		Preload("Metadata").Preload("Locations").Preload("Locations.ContainerType").Find(&mf, mfID).Error
+		Preload("Metadata").Preload("Metadata.OCRHint").
+		Preload("Locations").Preload("Locations.ContainerType").Find(&mf, mfID).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get masterfile %s: %s", mfID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
