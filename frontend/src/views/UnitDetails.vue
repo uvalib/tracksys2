@@ -93,11 +93,18 @@
             </DataDisplay>
             <DataDisplay label="Order Units" :value="`${detail.relatedUnits}`">
                <div class="related-unit-ids">
-                  <template v-for="(uid,idx) in detail.relatedUnits" :key="`related-${uid}`">
+                  <template v-for="(uid,idx) in detail.relatedUnits.slice(0,30)" :key="`related-${uid}`">
                      <template v-if="idx > 0"><span class="sep"></span></template>
                      <router-link :to="`/units/${uid}`" v-if="uid != detail.id">{{uid}}</router-link>
                      <span class="current-unit" v-else>{{uid}}</span>
                   </template>
+                  <template v-if="detail.relatedUnits.length > 30">
+                     <span class="sep"></span>
+                     <span>...</span>
+                  </template>
+               </div>
+               <div class="more-link" v-if="detail.relatedUnits.length > 30">
+                  <RelatedUnitsDialog  :units="detail.relatedUnits" :currentUnitID="detail.id" :orderID="detail.orderID"/>
                </div>
             </DataDisplay>
             <DataDisplay v-if="detail.projectID"  label="Project" :value="`${detail.projectID}`">
@@ -161,6 +168,7 @@ import MasterFilesList from '../components/unit/MasterFilesList.vue'
 import ProgressBar from 'primevue/progressbar'
 import Dialog from 'primevue/dialog'
 import { useConfirm } from "primevue/useconfirm"
+import RelatedUnitsDialog from '../components/unit/RelatedUnitsDialog.vue'
 
 const confirm = useConfirm()
 const route = useRoute()
@@ -358,10 +366,14 @@ div.unit-acts {
       flex: 45%;
       text-align: left;
    }
-   .toolbar {
+   .toolbar, .more-link {
       padding: 15px 0 0 0;
       text-align: right;
       font-size: 0.8em;
+   }
+   .more-link {
+      padding-top: 0;
+      justify-content: flex-end;
    }
    .acts-wrap {
       border-top: 1px solid var(--uvalib-grey-light);
