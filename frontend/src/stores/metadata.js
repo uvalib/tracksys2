@@ -127,6 +127,17 @@ export const useMetadataStore = defineStore('metadata', {
          })
          return hasFiles
       },
+      canPublishToVirgo: state => {
+         if ( state.detail.type == 'ExternalMetadata' ) return false
+
+         let canPublish =  false
+         state.related.units.forEach( u => {
+            if ( u.inDL ) {
+               canPublish = true
+            }
+         })
+         return canPublish
+      }
 	},
 	actions: {
       resetSearch() {

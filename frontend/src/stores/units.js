@@ -42,16 +42,28 @@ export const useUnitsStore = defineStore('units', {
          return ( state.masterFiles.length > 0 && state.detail.reorder == false && isCandidate )
       },
       canPDF: state => {
-         if (state.detail.status != 'done') return false
          return state.detail.dateArchived != null && state.detail.reorder == false
       },
       canDownload: state => {
-         if (state.detail.status != 'done') return false
          return state.detail.dateArchived != null || (state.detail.reorder && state.detail.datePatronDeliverablesReady)
       },
       canComplete: state => {
          if (state.detail.status == 'done') return false
          return state.detail.reorder && state.detail.datePatronDeliverablesReady
+      },
+      canPublishToVirgo: state => {
+         const system = useSystemStore()
+         if (system.working) return false
+
+         if ( state.detail.metadata.type == "ExternalMetadata" ) return false
+         if ( state.masterFiles.length == 0) return false
+         let canPublish =  true
+         state.masterFiles.forEach( mf => {
+            if ( mf.metadata.type == "ExternalMetadata" ) {
+               canPublish = false
+            }
+         })
+         return canPublish
       }
 	},
 	actions: {

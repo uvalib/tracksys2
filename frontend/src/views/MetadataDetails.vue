@@ -130,7 +130,7 @@
       <Panel header="Digital Library Information">
          <dl>
             <DataDisplay label="PID" :value="metadataStore.detail.pid"/>
-            <DataDisplay label="In Digital Library" :value="formatBoolean(metadataStore.detail.inDL)"/>
+            <DataDisplay label="Virgo" :value="formatBoolean(metadataStore.detail.inDL)"/>
             <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.detail.inDPLA)"/>
             <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
                <DataDisplay label="Use Right" :value="metadataStore.detail.useRightName">
@@ -149,13 +149,13 @@
                   {{metadataStore.detail.supplementalSystem}}<i class="icon fas fa-external-link"></i>
                </a>
             </DataDisplay>
-            <template v-if="metadataStore.detail.type != 'ExternalMetadata'">
+            <template v-if="metadataStore.canPublishToVirgo && metadataStore.detail.dateDLIngest">
                <DataDisplay :spacer="true"/>
-               <DataDisplay label="Date DL Ingest" :value="formatDate(metadataStore.detail.dateDLIngest)"/>
-               <DataDisplay label="Date DL Update" :value="formatDate(metadataStore.detail.dateDLUpdate)"/>
+               <DataDisplay label="Virgo Ingest" :value="formatDate(metadataStore.detail.dateDLIngest)"/>
+               <DataDisplay label="Virgo Update" :value="formatDate(metadataStore.detail.dateDLUpdate)"/>
             </template>
          </dl>
-         <div v-if="canPublish" class="publish">
+         <div v-if="metadataStore.canPublishToVirgo" class="publish">
             <DPGButton label="Publish to Virgo" autofocus class="p-button-secondary" @click="publishClicked()" :loading="publishing"/>
          </div>
       </Panel>
@@ -234,24 +234,6 @@ const canEdit = computed(() => {
 const externalSystem = computed(() => {
    if (!metadataStore.detail.externalSystem) return ""
    return metadataStore.detail.externalSystem.name
-})
-
-const canPublish = computed(() => {
-   if ( metadataStore.detail.type == 'ExternalMetadata' ) return false
-   if (metadataStore.detail.dateDLIngest) {
-      return true
-   } else {
-      if (metadataStore.detail.type == 'XmlMetadata' || metadataStore.detail.type == 'SirsiMetadata') {
-         let canPub = false
-         metadataStore.related.units.forEach( u => {
-            if (u.inDL)  {
-               canPub = true
-            }
-         })
-         return canPub
-      }
-   }
-   return false
 })
 
 const availabilityPolicy = computed(() => {

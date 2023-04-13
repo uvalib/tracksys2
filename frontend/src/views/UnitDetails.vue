@@ -1,8 +1,6 @@
 <template>
    <h2>{{pageTitle}}</h2>
    <div class="unit-acts">
-      <DPGButton label="OCR"  @click="unitOCRClicked()" v-if="unitsStore.canOCR && (userStore.isAdmin || userStore.isSupervisor)" />
-      <DPGButton label="PDF" @click="unitPDFClicked()" v-if="unitsStore.canPDF" />
       <DPGButton label="Edit" @click="editUnit()"/>
    </div>
    <div v-if="detail.lastError" class="last-error">
@@ -46,12 +44,12 @@
             <DataDisplay label="Remove Watermark" :value="flagString(detail.removeWatermark)">
                <span :class="`flag ${flagString(detail.removeWatermark)}`">{{displayFlag(detail.removeWatermark)}}</span>
             </DataDisplay>
-            <DataDisplay label="Date Archived" :value="formatDate(detail.dateArchived)" />
-            <DataDisplay label="Date Patron Deliverables Ready" :value="formatDate(detail.datePatronDeliverablesReady)" />
-            <DataDisplay label="In Digital Library" :value="flagString(detail.includeInDL)">
+            <DataDisplay label="Virgo" :value="flagString(detail.includeInDL)">
                <span :class="`flag ${flagString(detail.includeInDL)}`">{{displayFlag(detail.includeInDL)}}</span>
             </DataDisplay>
-            <DataDisplay label="Date DL Deliverables Ready" :value="formatDate(detail.dateDLDeliverablesReady)" />
+            <DataDisplay label="Date Archived" :value="formatDate(detail.dateArchived)" />
+            <DataDisplay label="Date Virgo Deliverables Ready" :value="formatDate(detail.dateDLDeliverablesReady)" />
+            <DataDisplay label="Date Patron Deliverables Ready" :value="formatDate(detail.datePatronDeliverablesReady)" />
          </dl>
 
          <div class="acts-wrap" v-if="detail.status != 'finalizing' && (userStore.isAdmin || userStore.isSupervisor)">
@@ -63,7 +61,10 @@
                   class="p-button-secondary" label="Generate Deliverables" />
                <DPGButton v-if="detail.intendedUseID != 110 && detail.datePatronDeliverablesReady" @click="generateDeliverablesClicked"
                   class="p-button-secondary" label="Regenerate Deliverables" />
-               <DPGButton v-if="unitsStore.canDownload" @click="downloadClicked" class="p-button-secondary" label="Download Unit From Archive" />
+               <DPGButton v-if="unitsStore.canDownload" @click="downloadClicked" class="p-button-secondary" label="Download from Archive" />
+               <DPGButton label="OCR Master Files" class="p-button-secondary"  @click="unitOCRClicked()" v-if="unitsStore.canOCR && (userStore.isAdmin || userStore.isSupervisor)" />
+               <DPGButton label="Download PDF" class="p-button-secondary" @click="unitPDFClicked()" v-if="unitsStore.canPDF" />
+
                <DPGButton v-if="unitsStore.canComplete" @click="completeClicked" class="p-button-secondary" label="Complete Unit" />
             </div>
          </div>

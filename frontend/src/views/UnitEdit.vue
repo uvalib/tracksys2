@@ -31,35 +31,36 @@
                </Panel>
                <div class="sep"></div>
                <Panel header="Digitization Information">
-                  <FormKit label="Intended Use" type="select" v-model="edited.intendedUseID" outer-class="first" :options="intendedUses"
-                     placeholder="Select an intended use" required />
-                  <div class="split top-pad">
-                     <div class="checkbox">
-                        <input type="checkbox" v-model="edited.ocrMasterFiles"/>
-                        <span class="label">OCR Master Files</span>
-                     </div>
-                     <div class="checkbox">
-                        <input type="checkbox" v-model="edited.removeWatermark"/>
-                        <span class="label">Remove Watermark</span>
-                     </div>
-                     <div class="checkbox">
-                        <input type="checkbox" v-model="edited.includeInDL"/>
-                        <span class="label">Include In DL</span>
-                     </div>
+                  <div class="dd">
+                     <FormKit label="Intended Use" type="select" v-model="edited.intendedUseID" outer-class="first" :options="intendedUses"
+                        placeholder="Select an intended use" required />
                   </div>
-                  <div class="split top-pad">
-                     <div class="checkbox">
-                        <input type="checkbox" v-model="edited.completeScan"/>
-                        <span class="label">Complete Scan</span>
-                     </div>
-                     <div class="checkbox">
-                        <input type="checkbox" v-model="edited.throwAway"/>
-                        <span class="label">Throw Away</span>
-                     </div>
+
+                  <div class="checkbox" v-if="unitsStore.canPublishToVirgo">
+                     <input type="checkbox" v-model="edited.includeInDL"/>
+                     <span class="label">Include in Virgo</span>
                   </div>
-                  <p class="note">
-                     <b>Note:</b> Throw away scans will not be sent to preservation. They are one-time scans made for a single patron.
-                  </p>
+                  <div class="checkbox">
+                     <input type="checkbox" v-model="edited.ocrMasterFiles"/>
+                     <span class="label">OCR Master Files</span>
+                  </div>
+                  <div class="checkbox">
+                     <input type="checkbox" v-model="edited.removeWatermark"/>
+                     <span class="label">Remove Watermark</span>
+                  </div>
+                  <div class="checkbox">
+                     <input type="checkbox" v-model="edited.completeScan"/>
+                     <span class="label">Complete Scan</span>
+                  </div>
+                  <div class="checkbox">
+                     <input type="checkbox" v-model="edited.throwAway"/>
+                     <span class="label">
+                        Throw Away
+                        <span class="note">
+                          (Throw away scans will not be sent to preservation. They are one-time scans made for a single patron.)
+                        </span>
+                     </span>
+                  </div>
                </Panel>
             </div>
          </div>
@@ -183,15 +184,19 @@ async function submitChanges() {
    width: 80%;
    margin: 30px auto 0 auto;
 
-   p.note {
+   .note {
       text-align: left;
       font-size: 0.8em;
       font-style: italic;
       padding:0;
-      margin:20px 0 0 0;
+      margin: 0 0 0 5px;
+      display: inline-block
    }
-   .top-pad {
-      margin-top: 15px;
+   .dd {
+     margin-bottom: 20px;
+   }
+   .checkbox {
+      padding-bottom: 10px;
    }
 
    .split {
