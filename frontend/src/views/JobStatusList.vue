@@ -108,6 +108,9 @@ function getAssociatedObjectLink( objName ) {
    if (objType == "metadata") {
       return `/metadata/${objID}`
    }
+   if (objType == "masterfile") {
+      return `/masterfiles/${objID}`
+   }
    return ""
 }
 
