@@ -44,11 +44,11 @@
             <DataDisplay label="Remove Watermark" :value="flagString(detail.removeWatermark)">
                <span :class="`flag ${flagString(detail.removeWatermark)}`">{{displayFlag(detail.removeWatermark)}}</span>
             </DataDisplay>
-            <DataDisplay label="Virgo" :value="flagString(detail.includeInDL)">
+            <DataDisplay label="Virgo" :value="flagString(detail.includeInDL)" v-if="unitsStore.canPublishToVirgo">
                <span :class="`flag ${flagString(detail.includeInDL)}`">{{displayFlag(detail.includeInDL)}}</span>
             </DataDisplay>
             <DataDisplay label="Date Archived" :value="formatDate(detail.dateArchived)" />
-            <DataDisplay label="Date Virgo Deliverables Ready" :value="formatDate(detail.dateDLDeliverablesReady)" />
+            <DataDisplay label="Date Virgo Deliverables Ready" :value="formatDate(detail.dateDLDeliverablesReady)" v-if="unitsStore.canPublishToVirgo" />
             <DataDisplay label="Date Patron Deliverables Ready" :value="formatDate(detail.datePatronDeliverablesReady)" />
          </dl>
 
