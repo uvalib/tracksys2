@@ -1,0 +1,1 @@
+RENAME TABLE master_file_audit TO master_file_audits;
