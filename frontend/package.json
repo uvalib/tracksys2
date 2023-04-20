@@ -13,6 +13,7 @@
     "axios": "^0.27.2",
     "dayjs": "^1.11.4",
     "pinia": "^2.0.16",
+    "primeicons": "^6.0.1",
     "primevue": "^3.16.0",
     "vue": "^3.2.37",
     "vue-cookies": "^1.7.4",

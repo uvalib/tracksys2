@@ -139,6 +139,40 @@ func (svc *serviceContext) scriptRunner(c *gin.Context) {
 	c.String(http.StatusNotImplemented, "no script is available")
 }
 
+// SAMPLE republish AS records
+// log.Printf("INFO: republish AS records from 4/17 and 4/18")
+// var asRecs []metadata
+// err := svc.DB.Where("type=? and external_system_id=? and date_dl_ingest like ?", "ExternalMetadata", 1, "2023-04-18%").Find(&asRecs).Error
+// if err != nil {
+// 	log.Printf("ERROR: unable to find recently published as records: %s", err.Error())
+// 	c.String(http.StatusInternalServerError, err.Error())
+// 	return
+// }
+
+// published := 0
+// errors := 0
+// for _, md := range asRecs {
+// 	log.Printf("INFO: publish %s to AS", md.PID)
+// 	payload := struct {
+// 		UserID     string `json:"userID"`
+// 		MetadataID string `json:"metadataID"`
+// 	}{
+// 		UserID:     "120", /// lf6f
+// 		MetadataID: fmt.Sprintf("%d", md.ID),
+// 	}
+// 	url := fmt.Sprintf("%s/archivesspace/publish?immediate=1", svc.ExternalSystems.Jobs)
+// 	asResp, asErr := svc.postJSON(url, payload)
+// 	if asErr != nil {
+// 		log.Printf("ERROR: AS publish %d failed %d: %s", md.ID, asErr.StatusCode, asErr.Message)
+// 		errors++
+// 	} else {
+// 		log.Printf("INFO: %s", asResp)
+// 		published++
+// 	}
+// }
+
+// c.String(http.StatusOK, fmt.Sprintf("DONE. %d total records, %d published, %d failed", len(asRecs), published, errors))
+
 // SAMPLE for updating AS date_dl_ingested
 //
 // log.Printf("INFO: update date_dl_ingest for published AS metadata records")
