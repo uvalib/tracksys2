@@ -48,36 +48,48 @@ type imageTechMeta struct {
 	UpdatedAt    time.Time  `json:"-"`
 }
 
+type masterFileAudit struct {
+	ID            int64       `json:"id"`
+	MasterFileID  int64       `json:"masterFileID"`
+	MasterFile    *masterFile `gorm:"foreignKey:MasterFileID" json:"masterFile,omitempty"`
+	ArchiveExists bool        `json:"archiveExists"`
+	ChecksumMatch bool        `json:"checksumMatch"`
+	AuditChecksum string      `json:"auditChecksum"`
+	IIIFExists    bool        `gorm:"column:iiif_exists" json:"iiifExists"`
+	AuditedAt     time.Time   `json:"auditedAt"`
+}
+
 type masterFile struct {
-	ID                int64          `json:"id"`
-	PID               string         `gorm:"column:pid" json:"pid"`
-	MetadataID        *int64         `gorm:"column:metadata_id" json:"metadataID,omitempty"`
-	Metadata          *metadata      `gorm:"foreignKey:MetadataID" json:"metadata,omitempty"`
-	ImageTechMeta     *imageTechMeta `gorm:"foreignKey:MasterFileID" json:"techMetadata,omitempty"`
-	UnitID            int64          `gorm:"column:unit_id" json:"unitID"`
-	Unit              *unit          `gorm:"foreignKey:UnitID" json:"unit,omitempty"`
-	ComponentID       int64          `gorm:"column:component_id" json:"componentID"`
-	Filename          string         `json:"filename"`
-	Title             string         `json:"title"`
-	Description       string         `json:"description"`
-	Tags              []tag          `gorm:"many2many:master_file_tags" json:"tags"`
-	Filesize          int64          `json:"filesize"`
-	MD5               string         `gorm:"column:md5" json:"md5"`
-	OriginalMfID      int64          `gorm:"column:original_mf_id" json:"originalID"`
-	DateArchived      *time.Time     `json:"dateArchived"`
-	DeaccessionedAt   *time.Time     `json:"deaccessionedAt"`
-	DeaccessionedByID *int64         `gorm:"column:deaccessioned_by_id" json:"-"`
-	DeaccessionedBy   *staffMember   `gorm:"foreignKey:DeaccessionedByID" json:"deaccessionedBy"`
-	DeaccessionNote   string         `json:"deaccessionNote"`
-	TranscriptionText string         `json:"transcription"`
-	DateDlIngest      *time.Time     `gorm:"column:date_dl_ingest" json:"dateDLIngest"`
-	DateDlUpdate      *time.Time     `gorm:"column:date_dl_update" json:"dateDLUpdate"`
-	CreatedAt         time.Time      `json:"-"`
-	UpdatedAt         time.Time      `json:"-"`
-	ThumbnailURL      string         `gorm:"-" json:"thumbnailURL,omitempty"`
-	ViewerURL         string         `gorm:"-" json:"viewerURL,omitempty"`
-	Exemplar          bool           `json:"exemplar"`
-	Locations         []location     `gorm:"many2many:master_file_locations" json:"locations"`
+	ID                int64            `json:"id"`
+	PID               string           `gorm:"column:pid" json:"pid"`
+	MetadataID        *int64           `gorm:"column:metadata_id" json:"metadataID,omitempty"`
+	Metadata          *metadata        `gorm:"foreignKey:MetadataID" json:"metadata,omitempty"`
+	ImageTechMeta     *imageTechMeta   `gorm:"foreignKey:MasterFileID" json:"techMetadata,omitempty"`
+	UnitID            int64            `gorm:"column:unit_id" json:"unitID"`
+	Unit              *unit            `gorm:"foreignKey:UnitID" json:"unit,omitempty"`
+	ComponentID       int64            `gorm:"column:component_id" json:"componentID"`
+	Filename          string           `json:"filename"`
+	Title             string           `json:"title"`
+	Description       string           `json:"description"`
+	Tags              []tag            `gorm:"many2many:master_file_tags" json:"tags"`
+	Filesize          int64            `json:"filesize"`
+	MD5               string           `gorm:"column:md5" json:"md5"`
+	OriginalMfID      int64            `gorm:"column:original_mf_id" json:"originalID"`
+	DateArchived      *time.Time       `json:"dateArchived"`
+	DeaccessionedAt   *time.Time       `json:"deaccessionedAt"`
+	DeaccessionedByID *int64           `gorm:"column:deaccessioned_by_id" json:"-"`
+	DeaccessionedBy   *staffMember     `gorm:"foreignKey:DeaccessionedByID" json:"deaccessionedBy"`
+	DeaccessionNote   string           `json:"deaccessionNote"`
+	TranscriptionText string           `json:"transcription"`
+	DateDlIngest      *time.Time       `gorm:"column:date_dl_ingest" json:"dateDLIngest"`
+	DateDlUpdate      *time.Time       `gorm:"column:date_dl_update" json:"dateDLUpdate"`
+	CreatedAt         time.Time        `json:"-"`
+	UpdatedAt         time.Time        `json:"-"`
+	ThumbnailURL      string           `gorm:"-" json:"thumbnailURL,omitempty"`
+	ViewerURL         string           `gorm:"-" json:"viewerURL,omitempty"`
+	Exemplar          bool             `json:"exemplar"`
+	Locations         []location       `gorm:"many2many:master_file_locations" json:"locations"`
+	Audit             *masterFileAudit `gorm:"foreignKey:MasterFileID" json:"audit,omitempty"`
 }
 
 func (svc *serviceContext) getMasterFile(c *gin.Context) {
@@ -85,7 +97,7 @@ func (svc *serviceContext) getMasterFile(c *gin.Context) {
 	log.Printf("INFO: get master file %s details", mfID)
 	var mf masterFile
 	err := svc.DB.Preload("ImageTechMeta").Preload("DeaccessionedBy").Preload("Tags").
-		Preload("Metadata").Preload("Metadata.OCRHint").
+		Preload("Metadata").Preload("Metadata.OCRHint").Preload("Audit").
 		Preload("Locations").Preload("Locations.ContainerType").Find(&mf, mfID).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get masterfile %s: %s", mfID, err.Error())

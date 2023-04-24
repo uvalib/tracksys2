@@ -43,6 +43,15 @@ export const useMasterFilesStore = defineStore('masterfiles', {
             system.setError(e)
          })
       },
+      audit() {
+         const system = useSystemStore()
+         let payload = {type: "id", data: `${this.details.id}`}
+         axios.post(`${system.jobsURL}/audit`, payload).then( ( resp ) => {
+            this.details = resp.data
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
       async submitEdit( edit ) {
          const system = useSystemStore()
          system.working = true

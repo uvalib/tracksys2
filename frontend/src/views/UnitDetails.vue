@@ -1,6 +1,7 @@
 <template>
    <h2>{{pageTitle}}</h2>
    <div class="unit-acts">
+      <DPGButton label="Audit Master Files" @click="auditUnit()" v-if="detail.reorder == false && unitsStore.hasMasterFiles"/>
       <DPGButton label="Edit" @click="editUnit()"/>
    </div>
    <div v-if="detail.lastError" class="last-error">
@@ -260,6 +261,10 @@ const downloadClicked = (() => {
 
 const generateDeliverablesClicked = (() => {
    unitsStore.generateDeliverables()
+})
+
+const auditUnit = (() => {
+   unitsStore.audit()
 })
 
 const editUnit = (() => {

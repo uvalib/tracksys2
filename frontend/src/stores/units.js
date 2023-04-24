@@ -64,6 +64,9 @@ export const useUnitsStore = defineStore('units', {
             }
          })
          return canPublish
+      },
+      hasMasterFiles: state => {
+         return state.masterFiles.length > 0
       }
 	},
 	actions: {
@@ -109,6 +112,16 @@ export const useUnitsStore = defineStore('units', {
          const system = useSystemStore()
          return axios.post( `/api/units/${this.detail.id}/project`, data ).then( (resp) => {
             this.detail.projectID = parseInt(resp.data, 10)
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
+      audit() {
+         const system = useSystemStore()
+         let payload = {type: "unit", data: `${this.detail.id}`}
+         axios.post(`${system.jobsURL}/audit`, payload).then( () => {
+            system.toastMessage("Audit Started", `An audit of the master files belonging to this unit has begin. Check the Job Status page for details.`)
          }).catch( e => {
             system.setError(e)
          })

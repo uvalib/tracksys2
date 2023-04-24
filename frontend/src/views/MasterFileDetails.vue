@@ -67,29 +67,44 @@
                </Fieldset>
          </Panel>
       </div>
-      <Panel header="Technical Information">
-         <dl>
-            <DataDisplay label="MD5" :value="masterFiles.details.md5" />
-            <DataDisplay label="Filesize" :value="masterFiles.details.filesize" />
-            <DataDisplay label="Format" :value="masterFiles.details.techMetadata.imageFormat" />
-            <DataDisplay label="Height x Width" :value="masterFiles.details.techMetadata.height">
-               {{masterFiles.details.techMetadata.height}} x {{masterFiles.details.techMetadata.width}}
-            </DataDisplay>
-            <DataDisplay label="Resolution" :value="masterFiles.details.techMetadata.resolution" />
-            <DataDisplay label="Depth" :value="masterFiles.details.techMetadata.depth" />
-            <DataDisplay label="Compression" :value="masterFiles.details.techMetadata.compression" />
-            <DataDisplay label="Color Space" :value="masterFiles.details.techMetadata.colorSpace" />
-            <DataDisplay label="Color Profile" :value="masterFiles.details.techMetadata.colorProfile" />
-            <DataDisplay label="Equipment" :value="masterFiles.details.techMetadata.equipment" />
-            <DataDisplay label="Model" :value="masterFiles.details.techMetadata.model" />
-            <DataDisplay label="ISO" :value="masterFiles.details.techMetadata.iso" />
-            <DataDisplay label="Exposure Bias" :value="masterFiles.details.techMetadata.exposureBias" />
-            <DataDisplay label="Exposure Time" :value="masterFiles.details.techMetadata.exposureTime" />
-            <DataDisplay label="Aperture" :value="masterFiles.details.techMetadata.aperture" />
-            <DataDisplay label="Focal Length" :value="masterFiles.details.techMetadata.focalLength" />
-            <DataDisplay label="Software" :value="masterFiles.details.techMetadata.software" />
-         </dl>
-      </Panel>
+      <div class="right">
+         <Panel header="Technical Information">
+            <dl>
+               <DataDisplay label="MD5" :value="masterFiles.details.md5" />
+               <DataDisplay label="Filesize" :value="masterFiles.details.filesize" />
+               <DataDisplay label="Format" :value="masterFiles.details.techMetadata.imageFormat" />
+               <DataDisplay label="Height x Width" :value="masterFiles.details.techMetadata.height">
+                  {{masterFiles.details.techMetadata.height}} x {{masterFiles.details.techMetadata.width}}
+               </DataDisplay>
+               <DataDisplay label="Resolution" :value="masterFiles.details.techMetadata.resolution" />
+               <DataDisplay label="Depth" :value="masterFiles.details.techMetadata.depth" />
+               <DataDisplay label="Compression" :value="masterFiles.details.techMetadata.compression" />
+               <DataDisplay label="Color Space" :value="masterFiles.details.techMetadata.colorSpace" />
+               <DataDisplay label="Color Profile" :value="masterFiles.details.techMetadata.colorProfile" />
+               <DataDisplay label="Equipment" :value="masterFiles.details.techMetadata.equipment" />
+               <DataDisplay label="Model" :value="masterFiles.details.techMetadata.model" />
+               <DataDisplay label="ISO" :value="masterFiles.details.techMetadata.iso" />
+               <DataDisplay label="Exposure Bias" :value="masterFiles.details.techMetadata.exposureBias" />
+               <DataDisplay label="Exposure Time" :value="masterFiles.details.techMetadata.exposureTime" />
+               <DataDisplay label="Aperture" :value="masterFiles.details.techMetadata.aperture" />
+               <DataDisplay label="Focal Length" :value="masterFiles.details.techMetadata.focalLength" />
+               <DataDisplay label="Software" :value="masterFiles.details.techMetadata.software" />
+            </dl>
+         </Panel>
+         <Panel header="Audit Information">
+            <div class="no-audit" v-if="!masterFiles.details.audit">Not Audited</div>
+            <dl v-else>
+               <DataDisplay label="Audited" :value="formatTimestamp(masterFiles.details.audit.auditedAt)" />
+               <DataDisplay label="Archive Exists" :value="formatBool(masterFiles.details.audit.archiveExists)" />
+               <DataDisplay label="Checksum Match" :value="formatBool(masterFiles.details.audit.checksumMatch)" />
+               <DataDisplay v-if="masterFiles.details.audit.checksumMatch==false" label="Audit Checksum" :value="masterFiles.details.audit.auditChecksum" />
+               <DataDisplay label="IIIF Exists" :value="formatBool(masterFiles.details.audit.iiifExists)" />
+            </dl>
+            <div class="audit-toolbar">
+               <DPGButton @click="auditNow" class="p-button-secondary" label="Audit Now"/>
+            </div>
+         </Panel>
+      </div>
    </div>
    <div class="details" v-if="masterFiles.details.transcription">
       <Panel header="Transcription">
@@ -189,11 +204,26 @@ const editMasterFile = (() => {
    router.push(`/masterfiles/${route.params.id}/edit`)
 })
 
+const formatBool = (( val ) => {
+   if (val) return "Yes"
+   return "No"
+})
+
 const formatDate = (( date ) => {
    if (date) {
       return dayjs(date).format("YYYY-MM-DD")
    }
    return ""
+})
+const formatTimestamp = (( ts ) => {
+   if (ts) {
+      return dayjs(ts).format("YYYY-MM-DD HH:MM:ss")
+   }
+   return ""
+})
+
+const auditNow = (() => {
+   masterFiles.audit()
 })
 </script>
 
@@ -233,11 +263,19 @@ div.masterfile-acts {
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
+   align-items: flex-start;
    .left {
       display: flex;
-      flex-flow: column;
+      flex-direction: column;
       justify-content: flex-start;
       width: 50%;
+   }
+   .right {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      width: auto;
+      flex-grow: 1;
    }
    :deep(div.p-panel) {
       margin: 10px;
@@ -256,5 +294,13 @@ div.masterfile-acts {
    p {
       margin:0 0 15px 0;
    }
+}
+.no-audit {
+   text-align: center;
+   font-style: italic;
+}
+.audit-toolbar {
+   text-align: right;
+   font-size: 0.8em;
 }
 </style>
