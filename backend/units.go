@@ -71,7 +71,6 @@ type unit struct {
 	CompleteScan                bool         `json:"completeScan"`
 	ThrowAway                   bool         `json:"throwAway"`
 	OCRMasterFiles              bool         `gorm:"column:ocr_master_files" json:"ocrMasterFiles"`
-	MasterFiles                 []masterFile `gorm:"foreignKey:UnitID" json:"masterFiles"`
 	NumMasterFiles              uint         `json:"masterFilesCount"`
 	Attachments                 []attachment `gorm:"foreignKey:UnitID" json:"attachments"`
 	SpecialInstructions         string       `json:"specialInstructions"`

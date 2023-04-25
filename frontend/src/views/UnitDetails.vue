@@ -195,13 +195,13 @@ const pageTitle = computed(() => {
 
 onBeforeRouteUpdate(async (to) => {
    let uID = to.params.id
-   unitsStore.getDetails( uID )
+   await unitsStore.getDetails( uID )
    unitsStore.getMasterFiles(uID)
 })
 
-onBeforeMount(() => {
+onBeforeMount( async () => {
    let uID = route.params.id
-   unitsStore.getDetails( uID )
+   await unitsStore.getDetails( uID )
    unitsStore.getMasterFiles(uID)
    document.title = `Unit #${uID}`
 })

@@ -4,26 +4,12 @@ import axios from 'axios'
 
 export const useUnitsStore = defineStore('units', {
 	state: () => ({
-      detail: {
-         id: 0,
-         status: "",
-         intendedUse: null,
-         includeInDL: false,
-         removeWaterMark: false,
-         reorder: false,
-         completeScan: false,
-         throwAway: false,
-         ocrMasterFiles: false,
-         attachments: [],
-         staffNotes: "",
-         dateArchived: "",
-         datePatronDeliverablesReady: "",
-         dateDLDeliverablesReady: "",
-         relatedUnits: [],
-         hasText: false
-      },
+      detail: {},
+
       masterFiles: [],
+
       updateInProgress: false,
+
       pdf: {
          downloading: false,
          percent: 0,
@@ -70,26 +56,6 @@ export const useUnitsStore = defineStore('units', {
       }
 	},
 	actions: {
-      clearDetails() {
-         this.detail.id = 0
-         this.detail.status = ""
-         this.detail.intendedUse = null
-         this.detail.includeInDL = false
-         this.detail.removeWaterMark = false
-         this.detail.reorder = false
-         this.detail.completeScan = false
-         this.detail.throwAway = false
-         this.detail.ocrMasterFiles = false
-         this.detail.attachments = []
-         this.detail.staffNotes = ""
-         this.detail.dateArchived = ""
-         this.detail.datePatronDeliverablesReady = ""
-         this.detail.dateDLDeliverablesReady = ""
-         this.detail.hasText = false
-      },
-      flagAsReorder() {
-         this.detail.reorder = true
-      },
       async getDetails( unitID ) {
          if ( this.detail.id == unitID ) return
 
@@ -106,6 +72,10 @@ export const useUnitsStore = defineStore('units', {
                system.setError(e)
             }
          })
+      },
+
+      flagAsReorder() {
+         this.detail.reorder = true
       },
 
       async createProject( data ) {
@@ -175,6 +145,7 @@ export const useUnitsStore = defineStore('units', {
          const system = useSystemStore()
          axios.get( `/api/units/${unitID}/masterfiles` ).then(response => {
             this.masterFiles = response.data
+            this.detail.masterFilesCount = this.masterFiles.length
          }).catch( e => {
             system.setError(e)
          })
@@ -356,9 +327,7 @@ export const useUnitsStore = defineStore('units', {
                      statusURL += `?token=${this.pdf.token}`
                   }
                   axios.get(statusURL).then( resp => {
-                     console.log("PDF STATUS: "+resp.data)
                      if ( resp.data == "READY") {
-                        console.log("DONE")
                         this.pdf.percent = 100
                         this.downloadPDF()
                         clearInterval(this.pdf.intervalID)
@@ -389,7 +358,6 @@ export const useUnitsStore = defineStore('units', {
          if (this.pdf.token != "") {
             downloadURL += `?token=${this.pdf.token}`
          }
-         console.log("DOWNLOAD "+downloadURL)
          axios.get(downloadURL, {responseType: "blob"}).then((response) => {
             var fileURL = window.URL.createObjectURL(response.data,{ type: 'application/pdf'})
             var fileLink = document.createElement('a')
