@@ -47,7 +47,7 @@ export const useMasterFilesStore = defineStore('masterfiles', {
          const system = useSystemStore()
          let payload = {type: "id", data: `${this.details.id}`}
          axios.post(`${system.jobsURL}/audit`, payload).then( ( resp ) => {
-            this.details = resp.data
+            this.details.audit = resp.data
          }).catch( e => {
             system.setError(e)
          })
