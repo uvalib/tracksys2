@@ -1,0 +1,1 @@
+ALTER table projects DROP COLUMN total_duration_mins;

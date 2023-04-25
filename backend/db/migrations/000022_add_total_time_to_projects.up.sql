@@ -1,0 +1,1 @@
+ALTER table projects ADD COLUMN total_duration_mins int DEFAULT null;
