@@ -1,0 +1,1 @@
+ALTER table master_file_audits ADD COLUMN checksum_exists tinyint(1) DEFAULT 0;
