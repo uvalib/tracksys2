@@ -71,7 +71,7 @@
          </DataTable>
       </Panel>
       <Panel header="Master Files" v-else>
-         <template v-if="cloneMasterFiles == false">
+         <template v-if="cloneStore.uiVisible == false">
             <p>No master files are associated with this unit.</p>
             <DPGButton label="Clone Existing Master Files" class="p-button-secondary" @click="cloneClicked()" />
          </template>
@@ -84,6 +84,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSystemStore } from '@/stores/system'
 import { useUnitsStore } from '@/stores/units'
+import { useCloneStore } from '@/stores/clone'
 import { useUserStore } from '@/stores/user'
 import { usePDFStore } from '@/stores/pdf'
 import Panel from 'primevue/panel'
@@ -104,10 +105,10 @@ const unitsStore = useUnitsStore()
 const userStore = useUserStore()
 const pdfStore = usePDFStore()
 const router = useRouter()
+const cloneStore = useCloneStore()
 
 const selectedMasterFiles = ref([])
 const selectAll = ref(false)
-const cloneMasterFiles = ref(false)
 const toolbarTop = ref(0)
 const toolbarHeight = ref(0)
 const toolbarWidth = ref(0)
@@ -196,13 +197,13 @@ function scrollHandler( ) {
 }
 
 function cloneClicked() {
-   cloneMasterFiles.value = true
+   cloneStore.show( true )
 }
 function cloneCanceled() {
-   cloneMasterFiles.value = false
+   cloneStore.show( false )
 }
 function cloneCompleted() {
-   cloneMasterFiles.value = false
+   cloneStore.show( false )
    systemStore.toastMessage("Clone Success", 'All master files have been cloned.')
 }
 function downloadClicked() {

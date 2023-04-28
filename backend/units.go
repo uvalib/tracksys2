@@ -376,10 +376,8 @@ func (svc *serviceContext) getUnitCloneSources(c *gin.Context) {
 	}
 
 	var units []unit
-	err = svc.DB.Omit("num_master_files").
-		Joins("inner join master_files m on m.unit_id = units.id").
-		Where("reorder=? and units.id<>? and throw_away=? and units.metadata_id=?", false, tgtUnit.ID, false, tgtUnit.MetadataID).
-		Distinct("units.id").Find(&units).Error
+	log.Printf("INFO: unit %d clone source has metadata [%d]", tgtUnit.ID, *tgtUnit.MetadataID)
+	err = svc.DB.Where("reorder=? and units.id<>? and throw_away=? and units.metadata_id=?", false, tgtUnit.ID, false, tgtUnit.MetadataID).Find(&units).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get source units for clone of unit %s: %s", tgtUnitID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())

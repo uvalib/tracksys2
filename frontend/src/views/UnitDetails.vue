@@ -154,6 +154,7 @@
 <script setup>
 import { onBeforeMount, computed } from 'vue'
 import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
+import { useCloneStore } from '@/stores/clone'
 import { useSystemStore } from '@/stores/system'
 import { useUnitsStore } from '@/stores/units'
 import { useUserStore } from '@/stores/user'
@@ -179,6 +180,7 @@ const systemStore = useSystemStore()
 const unitsStore = useUnitsStore()
 const userStore = useUserStore()
 const pdfStore = usePDFStore()
+const cloneStore = useCloneStore()
 
 const { detail } = storeToRefs(unitsStore)
 
@@ -194,12 +196,14 @@ const pageTitle = computed(() => {
 })
 
 onBeforeRouteUpdate(async (to) => {
+   cloneStore.show( false )
    let uID = to.params.id
    await unitsStore.getDetails( uID )
    unitsStore.getMasterFiles(uID)
 })
 
 onBeforeMount( async () => {
+   cloneStore.show( false )
    let uID = route.params.id
    await unitsStore.getDetails( uID )
    unitsStore.getMasterFiles(uID)

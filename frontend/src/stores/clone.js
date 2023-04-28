@@ -8,7 +8,8 @@ export const useCloneStore = defineStore('clone', {
       sourceUnits: [],
       masterFiles: [],
       initialized: false,
-      status: "pending"
+      status: "pending",
+      uiVisible: false
 	}),
 	getters: {
       inProgress: state => {
@@ -16,6 +17,13 @@ export const useCloneStore = defineStore('clone', {
       },
 	},
 	actions: {
+      show( showFlag ) {
+         this.uiVisible = showFlag
+         this.sourceUnits = []
+         this.masterFiles = []
+         this.initialized = false
+         this.status = "pending"
+      },
       getSourceUnits( destUnitID ) {
          const system = useSystemStore()
          this.sourceUnits = []
