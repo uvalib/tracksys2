@@ -41,6 +41,11 @@
             <FormKit label="Email" type="email" v-model="staffDetails.email" validation="required" />
             <FormKit type="select" label="Role" v-model="staffDetails.roleID" :options="{ 0: 'Admin', 1: 'Supervisor', 2: 'Student', 3: 'Viewer' }" />
             <FormKit type="select" label="Active" v-model="staffDetails.active" :options="{ false: 'No', true: 'Yes' }" />
+            <div class="notes">
+               <b>IMPORTANT:</b>
+               <span>All new staff must be added to a group named lb-digiserv. This can be done here: </span>
+               <a href="https://mygroups.virginia.edu/groups/" target="_blank">MyGroups</a>
+            </div>
             <div class="form-controls">
                <FormKit type="button" label="Cancel" wrapper-class="cancel-button" @click="showEdit = false" />
                <FormKit type="submit" label="Save" wrapper-class="submit-button" />
@@ -161,6 +166,20 @@ button.p-button.create {
          @include primary-button();
          width: auto;
       }
+   }
+}
+.notes {
+   font-size: 0.9em;
+   margin: 15px 0 10px 0;
+   border:  1px solid var(--uvalib-teal);
+   padding: 10px 20px;
+   border-radius: 5px;
+   background-color: var(--uvalib-teal-lightest);
+   b {
+      padding-right: 10px;
+   }
+   a {
+      color: var(--uvalib-blue-alt-dark);
    }
 }
 .staff {
