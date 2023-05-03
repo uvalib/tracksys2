@@ -83,7 +83,7 @@ type masterFile struct {
 	TranscriptionText string           `json:"transcription"`
 	DateDlIngest      *time.Time       `gorm:"column:date_dl_ingest" json:"dateDLIngest"`
 	DateDlUpdate      *time.Time       `gorm:"column:date_dl_update" json:"dateDLUpdate"`
-	CreatedAt         time.Time        `json:"-"`
+	CreatedAt         time.Time        `json:"createdAt"`
 	UpdatedAt         time.Time        `json:"-"`
 	ThumbnailURL      string           `gorm:"-" json:"thumbnailURL,omitempty"`
 	ViewerURL         string           `gorm:"-" json:"viewerURL,omitempty"`

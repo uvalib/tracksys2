@@ -22,6 +22,7 @@
                <DataDisplay label="Title" :value="masterFiles.details.title" />
                <DataDisplay label="Description" :value="masterFiles.details.description" />
                <DataDisplay label="Orientation" :value="orientationName" />
+               <DataDisplay label="Created" :value="formatTimestamp(masterFiles.details.createdAt)" blankValue="N/A" />
                <DataDisplay label="Date Archived" :value="formatDate(masterFiles.details.dateArchived)" blankValue="N/A" />
                <DataDisplay label="Date DL Ingest" :value="formatDate(masterFiles.details.dateDLIngest)" blankValue="N/A" />
                <DataDisplay label="Date DL Update" :value="formatDate(masterFiles.details.dateDLUpdate)" blankValue="N/A" />
