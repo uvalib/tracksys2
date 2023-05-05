@@ -391,7 +391,7 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 				// a collection. Don't include external metadata and only search a few fields
 				log.Printf("INFO: this is a search for internal metadata records that are candidates for being part of a collection")
 				mfCnt := "(select count(*) from master_files m inner join units mu on mu.id = m.unit_id where mu.metadata_id=metadata.id and mu.intended_use_id=110) as num_master_files"
-				searchQ = searchQ.Debug().Joins("inner join units u on u.metadata_id = metadata.id").Where("type != ? and u.intended_use_id=?", "ExternalMetadata", 110)
+				searchQ = searchQ.Joins("inner join units u on u.metadata_id = metadata.id").Where("type != ? and u.intended_use_id=?", "ExternalMetadata", 110)
 				fieldQ := svc.DB.Or("title like ?", sc.QueryAny).Or("barcode like ?", sc.QueryStart).Or("catalog_key like ?", sc.QueryStart).
 					Or("call_number like ?", sc.QueryStart).Or("u.id=?", sc.IntQuery)
 				searchQ.Where("parent_metadata_id=?", 0).Where(fieldQ).Group("metadata.id").Select("metadata.*", mfCnt)
@@ -400,7 +400,7 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 				var fieldQ *gorm.DB
 				if sc.Field == "all" {
 					fieldQ = svc.DB.Or("title like ?", sc.QueryAny).
-						Or("barcode=?", sc.Query).Or("catalog_key=?", sc.Query).Or("call_number like ?", sc.QueryStart).
+						Or("barcode=?", sc.Query).Or("catalog_key=?", sc.Query).Or("call_number like ?", sc.QueryStart).Or("desc_metadata like ?", sc.QueryAny).
 						Or("creator_name like ?", sc.QueryStart).Or("collection_id like ?", sc.QueryStart).Or("collection_facet like ?", sc.QueryStart)
 					if sc.QueryType == "id" {
 						fieldQ = fieldQ.Or("metadata.id=?", sc.IntQuery)
