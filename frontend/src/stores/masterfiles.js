@@ -9,7 +9,8 @@ export const useMasterFilesStore = defineStore('masterfiles', {
       viewerURL: "",
       orderID: 0,
       nextID: 0,
-      prevID: 0
+      prevID: 0,
+      replaceInProgress: false,
    }),
 	getters: {
       hasText: state => {
@@ -98,6 +99,35 @@ export const useMasterFilesStore = defineStore('masterfiles', {
          }).catch( e => {
             system.setError(e)
          })
-      }
+      },
+      replace() {
+         const system = useSystemStore()
+         this.replaceInProgress = true
+         axios.post(`${system.jobsURL}/units/${this.details.unitID}/masterfiles/replace`).then( resp => {
+            system.toastMessage("Please Wait", 'Replacing unit master file...')
+            let jobID = resp.data
+            var tid = setInterval( ()=> {
+               axios.get(`${system.jobsURL}/jobs/${jobID}`).then( resp => {
+                  let status = resp.data.status
+                  if (status == 'failure') {
+                     clearInterval(tid)
+                     this.replaceInProgress = false
+                     system.setError(`Replace failed: ${resp.data.error}. Check the job status logs for more information.`)
+                  } else if (status == 'finished') {
+                     clearInterval(tid)
+                     this.replaceInProgress = false
+                     window.location.reload()
+                  }
+               }).catch( e => {
+                  system.setError(e)
+                  this.replaceInProgress = false
+                  clearInterval(tid)
+               })
+            }, 1000)
+         }).catch( e => {
+            system.setError(e)
+            this.replaceInProgress = false
+         })
+      },
    },
 })

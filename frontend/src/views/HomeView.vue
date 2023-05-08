@@ -97,7 +97,7 @@ const scopeFields = computed( () => {
 })
 
 onBeforeMount( () => {
-   document.title = `Tracksys2`
+   document.title = `Tracksys`
    dashboard.getStatistics()
 
    let paramsChanged = false

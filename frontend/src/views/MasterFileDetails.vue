@@ -5,6 +5,7 @@
       <DPGButton label="Next" @click="nextImage()" v-if="masterFiles.nextID > 0"/>
       <DPGButton label="Download Image" @click="downloadImage()"/>
       <DPGButton label="Download PDF" @click="downloadPDF()" v-if="masterFiles.details.originalID==0"/>
+      <DPGButton label="Replace" @click="replaceMasterFile()" v-if="masterFiles.details.originalID==0" :loading="masterFiles.replaceInProgress"/>
       <DPGButton label="OCR" @click="ocrRequested()" v-if="masterFiles.isOCRCandidate  && (userStore.isAdmin || userStore.isSupervisor)"/>
       <DPGButton label="Edit" @click="editMasterFile()"/>
    </div>
@@ -199,6 +200,19 @@ const downloadPDF = (() => {
          }
       })
    }
+})
+
+const replaceMasterFile = (() => {
+   let unitDir = `${masterFiles.details.unitID}`.padStart(9, '0')
+   confirm.require({
+      message: `Replace this master file with ./finalization/unit_update/${unitDir}/${masterFiles.details.filename}?`,
+      header: 'Confirm Replace Master File',
+      icon: 'pi pi-question-circle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         masterFiles.replace()
+      }
+   })
 })
 
 const editMasterFile = (() => {
