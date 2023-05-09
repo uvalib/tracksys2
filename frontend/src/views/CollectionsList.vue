@@ -1,8 +1,10 @@
 <template>
-   <h2>Collections</h2>
-   <div class="actions" v-if="userStore.isAdmin" >
-      <DPGButton label="Create Collection" class="create" @click="createCollection()"/>
-   </div>
+   <h2>
+      <span>Collections</span>
+      <div class="actions" v-if="userStore.isAdmin" >
+         <DPGButton label="Create Collection" class="create" @click="createCollection()"/>
+      </div>
+   </h2>
    <div class="collections">
       <DataTable :value="collectionStore.collections" ref="collectionRecordsTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
@@ -68,15 +70,6 @@ function collectionCreated() {
 </script>
 
 <style scoped lang="scss">
-div.actions {
-   position: absolute;
-   right:15px;
-   top: 15px;
-   button.p-button {
-      margin-right: 5px;
-      font-size: 0.9em;
-   }
-}
 .collections {
    min-height: 600px;
    text-align: left;

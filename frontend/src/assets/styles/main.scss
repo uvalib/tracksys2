@@ -29,21 +29,22 @@ body {
       }
 
       h2 {
-         // margin: 0;
-         // font-weight: bold;
-         // position: relative;
-         // text-align: center;
-         // padding: 20px 10px;
-         // color: var(--uvalib-brand-orange);
          margin: 0;
          font-weight: bold;
          position: relative;
          text-align: left;
-         padding: 18px;
+         padding: 10px 10px 10px 20px;
          background: var(--uvalib-grey-lightest);
          border-bottom: 1px solid var(--uvalib-grey-light);
-         border-top: 1px solid var(--uvalib-grey-light);
-         margin-bottom: 10px;
+         display: flex;
+         flex-flow: row nowrap;
+         justify-content: space-between;
+         div.actions {
+            font-size: 14px;
+            button.p-button {
+               margin-right: 5px;
+            }
+         }
       }
 
       dl {

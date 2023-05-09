@@ -1,6 +1,10 @@
 <template>
-   <h2>Orders</h2>
-   <DPGButton label="New Order" class="create" @click="createOrder()"/>
+   <h2>
+      <span>Orders</span>
+      <div class="actions" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
+         <DPGButton label="New Order" class="create" @click="createOrder()"/>
+      </div>
+   </h2>
    <div class="orders">
       <div class="toolbar">
          <span>
@@ -224,60 +228,54 @@ onMounted(() => {
 :deep(td.nowrap) {
    white-space: nowrap;
 }
-button.p-button.create {
-   position: absolute;
-   right:15px;
-   top: 15px;
-   font-size: 0.9em;
-}
-   .orders {
-      min-height: 600px;
-      text-align: left;
-      padding: 0 25px;
+.orders {
+   min-height: 600px;
+   text-align: left;
+   padding: 0 25px;
 
-      .toolbar {
-         padding: 10px 0;
-         display: flex;
-         flex-flow: row nowrap;
-         justify-content: space-between;
-         label {
-            font-weight: bold;
-            margin-right: 5px;
-            display: inline-block;
-         }
-         button.p-button {
-            margin-left: 5px;
-         }
-         div.p-button.p-togglebutton {
-            margin-left: 10px;
-         }
+   .toolbar {
+      padding: 10px 0;
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      label {
+         font-weight: bold;
+         margin-right: 5px;
+         display: inline-block;
       }
-
-      .p-datatable {
-         font-size: 0.85em;
-         span.status {
-            width: 100%;
-         }
-         .dimmed {
-            display:inline-block;
-            color: #ccc;
-         }
-         span.dimmed {
-            margin-left: 3px;
-         }
-         span.sta
-         :deep(td), :deep(th) {
-            padding: 10px;
-         }
-         :deep(.row-acts) {
-            text-align: center;
-            padding: 0;
-            a {
-               display: inline-block;
-               margin: 0;
-               padding: 5px 10px;
-            };
-         }
+      button.p-button {
+         margin-left: 5px;
+      }
+      div.p-button.p-togglebutton {
+         margin-left: 10px;
       }
    }
+
+   .p-datatable {
+      font-size: 0.85em;
+      span.status {
+         width: 100%;
+      }
+      .dimmed {
+         display:inline-block;
+         color: #ccc;
+      }
+      span.dimmed {
+         margin-left: 3px;
+      }
+      span.sta
+      :deep(td), :deep(th) {
+         padding: 10px;
+      }
+      :deep(.row-acts) {
+         text-align: center;
+         padding: 0;
+         a {
+            display: inline-block;
+            margin: 0;
+            padding: 5px 10px;
+         };
+      }
+   }
+}
 </style>

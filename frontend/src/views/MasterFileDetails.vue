@@ -1,14 +1,19 @@
 <template>
-   <h2>Master File {{route.params.id}}<span class="clone" v-if="masterFiles.details.originalID>0">(Cloned from {{ masterFiles.details.originalID }})</span></h2>
-   <div class="masterfile-acts">
-      <DPGButton label="Previous" @click="prevImage()" v-if="masterFiles.prevID > 0"/>
-      <DPGButton label="Next" @click="nextImage()" v-if="masterFiles.nextID > 0"/>
-      <DPGButton label="Download Image" @click="downloadImage()"/>
-      <DPGButton label="Download PDF" @click="downloadPDF()" v-if="masterFiles.details.originalID==0"/>
-      <DPGButton label="Replace" @click="replaceMasterFile()" v-if="masterFiles.details.originalID==0" :loading="masterFiles.replaceInProgress"/>
-      <DPGButton label="OCR" @click="ocrRequested()" v-if="masterFiles.isOCRCandidate  && (userStore.isAdmin || userStore.isSupervisor)"/>
-      <DPGButton label="Edit" @click="editMasterFile()"/>
-   </div>
+   <h2>
+      <div>
+         <span>Master File {{route.params.id}}</span>
+         <span class="clone" v-if="masterFiles.details.originalID>0">(Cloned from {{ masterFiles.details.originalID }})</span>
+      </div>
+      <div class="actions">
+         <DPGButton label="Previous" @click="prevImage()" v-if="masterFiles.prevID > 0"/>
+         <DPGButton label="Next" @click="nextImage()" v-if="masterFiles.nextID > 0"/>
+         <DPGButton label="Download Image" @click="downloadImage()"/>
+         <DPGButton label="Download PDF" @click="downloadPDF()" v-if="masterFiles.details.originalID==0"/>
+         <DPGButton label="Replace" @click="replaceMasterFile()" v-if="masterFiles.details.originalID==0" :loading="masterFiles.replaceInProgress"/>
+         <DPGButton label="OCR" @click="ocrRequested()" v-if="masterFiles.isOCRCandidate  && (userStore.isAdmin || userStore.isSupervisor)"/>
+         <DPGButton label="Edit" @click="editMasterFile()"/>
+      </div>
+   </h2>
    <div class="details" v-if="systemStore.working==false">
       <div class="thumb">
          <a :href="masterFiles.viewerURL" target="_blank">
@@ -243,15 +248,6 @@ const auditNow = (() => {
 </script>
 
 <style scoped lang="scss">
-div.masterfile-acts {
-   position: absolute;
-   right:15px;
-   top: 15px;
-   button.p-button {
-      margin-right: 5px;
-      font-size: 0.9em;
-   }
-}
 :deep(.p-fieldset) {
    margin-top: 15px;
    .p-fieldset-content {

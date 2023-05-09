@@ -1,6 +1,10 @@
 <template>
-   <h2>Customers</h2>
-   <DPGButton label="Add" class="create" @click="addCustomer()"/>
+   <h2>
+      <span>Customers</span>
+      <div class="actions" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
+         <DPGButton label="Add" class="create" @click="addCustomer()"/>
+      </div>
+   </h2>
    <div class="customers">
       <div class="filter-controls">
          <span>
@@ -108,6 +112,7 @@
 import { ref, computed, onBeforeMount } from 'vue'
 import { useCustomersStore } from '@/stores/customers'
 import { useSystemStore } from '@/stores/system'
+import { useUserStore } from '../stores/user'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
@@ -118,6 +123,7 @@ import { FilterMatchMode } from 'primevue/api'
 
 const customersStore = useCustomersStore()
 const systemStore = useSystemStore()
+const userStore = useUserStore()
 
 const filter = ref( {'global': {value: null, matchMode: FilterMatchMode.STARTS_WITH}})
 const expandedRows = ref([])
@@ -142,29 +148,29 @@ const academicStatuses = computed(() => {
 
 onBeforeMount(() => {
    customersStore.getCustomers()
-   document.title = `customers`
+   document.title = `Customers`
 })
 
-function submitChanges() {
+const submitChanges = (() => {
    customersStore.addOrUpdateCustomer(customerDetails.value)
    showEdit.value = false
-}
+})
 
-function addAddress( addrType ) {
+const addAddress = (( addrType ) => {
    let newAddr = {address1: "", address2: "", city: "", state: "", zip: "", country: "", phone: "", addressType: addrType}
    customerDetails.value.addresses.push(newAddr)
-}
+})
 
-function formattedAddress(data) {
+const formattedAddress = ((data) => {
    let out = data.address1
    if (data.address2) {
       out += ` ${data.address2}`
    }
    out += `, ${data.city} ${data.state} ${data.zip}, ${data.country}`
    return  out
-}
+})
 
-function addCustomer() {
+const addCustomer = (() => {
    customerDetails.value = {
       lastName: "",
       firstName: "",
@@ -175,25 +181,19 @@ function addCustomer() {
       id: 0
    }
    showEdit.value = true
-}
+})
 
-function edit(data) {
+const edit = ((data) => {
    customerDetails.value = {...data} // clone the data so edits dont change the store
    showEdit.value = true
-}
+})
 
-function clearSearch() {
-   filter.value = ""
-}
+const clearSearch = (() => {
+   filter.value['global'].value = ""
+})
 </script>
 
 <style scoped lang="scss">
-button.p-button.create {
-   position: absolute;
-   right:15px;
-   top: 15px;
-   font-size: 0.9em;;
-}
 .customers {
    min-height: 600px;
    text-align: left;

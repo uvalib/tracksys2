@@ -1,28 +1,30 @@
 <template>
    <Menubar :model="items">
       <template #end>
-         <span class="signout" tabindex="0" @click="signOut">Sign Out</span>
+         <span class="global-search p-input-icon-right" v-if="showSearch">
+            <i class="pi pi-search" />
+            <InputText v-model="newQuery" />
+         </span>
       </template>
    </Menubar>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import Menubar from 'primevue/menubar'
 import { useSystemStore } from "@/stores/system"
-import { useUserStore } from "@/stores/user"
-import { useRouter } from 'vue-router'
+import InputText from 'primevue/inputtext'
+import { useRoute } from 'vue-router'
 
-const userStore = useUserStore()
 const systemStore = useSystemStore()
-const router = useRouter()
+const route = useRoute()
 
 const items = ref([])
+const newQuery = ref("")
 
-function signOut() {
-   userStore.signout()
-   router.push("signedout")
-}
+const showSearch = computed(() => {
+   return route.name != "home"
+})
 
 onMounted(() => {
    setTimeout( () => {
@@ -50,14 +52,10 @@ onMounted(() => {
 .p-menubar {
    padding: 0;
    border-radius: 0;
+   min-height: 48px;
 }
-.signout {
-   cursor: pointer;
-   padding: 0.5rem;
-   margin: 0 10px 0 0;
-   &:hover {
-      text-decoration: underline;
-      background: #e9ecef;
-   }
+.global-search {
+   margin: 5px;
+   width: 300px;
 }
 </style>

@@ -1,11 +1,11 @@
 <template>
    <h2>
       <span>Order {{route.params.id}}</span>
+      <div class="actions" v-if="(user.isAdmin || user.isSupervisor)" >
+         <DPGButton label="Delete" class="edit" @click="deleteOrder()" v-if="canDelete"/>
+         <DPGButton label="Edit" class="edit" @click="editOrder()"/>
+      </div>
    </h2>
-   <div class="order-acts">
-      <DPGButton label="Delete" class="edit" @click="deleteOrder()" v-if="canDelete"/>
-      <DPGButton label="Edit" class="edit" @click="editOrder()"/>
-   </div>
    <div class="details">
       <div class="left">
          <Panel header="General Information">
@@ -403,15 +403,6 @@ function claimOrder() {
 :deep(dl.item-intended-use) {
    dd {
       margin: 0 0 5px 0 !important;
-   }
-}
-div.order-acts {
-   position: absolute;
-   right:15px;
-   top: 15px;
-   button.p-button {
-      margin-right: 5px;
-      font-size: 0.9em;
    }
 }
 div.item {

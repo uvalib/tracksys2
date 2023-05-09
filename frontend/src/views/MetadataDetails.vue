@@ -1,14 +1,19 @@
 <template>
-   <h2><span v-if="metadataStore.detail.isCollection" class="collection-tag">Collection</span>Metadata {{route.params.id}}</h2>
-   <div class="unit-acts">
-      <template  v-if="metadataStore.detail.type == 'XmlMetadata' && systemStore.working==false">
-         <DPGButton label="Delete" class="edit" @click="deleteMetadata()" v-if="canDelete"/>
-         <DPGButton label="Download XML"  @click="downloadXMLClicked()" />
-         <FileUpload mode="basic" name="xml" accept=".xml" :customUpload="true" @uploader="xmlUploader"
-            :auto="true" chooseLabel="Upload XML" uploadIcon="" v-if="userStore.isAdmin || userStore.isSupervisor"/>
-      </template>
-      <DPGButton label="Edit" @click="editMetadata()"  v-if="canEdit"/>
-   </div>
+   <h2>
+      <div>
+         <span v-if="metadataStore.detail.isCollection" class="collection-tag">Collection</span>
+         <span>Metadata {{route.params.id}}</span>
+      </div>
+      <div class="actions">
+         <template  v-if="metadataStore.detail.type == 'XmlMetadata' && systemStore.working==false">
+            <DPGButton label="Delete" class="edit" @click="deleteMetadata()" v-if="canDelete"/>
+            <DPGButton label="Download XML"  @click="downloadXMLClicked()" />
+            <FileUpload mode="basic" name="xml" accept=".xml" :customUpload="true" @uploader="xmlUploader"
+               :auto="true" chooseLabel="Upload XML" uploadIcon="" v-if="userStore.isAdmin || userStore.isSupervisor"/>
+         </template>
+         <DPGButton label="Edit" @click="editMetadata()"  v-if="canEdit"/>
+      </div>
+   </h2>
    <div class="details" v-if="systemStore.working==false">
       <div v-if="metadataStore.detail.thumbURL" class="thumb">
          <a :href="metadataStore.detail.viewerURL" target="_blank">
@@ -269,7 +274,7 @@ onBeforeMount( async () => {
    await metadataStore.getDetails( mdID )
 })
 
-function deleteMetadata() {
+const deleteMetadata = (() => {
    confirm.require({
       message: 'Are you sure you want delete this metadata? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Metadata',
@@ -279,13 +284,13 @@ function deleteMetadata() {
          await metadataStore.deleteMetadata()
       }
    })
-}
+})
 
-function editMetadata() {
+const editMetadata = (() => {
    router.push(`/metadata/${metadataStore.detail.id}/edit`)
-}
+})
 
-function downloadXMLClicked() {
+const downloadXMLClicked = (() => {
    const fileURL = window.URL.createObjectURL(new Blob([metadataStore.detail.xmlMetadata], { type: 'application/xml' }))
    const fileLink = document.createElement('a')
    fileLink.href =  fileURL
@@ -293,60 +298,50 @@ function downloadXMLClicked() {
    document.body.appendChild(fileLink)
    fileLink.click()
    window.URL.revokeObjectURL(fileURL)
-}
-function xmlUploader( event ) {
-   metadataStore.uploadXML( event.files[0] )
-}
+})
 
-async function publishClicked() {
+const xmlUploader = (( event ) => {
+   metadataStore.uploadXML( event.files[0] )
+})
+
+const publishClicked = (async () => {
    publishing.value = true
    await metadataStore.publish()
    publishing.value = false
    if (systemStore.error == "") {
       systemStore.toastMessage('Publish Success', 'This item has successfully been published to Virgo')
    }
-}
+})
 
-async function publishToAS( immediate ) {
+const publishToAS = ( async ( immediate ) => {
    publishing.value = true
    await metadataStore.publishToArchivesSpace(userStore.ID, immediate)
    publishing.value = false
    if (systemStore.error == "") {
       systemStore.toastMessage('Publish Success', 'This item has successfully been published to ArchivesSpace')
    }
-}
+})
 
-function formatBoolean( flag) {
+const formatBoolean = (( flag) => {
    if (flag) return "Yes"
    return "No"
-}
+})
 
-function formatDate( date ) {
+const formatDate = (( date ) => {
    if (date) {
       return dayjs(date).format("YYYY-MM-DD HH:mm")
    }
    return ""
-}
+})
 
 </script>
 
 <style scoped lang="scss">
-div.unit-acts {
-   position: absolute;
-   right:15px;
-   top: 15px;
-   button.p-button {
-      margin-right: 5px;
-      font-size: 0.9em;
-   }
-   :deep(.p-fileupload.p-fileupload-basic.p-component) {
-      margin-right: 5px;
-      font-size: 0.9em;
-      display: inline-block;
-      .p-button-label {
-         font-size: 0.9em;
-         outline: 0;
-      }
+:deep(.p-fileupload.p-fileupload-basic.p-component) {
+   margin-right: 5px;
+   display: inline-block;
+   .p-button-label {
+      font-size: 14px;
    }
 }
 .collection-tag {

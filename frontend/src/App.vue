@@ -14,7 +14,10 @@
          </div>
       </div>
       <div class="user-banner" v-if="userStore.jwt">
-         <label>Signed in as:</label><span class="user">{{ userStore.signedInUser }}</span>
+         <DPGButton id="signout" :label="userStore.signedInUser" text icon="pi pi-angle-down" iconPos="right" @click="toggleSignOut"/>
+         <OverlayPanel ref="signoutOverlay">
+            <DPGButton label="Sign Out" text @click="signOut()" autofocus/>
+        </OverlayPanel>
       </div>
       <MenuBar v-if="userStore.jwt" />
    </div>
@@ -43,14 +46,17 @@ import { onBeforeMount, watch, ref } from 'vue'
 import Dialog from 'primevue/dialog'
 import Toast from 'primevue/toast'
 import { useToast } from "primevue/usetoast"
+import OverlayPanel from 'primevue/overlaypanel'
+import { useRouter } from 'vue-router'
 
 const systemStore = useSystemStore()
 const userStore = useUserStore()
 const searchStore = useSearchStore()
 const toast = useToast()
+const router = useRouter()
 
 const configuring = ref(true)
-
+const signoutOverlay = ref()
 
 watch(() => systemStore.toast.show, (newShow) => {
    if ( newShow == true) {
@@ -59,14 +65,23 @@ watch(() => systemStore.toast.show, (newShow) => {
    }
 })
 
-function homeClicked() {
-   searchStore.resetSearch()
-}
+const toggleSignOut = ((event) => {
+   signoutOverlay.value.toggle(event)
+})
 
-function errorClosed() {
+const signOut = (() => {
+   userStore.signout()
+   router.push("/signedout")
+})
+
+const homeClicked = (() => {
+   searchStore.resetSearch()
+})
+
+const errorClosed = (() => {
    systemStore.setError("")
    systemStore.showError = false
-}
+})
 
 onBeforeMount( async () => {
    document.title = `Tracksys`
@@ -83,6 +98,7 @@ div.header {
    text-align: left;
    position: relative;
    box-sizing: border-box;
+
    .main-header {
       display: flex;
       flex-direction: row;
@@ -98,19 +114,13 @@ div.header {
    .user-banner {
       text-align: right;
       padding: 0;
-      font-size: 0.8em;
+      font-size: 0.9em;
       margin: 10px 0;
       padding: 10px 10px 0 10px;
       background-color: var(--uvalib-blue-alt-darkest);
-      .user-wrap {
-         margin-bottom: 5px;
-         label {
-            font-weight: bold;
-            margin-right: 5px;
-         }
-         .user {
-            font-weight: 100;
-         }
+      #signout {
+         color: white;
+         font-weight: bold;
       }
    }
 }

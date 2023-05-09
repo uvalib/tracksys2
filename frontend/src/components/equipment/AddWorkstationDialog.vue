@@ -22,26 +22,22 @@ const equipmentStore = useEquipmentStore()
 const isOpen = ref(false)
 const workstationName = ref("")
 
-async function addWorkstation() {
+const addWorkstation= (async () => {
    await equipmentStore.addWorkstation( workstationName.value)
    hide()
-}
-function hide() {
+})
+
+const hide = (() => {
    isOpen.value=false
-}
-function show() {
+})
+
+const show = (() => {
    workstationName.value = ""
    isOpen.value = true
-
-}
+})
 </script>
 
 <style lang="scss" scoped>
-button.p-button {
-   margin-left: 10px;
-   font-size: 0.9em;
-}
-
 .spacer {
    display: inline-block;
    margin: 0 5px;

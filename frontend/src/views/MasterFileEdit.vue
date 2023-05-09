@@ -108,19 +108,20 @@ onMounted( async () =>{
    }
 })
 
-function metadataSelected( o ) {
+const metadataSelected = (( o ) => {
    edited.value.metadataID = o
-}
-function cancelEdit() {
-   router.push(`/units/${route.params.id}`)
-}
+})
 
-async function submitChanges() {
+const cancelEdit = (() => {
+   router.push(`/masterfiles/${masterFiles.details.id}`)
+})
+
+const submitChanges = ( async () => {
    await masterFiles.submitEdit( edited.value )
    if (systemStore.showError == false) {
       router.push(`/masterfiles/${masterFiles.details.id}`)
    }
-}
+})
 </script>
 
 

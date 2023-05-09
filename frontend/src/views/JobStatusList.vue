@@ -61,14 +61,16 @@ const confirm = useConfirm()
 const selectedJobs = ref([])
 const selectAll = ref(false)
 
-function queryJobs() {
+const queryJobs = (() => {
    jobsStore.getJobs()
-}
-function clearSearch() {
+})
+
+const clearSearch = (() => {
    jobsStore.searchOpts.query = ""
    jobsStore.getJobs()
-}
-function deletAllClicked() {
+})
+
+const deletAllClicked = (() => {
    confirm.require({
       message: 'Are you sure you want delete the selected job status records? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete All',
@@ -80,8 +82,9 @@ function deletAllClicked() {
          jobsStore.deleteJobs( payload )
       }
    })
-}
-function deleteJob(id) {
+})
+
+const deleteJob = ((id) => {
    confirm.require({
       message: 'Are you sure you want delete this job status?',
       header: 'Confirm Delete All',
@@ -91,9 +94,9 @@ function deleteJob(id) {
          jobsStore.deleteJobs( [id] )
       }
    })
-}
+})
 
-function getAssociatedObjectLink( objName ) {
+const getAssociatedObjectLink = (( objName ) => {
    if (objName.split(" ").length != 2) {
       return ""
    }
@@ -112,9 +115,9 @@ function getAssociatedObjectLink( objName ) {
       return `/masterfiles/${objID}`
    }
    return ""
-}
+})
 
-function rowClass(rowData) {
+const rowClass = ((rowData) => {
    if (rowData.status ==  "failure"){
       return "error-row"
    }
@@ -125,21 +128,23 @@ function rowClass(rowData) {
       return "warn-row"
    }
    return ""
-}
+})
 
-function onPage(event) {
+const onPage = ((event) => {
    jobsStore.searchOpts.start = event.first
    jobsStore.searchOpts.limit = event.rows
    jobsStore.getJobs()
-}
+})
 
-function onRowSelect() {
+const onRowSelect = (() => {
    selectAll.value = selectedJobs.value === jobsStore.searchOpts.limit
-}
-function onRowUnselect() {
+})
+
+const onRowUnselect = (() => {
    selectAll.value  = false
-}
-function onSelectAllChange(event) {
+})
+
+const onSelectAllChange = ((event) => {
    selectAll.value = event.checked
    if (selectAll.value) {
       selectedJobs.value = jobsStore.jobs
@@ -147,7 +152,7 @@ function onSelectAllChange(event) {
    else {
       selectedJobs.value = []
    }
-}
+})
 
 onMounted(() => {
    jobsStore.getJobs()
@@ -160,6 +165,7 @@ onMounted(() => {
       min-height: 600px;
       text-align: left;
       padding: 0 25px;
+      margin-top: 10px;
       .sep {
          display: inline-block;
          margin: 0 10px;

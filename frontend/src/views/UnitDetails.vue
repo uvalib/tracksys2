@@ -1,9 +1,11 @@
 <template>
-   <h2>{{pageTitle}}</h2>
-   <div class="unit-acts">
-      <DPGButton label="Audit Master Files" @click="auditUnit()" v-if="detail.reorder == false && unitsStore.hasMasterFiles"/>
-      <DPGButton label="Edit" @click="editUnit()"/>
-   </div>
+   <h2>
+      <span>{{pageTitle}}</span>
+      <div class="actions" >
+         <DPGButton label="Audit Master Files" @click="auditUnit()" v-if="detail.reorder == false && unitsStore.hasMasterFiles && (userStore.isAdmin || userStore.isSupervisor)"/>
+         <DPGButton label="Edit" @click="editUnit()"/>
+      </div>
+   </h2>
    <div v-if="detail.lastError" class="last-error">
       <span>Recent Error:</span>
       <router-link :to="`/jobs/${detail.lastError.jobID}`">{{detail.lastError.error}}</router-link>
@@ -315,15 +317,6 @@ const formatDate = (( dateStr ) => {
 </script>
 
 <style scoped lang="scss">
-div.unit-acts {
-   position: absolute;
-   right:15px;
-   top: 15px;
-   button.p-button {
-      margin-right: 5px;
-      font-size: 0.9em;
-   }
-}
 .related-unit-ids {
    display: flex;
    flex-flow: row wrap;

@@ -1,10 +1,12 @@
 <template>
-   <h2>Home</h2>
-   <div class="actions" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
-      <DPGButton v-if="userStore.isAdmin" label="Create Collection Facet" class="create" @click="showCreateCollectionDialog()"/>
-      <DPGButton label="Create Metadata" class="create" @click="createMetadata()"/>
-      <DPGButton label="Create Order" class="create" @click="createOrder()"/>
-   </div>
+   <h2>
+      <span>Home</span>
+      <div class="actions" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
+         <DPGButton v-if="userStore.isAdmin" label="Create Collection Facet" class="create" @click="showCreateCollectionDialog()"/>
+         <DPGButton label="Create Metadata" class="create" @click="createMetadata()"/>
+         <DPGButton label="Create Order" class="create" @click="createOrder()"/>
+      </div>
+   </h2>
    <div class="home">
       <div class="stats">
          <div>
@@ -157,7 +159,7 @@ onBeforeMount( () => {
    }
 })
 
-function resetSearch() {
+const resetSearch = (() => {
    searchStore.resetSearch()
    selectedScope.value = "all"
    selectedField.value = "all"
@@ -169,13 +171,13 @@ function resetSearch() {
    delete query.filters
    delete query.view
    router.push({query})
-}
+})
 
-function scopeChanged() {
+const scopeChanged = (() => {
    selectedField.value = "all"
-}
+})
 
-async function doUnitSearch() {
+const doUnitSearch = ( async () => {
    resetSearch()
    unitError.value = ""
    await searchStore.unitExists(unitID.value)
@@ -185,9 +187,9 @@ async function doUnitSearch() {
    }
 
    router.push(`/units/${unitID.value}`)
-}
+})
 
-function doSearch() {
+const doSearch = (() => {
    if (newQuery.value.length > 0) {
       unitError.value = ""
 
@@ -222,121 +224,115 @@ function doSearch() {
       // do the search last. This will pick a view and upodate the URL to include it.
       searchStore.executeSearch()
    }
-}
+})
 
-function createOrder() {
+const createOrder = (() => {
    router.push("/orders/new")
-}
-function showCreateCollectionDialog() {
+})
+
+const showCreateCollectionDialog = (() => {
    newCollectionFacet.value = ""
    showCreateCollection.value = true
-}
-async function createCollection() {
+})
+
+const createCollection = ( async () => {
    await systemStore.createCollectionFacet(newCollectionFacet.value)
    showCreateCollection.value = false
-}
-function createCollectionClosed() {
+})
+
+const createCollectionClosed = (() => {
    showCreateCollection.value = false
-}
-function createMetadata() {
+})
+
+const createMetadata = (() => {
    showCreateMetadata.value = true
-}
-function metadataCreated() {
+})
+
+const metadataCreated = (() => {
    systemStore.toastMessage("Metadata Created", `Metadata ${metadataStore.detail.pid}: ${metadataStore.detail.title} has been created.`)
    showCreateMetadata.value = false
-}
-function createMetadataClosed() {
+})
+
+const createMetadataClosed = (() => {
    showCreateMetadata.value = false
-}
+})
 </script>
 
 <style scoped lang="scss">
-h2 {
-   margin-bottom: 0 !important;
-}
-div.actions {
-   position: absolute;
-   right:15px;
-   top: 15px;
-   button.p-button {
-      margin-right: 5px;
-      font-size: 0.9em;
+.home {
+   margin-top: 0px;
+   padding-bottom: 50px;
+   min-height:600px;
+   .stats {
+      margin: 0px auto 40px auto;
+      display: flex;
+      flex-flow: row wrap;
+      justify-content: center;
+      background: #fafafa;
+      padding: 15px;
+      border-bottom: 1px solid var(--uvalib-grey-light);
+
+      label {
+         font-weight: 600;
+         margin-right: 5px;
+      }
+      .sep {
+         display: inline-block;
+         width: 50px;
+      }
    }
-}
-   .home {
-      margin-top: 0px;
-      padding-bottom: 50px;
-      min-height:600px;
-      .stats {
-         margin: 0px auto 40px auto;
-         display: flex;
-         flex-flow: row wrap;
-         justify-content: center;
-         background: #fafafa;
-         padding: 15px;
-         border-bottom: 1px solid var(--uvalib-grey-light);
 
-         label {
-            font-weight: 600;
-            margin-right: 5px;
-         }
-         .sep {
-            display: inline-block;
-            width: 50px;
-         }
+   :deep(#unit-search) {
+      width: 25% !important;
+      align-items: flex-end !important;
+      margin-top: 25px !important;
+      div.searchbar {
+         width: 40%;
       }
-
-      :deep(#unit-search) {
-         width: 25% !important;
-         align-items: flex-end !important;
-         margin-top: 25px !important;
-         div.searchbar {
-            width: 40%;
-         }
+   }
+   p.error {
+      color: var(--uvalib-red-emergency);
+   }
+   :deep(#global-search), :deep(#unit-search) {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: center;
+      align-items: center;
+      width: 70%;
+      margin: 0 auto;
+      span  {
+         font-weight: bold;
+         display: inline-block;
       }
-      p.error {
-         color: var(--uvalib-red-emergency);
-      }
-      :deep(#global-search), :deep(#unit-search) {
-         display: flex;
-         flex-flow: row nowrap;
-         justify-content: center;
-         align-items: center;
-         width: 70%;
-         margin: 0 auto;
-         span  {
-            font-weight: bold;
-            display: inline-block;
-         }
-         .searchbar {
-            flex-grow: 1;
+      .searchbar {
+         flex-grow: 1;
+         margin: 0;
+         input {
             margin: 0;
-            input {
-               margin: 0;
-            }
          }
-         .submit-button button {
-            @include primary-button();
-            font-size: 0.95em;
-            padding: 6px 15px;
-            margin-left: 10px;
-            display: inline-block;
-            width: 125px;
-         }
-         .reset-button button {
-            @include base-button();
-            font-size: 0.95em;
-            padding: 6px 15px;
-            margin-left: 10px;
-            display: inline-block;
-            width: 125px;
-         }
-         .formkit-outer.select-wrap {
-            margin: 0 10px 0 0;
-            select {
-               margin: 0;
-            }
+      }
+      .submit-button button {
+         @include primary-button();
+         font-size: 0.95em;
+         padding: 6px 15px;
+         margin-left: 10px;
+         display: inline-block;
+         width: 125px;
+      }
+      .reset-button button {
+         @include base-button();
+         font-size: 0.95em;
+         padding: 6px 15px;
+         margin-left: 10px;
+         display: inline-block;
+         width: 125px;
+      }
+      .formkit-outer.select-wrap {
+         margin: 0 10px 0 0;
+         select {
+            margin: 0;
          }
       }
    }
+}
 </style>

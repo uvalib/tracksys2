@@ -1,6 +1,11 @@
 <template>
-   <h2>Staff Members</h2>
-   <DPGButton label="Add" class="p-button create" @click="addStaff()"/>
+   <h2>
+      <span>Staff Members</span>
+      <div class="actions" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
+         <DPGButton label="Add" class="p-button create" @click="addStaff()"/>
+      </div>
+   </h2>
+
    <div class="staff">
       <div class="filter-controls">
          <span>
@@ -58,12 +63,15 @@
 <script setup>
 import { onMounted, ref} from 'vue'
 import { useStaffStore } from '@/stores/staff'
+import { useUserStore } from '../stores/user'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
 
 const staffStore = useStaffStore()
+const userStore = useUserStore()
+
 const filter = ref("")
 const showEdit = ref(false)
 const staffDetails = ref({
@@ -76,7 +84,7 @@ const staffDetails = ref({
    active: false}
 )
 
-function addStaff() {
+const addStaff = (() => {
    staffDetails.value = {
       id: 0,
       lastName: "",
@@ -87,9 +95,9 @@ function addStaff() {
       active: false
    }
    showEdit.value = true
-}
+})
 
-function submitChanges() {
+const submitChanges = (() => {
    let active = false
    if (staffDetails.value.active == "true") {
       active = true
@@ -100,9 +108,9 @@ function submitChanges() {
    staffDetails.value.role = roles[ staffDetails.value.roleID ]
    staffStore.addOrUpdateStaff(staffDetails.value)
    showEdit.value = false
-}
+})
 
-function edit(data) {
+const edit = ((data) => {
    staffDetails.value = {...data} // clone the data so edits dont change the store
    if (staffDetails.value.active) {
       staffDetails.value.active = "true"
@@ -110,31 +118,31 @@ function edit(data) {
       staffDetails.value.active = "false"
    }
    showEdit.value = true
-}
+})
 
-function onPage(event) {
+const onPage = ((event) => {
    staffStore.searchOpts.start = event.first
    staffStore.searchOpts.limit = event.rows
    staffStore.getStaff( filter.value  )
-}
+})
 
-function onSort(event) {
+const onSort = ((event) => {
    staffStore.searchOpts.sortField = event.sortField
    staffStore.searchOpts.sortOrder = "asc"
    if (event.sortOrder == -1) {
       staffStore.searchOpts.sortOrder = "desc"
    }
    staffStore.getStaff( filter.value )
-}
+})
 
-function applyFilter() {
+const applyFilter = (() => {
    staffStore.getStaff( filter.value )
-}
+})
 
-function clearSearch() {
+const clearSearch = (() => {
    filter.value = ""
    staffStore.getStaff( filter.value )
-}
+})
 
 onMounted(() => {
    staffStore.getStaff( filter.value  )
@@ -143,12 +151,6 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-button.p-button.create {
-   position: absolute;
-   right:15px;
-   top: 15px;
-   font-size: 0.9em;
-}
 #staff-detail {
    .form-controls {
       display: flex;

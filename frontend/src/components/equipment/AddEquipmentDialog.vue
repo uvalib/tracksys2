@@ -35,28 +35,25 @@ const equipmentTypes = computed( () => {
    ]
 })
 
-async function addEquipment() {
+const addEquipment= ( async () => {
    await equipmentStore.addEquipment( equipType.value, name.value, serialNumber.value)
    hide()
-}
-function hide() {
+})
+
+const hide = (() => {
    isOpen.value=false
-}
-function show() {
+})
+
+const show = (() => {
    name.value = ""
    serialNumber.value = ""
    equipType.value = null
    isOpen.value = true
 
-}
+})
 </script>
 
 <style lang="scss" scoped>
-button.p-button {
-   margin-left: 10px;
-   font-size: 0.9em;
-}
-
 .spacer {
    display: inline-block;
    margin: 0 5px;

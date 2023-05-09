@@ -1,9 +1,11 @@
 <template>
-   <h2>Equipment</h2>
-   <div class="equip-acts">
-      <AddWorkstationDialog />
-      <AddEquipmentDialog />
-   </div>
+   <h2>
+      <span>Equipment</span>
+      <div class="actions" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
+         <AddWorkstationDialog />
+         <AddEquipmentDialog />
+      </div>
+   </h2>
    <div class="equipment">
       <div class="columns">
          <Panel header="Workstations">
@@ -76,6 +78,7 @@
 <script setup>
 import { onBeforeMount, ref, computed } from 'vue'
 import { useEquipmentStore } from '@/stores/equipment'
+import { useUserStore } from '../stores/user'
 import Panel from 'primevue/panel'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -88,6 +91,7 @@ import AddEquipmentDialog from '../components/equipment/AddEquipmentDialog.vue'
 
 const confirm = useConfirm()
 const equipmentStore = useEquipmentStore()
+const userStore = useUserStore()
 
 const selectedWorkstation = ref()
 
@@ -116,13 +120,15 @@ onBeforeMount( async () => {
    equipmentStore.getEquipment()
 })
 
-function deactivateWorkstation( wsID ) {
+const deactivateWorkstation = (( wsID ) => {
    equipmentStore.deactivateWorkstation(wsID)
-}
-function activateWorkstation( wsID ) {
+})
+
+const activateWorkstation = (( wsID ) => {
    equipmentStore.activateWorkstation(wsID)
-}
-function retireWorkstation( wsID ) {
+})
+
+const retireWorkstation = (( wsID ) => {
    let ws = equipmentStore.workstations.find(ws => ws.id == wsID)
    confirm.require({
       message: `Retire workstation '${ws.name}'?`,
@@ -133,43 +139,32 @@ function retireWorkstation( wsID ) {
          equipmentStore.retireWorkstation(wsID)
       }
    })
-}
+})
 
-function workstationSelected() {
+const workstationSelected = (() => {
    equipmentStore.workstationSelected( selectedWorkstation.value.id )
-}
+})
 
-function clearSetup() {
+const clearSetup = (() => {
    equipmentStore.clearSetup()
-}
-function saveSetup() {
-   equipmentStore.saveSetup()
-}
+})
 
-function statusClass(statusID) {
+const saveSetup = (() => {
+   equipmentStore.saveSetup()
+})
+
+const statusClass = ((statusID) => {
    if (statusID == 1) {
       return "ws-status inactive"
    }
    return "ws-status active"
-}
+})
 </script>
 
 <style scoped lang="scss">
-.equip-acts {
-   position: absolute;
-   right:15px;
-   top: 15px;
-   button.p-button {
-      margin-right: 5px;
-      font-size: 0.9em;
-   }
-}
 .equipment {
    min-height: 600px;
    padding: 15px 25px;
-   .pad-bottom {
-      margin-bottom: 15px;
-   }
    h3 {
       text-align: center;
       color: var(--uvalib-text);
