@@ -127,14 +127,15 @@ onMounted( async () =>{
    }
 })
 
-function cancelEdit() {
+const cancelEdit = (() => {
    if ( newOrder.value == true) {
       router.push(`/orders`)
    } else {
       router.push(`/orders/${route.params.id}`)
    }
-}
-async function submitChanges() {
+})
+
+const submitChanges = ( async () => {
    if ( edited.value.customerID == 0) {
       error.value = "Customer is required"
       return
@@ -147,7 +148,7 @@ async function submitChanges() {
    if (systemStore.showError == false) {
       router.push(`/orders/${ordersStore.detail.id}`)
    }
-}
+})
 
 </script>
 

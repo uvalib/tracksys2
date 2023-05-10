@@ -56,17 +56,19 @@ onMounted(() => {
    document.title = `Collections`
 })
 
-function createCollection() {
+const createCollection = (() => {
    showCreateCollection.value = true
-}
-function createCollectionClosed() {
+})
+
+const createCollectionClosed = (() => {
    showCreateCollection.value = false
-}
-function collectionCreated() {
+})
+
+const collectionCreated = (() => {
    collectionStore.addCollection(  metadataStore.detail )
    systemStore.toastMessage("Collection Created", `A new collection metadata record has been created.`)
    showCreateCollection.value = false
-}
+})
 </script>
 
 <style scoped lang="scss">

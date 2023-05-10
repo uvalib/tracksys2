@@ -68,7 +68,7 @@ onBeforeMount( async () => {
    }
 })
 
-function exportJSON() {
+const exportJSON = (() => {
    const fileURL = window.URL.createObjectURL(new Blob([JSON.stringify(componentsStore.nodes, null, 3)], { type: 'application/json' }))
    const fileLink = document.createElement('a')
    fileLink.href =  fileURL
@@ -76,9 +76,9 @@ function exportJSON() {
    document.body.appendChild(fileLink)
    fileLink.click()
    window.URL.revokeObjectURL(fileURL)
-}
+})
 
-function componentSelected( tgtComponent ) {
+const componentSelected = (( tgtComponent ) => {
    let cID = parseInt(tgtComponent.key, 10)
    componentsStore.loadRelatedMasterFiles(cID)
    let mfEle = document.getElementById("master-files")
@@ -89,9 +89,9 @@ function componentSelected( tgtComponent ) {
       top: offsetPosition,
       behavior: "smooth"
    })
-}
+})
 
-function expandSelectedComponent( cID ) {
+const expandSelectedComponent = (( cID ) => {
    let nodes = componentsStore.nodes
    if ( cID != nodes[0].key) {
       expandedKeys.value[nodes[0].key] = true
@@ -110,9 +110,9 @@ function expandSelectedComponent( cID ) {
       })
       selectedKey.value[cID] = true
    })
-}
+})
 
-function findNode( currNode, tgtKey) {
+const findNode = (( currNode, tgtKey) => {
    if ( currNode.key == tgtKey) return true
 
    let found = false
@@ -130,7 +130,7 @@ function findNode( currNode, tgtKey) {
    })
 
    return found
-}
+})
 
 </script>
 

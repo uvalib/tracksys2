@@ -41,7 +41,12 @@ const router = useRouter()
 const jobsStore = useJobsStore()
 const confirm = useConfirm()
 
-function getAssociatedObjectLink( objName ) {
+onMounted(() => {
+   jobsStore.getJobDetails(route.params.id)
+   document.title = `Job #${route.params.id}`
+})
+
+const getAssociatedObjectLink = (( objName ) => {
    if (objName.split(" ").length != 2) {
       return ""
    }
@@ -57,14 +62,9 @@ function getAssociatedObjectLink( objName ) {
       return `/metadata/${objID}`
    }
    return ""
-}
-
-onMounted(() => {
-   jobsStore.getJobDetails(route.params.id)
-   document.title = `Job #${route.params.id}`
 })
 
-function deleteJobLog() {
+const deleteJobLog = (() => {
    confirm.require({
       message: 'Are you sure you want delete this job log? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Job Log',
@@ -75,7 +75,7 @@ function deleteJobLog() {
          router.push("/jobs")
       }
    })
-}
+})
 </script>
 
 <style scoped lang="scss">

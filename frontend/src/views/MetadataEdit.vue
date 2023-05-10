@@ -261,7 +261,7 @@ onMounted( async () =>{
    }
 })
 
-async function sirsiLookup() {
+const sirsiLookup = ( async () => {
    validated.value = false
    await metadataStore.sirsiLookup(edited.value.barcode, edited.value.catalogKey)
    edited.value.title = metadataStore.sirsiMatch.title
@@ -272,23 +272,26 @@ async function sirsiLookup() {
    if ( metadataStore.sirsiMatch.error == "") {
       validated.value = true
    }
-}
-function uriChanged() {
+})
+
+const uriChanged = (() => {
    validated.value = false
-}
-async function validateASMetadata() {
+})
+
+const validateASMetadata = ( async () => {
    await metadataStore.validateArchivesSpaceURI(edited.value.externalURI)
    if (metadataStore.asMatch.error == "") {
       validated.value = true
       edited.value.externalURI = metadataStore.asMatch.validatedURL
       edited.value.title = metadataStore.asMatch.title
    }
-}
-function cancelEdit() {
-   router.push(`/metadata/${route.params.id}`)
-}
+})
 
-async function submitChanges() {
+const cancelEdit = (() => {
+   router.push(`/metadata/${route.params.id}`)
+})
+
+const submitChanges = ( async () => {
    // SEE IF UR changed from CNE / UND to sotething else, or if RR chanegd from something valid to CNE/UND
    // in these cases, send the new ID. Otehrwise send a 0 so backend ignores the request.
    let origCNE = (originalUseRight.value == 1 || edited.value.useRight.value == 11)
@@ -306,9 +309,8 @@ async function submitChanges() {
    if (systemStore.showError == false) {
       router.push(`/metadata/${metadataStore.detail.id}`)
    }
-}
+})
 </script>
-
 
 <style lang="scss" scoped>
 .edit-form {

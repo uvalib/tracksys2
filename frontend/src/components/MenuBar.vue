@@ -3,7 +3,7 @@
       <template #end>
          <span class="global-search p-input-icon-right" v-if="showSearch">
             <i class="pi pi-search" />
-            <InputText v-model="newQuery" />
+            <InputText v-model="newQuery" @keyup.enter="searchEntered" placeholder="Search Tracksys..."/>
          </span>
       </template>
    </Menubar>
@@ -13,11 +13,14 @@
 import { ref, onMounted, computed } from 'vue'
 import Menubar from 'primevue/menubar'
 import { useSystemStore } from "@/stores/system"
+import { useSearchStore } from '@/stores/search'
 import InputText from 'primevue/inputtext'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const systemStore = useSystemStore()
+const searchStore = useSearchStore()
 const route = useRoute()
+const router = useRouter()
 
 const items = ref([])
 const newQuery = ref("")
@@ -45,6 +48,16 @@ onMounted(() => {
          ]}
       ]
    }, 500)
+})
+
+const searchEntered = (() => {
+   if (newQuery.value.length > 0) {
+      searchStore.resetSearch()
+      let query = Object.assign({}, route.query)
+      query.q = newQuery.value
+      router.push({path: "/", query: query})
+      newQuery.value = ""
+   }
 })
 </script>
 

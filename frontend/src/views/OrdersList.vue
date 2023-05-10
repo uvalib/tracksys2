@@ -152,36 +152,41 @@ onBeforeMount( () => {
    }
 })
 
-function createOrder() {
-   router.push("/orders/new")
-}
+onMounted(() => {
+   ordersStore.getOrders()
+   document.title = `Orders`
+})
 
-function displayStatus( id) {
+const createOrder = (() => {
+   router.push("/orders/new")
+})
+
+const displayStatus = ( (id) => {
    if (id == "await_fee") {
       return "Await Fee"
    }
    return id.charAt(0).toUpperCase() + id.slice(1)
-}
+})
 
-function clearSearch() {
+const clearSearch = (() => {
    ordersStore.searchOpts.query = ""
    getOrders()
-}
+})
 
-function queryOrders() {
+const queryOrders = (() => {
    getOrders()
-}
+})
 
-function ownerToggled() {
+const ownerToggled = (() => {
    if ( assignedToMe.value == true) {
       ordersStore.setTargetOwner( userStore.ID )
    } else {
       ordersStore.clearTargetOwner()
    }
    getOrders()
-}
+})
 
-function setQueryParams() {
+const setQueryParams = (() => {
    let query = Object.assign({}, route.query)
    delete query.q
    if (ordersStore.searchOpts.query) {
@@ -190,9 +195,9 @@ function setQueryParams() {
    query.filters = ordersStore.filtersAsQueryParam
    query.sort = `${ordersStore.searchOpts.sortField} ${ordersStore.searchOpts.sortOrder}`
    router.push({query})
-}
+})
 
-function getOrders() {
+const getOrders = (() => {
    ordersStore.searchOpts.filters = [{field: "status", value: statusFilter.value, match: FilterMatchMode.EQUALS}]
    Object.entries(columnFilters.value).forEach(([key, data]) => {
       if (data.value && data.value != "") {
@@ -201,26 +206,21 @@ function getOrders() {
    })
    setQueryParams()
    ordersStore.getOrders()
-}
+})
 
-function onPage(event) {
+const onPage = ((event) => {
    ordersStore.searchOpts.start = event.first
    ordersStore.searchOpts.limit = event.rows
    ordersStore.getOrders()
-}
+})
 
-function onSort(event) {
+const onSort = ((event) => {
    ordersStore.searchOpts.sortField = event.sortField
    ordersStore.searchOpts.sortOrder = "asc"
    if (event.sortOrder == -1) {
       ordersStore.searchOpts.sortOrder = "desc"
    }
    getOrders( )
-}
-
-onMounted(() => {
-   ordersStore.getOrders()
-   document.title = `Orders`
 })
 </script>
 

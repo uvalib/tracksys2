@@ -160,22 +160,24 @@ onMounted( async () =>{
    edited.value.includeInDL = unitsStore.detail.includeInDL
 })
 
-function orderSelected( o ) {
+const orderSelected = (( o ) => {
    edited.value.orderID = o
-}
-function metadataSelected( o ) {
-   edited.value.metadataID = o
-}
-function cancelEdit() {
-   router.push(`/units/${route.params.id}`)
-}
+})
 
-async function submitChanges() {
+const metadataSelected = (( o ) => {
+   edited.value.metadataID = o
+})
+
+const cancelEdit = (() => {
+   router.push(`/units/${route.params.id}`)
+})
+
+const submitChanges = ( async () => {
    await unitsStore.submitEdit( edited.value )
    if (systemStore.showError == false) {
       router.push(`/units/${unitsStore.detail.id}`)
    }
-}
+})
 </script>
 
 

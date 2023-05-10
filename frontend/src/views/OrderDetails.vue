@@ -254,27 +254,6 @@ const isExternalCustomer = computed( () => {
    return customerStore.isExternal(ordersStore.detail.customer.id)
 })
 
-function deleteOrder() {
-   confirm.require({
-      message: 'Are you sure you want delete this order? All data will be lost. This cannot be reversed.',
-      header: 'Confirm Delete Order',
-      icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
-      accept: async () => {
-         await ordersStore.deleteOrder()
-         router.push("/orders")
-      }
-   })
-}
-
-function editOrder() {
-   router.push(`/orders/${route.params.id}/edit`)
-}
-
-function toggleCustomer(e) {
-   customer.value.toggle(e)
-}
-
 onBeforeRouteUpdate(async (to) => {
    let orderID = to.params.id
    ordersStore.getOrderDetails(orderID)
@@ -287,66 +266,94 @@ onBeforeMount( async () => {
    await customerStore.getCustomers()
 })
 
-function addressHeader(idx) {
+const deleteOrder = (() => {
+   confirm.require({
+      message: 'Are you sure you want delete this order? All data will be lost. This cannot be reversed.',
+      header: 'Confirm Delete Order',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         await ordersStore.deleteOrder()
+         router.push("/orders")
+      }
+   })
+})
+
+const editOrder = (() => {
+   router.push(`/orders/${route.params.id}/edit`)
+})
+
+const toggleCustomer = ((e) => {
+   customer.value.toggle(e)
+})
+
+const addressHeader = ((idx) => {
    if ( idx == 0) return "Primary Address"
    return "Billing Address"
-}
-function recreateEmailClicked() {
+})
+
+const recreateEmailClicked = (() => {
    ordersStore.recreateEmail()
-}
-function recreatePDFClicked() {
+})
+
+const recreatePDFClicked = (() => {
    ordersStore.recreatePDF()
-}
-function viewPDFClicked() {
+})
+
+const viewPDFClicked = (() => {
    let url = `${systemStore.jobsURL}/orders/${ordersStore.detail.id}/pdf`
    window.open(url)
-}
+})
 
-function formatFee( fee ) {
+const formatFee = (( fee ) => {
    if (fee) {
       let floatFee = parseFloat(fee).toFixed(2)
       return `$${floatFee}`
    }
    return ""
-}
+})
 
-function displayStatus( id) {
+const displayStatus = ((id) => {
    if (id == "await_fee") {
       return "Await Fee"
    }
    return id.charAt(0).toUpperCase() + id.slice(1)
-}
+})
 
-function formatDateTime( dateStr ) {
+const formatDateTime = (( dateStr ) => {
    if (dateStr) {
       let d = dayjs(dateStr)
       return d.format("YYYY-MM-DD HH:mm")
    }
    return ""
-}
+})
 
-function formatDate( dateStr ) {
+const formatDate = (( dateStr ) => {
    if (dateStr) {
       return dateStr.split("T")[0]
    }
    return ""
-}
+})
 
-function viewEmailClicked() {
+const viewEmailClicked = (() => {
    showEmail.value = true
-}
-function emailClosed() {
+})
+
+const emailClosed = (() => {
    showEmail.value = false
-}
-function viewInvoiceClicked() {
+})
+
+const viewInvoiceClicked = (() => {
     ordersStore.editInvoice = false
     ordersStore.showInvoice = true
-}
-function createInvoiceClicked() {
+})
+
+const createInvoiceClicked = (() => {
     ordersStore.editInvoice = true
     ordersStore.showInvoice = true
-}
-function discardItem(item) {
+})
+
+const discardItem = ((item) => {
    confirm.require({
       message: 'Are you sure you want delete this item? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Item',
@@ -356,36 +363,45 @@ function discardItem(item) {
          await ordersStore.discardItem(item.id)
       }
    })
-}
+})
 
-function sendFeeEstimateCllicked() {
+const sendFeeEstimateCllicked = (() => {
    ordersStore.sendFeeEstimate()
-}
-function deferOrderClicked() {
+})
+
+const deferOrderClicked = (() => {
    ordersStore.deferOrder()
-}
-function resumeOrderClicked() {
+})
+
+const resumeOrderClicked = (() => {
    ordersStore.resumeOrder()
-}
-function approveOrderClicked() {
+})
+
+const approveOrderClicked = (() => {
    ordersStore.approveOrder()
-}
-function cancelOrderClicked() {
+})
+
+const cancelOrderClicked = (() => {
    ordersStore.cancelOrder()
-}
-function completeOrderClicked() {
+})
+
+const completeOrderClicked = (() => {
    ordersStore.completeOrder()
-}
-function payFeeClicked() {
+})
+
+const payFeeClicked = (() => {
    ordersStore.feeAccepted()
-}
-function declineFeeClicked() {
+})
+
+const declineFeeClicked = (() => {
    ordersStore.feeDeclined()
-}
-function checkOrderComplete() {
+})
+
+const checkOrderComplete = (() => {
    ordersStore.checkOrderComplete()
-}
-function claimOrder() {
+})
+
+const claimOrder = (() => {
    confirm.require({
       message: 'Are you sure you want claim this order for processing?',
       header: 'Confirm Claim Order',
@@ -395,7 +411,7 @@ function claimOrder() {
          ordersStore.setProcessor( user.ID )
       }
    })
-}
+})
 
 </script>
 
