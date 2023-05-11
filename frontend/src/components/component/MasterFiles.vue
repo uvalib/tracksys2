@@ -48,7 +48,6 @@
 
 <script setup>
 import { useComponentsStore } from '@/stores/components'
-import { useUnitsStore } from '@/stores/units'
 import { useUserStore } from '@/stores/user'
 import { useSystemStore } from '@/stores/system'
 import Panel from 'primevue/panel'
@@ -58,7 +57,6 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import LookupDialog from '@/components/LookupDialog.vue'
 
 const component = useComponentsStore()
-const unitsStore = useUnitsStore()
 const userStore = useUserStore()
 const systemStore = useSystemStore()
 
@@ -163,7 +161,7 @@ async function assignMetadata( metadataID ) {
    clearSelections()
 }
 function onRowSelect() {
-   selectAll.value = selectedMasterFiles.value < unitsStore.masterFiles.length
+   selectAll.value = selectedMasterFiles.value < component.relatedMasterFiles.length
 }
 function onRowUnselect() {
    selectAll.value  = false
@@ -171,7 +169,7 @@ function onRowUnselect() {
 function onSelectAllChange(event) {
    selectAll.value = event.checked
    if (selectAll.value) {
-      selectedMasterFiles.value = unitsStore.masterFiles
+      selectedMasterFiles.value = component.relatedMasterFiles
    }
    else {
       selectedMasterFiles.value = []
