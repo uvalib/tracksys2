@@ -115,14 +115,7 @@ func (svc *serviceContext) getComponentTree(c *gin.Context) {
 	for idx, mf := range related {
 		mfPID := mf.PID
 		mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
-		if mf.MetadataID != nil {
-			mf.ViewerURL = fmt.Sprintf("%s/view/%s?unit=%d", svc.ExternalSystems.Curio, mf.Metadata.PID, mf.UnitID)
-			if idx > 0 {
-				mf.ViewerURL += fmt.Sprintf("&page=%d", (idx + 1))
-			}
-		} else {
-			mf.ViewerURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
-		}
+		mf.ViewerURL = svc.getComponentViewerURL(mf, idx)
 	}
 
 	resp := struct {
@@ -134,6 +127,30 @@ func (svc *serviceContext) getComponentTree(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) getComponentViewerURL(mf *masterFile, idx int) string {
+	viewerURL := fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
+	if mf.MetadataID != nil {
+		// The master files for component children are all owned by one unit. The titles have a
+		// page number that denotes their sequence for that particular child. The masterfile file name contains the
+		// overall sequence for the entire unit. This sequence is the data that is needed to determine
+		// the correct page number for Curio as it only knows about the entire unit - not the component structure.
+		mf.ViewerURL = fmt.Sprintf("%s/view/%s?unit=%d", svc.ExternalSystems.Curio, mf.Metadata.PID, mf.UnitID)
+		baseName := strings.Split(mf.Filename, ".")[0]
+		seqStr := strings.Split(baseName, "_")[1]
+		seq, cnvErr := strconv.ParseInt(seqStr, 10, 64)
+		if cnvErr != nil {
+			log.Printf("ERROR: unable to parse component %d masterfile %s sequence: %s", mf.ComponentID, mf.Filename, cnvErr.Error())
+			if idx > 0 {
+				mf.ViewerURL += fmt.Sprintf("&page=%d", (idx + 1))
+			}
+		} else {
+			mf.ViewerURL += fmt.Sprintf("&page=%d", seq)
+		}
+
+	}
+	return viewerURL
 }
 
 func (svc *serviceContext) getComponentMasterFiles(c *gin.Context) {
@@ -148,14 +165,7 @@ func (svc *serviceContext) getComponentMasterFiles(c *gin.Context) {
 	for idx, mf := range related {
 		mfPID := mf.PID
 		mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
-		if mf.MetadataID != nil {
-			mf.ViewerURL = fmt.Sprintf("%s/view/%s?unit=%d", svc.ExternalSystems.Curio, mf.Metadata.PID, mf.UnitID)
-			if idx > 0 {
-				mf.ViewerURL += fmt.Sprintf("&page=%d", (idx + 1))
-			}
-		} else {
-			mf.ViewerURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
-		}
+		mf.ViewerURL = svc.getComponentViewerURL(mf, idx)
 	}
 	c.JSON(http.StatusOK, related)
 }
