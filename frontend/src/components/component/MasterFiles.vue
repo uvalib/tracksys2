@@ -44,21 +44,29 @@
    <Panel header="Related Master Files" v-else>
       <p>No master files are associated with this component.</p>
    </Panel>
+   <Dialog v-model:visible="pdfStore.downloading" :modal="true" header="Generating PDF" :style="{width: '350px'}">
+      <div class="download">
+         <p>PDF generation in progress...</p>
+         <ProgressBar :value="pdfStore.percent"/>
+      </div>
+   </Dialog>
 </template>
 
 <script setup>
 import { useComponentsStore } from '@/stores/components'
 import { useUserStore } from '@/stores/user'
-import { useSystemStore } from '@/stores/system'
+import { usePDFStore } from '@/stores/pdf'
 import Panel from 'primevue/panel'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import LookupDialog from '@/components/LookupDialog.vue'
+import ProgressBar from 'primevue/progressbar'
+import Dialog from 'primevue/dialog'
 
 const component = useComponentsStore()
 const userStore = useUserStore()
-const systemStore = useSystemStore()
+const pdfStore = usePDFStore()
 
 const toolbarTop = ref(0)
 const toolbarHeight = ref(0)
@@ -83,6 +91,13 @@ const selectedIDs = computed(() => {
       ids.push(s.id)
    })
    return ids
+})
+
+watch(() => component.loadingMasterFiles, (newVal) => {
+   if ( newVal == false) {
+      selectedMasterFiles.value = []
+      selectAll.value = false
+   }
 })
 
 onMounted(() => {
@@ -116,7 +131,7 @@ onUnmounted(() => {
    window.removeEventListener("scroll", scrollHandler)
 })
 
-function scrollHandler( ) {
+const scrollHandler = ( () => {
    if ( toolbar.value) {
       if ( window.scrollY <= toolbarTop.value ) {
          if ( toolbar.value.classList.contains("sticky") ) {
@@ -139,34 +154,39 @@ function scrollHandler( ) {
          }
       }
    }
-}
+})
 
-function downloadClicked() {
+const downloadClicked = (() => {
    component.downloadFromArchive(userStore.computeID, selectedMasterFiles.value[0].unitID, selectedFileNames.value)
    clearSelections()
-}
-function pdfClicked() {
+})
+
+const pdfClicked = (() => {
    let ids = []
+   let unitID = 0
    selectedMasterFiles.value.forEach( s => {
       ids.push(s.id)
+      if (unitID == 0) {
+         unitID = s.unitID
+      }
    })
-   let token = new Date().getTime()
-   let unitID = selectedMasterFiles.value[0].unitID
-   let mdPID = selectedMasterFiles.value[0].metadata.pid
-   let url = `${systemStore.pdfURL}/${mdPID}?unit=${unitID}&token=${token}&pages=${ids.join(',')}`
-   window.open(url)
-}
-async function assignMetadata( metadataID ) {
+   pdfStore.requestPDF( unitID, ids )
+})
+
+const assignMetadata = ( async ( metadataID ) => {
    await component.assignMetadata(metadataID, selectedMasterFiles.value[0].unitID, selectedIDs.value)
    clearSelections()
-}
-function onRowSelect() {
+})
+
+const onRowSelect = (() => {
    selectAll.value = selectedMasterFiles.value < component.relatedMasterFiles.length
-}
-function onRowUnselect() {
+})
+
+const onRowUnselect = (() => {
    selectAll.value  = false
-}
-function onSelectAllChange(event) {
+})
+
+const onSelectAllChange = ((event) => {
    selectAll.value = event.checked
    if (selectAll.value) {
       selectedMasterFiles.value = component.relatedMasterFiles
@@ -174,11 +194,12 @@ function onSelectAllChange(event) {
    else {
       selectedMasterFiles.value = []
    }
-}
-function clearSelections() {
+})
+
+const clearSelections = (() => {
    selectAll.value = false
    selectedMasterFiles.value = []
-}
+})
 
 </script>
 
