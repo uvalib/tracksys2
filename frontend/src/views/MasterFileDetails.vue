@@ -38,7 +38,7 @@
                <TagsDialog />
             </div>
          </Panel>
-         <Panel header="Location">
+         <Panel header="Location" v-if="location">
             <dl>
                <DataDisplay label="Container Type" :value="location.containerType.name"/>
                <DataDisplay label="Container ID" :value="location.containerID"/>
