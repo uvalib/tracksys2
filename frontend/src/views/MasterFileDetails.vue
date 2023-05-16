@@ -20,7 +20,7 @@
             <img :src="masterFiles.thumbURL" />
          </a>
       </div>
-      <div class="left">
+      <div class="column">
          <Panel header="General Information">
             <dl>
                <DataDisplay label="PID" :value="masterFiles.details.pid" />
@@ -37,6 +37,14 @@
             <div class="tags">
                <TagsDialog />
             </div>
+         </Panel>
+         <Panel header="Location">
+            <dl>
+               <DataDisplay label="Container Type" :value="location.containerType.name"/>
+               <DataDisplay label="Container ID" :value="location.containerID"/>
+               <DataDisplay label="Folder" :value="location.folderID"/>
+               <DataDisplay label="Notes" :value="location.notes"/>
+            </dl>
          </Panel>
          <Panel header="Related Information">
             <dl>
@@ -64,17 +72,9 @@
                   <router-link :to="`/masterfiles/${masterFiles.details.originalID}`">{{masterFiles.details.originalID}}</router-link>
                </DataDisplay>
             </dl>
-               <Fieldset legend="Location" v-if="location">
-                  <dl>
-                     <DataDisplay label="Container Type" :value="location.containerType.name"/>
-                     <DataDisplay label="Container ID" :value="location.containerID"/>
-                     <DataDisplay label="Folder" :value="location.folderID"/>
-                     <DataDisplay label="Notes" :value="location.notes"/>
-                  </dl>
-               </Fieldset>
          </Panel>
       </div>
-      <div class="right">
+      <div class="column">
          <Panel header="Technical Information">
             <dl>
                <DataDisplay label="MD5" :value="masterFiles.details.md5" />
@@ -248,17 +248,6 @@ const auditNow = (() => {
 </script>
 
 <style scoped lang="scss">
-:deep(.p-fieldset) {
-   margin-top: 15px;
-   .p-fieldset-content {
-      padding: 10px;
-   }
-   .p-fieldset-legend {
-      background: none;
-      border: 0;
-      padding: 0 10px;
-   }
-}
 .clone {
    display: inline-block;
    margin-left: 10px;
@@ -270,34 +259,23 @@ const auditNow = (() => {
    text-align: right;
 }
 .details {
-   padding:  0 25px 10px 25px;
+   padding:  10px;
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
    align-items: flex-start;
-   .left {
+   .column {
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      width: 50%;
-   }
-   .right {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      width: auto;
-      flex-grow: 1;
+      flex: 1;
    }
    :deep(div.p-panel) {
       margin: 10px;
-      flex-grow: 1;
       text-align: left;
    }
    .thumb {
       margin: 10px;
-   }
-   .empty {
-      color: #ccc;
    }
 }
 .download {
