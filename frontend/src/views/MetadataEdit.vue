@@ -107,7 +107,7 @@ const edited = ref({
    manuscript: false,
    ocrHint: 0,
    ocrLanguageHint: "",
-   preservationTier: "",
+   preservationTier: 0,
    availabilityPolicy: null,
    useRight: null,
    inDPLA: false,
@@ -229,7 +229,7 @@ onMounted( async () =>{
       edited.value.ocrHint = metadataStore.detail.ocrHint.id
    }
    edited.value.ocrLanguageHint = metadataStore.detail.ocrLanguageHint
-   edited.value.preservationTier = ""
+   edited.value.preservationTier = 0
    if (metadataStore.detail.preservationTier) {
       edited.value.preservationTier = metadataStore.detail.preservationTier.id
    }
