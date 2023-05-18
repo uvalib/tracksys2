@@ -1,8 +1,10 @@
 <template>
-   <h2>Job {{route.params.id}} Processing Log</h2>
-   <div class="job-acts">
-      <DPGButton label="Delete" @click="deleteJobLog" />
-   </div>
+   <h2>
+      <span>Job {{route.params.id}} Processing Log</span>
+      <div class="actions">
+         <DPGButton label="Delete" @click="deleteJobLog" />
+      </div>
+   </h2>
    <div class="status">
       <template v-if="jobsStore.details.error">
          <b class="error">FAILED:</b><span>{{jobsStore.details.error}}</span>
@@ -79,17 +81,8 @@ const deleteJobLog = (() => {
 </script>
 
 <style scoped lang="scss">
-div.job-acts {
-   position: absolute;
-   right:15px;
-   top: 15px;
-   button.p-button {
-      margin-right: 5px;
-      font-size: 0.9em;
-   }
-}
    .status {
-      padding: 0 25px 10px 25px;
+      padding: 15px 25px 10px 25px;
       text-align: left;
       display: flex;
       flex-flow: row nowrap;
