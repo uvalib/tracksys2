@@ -611,9 +611,6 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 	}
 
 	if md.Type == "SirsiMetadata" || md.Type == "XmlMetadata" {
-		log.Printf("INFO: set viewer url for sirs/xml metadata")
-		out.ViewerURL = fmt.Sprintf("%s/view/%s", svc.ExternalSystems.Curio, md.PID)
-
 		log.Printf("INFO: look for metadata %d exemplar", mdID)
 		var exemplar masterFile
 		err = svc.DB.Where("metadata_id=? and exemplar=?", mdID, 1).Limit(1).Find(&exemplar).Error
@@ -623,6 +620,12 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 			if exemplar.ID > 0 {
 				log.Printf("INFO: metadata %d has exemplar [%s]", mdID, exemplar.PID)
 				out.ThumbURL = fmt.Sprintf("%s/%s/full/!240,385/0/default.jpg", svc.ExternalSystems.IIIF, exemplar.PID)
+
+				log.Printf("INFO : set viewer url for sirs/xml metadata")
+				extStripped := strings.TrimSuffix(exemplar.Filename, path.Ext(exemplar.Filename))
+				seqStr := strings.Split(extStripped, "_")[1]
+				seq, _ := strconv.Atoi(seqStr)
+				out.ViewerURL = fmt.Sprintf("%s/view/%s?unit=%d&page=%d", svc.ExternalSystems.Curio, md.PID, exemplar.UnitID, seq)
 			} else {
 				log.Printf("INFO: metadata %d does not have an exemplar", mdID)
 			}
