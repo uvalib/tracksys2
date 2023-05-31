@@ -116,6 +116,7 @@ const edited = ref({
    isCollection: false
 })
 const originalUseRight = ref(1)
+const updateValidatedURI = ref(false)
 
 const pageHeader = computed( () => {
    let baseHdr = `Metadata ${route.params.id}`
@@ -275,15 +276,22 @@ const sirsiLookup = ( async () => {
 })
 
 const uriChanged = (() => {
-   validated.value = false
+   if (  updateValidatedURI.value == false ) {
+      validated.value = false
+   }
+   updateValidatedURI.value = false
 })
 
 const validateASMetadata = ( async () => {
    await metadataStore.validateArchivesSpaceURI(edited.value.externalURI)
    if (metadataStore.asMatch.error == "") {
-      validated.value = true
+      // set a flag to indicate that the validated URL is programatically being set
+      // When the above uriChanged handler eventually happens check for this flag.
+      // If set, don't mark the URL as invalid. Instead clear the updating flag.
+      updateValidatedURI.value = true
       edited.value.externalURI = metadataStore.asMatch.validatedURL
       edited.value.title = metadataStore.asMatch.title
+      validated.value = true
    }
 })
 
