@@ -42,7 +42,7 @@ onMounted( () => {
    showTargetView()
 })
 
-function showTargetView() {
+const showTargetView = (() => {
    let query = Object.assign({}, route.query)
    if (query.view) {
       if ( query.view != searchStore.view && searchStore.scope == "all") {
@@ -55,9 +55,9 @@ function showTargetView() {
          router.push({query})
      }
    }
-}
+})
 
-function tabChanged() {
+const tabChanged =(() => {
    if (searchStore.scope == "all") {
       let tabs = ['orders', 'metadata', 'masterfiles', 'components']
       let query = Object.assign({}, route.query)
@@ -71,7 +71,7 @@ function tabChanged() {
       }
       router.push({query})
    }
-}
+})
 </script>
 
 <stype scoped lang="scss">

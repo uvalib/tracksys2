@@ -3,14 +3,22 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/corona10/goimagehash"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/image/tiff"
 	"gorm.io/gorm"
 )
 
@@ -530,4 +538,118 @@ func (svc *serviceContext) queryComponents(sc *searchContext, channel chan searc
 		log.Printf("INFO: component search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
 	}
 	channel <- searchChannel{Type: "components", Results: resp}
+}
+
+func (svc *serviceContext) imageSearchRequest(c *gin.Context) {
+	pHashQ := strings.TrimSpace(c.Query("phash"))
+
+	type similarImageHit struct {
+		ID            int64  `gorm:"column:id" json:"id"`
+		PID           string `gorm:"column:pid" json:"pid"`
+		Filename      string `gorm:"column:filename" json:"filename"`
+		Title         string `gorm:"column:title" json:"title"`
+		Description   string `gorm:"column:description" json:"description"`
+		Distance      int64  `gorm:"column:distance" json:"distance"`
+		UnitID        int64  `gorm:"column:unit_id" json:"unitID"`
+		MetadatID     int64  `gorm:"column:md_id" json:"metadataID"`
+		MetadataPID   string `gorm:"column:md_pid" json:"metadataPID"`
+		MetadataTitle string `gorm:"column:md_title" json:"metadataTitle"`
+		ThumbnailURL  string `gorm:"-" json:"thumbnailURL"`
+		ImageURL      string `gorm:"-" json:"imageURL"`
+	}
+	type similarResult struct {
+		Hits  []*similarImageHit `json:"hits"`
+		Total int64              `json:"total"`
+	}
+
+	log.Printf("INFO: searching for images matching pHash [%s]", pHashQ)
+	resp := similarResult{Hits: make([]*similarImageHit, 0)}
+	startTime := time.Now()
+	distQ := fmt.Sprintf("WHERE BIT_COUNT(phash ^ %s) <= 8", pHashQ)
+	err := svc.DB.Raw(fmt.Sprintf("SELECT count(id) FROM master_files %s", distQ)).Scan(&resp.Total).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get image search hit count: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	imgFields := "m.id as id, m.pid as pid, m.filename as filename, m.title as title, m.description as description, BIT_COUNT(phash ^ 16063924867715495670) as distance"
+	mdFields := "m.unit_id as unit_id, m2.id as md_id, m2.title as md_title, m2.pid as md_pid"
+	orderClause := "order by distance asc limit 0,10"
+	err = svc.DB.Raw(fmt.Sprintf("SELECT %s, %s FROM master_files m inner join metadata m2 on m2.id=metadata_id %s %s",
+		imgFields, mdFields, distQ, orderClause)).Scan(&resp.Hits).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get image search hits: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	for _, mf := range resp.Hits {
+		imgPID := mf.PID
+		mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, imgPID)
+		mf.ImageURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, imgPID)
+	}
+
+	elapsedNanoSec := time.Since(startTime)
+	elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+	log.Printf("INFO: masterfile search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) uploadSearchImage(c *gin.Context) {
+	log.Printf("INFO: received image search upload")
+	formFile, err := c.FormFile("imageSearch")
+	if err != nil {
+		log.Printf("ERROR: unable to get upload image: %s", err.Error())
+		c.String(http.StatusBadRequest, fmt.Sprintf("unable to get file: %s", err.Error()))
+		return
+	}
+
+	log.Printf("INFO: receive image %s", formFile.Filename)
+	destFile := path.Join("/tmp", formFile.Filename)
+	err = c.SaveUploadedFile(formFile, destFile)
+	if err != nil {
+		log.Printf("ERROR: unable to save %s: %s", formFile.Filename, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	imgFile, err := os.Open(destFile)
+	if err != nil {
+		log.Printf("ERROR: unable to open %s for phash generation: %s", destFile, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	defer imgFile.Close()
+	fileType := strings.ToUpper(path.Ext(destFile))
+	fileType = strings.Replace(fileType, ".", "", 1)
+	var imgData image.Image
+
+	if fileType == "TIF" {
+		imgData, err = tiff.Decode(imgFile)
+	} else if fileType == "JPG" {
+		imgData, err = jpeg.Decode(imgFile)
+	} else if fileType == "PNG" {
+		imgData, err = png.Decode(imgFile)
+	} else if fileType == "GIF" {
+		imgData, err = gif.Decode(imgFile)
+	}
+	if err != nil {
+		log.Printf("ERROR: unable to decode %s for phash generation: %s", destFile, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	imgHash, err := goimagehash.DifferenceHash(imgData)
+	if err != nil {
+		log.Printf("ERROR: unable to calculate pHash for %s: %s", destFile, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	pHash := imgHash.GetHash()
+	os.Remove(destFile)
+
+	c.String(http.StatusOK, fmt.Sprintf("%d", pHash))
 }

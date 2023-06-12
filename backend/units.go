@@ -104,6 +104,26 @@ func (svc *serviceContext) validateUnit(c *gin.Context) {
 	c.String(http.StatusOK, "exists")
 }
 
+func (svc *serviceContext) deleteUnit(c *gin.Context) {
+	unitID := c.Param("id")
+	log.Printf("INFO: delete unit %s details", unitID)
+	var mfCount int64
+	err := svc.DB.Table("master_files").Where("unit_id=?", unitID).Count(&mfCount).Error
+	if err != nil {
+		log.Printf("ERROR: unable to determine if unit %s has master files: %s", unitID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = svc.DB.Delete(&unit{}, unitID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to delete unit %s: %s", unitID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.String(http.StatusOK, "deleted")
+}
+
 func (svc *serviceContext) getUnit(c *gin.Context) {
 	unitID := c.Param("id")
 	log.Printf("INFO: get unit %s details", unitID)

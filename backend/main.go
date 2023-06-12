@@ -12,7 +12,7 @@ import (
 )
 
 // Version of the service
-const Version = "1.8.2"
+const Version = "1.9.0"
 
 func main() {
 	// Load cfg
@@ -33,6 +33,7 @@ func main() {
 	router.GET("/authenticate", svc.authenticate)
 	router.GET("/config", svc.getConfig)
 	router.POST("/cleanup", svc.cleanupExpiredData)
+	router.POST("/upload_search_image", svc.uploadSearchImage)
 
 	router.GET("/script", svc.scriptRunner)
 
@@ -96,6 +97,7 @@ func main() {
 		api.GET("/jobs/:id", svc.getJobDetails)
 
 		api.GET("/units/:id", svc.getUnit)
+		api.DELETE("/units/:id", svc.deleteUnit)
 		api.GET("/units/:id/pdf", svc.requestPDF)
 		api.GET("/units/:id/pdf/status", svc.getPDFStatus)
 		api.GET("/units/:id/pdf/download", svc.downloadPDF)
@@ -107,6 +109,7 @@ func main() {
 		api.POST("/units/:id/update", svc.updateUnit)
 
 		api.GET("/search", svc.searchRequest)
+		api.GET("/search/images", svc.imageSearchRequest)
 
 		api.GET("/staff", svc.getStaff)
 		api.POST("/staff", svc.addOrUpdateStaff)

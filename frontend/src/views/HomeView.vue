@@ -38,8 +38,15 @@
             <FormKit label="" type="search" placeholder="Find Unit by ID..." v-model="unitID" outer-class="searchbar" />
             <FormKit type="submit" label="Find Unit" wrapper-class="submit-button" />
          </FormKit>
+
+         <div class="image-search" v-if="userStore.isAdmin">
+            <label>Search for similar images</label>
+            <FileUpload mode="basic" name="imageSearch" url="/upload_search_image" accept="image/*" :maxFileSize="40000000" @upload="imageUploaded" :auto="true" chooseLabel="Upload Image" />
+         </div>
+
          <p class="error" v-if="unitError">{{unitError}}</p>
          <SearchResults v-if="searchStore.searched" />
+         <SimilarImages v-if="searchStore.similarSearch && systemStore.working == false" />
       </div>
    </div>
    <Dialog v-model:visible="showCreateMetadata" :modal="true" header="Create Metadata" @hide="createMetadataClosed" :style="{width: '750px'}">
@@ -65,10 +72,12 @@ import { useUserStore } from '../stores/user'
 import { useSystemStore } from '../stores/system'
 import { useMetadataStore } from '../stores/metadata'
 import SearchResults from '@/components/results/SearchResults.vue'
+import SimilarImages from '@/components/results/SimilarImages.vue'
 import { ref, computed, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Dialog from 'primevue/dialog'
 import NewMetadataPanel from '@/components/NewMetadataPanel.vue'
+import FileUpload from 'primevue/fileupload'
 
 const searchStore = useSearchStore()
 const route = useRoute()
@@ -157,6 +166,10 @@ onBeforeMount( () => {
    if (paramsChanged) {
       searchStore.executeSearch()
    }
+})
+
+const imageUploaded = ((e) => {
+   searchStore.imageSearch( e.xhr.responseText )
 })
 
 const resetSearch = (() => {
@@ -263,6 +276,13 @@ const createMetadataClosed = (() => {
    margin-top: 0px;
    padding-bottom: 50px;
    min-height:600px;
+   .image-search {
+      width: 250px;
+      margin: 30px auto 0 auto;
+      .p-fileupload.p-fileupload-basic {
+         margin-top: 5px;
+      }
+   }
    .stats {
       margin: 0px auto 40px auto;
       display: flex;

@@ -34,6 +34,10 @@
              target: process.env.TRACKSYS2_SRV,
              changeOrigin: true
           },
+          '/upload_search_image': {
+            target: process.env.TRACKSYS2_SRV,
+            changeOrigin: true
+         },
           '/version': {
              target: process.env.TRACKSYS2_SRV,
              changeOrigin: true

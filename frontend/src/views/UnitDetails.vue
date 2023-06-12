@@ -4,6 +4,7 @@
       <div class="actions" >
          <DPGButton label="Audit Master Files" @click="auditUnit()" v-if="detail.reorder == false && unitsStore.hasMasterFiles && (userStore.isAdmin || userStore.isSupervisor)"/>
          <DPGButton label="Edit" @click="editUnit()"/>
+         <DPGButton label="Delete" @click="deleteUnit()" v-if="canDelete"/>
       </div>
    </h2>
    <div v-if="detail.lastError" class="last-error">
@@ -186,6 +187,10 @@ const cloneStore = useCloneStore()
 
 const { detail } = storeToRefs(unitsStore)
 
+const canDelete = computed(() => {
+   return userStore.isAdmin && unitsStore.masterFiles.length == 0
+})
+
 const pageTitle = computed(() => {
    let t = 'Unit'
    if ( unitsStore.detail ) {
@@ -271,6 +276,18 @@ const generateDeliverablesClicked = (() => {
 
 const auditUnit = (() => {
    unitsStore.audit()
+})
+
+const deleteUnit = (() => {
+   confirm.require({
+      message: 'Are you sure you want delete the selected unit? This cannot be reversed.',
+      header: 'Confirm Delete Unit',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         await unitsStore.deleteUnit(unitsStore.detail.id)
+      }
+   })
 })
 
 const editUnit = (() => {

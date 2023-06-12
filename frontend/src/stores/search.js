@@ -39,6 +39,11 @@ export const useSearchStore = defineStore('search', {
          hits: [],
          filters: []
       },
+      similarSearch: false,
+      similarImages: {
+         total: 0,
+         hits: [],
+      },
       searchFields: {},
 	}),
 	getters: {
@@ -77,6 +82,11 @@ export const useSearchStore = defineStore('search', {
          this.query = ""
          this.scope = "all"
          this.field = "all"
+         this.similarSearch = false
+         this.similarImages = {
+            total: 0,
+            hits: [],
+         }
 
          this.components.start = 0
          this.components.limit = 15
@@ -136,6 +146,23 @@ export const useSearchStore = defineStore('search', {
          } else if (filterObj.type == "orders") {
             this.orders.filters = parsedFilters
          }
+      },
+
+      imageSearch( pHash ) {
+         const system = useSystemStore()
+         system.working = true
+         this.similarSearch = true
+         this.similarImages = {
+            total: 0,
+            hits: [],
+         }
+         axios.get(`/api/search/images?phash=${pHash}`).then(response => {
+            this.similarImages.hits = response.data.hits
+            this,this.similarImages.total = response.data.total
+            system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
       },
 
       executeSearch( scopeOverride ) {

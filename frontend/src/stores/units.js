@@ -74,6 +74,17 @@ export const useUnitsStore = defineStore('units', {
          })
       },
 
+      deleteUnit( unitID ) {
+         const system = useSystemStore()
+         system.working = true
+         axios.delete( `/api/units/${unitID}` ).then( () => {
+            system.working = false
+            this.router.push(`/orders/${this.detail.orderID}`)
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
       flagAsReorder() {
          this.detail.reorder = true
       },
