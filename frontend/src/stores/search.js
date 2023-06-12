@@ -40,6 +40,7 @@ export const useSearchStore = defineStore('search', {
          filters: []
       },
       similarSearch: false,
+      distance: 8,
       similarImages: {
          total: 0,
          hits: [],
@@ -156,7 +157,7 @@ export const useSearchStore = defineStore('search', {
             total: 0,
             hits: [],
          }
-         axios.get(`/api/search/images?phash=${pHash}`).then(response => {
+         axios.get(`/api/search/images?phash=${pHash}&distance=${this.distance}`).then(response => {
             this.similarImages.hits = response.data.hits
             this,this.similarImages.total = response.data.total
             system.working = false

@@ -2,7 +2,7 @@
    <div class="similar">
       <h3>Similar Images</h3>
       <div v-if="searchStore.similarImages.total == 0">
-         <h3>No matching images found</h3>
+         <h4>No matching images found</h4>
       </div>
       <div class="hits" v-else >
          <DataTable :value="searchStore.similarImages.hits" ref="similarHitsTable" dataKey="id"

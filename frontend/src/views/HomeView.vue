@@ -41,6 +41,14 @@
 
          <div class="image-search" v-if="userStore.isAdmin">
             <label>Search for similar images</label>
+            <p class="hint">Set a similarity threshold then upload the search image</p>
+            <div class="slide">
+               <div class="labels">
+                  <span>More Similar</span>
+                  <span>Less Similar</span>
+               </div>
+               <Slider class="w-14rem" :min="5" :max="18" v-model="searchStore.distance"/>
+            </div>
             <FileUpload mode="basic" name="imageSearch" url="/upload_search_image" accept="image/*" :maxFileSize="40000000" @upload="imageUploaded" :auto="true" chooseLabel="Upload Image" />
          </div>
 
@@ -78,6 +86,7 @@ import { useRoute, useRouter } from 'vue-router'
 import Dialog from 'primevue/dialog'
 import NewMetadataPanel from '@/components/NewMetadataPanel.vue'
 import FileUpload from 'primevue/fileupload'
+import Slider from 'primevue/slider'
 
 const searchStore = useSearchStore()
 const route = useRoute()
@@ -279,8 +288,26 @@ const createMetadataClosed = (() => {
    .image-search {
       width: 250px;
       margin: 30px auto 0 auto;
+      label {
+         font-weight: 600;
+      }
       .p-fileupload.p-fileupload-basic {
          margin-top: 5px;
+      }
+      .hint {
+         font-size: 0.8em;
+         margin: 5px 0 10px 0;;
+
+      }
+      .slide {
+         margin: 15px 0 20px 0;
+         .labels {
+            margin: 10px 0 15px 0;
+            font-size: 0.85em;
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: space-between;
+         }
       }
    }
    .stats {

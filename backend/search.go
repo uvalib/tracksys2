@@ -541,7 +541,18 @@ func (svc *serviceContext) queryComponents(sc *searchContext, channel chan searc
 }
 
 func (svc *serviceContext) imageSearchRequest(c *gin.Context) {
-	pHashQ := strings.TrimSpace(c.Query("phash"))
+	pHashQ, parmErr := strconv.ParseUint(strings.TrimSpace(c.Query("phash")), 10, 64)
+	if parmErr != nil {
+		log.Printf("INFO: invalid phash param: %s", parmErr.Error())
+		c.String(http.StatusBadRequest, parmErr.Error())
+		return
+	}
+	distance, parmErr := strconv.ParseInt(strings.TrimSpace(c.Query("distance")), 10, 64)
+	if parmErr != nil {
+		log.Printf("INFO: invalid distance param: %s", parmErr.Error())
+		c.String(http.StatusBadRequest, parmErr.Error())
+		return
+	}
 
 	type similarImageHit struct {
 		ID            int64  `gorm:"column:id" json:"id"`
@@ -562,11 +573,11 @@ func (svc *serviceContext) imageSearchRequest(c *gin.Context) {
 		Total int64              `json:"total"`
 	}
 
-	log.Printf("INFO: searching for images matching pHash [%s]", pHashQ)
+	log.Printf("INFO: searching for images matching pHash [%d] with distance [%d]", pHashQ, distance)
 	resp := similarResult{Hits: make([]*similarImageHit, 0)}
 	startTime := time.Now()
-	distQ := fmt.Sprintf("WHERE BIT_COUNT(phash ^ %s) <= 8", pHashQ)
-	err := svc.DB.Raw(fmt.Sprintf("SELECT count(id) FROM master_files %s", distQ)).Scan(&resp.Total).Error
+	distQ := "WHERE BIT_COUNT(phash ^ ?) <= ?"
+	err := svc.DB.Raw(fmt.Sprintf("SELECT count(id) FROM master_files %s", distQ), pHashQ, distance).Scan(&resp.Total).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get image search hit count: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -577,7 +588,7 @@ func (svc *serviceContext) imageSearchRequest(c *gin.Context) {
 	mdFields := "m.unit_id as unit_id, m2.id as md_id, m2.title as md_title, m2.pid as md_pid"
 	orderClause := "order by distance asc limit 0,10"
 	err = svc.DB.Raw(fmt.Sprintf("SELECT %s, %s FROM master_files m inner join metadata m2 on m2.id=metadata_id %s %s",
-		imgFields, mdFields, distQ, orderClause)).Scan(&resp.Hits).Error
+		imgFields, mdFields, distQ, orderClause), pHashQ, distance).Scan(&resp.Hits).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get image search hits: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
