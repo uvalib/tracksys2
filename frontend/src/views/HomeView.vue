@@ -47,7 +47,7 @@
                   <span>More Similar</span>
                   <span>Less Similar</span>
                </div>
-               <Slider class="w-14rem" :min="5" :max="18" v-model="searchStore.distance"/>
+               <Slider class="w-14rem" :min="5" :max="15" v-model="searchStore.distance" @change="slideChanged"/>
             </div>
             <FileUpload mode="basic" name="imageSearch" url="/upload_search_image" accept="image/*" :maxFileSize="40000000" @upload="imageUploaded" :auto="true" chooseLabel="Upload Image" />
          </div>
@@ -174,6 +174,12 @@ onBeforeMount( () => {
 
    if (paramsChanged) {
       searchStore.executeSearch()
+   }
+})
+
+const slideChanged = ( () => {
+   if (searchStore.similarSearch == true && searchStore.searchPHash !== 0) {
+      searchStore.imageSearch( searchStore.searchPHash )
    }
 })
 

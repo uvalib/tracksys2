@@ -39,6 +39,7 @@ export const useSearchStore = defineStore('search', {
          hits: [],
          filters: []
       },
+      searchPHash: 0,
       similarSearch: false,
       distance: 8,
       similarImages: {
@@ -84,6 +85,8 @@ export const useSearchStore = defineStore('search', {
          this.scope = "all"
          this.field = "all"
          this.similarSearch = false
+         this.searchPHash = 0
+         this.distance = 8
          this.similarImages = {
             total: 0,
             hits: [],
@@ -152,6 +155,7 @@ export const useSearchStore = defineStore('search', {
       imageSearch( pHash ) {
          const system = useSystemStore()
          system.working = true
+         this.searchPHash = pHash
          this.similarSearch = true
          this.similarImages = {
             total: 0,
