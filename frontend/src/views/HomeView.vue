@@ -32,7 +32,7 @@
             <FormKit type="select" label="" v-model="selectedField" :options="scopeFields" outer-class="select-wrap" :disabled="selectedScope == 'all'"/>
             <FormKit label="" type="search" placeholder="Find Tracksys items..." v-model="newQuery" outer-class="searchbar" />
             <FormKit type="submit" label="Search" wrapper-class="submit-button" />
-            <FormKit type="button" v-if="searchStore.searched"  label="Reset search" @click="resetSearch()" wrapper-class="reset-button"/>
+            <FormKit type="button" v-if="searchStore.searched || searchStore.similarSearch == true"  label="Reset search" @click="resetSearch()" wrapper-class="reset-button"/>
          </FormKit>
          <FormKit type="form" id="unit-search" :actions="false" @submit="doUnitSearch" outer-class="select-wrap" >
             <FormKit label="" type="search" placeholder="Find Unit by ID..." v-model="unitID" outer-class="searchbar" />
@@ -47,7 +47,7 @@
                   <span>More Similar</span>
                   <span>Less Similar</span>
                </div>
-               <Slider class="w-14rem" :min="5" :max="15" v-model="searchStore.distance" @change="slideChanged"/>
+               <Slider class="w-14rem" :min="5" :max="18" v-model="searchStore.distance" @change="slideChanged"/>
             </div>
             <FileUpload mode="basic" name="imageSearch" url="/upload_search_image" accept="image/*" :maxFileSize="40000000" @upload="imageUploaded" :auto="true" chooseLabel="Upload Image" />
          </div>
