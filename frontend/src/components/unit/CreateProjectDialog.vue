@@ -5,7 +5,6 @@
          <FormKit label="Workflow" type="select" v-model="project.workflowID" :options="workflows" required outer-class="first" />
          <FormKit v-if="project.workflowID==6" label="Container Type" type="select" v-model="project.containerTypeID" :options="containerTypes" required placeholder="Select a container type"/>
          <FormKit label="Category" type="select" v-model="project.categoryID" :options="categories" required placeholder="Select a category"/>
-         <FormKit label="Date Due" type="date" v-model="project.dueOn" required/>
          <FormKit label="Condition" type="select" v-model="project.condition" :options="conditions" required/>
          <FormKit label="" type="textarea" rows="4" v-model="project.notes"/>
          <div class="acts">
@@ -32,7 +31,6 @@ const project = ref({
    containerTypeID: 0,
    categoryID: 0,
    condition: 0,
-   dueOn: null,
    notes: ""
 })
 
@@ -81,7 +79,6 @@ function show() {
    project.value.categoryID = 0
    project.value.containerTypeID = 0
    project.value.condition = 0
-   project.value.dueOn = unitsStore.detail.order.dateDue.split("T")[0]
    project.value.notes = ""
    isOpen.value = true
 

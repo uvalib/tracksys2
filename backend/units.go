@@ -28,7 +28,6 @@ type project struct {
 	ContainerTypeID *int64     `json:"-"`
 	UnitID          int64      `json:"-"`
 	CurrentStepID   int64      `json:"-"`
-	DueOn           *time.Time `json:"dueOn,omitempty"`
 	AddedAt         *time.Time `json:"addedAt,omitempty"`
 	CategoryID      int64      `json:"-"`
 	ItemCondition   uint       `json:"itemCondition"`
@@ -206,7 +205,6 @@ func (svc *serviceContext) createProject(c *gin.Context) {
 		ContainerTypeID int64  `json:"containerTypeID"`
 		CategoryID      int64  `json:"categoryID"`
 		Condition       uint   `json:"condition"`
-		DueOn           string `json:"dueOn"`
 		Notes           string `json:"notes"`
 	}
 	err = c.BindJSON(&req)
@@ -226,13 +224,11 @@ func (svc *serviceContext) createProject(c *gin.Context) {
 	}
 
 	log.Printf("INFO: create project for unit %d", unitDetail.ID)
-	dueDate, _ := time.Parse("2006-01-02", req.DueOn)
 	now := time.Now()
 	newProj := project{
 		WorkflowID:    req.WorkflowID,
 		UnitID:        unitDetail.ID,
 		CurrentStepID: firstStep.ID,
-		DueOn:         &dueDate,
 		AddedAt:       &now,
 		CategoryID:    req.CategoryID,
 		ItemCondition: req.Condition,
