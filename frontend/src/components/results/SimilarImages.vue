@@ -11,7 +11,7 @@
          >
             <template #header>
                <div class="results-toolbar">
-                  <div class="matches">{{searchStore.similarImages.total}} matches found, only showing the top 10</div>
+                  <div class="matches">{{searchStore.similarImages.total}} matches found, only showing the top 50</div>
                </div>
             </template>
             <Column field="id" header="ID">
