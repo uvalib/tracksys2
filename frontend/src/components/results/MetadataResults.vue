@@ -93,6 +93,15 @@
             <span v-else>No</span>
          </template>
       </Column>
+      <Column field="hathitrust" header="HathiTrust" class="nowrap" filterField="hathitrust" :showFilterMatchModes="false" >
+         <template #filter="{filterModel}">
+            <Dropdown v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
+         </template>
+         <template #body="slotProps">
+            <span v-if="slotProps.data.hathitrust">Yes</span>
+            <span v-else>No</span>
+         </template>
+      </Column>
    </DataTable>
 </template>
 
@@ -122,7 +131,8 @@ const filters = ref( {
     'call_number': {value: null, matchMode: FilterMatchMode.CONTAINS},
     'catalog_key': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
     'virgo': {value: null, matchMode: FilterMatchMode.EQUALS},
-    'dpla': {value: null, matchMode: FilterMatchMode.EQUALS}
+    'dpla': {value: null, matchMode: FilterMatchMode.EQUALS},
+    'hathitrust': {value: null, matchMode: FilterMatchMode.EQUALS}
 })
 
 const yesNo = computed(() => {

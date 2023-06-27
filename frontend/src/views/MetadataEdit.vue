@@ -64,6 +64,8 @@
             <div class="split">
                <FormKit label="In DPLA" type="select" :options="yesNo" v-model="edited.inDPLA"/>
                <span class="sep"/>
+               <FormKit label="In HathiTrust" type="select" :options="yesNo" v-model="edited.inHathiTrust" :disabled="submittedToHathiTrust"/>
+               <span class="sep"/>
                <FormKit label="Availability Policy" outer-class="first" type="select" :options="availabilityPolicies"
                   v-model="edited.availabilityPolicy" required placeholder="Select an availability policy"/>
             </div>
@@ -111,6 +113,7 @@ const edited = ref({
    availabilityPolicy: null,
    useRight: null,
    inDPLA: false,
+   inHathiTrust: false,
    collectionID: "",
    collectionFacet: null,
    isCollection: false
@@ -203,6 +206,11 @@ const submitClass = computed(() => {
    return c
 })
 
+const submittedToHathiTrust = computed( () => {
+   if ( metadataStore.detail.inHathiTrust == false) return false
+   return ( metadataStore.hathiTrustStatus.metadataSublittedAt != null)
+})
+
 onMounted( async () =>{
    let mdID = route.params.id
    await metadataStore.getDetails(mdID)
@@ -248,6 +256,7 @@ onMounted( async () =>{
    originalUseRight.value = edited.value.useRight
 
    edited.value.inDPLA = metadataStore.detail.inDPLA
+   edited.value.inHathiTrust = metadataStore.detail.inHathiTrust
    edited.value.isCollection = metadataStore.detail.isCollection
    edited.value.collectionID = metadataStore.detail.collectionID
    edited.value.collectionFacet = metadataStore.detail.collectionFacet

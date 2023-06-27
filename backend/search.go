@@ -49,6 +49,7 @@ type metadataHit struct {
 	DateDlIngest     *time.Time      `gorm:"column:date_dl_ingest" json:"-"`
 	Virgo            bool            `gorm:"-" json:"virgo"`
 	DPLA             bool            `json:"dpla"`
+	HathiTrust       bool            `gorm:"column:hathitrust" json:"hathitrust"`
 	VirgoURL         string          `gorm:"-" json:"virgoURL"`
 	ExternalSystemID *int64          `json:"-"`
 	ExternalSystem   *externalSystem `gorm:"foreignKey:ExternalSystemID" json:"externalSystem,omitempty"`
@@ -139,7 +140,6 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		} else if strings.Index(q, "uva-lib-") == 0 {
 			log.Printf("INFO: query %s appears to be a uva-lib pid formatted with a dash; update format and search on pid columns", q)
 			sc.Query = strings.ReplaceAll(q, "uva-lib-", "uva-lib:")
-
 			sc.QueryType = "pid"
 		} else if strings.Index(q, "tsb-") == 0 {
 			log.Printf("INFO: query %s appears to be a tsb pid formatted with a dash; update format and search on pid columns", q)
@@ -282,6 +282,20 @@ func (svc *serviceContext) initFilter(filterStr string) (*searchFilter, error) {
 						out.Query = svc.DB.Where("dpla=1")
 					} else {
 						out.Query = svc.DB.Where("dpla=0")
+					}
+				} else {
+					if tgtVal == "true" {
+						out.Query = out.Query.Where("dpla=1")
+					} else {
+						out.Query = out.Query.Where("dpla=0")
+					}
+				}
+			} else if tgtField == "hathitrust" {
+				if idx == 0 {
+					if tgtVal == "true" {
+						out.Query = svc.DB.Where("hathitrust=1")
+					} else {
+						out.Query = svc.DB.Where("hathitrust=0")
 					}
 				} else {
 					if tgtVal == "true" {

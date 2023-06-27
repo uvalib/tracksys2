@@ -1,0 +1,1 @@
+ALTER table metadata DROP COLUMN `hathitrust`;

@@ -32,6 +32,7 @@ export const useMetadataStore = defineStore('metadata', {
          preservationTier: null,
          inDL: false,
          inDPLA: false,
+         inHathiTrust: false,
          useRightName: "",
          useRightURI: "",
          useRightStatement: "",
@@ -44,6 +45,16 @@ export const useMetadataStore = defineStore('metadata', {
          thumbURL: "",
          viewerURL: "",
          virgoURL: "",
+      },
+      hathiTrustStatus: {
+         requestedAt: null,
+         packageCreatedAt: null,
+         packageSubmittedAt: null,
+         packageStatus: "",
+         metadataSubmittedAt: null,
+         metadataStatus: "",
+         finishedAt: null,
+         notes: "",
       },
       apTrustStatus: {
          etag: "",
@@ -367,6 +378,10 @@ export const useMetadataStore = defineStore('metadata', {
          this.detail.pid = details.metadata.pid
          this.detail.inDL = (details.metadata.dateDLIngest != null)
          this.detail.inDPLA = details.metadata.dpla
+         this.detail.inHathiTrust = details.metadata.hathiTrust
+         if ( this.detail.inHathiTrust ) {
+            this.hathiTrustStatus = details.metadata.hathiTrustStatus
+         }
          if ( details.metadata.creatorDeathDate > 0) {
             this.detail.creatorDeathDate = `${details.metadata.creatorDeathDate}`
          }

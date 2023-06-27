@@ -68,6 +68,19 @@ type preservationTier struct {
 	Description string `json:"description"`
 }
 
+type hathitrustStatus struct {
+	ID                  uint       `json:"id"`
+	MetadataID          int64      `json:"metadataID"`
+	RequestedAt         time.Time  `json:"requestedAt"`
+	PackageCreatedAt    *time.Time `json:"packageCreatedAt"`
+	PackageSubmittedAt  *time.Time `json:"packageSubmittedAt"`
+	PackageStatus       string     `json:"packageStatus"`
+	MetadataSubmittedAt *time.Time `json:"metadataSubmittedAt"`
+	MetadataStatus      string     `json:"metadataStatus"`
+	FinishedAt          *time.Time `json:"finishedAt"`
+	Notes               string     `json:"notes"`
+}
+
 type metadata struct {
 	ID                   int64               `json:"id"`
 	PID                  string              `gorm:"column:pid" json:"pid"`
@@ -98,6 +111,8 @@ type metadata struct {
 	PreservationTier     *preservationTier   `gorm:"foreignKey:PreservationTierID" json:"preservationTier"`
 	APTrustStatus        *apTrustStatus      `gorm:"foreignKey:MetadataID" json:"apTrustStatus,omitempty"`
 	DPLA                 bool                `gorm:"column:dpla" json:"dpla"`
+	HathiTrust           bool                `gorm:"column:hathitrust" json:"hathiTrust"`
+	HathiTrustStatus     *hathitrustStatus   `gorm:"foreignKey:MetadataID" json:"hathiTrustStatus,omitempty"`
 	IsManuscript         bool                `json:"isManuscript"`
 	IsPersonalItem       bool                `json:"isPersonalItem"`
 	DateDLIngest         *time.Time          `gorm:"date_dl_ingest" json:"dateDLIngest"`
@@ -226,6 +241,7 @@ type metadataRequest struct {
 	AvailabilityPolicyID int64  `json:"availabilityPolicy"`
 	UseRightID           int64  `json:"useRight"`
 	DPLA                 bool   `json:"inDPLA"`
+	HathiTrust           bool   `json:"inHathiTrust"`
 	CollectionID         string `json:"collectionID"`
 	CollectionFacet      string `json:"collectionFacet"`
 	IsCollection         bool   `json:"isCollection"`
@@ -462,7 +478,7 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 	mdID := c.Param("id")
 	log.Printf("INFO: received update request for metadata %s", mdID)
 	var md metadata
-	err := svc.DB.Preload("ExternalSystem").Find(&md, mdID).Error
+	err := svc.DB.Preload("ExternalSystem").Preload("HathiTrustStatus").Find(&md, mdID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Printf("INFO: metadata %s not found", mdID)
@@ -482,9 +498,13 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
+
+	newHathiTrustItem := (md.HathiTrust == false && req.HathiTrust == true)
+
 	log.Printf("INFO: update metadata %d request with %+v", md.ID, req)
-	fields := []string{"DPLA", "IsManuscript", "IsPersonalItem", "IsCollection"}
+	fields := []string{"DPLA", "HathiTrust", "IsManuscript", "IsPersonalItem", "IsCollection"}
 	md.DPLA = req.DPLA
+	md.HathiTrust = req.HathiTrust
 	md.IsManuscript = req.Manuscript
 	md.IsPersonalItem = req.PersonalItem
 	md.IsCollection = req.IsCollection
@@ -538,6 +558,20 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		return
 	}
 
+	// if this is a new HathiTrust item, add a status
+	if newHathiTrustItem {
+		log.Printf("INFO: create a new hathitrust status record for metadata %d", md.ID)
+		if md.HathiTrustStatus != nil {
+			svc.DB.Delete(hathitrustStatus{}, md.HathiTrustStatus.ID)
+		}
+
+		htStatus := hathitrustStatus{MetadataID: md.ID, RequestedAt: time.Now()}
+		err := svc.DB.Create(&htStatus).Error
+		if err != nil {
+			log.Printf("ERROR: unable to create hathitrust status for newly requested item %d: %s", md.ID, err.Error())
+		}
+	}
+
 	// after a successful update, send any updated use right info to sirsi
 	if md.Type == "SirsiMetadata" && req.UseRightID > 0 {
 		log.Printf("INFO: metadata %d updated with use right info; send to sirsi", md.ID)
@@ -583,7 +617,7 @@ func (svc *serviceContext) sendUseRightToSirsi(md *metadata, useRightID int64) {
 func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailResponse, error) {
 	var md metadata
 	err := svc.DB.Preload("OCRHint").Preload("AvailabilityPolicy").
-		Preload("ExternalSystem").Preload("SupplementalSystem").
+		Preload("ExternalSystem").Preload("SupplementalSystem").Preload("HathiTrustStatus").
 		Preload("APTrustStatus").Preload("PreservationTier").Limit(1).
 		Find(&md, mdID).Error
 	if err != nil {
@@ -621,7 +655,7 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 				log.Printf("INFO: metadata %d has exemplar [%s]", mdID, exemplar.PID)
 				out.ThumbURL = fmt.Sprintf("%s/%s/full/!240,385/0/default.jpg", svc.ExternalSystems.IIIF, exemplar.PID)
 
-				log.Printf("INFO : set viewer url for sirs/xml metadata")
+				log.Printf("INFO: set viewer url for sirs/xml metadata")
 				extStripped := strings.TrimSuffix(exemplar.Filename, path.Ext(exemplar.Filename))
 				seqStr := strings.Split(extStripped, "_")[1]
 				seq, _ := strconv.Atoi(seqStr)

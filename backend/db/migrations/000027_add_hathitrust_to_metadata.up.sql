@@ -1,0 +1,1 @@
+ALTER table metadata ADD COLUMN `hathitrust` tinyint(1) DEFAULT 0;

@@ -137,6 +137,7 @@
             <DataDisplay label="PID" :value="metadataStore.detail.pid"/>
             <DataDisplay label="Virgo" :value="formatBoolean(metadataStore.detail.inDL)"/>
             <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.detail.inDPLA)"/>
+            <DataDisplay label="HathiTrust" :value="formatBoolean(metadataStore.detail.inHathiTrust)"/>
             <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
                <DataDisplay label="Use Right" :value="metadataStore.detail.useRightName">
                   <a :href="metadataStore.detail.useRightURI" target="_blank" class="supplemental">
