@@ -137,7 +137,13 @@
             <DataDisplay label="PID" :value="metadataStore.detail.pid"/>
             <DataDisplay label="Virgo" :value="formatBoolean(metadataStore.detail.inDL)"/>
             <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.detail.inDPLA)"/>
-            <DataDisplay label="HathiTrust" :value="formatBoolean(metadataStore.detail.inHathiTrust)"/>
+            <DataDisplay label="HathiTrust" :value="formatBoolean(metadataStore.detail.inHathiTrust)">
+               <div class="hathi" v-if="metadataStore.detail.inHathiTrust" @click="showHathiDialog = true">
+                  <span>Yes</span>
+                  <i class="icon fas fa-info-circle" aria-label="HathiTrust status"></i>
+               </div>
+               <span v-else>No</span>
+            </DataDisplay>
             <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
                <DataDisplay label="Use Right" :value="metadataStore.detail.useRightName">
                   <a :href="metadataStore.detail.useRightURI" target="_blank" class="supplemental">
@@ -193,6 +199,7 @@
          </Panel>
       </div>
    </template>
+   <HathiTrustDialog v-if="showHathiDialog == true" @closed="showHathiDialog=false" />
 </template>
 
 <script setup>
@@ -214,6 +221,7 @@ import RelatedMasterFiles from '../components/related/RelatedMasterFiles.vue'
 import FileUpload from 'primevue/fileupload'
 import { useConfirm } from "primevue/useconfirm"
 import CollectionRecords from '../components/related/CollectionRecords.vue'
+import HathiTrustDialog from '../components/metadata/HathiTrustDialog.vue'
 
 const confirm = useConfirm()
 const route = useRoute()
@@ -223,6 +231,7 @@ const metadataStore = useMetadataStore()
 const userStore = useUserStore()
 
 const publishing = ref(false)
+const showHathiDialog = ref(false)
 
 const canDelete = computed(() => {
    if (!userStore.isAdmin && !userStore.isSupervisor) return false
@@ -373,6 +382,17 @@ const formatDate = (( date ) => {
    justify-content: flex-start;
    :deep(p-tabview) {
       margin: 0 !important;
+   }
+   div.hathi {
+      color: var(--uvalib-brand-blue-light);
+      cursor: pointer;
+      font-weight: bold;
+      i {
+         font-size: 1.2em;
+      }
+      &:hover {
+         text-decoration: underline;
+      }
    }
    .as-toolbar {
       text-align: right;

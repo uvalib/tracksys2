@@ -68,19 +68,6 @@ type preservationTier struct {
 	Description string `json:"description"`
 }
 
-type hathitrustStatus struct {
-	ID                  uint       `json:"id"`
-	MetadataID          int64      `json:"metadataID"`
-	RequestedAt         time.Time  `json:"requestedAt"`
-	PackageCreatedAt    *time.Time `json:"packageCreatedAt"`
-	PackageSubmittedAt  *time.Time `json:"packageSubmittedAt"`
-	PackageStatus       string     `json:"packageStatus"`
-	MetadataSubmittedAt *time.Time `json:"metadataSubmittedAt"`
-	MetadataStatus      string     `json:"metadataStatus"`
-	FinishedAt          *time.Time `json:"finishedAt"`
-	Notes               string     `json:"notes"`
-}
-
 type metadata struct {
 	ID                   int64               `json:"id"`
 	PID                  string              `gorm:"column:pid" json:"pid"`

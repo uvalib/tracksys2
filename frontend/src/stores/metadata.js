@@ -5,6 +5,8 @@ import dayjs from 'dayjs'
 
 export const useMetadataStore = defineStore('metadata', {
 	state: () => ({
+      working: false,
+      error: "",
       detail: {
          id: 0,
          pid: "",
@@ -430,6 +432,18 @@ export const useMetadataStore = defineStore('metadata', {
             system.working = false
          }).catch( e => {
             system.setError(e)
+         })
+      },
+
+      async updateHathiTrustStatus( status ) {
+         this.working = true
+         this.error = ""
+         await axios.post( `/api/metadata/${this.detail.id}/hathitrust`, status ).then(response => {
+            this.hathiTrustStatus = response.data
+            this.working = false
+         }).catch( e => {
+            this.working = false
+            this.error = e
          })
       },
 

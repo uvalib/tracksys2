@@ -37,10 +37,6 @@ const props = defineProps({
 </script>
 
 <style scoped lang="scss">
-dt {
-   font-weight: 600;
-   text-align: right;
-}
 .empty {
    color: #ccc;
 }
