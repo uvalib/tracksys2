@@ -123,7 +123,6 @@ type sirsiMetadata struct {
 	UseRightName      string `json:"useRightName"`
 	UseRightURI       string `json:"useRightURI"`
 	UseRightStatement string `json:"useRightStatement"`
-	VirgoURL          string `json:"virgoURL"`
 }
 
 type asMetadata struct {
@@ -208,6 +207,7 @@ type metadataDetailResponse struct {
 	Apollo       *apolloMetadata `json:"apolloDetails"`
 	ThumbURL     string          `json:"thumbURL,omitempty"`
 	ViewerURL    string          `json:"viewerURL,omitempty"`
+	VirgoURL     string          `json:"virgoURL,omitempty"`
 	Error        string          `json:"error"`
 }
 
@@ -651,6 +651,14 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 				log.Printf("INFO: metadata %d does not have an exemplar", mdID)
 			}
 		}
+
+		if md.DateDLIngest != nil {
+			if md.Type == "SirsiMetadata" {
+				out.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
+			} else if md.Type == "XmlMetadata" {
+				out.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
+			}
+		}
 	}
 
 	if md.Type == "SirsiMetadata" {
@@ -671,9 +679,6 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 				UseRightName:      sirsiResp.UseRightName,
 				UseRightURI:       sirsiResp.UseRightURI,
 				UseRightStatement: sirsiResp.UseRightStatement,
-			}
-			if md.Type == "SirsiMetadata" && md.CatalogKey != nil {
-				out.Sirsi.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
 			}
 		}
 	}

@@ -23,10 +23,7 @@
       <Panel header="General Information">
          <dl v-if="metadataStore.detail.type != 'ExternalMetadata'">
             <DataDisplay label="Type" :value="metadataStore.detail.type"/>
-            <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey" v-if="metadataStore.detail.type == 'SirsiMetadata'">
-               <span>{{metadataStore.detail.catalogKey}}</span>
-               <a class="virgo" :href="metadataStore.detail.virgoURL" target="_blank">VIRGO<i class="icon fas fa-external-link"></i></a>
-            </DataDisplay>
+            <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey" v-if="metadataStore.detail.type == 'SirsiMetadata'" />
             <DataDisplay label="Barcode" :value="metadataStore.detail.barcode" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
             <DataDisplay label="Call Number" :value="metadataStore.detail.callNumber" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
             <DataDisplay label="Title" :value="metadataStore.detail.title"/>
@@ -135,7 +132,10 @@
       <Panel header="Digital Library Information">
          <dl>
             <DataDisplay label="PID" :value="metadataStore.detail.pid"/>
-            <DataDisplay label="Virgo" :value="formatBoolean(metadataStore.detail.inDL)"/>
+            <DataDisplay label="Virgo" :value="formatBoolean(metadataStore.detail.inDL)">
+               <a v-if="metadataStore.detail.inDL" class="virgo no-pad" :href="metadataStore.detail.virgoURL" target="_blank">Yes<i class="icon fas fa-external-link"></i></a>
+               <span v-else>No</span>
+            </DataDisplay>
             <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.detail.inDPLA)"/>
             <DataDisplay label="HathiTrust" :value="formatBoolean(metadataStore.detail.inHathiTrust)">
                <div class="hathi" v-if="metadataStore.detail.inHathiTrust" @click="showHathiDialog = true">
@@ -410,6 +410,9 @@ const formatDate = (( date ) => {
    a.virgo, a.supplemental {
       display: inline-block;
       margin-left: 10px;
+   }
+   a.virgo.no-pad {
+      margin-left: 0
    }
    a.supplemental {
       margin-left: 0px;

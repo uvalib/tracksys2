@@ -305,13 +305,9 @@ export const useMetadataStore = defineStore('metadata', {
          this.detail.ocrHint = details.metadata.ocrHint
          this.detail.ocrLanguageHint = details.metadata.ocrLanguageHint
          this.detail.preservationTier = details.metadata.preservationTier
-
-         if (details.thumbURL) {
-            this.detail.thumbURL = details.thumbURL
-         }
-         if (details.viewerURL) {
-            this.detail.viewerURL = details.viewerURL
-         }
+         this.detail.thumbURL = details.thumbURL
+         this.detail.viewerURL = details.viewerURL
+         this.detail.virgoURL = details.virgoURL
 
          if ( details.metadata.apTrustStatus) {
             this.apTrustStatus.etag = details.metadata.apTrustStatus.etag
@@ -336,7 +332,6 @@ export const useMetadataStore = defineStore('metadata', {
             this.detail.useRightName =  details.sirsiDetails.useRightName
             this.detail.useRightURI =  details.sirsiDetails.useRightURI
             this.detail.useRightStatement =  details.sirsiDetails.useRightStatement
-            this.detail.virgoURL = details.sirsiDetails.virgoURL
          }
 
          if ( this.detail.type == "XmlMetadata") {

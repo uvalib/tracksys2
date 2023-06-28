@@ -49,7 +49,8 @@
                </div>
                <Slider class="w-14rem" :min="5" :max="20" v-model="searchStore.distance" @change="slideChanged"/>
             </div>
-            <FileUpload mode="basic" name="imageSearch" url="/upload_search_image" accept="image/*" :maxFileSize="40000000" @upload="imageUploaded" :auto="true" chooseLabel="Upload Image" />
+            <FileUpload mode="basic" name="imageSearch" url="/upload_search_image" accept="image/*" :maxFileSize="55000000"
+               @upload="imageUploaded" @before-upload="beforeUpload" :auto="true" chooseLabel="Upload Image" />
          </div>
 
          <p class="error" v-if="unitError">{{unitError}}</p>
@@ -181,6 +182,10 @@ const slideChanged = ( () => {
    if (searchStore.similarSearch == true && searchStore.searchPHash !== 0) {
       searchStore.imageSearch( searchStore.searchPHash )
    }
+})
+
+const beforeUpload = (() => {
+   systemStore.working = true
 })
 
 const imageUploaded = ((e) => {

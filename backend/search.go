@@ -457,8 +457,13 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 		}
 		for _, md := range resp.Hits {
 			if md.DateDlIngest != nil {
-				md.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, md.CatalogKey)
-				md.Virgo = true
+				if md.Type == "SirsiMetadata" {
+					md.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, md.CatalogKey)
+					md.Virgo = true
+				} else if md.Type == "XmlMetadata" {
+					md.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
+					md.Virgo = true
+				}
 			}
 		}
 		elapsedNanoSec := time.Since(startTime)

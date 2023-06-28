@@ -36,7 +36,12 @@
             <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
          </template>
       </Column>
-      <Column field="pid" header="PID" class="nowrap"/>
+      <Column field="pid" header="PID" class="nowrap">
+         <template #body="slotProps">
+            <div>{{slotProps.data.pid}}</div>
+            <div v-if="slotProps.data.virgoURL && slotProps.data.type=='XmlMetadata'"><a :href="slotProps.data.virgoURL" target="_blank">VIRGO</a></div>
+         </template>
+      </Column>
       <Column field="type" header="Type" filterField="type" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <Dropdown v-model="filterModel.value" :options="mdTypes" optionLabel="name" optionValue="code" placeholder="Select a type" />
@@ -72,7 +77,7 @@
          </template>
          <template #body="slotProps">
             <div>{{slotProps.data.catalogKey}}</div>
-            <div v-if="slotProps.data.virgoURL"><a :href="slotProps.data.virgoURL" target="_blank">VIRGO</a></div>
+            <div v-if="slotProps.data.virgoURL && slotProps.data.catalogKey"><a :href="slotProps.data.virgoURL" target="_blank">VIRGO</a></div>
          </template>
       </Column>
       <Column field="virgo" header="Virgo" class="nowrap" filterField="virgo" :showFilterMatchModes="false" >
