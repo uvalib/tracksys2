@@ -465,7 +465,7 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 	mdID := c.Param("id")
 	log.Printf("INFO: received update request for metadata %s", mdID)
 	var md metadata
-	err := svc.DB.Preload("ExternalSystem").Preload("HathiTrustStatus").Find(&md, mdID).Error
+	err := svc.DB.Preload("ExternalSystem").Find(&md, mdID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Printf("INFO: metadata %s not found", mdID)
@@ -486,12 +486,29 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		return
 	}
 
-	newHathiTrustItem := (md.HathiTrust == false && req.HathiTrust == true)
+	if req.HathiTrust == false {
+		if md.HathiTrust == true {
+			err = svc.removeMetadataFromHathiTrust(md.ID)
+			if err != nil {
+				log.Printf("ERROR: unable to remove metadata %d from hathitrust: %s", md.ID, err.Error())
+				c.String(http.StatusInternalServerError, err.Error())
+				return
+			}
+		}
+	} else {
+		if md.HathiTrust == false {
+			err = svc.flagMetadataForHathiTrust(md.ID)
+			if err != nil {
+				log.Printf("ERROR: unable to add metadata %d to hathitrust: %s", md.ID, err.Error())
+				c.String(http.StatusInternalServerError, err.Error())
+				return
+			}
+		}
+	}
 
 	log.Printf("INFO: update metadata %d request with %+v", md.ID, req)
-	fields := []string{"DPLA", "HathiTrust", "IsManuscript", "IsPersonalItem", "IsCollection"}
+	fields := []string{"DPLA", "IsManuscript", "IsPersonalItem", "IsCollection"}
 	md.DPLA = req.DPLA
-	md.HathiTrust = req.HathiTrust
 	md.IsManuscript = req.Manuscript
 	md.IsPersonalItem = req.PersonalItem
 	md.IsCollection = req.IsCollection
@@ -543,20 +560,6 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		log.Printf("ERROR: unable to update metadata %d: %s", md.ID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
-	}
-
-	// if this is a new HathiTrust item, add a status
-	if newHathiTrustItem {
-		log.Printf("INFO: create a new hathitrust status record for metadata %d", md.ID)
-		if md.HathiTrustStatus != nil {
-			svc.DB.Delete(hathitrustStatus{}, md.HathiTrustStatus.ID)
-		}
-
-		htStatus := hathitrustStatus{MetadataID: md.ID, RequestedAt: time.Now()}
-		err := svc.DB.Create(&htStatus).Error
-		if err != nil {
-			log.Printf("ERROR: unable to create hathitrust status for newly requested item %d: %s", md.ID, err.Error())
-		}
 	}
 
 	// after a successful update, send any updated use right info to sirsi
