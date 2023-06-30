@@ -771,6 +771,15 @@ func (svc *serviceContext) addUnitToOrder(c *gin.Context) {
 		return
 	}
 
+	if addReq.IncludeInDL {
+		err = svc.validateIncludeInDL(md.ID)
+		if err != nil {
+			log.Printf("ERROR: cannnot add new unit flagged for inclusion in virgo: %s", err.Error())
+			c.String(http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+
 	if addReq.ItemID != 0 {
 		log.Printf("INFO: update order item %d for new unit in order %s", addReq.MetadataID, orderID)
 		var tgtItem orderItem

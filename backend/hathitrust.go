@@ -141,6 +141,38 @@ func (svc *serviceContext) flagMetadataForHathiTrust(mdID int64) error {
 	return nil
 }
 
+func (svc *serviceContext) flagOrderForHathTrust(orderID int64) error {
+	var tgtUnits []unit
+	err := svc.DB.Where("order_id=? and unit_status != ?", orderID, "canceled").Find(&tgtUnits).Error
+	if err != nil {
+		return fmt.Errorf("unable to get units for order %d: %s", orderID, err.Error())
+	}
+
+	log.Printf("INFO: %d units in order %d are suitable to be flagged for hathitrust", len(tgtUnits), orderID)
+	flagCnt := 0
+	for _, tgtUnit := range tgtUnits {
+		var mfCnt int64
+		err = svc.DB.Table("master_files").Where("unit_id=?", tgtUnit.ID).Count(&mfCnt).Error
+		if err != nil {
+			log.Printf("ERROR: unable to get master file count for unit %d: %s", tgtUnit.ID, err.Error())
+			continue
+		}
+		if mfCnt == 0 {
+			log.Printf("INFO: unit %d has no master files and will be skipped", tgtUnit.ID)
+			continue
+		}
+		log.Printf("INFO: [%d] flag metadata %d from unit %d for inclusion in hathitrust", (flagCnt + 1), *tgtUnit.MetadataID, tgtUnit.ID)
+		err = svc.flagMetadataForHathiTrust(*tgtUnit.MetadataID)
+		if err != nil {
+			log.Printf("ERROR: %s", err.Error())
+			continue
+		}
+		flagCnt++
+	}
+	log.Printf("INFO: %d metadata records fro order %d flagged for hathitrust", flagCnt, orderID)
+	return nil
+}
+
 func (svc *serviceContext) removeMetadataFromHathiTrust(mdID int64) error {
 	log.Printf("INFO: remove hathitrust flag and status for matadata %d", mdID)
 

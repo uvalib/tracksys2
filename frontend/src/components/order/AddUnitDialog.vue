@@ -47,7 +47,7 @@
                </div>
                <div class="checkbox">
                   <input type="checkbox" v-model="unitInfo.includeInDL"/>
-                  <span class="label">Include in DL</span>
+                  <span class="label">Include in Virgo</span>
                </div>
             </div>
          </Panel>
@@ -158,7 +158,10 @@ async function createUnit() {
       } else {
          await ordersStore.addUnit(selectedMetadata.value.id, unitInfo.value)
       }
-      hide()
+
+      if (systemStore.error == "") {
+         hide()
+      }
    }
 }
 

@@ -276,6 +276,17 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
+
+	// Only 1 unit per metadata record can be flagged for inclusion in the DL (Virgo) enforce this now
+	if req.IncludeInDL {
+		err = svc.validateIncludeInDL(*unitDetail.MetadataID)
+		if err != nil {
+			log.Printf("ERROR: unit %d failed include in dl validation: %s", unitDetail.ID, err.Error())
+			c.String(http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+
 	log.Printf("INFO: update unit %d with %+v", unitDetail.ID, req)
 	unitDetail.UnitStatus = req.Status
 	unitDetail.PatronSourceURL = req.PatronSourceURL
@@ -401,4 +412,20 @@ func (svc *serviceContext) getUnitCloneSources(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, units)
+}
+
+func (svc *serviceContext) validateIncludeInDL(metadataID int64) error {
+	log.Printf("INFO: validate  include in dl setting for metadata %d", metadataID)
+
+	var dlCnt int64
+	err := svc.DB.Table("units").Where("metadata_id=? and include_in_dl=?", metadataID, 1).Count(&dlCnt).Error
+	if err != nil {
+		return err
+	}
+
+	if dlCnt > 0 {
+		return fmt.Errorf("metadata %d already has another unit flagged for inclusion in virgo", metadataID)
+	}
+
+	return nil
 }

@@ -12,7 +12,7 @@ import (
 )
 
 // Version of the service
-const Version = "1.11.1"
+const Version = "1.11.2"
 
 func main() {
 	// Load cfg
@@ -142,6 +142,20 @@ func (svc *serviceContext) scriptRunner(c *gin.Context) {
 	log.Printf("INFO: script runner called")
 	c.String(http.StatusNotImplemented, "no script is available")
 }
+
+// SCRIPT TO FLAG ORDER METADATA FOR HATHITRUST PUBLISH
+// log.Printf("INFO: script runner called")
+// orderStr := c.Query("order")
+// tgtID, _ := strconv.ParseInt(orderStr, 10, 64)
+
+// err := svc.flagOrderForHathTrust(tgtID)
+// if err != nil {
+// 	log.Printf("ERROR: publish order to hathitrust failed: %s", err.Error())
+// 	c.String(http.StatusInternalServerError, err.Error())
+// 	return
+// }
+
+// c.String(http.StatusOK, fmt.Sprintf("flagged order %d", tgtID))
 
 // SAMPLE republish AS records
 // log.Printf("INFO: republish AS records from 4/17 and 4/18")
