@@ -1,0 +1,1 @@
+ALTER table projects DROP COLUMN due_on;
