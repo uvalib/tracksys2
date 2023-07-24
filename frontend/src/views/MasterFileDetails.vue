@@ -10,7 +10,7 @@
          <DPGButton label="Download Image" @click="downloadImage()"/>
          <DPGButton label="Download PDF" @click="downloadPDF()" v-if="masterFiles.details.originalID==0"/>
          <DPGButton label="Replace" @click="replaceMasterFile()" v-if="masterFiles.details.originalID==0" :loading="masterFiles.replaceInProgress"/>
-         <DPGButton label="OCR" @click="ocrRequested()" v-if="masterFiles.isOCRCandidate  && (userStore.isAdmin || userStore.isSupervisor)"/>
+         <DPGButton label="OCR" @click="masterFiles.ocr()" v-if="masterFiles.isOCRCandidate  && (userStore.isAdmin || userStore.isSupervisor)"/>
          <DPGButton label="Edit" @click="editMasterFile()"/>
       </div>
    </h2>

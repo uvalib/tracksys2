@@ -93,6 +93,7 @@ export const useMasterFilesStore = defineStore('masterfiles', {
          })
       },
       ocr() {
+         const system = useSystemStore()
          let payload = {type: "masterfile", id: this.details.id}
          axios.post(`${system.jobsURL}/ocr`, payload).then( () => {
             system.toastMessage("OCR Started", `OCR nas been started form ${this.details.filename}. Check the Job Statuses page for updates.`)
