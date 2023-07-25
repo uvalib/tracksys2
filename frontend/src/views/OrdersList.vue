@@ -49,7 +49,8 @@
          <Column field="masterFileCount" header="Master Files" :sortable="true" />
          <Column field="fee" header="Fee" :sortable="true">
             <template #body="slotProps">
-               <span class="fee" v-if="slotProps.data.fee !== undefined">${{parseFloat(slotProps.data.fee).toFixed(2)}}</span>
+               <span class="fee-waived" v-if="slotProps.data.feeWaived">Waived</span>
+               <span class="fee" v-else-if="slotProps.data.fee !== undefined">${{parseFloat(slotProps.data.fee).toFixed(2)}}</span>
             </template>
          </Column>
          <Column field="lastName" header="Customer" filterField="customer" :showFilterMatchModes="false">
@@ -263,7 +264,13 @@ const onSort = ((event) => {
       span.dimmed {
          margin-left: 3px;
       }
-      span.sta
+      span.fee-waived {
+         background: var(--uvalib-blue-alt);
+         padding: 3px 10px;
+         border-radius: 5px;
+         color: white;
+         font-weight: bold;
+      }
       :deep(td), :deep(th) {
          padding: 10px;
       }

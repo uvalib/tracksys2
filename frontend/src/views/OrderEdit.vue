@@ -112,7 +112,8 @@ onMounted( async () =>{
    edited.value.title = ordersStore.detail.title
    edited.value.specialInstructions = ordersStore.detail.specialInstructions
    edited.value.staffNotes = ordersStore.detail.staffNotes
-   if (ordersStore.detail.fee) {
+   edited.value.fee = null
+   if (ordersStore.detail.fee && !ordersStore.detail.feeWaived ) {
       edited.value.fee = parseFloat(ordersStore.detail.fee).toFixed(2)
    }
    if (ordersStore.detail.agency) {
