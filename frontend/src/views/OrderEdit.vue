@@ -13,7 +13,7 @@
          <FormKit label="Order Title" type="text" v-model="edited.title"/>
          <FormKit label="Special Instructions" type="textarea" rows="5" v-model="edited.specialInstructions"/>
          <FormKit label="Staff Notes" type="textarea" rows="5" v-model="edited.staffNotes"/>
-         <FormKit v-if="isExternalCustomer" label="Fee" type="text" v-model="edited.fee"/>
+         <FormKit v-if="isExternalCustomer && !ordersStore.detail.feeWaived" label="Fee" type="text" v-model="edited.fee"/>
          <div class="split">
             <div class="select-wrapper">
                <label class="dpg-form-label">Agency</label>

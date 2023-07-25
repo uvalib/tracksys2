@@ -54,9 +54,9 @@ function sendClicked() {
       return
    }
    if (props.mode == "order") {
-      ordersStore.sendEmail(user.ID, sendToCustomer.value, sendToAlt.value, altEmail.value)
+      ordersStore.sendEmail(user.computeID, sendToCustomer.value, sendToAlt.value, altEmail.value)
    } else {
-      ordersStore.resendFeeEstimate( user.ID, sendToCustomer.value, sendToAlt.value, altEmail.value)
+      ordersStore.resendFeeEstimate( user.computeID, sendToCustomer.value, sendToAlt.value, altEmail.value)
    }
    hide()
 }

@@ -58,7 +58,7 @@
          <Panel class="messages" header="Messages" v-if="hasMessages">
             <div class="msg" v-if="detail.status== 'requested'">Order is not yet approved. Units must be added and approved before order can be approved.</div>
             <div class="msg" v-if="detail.status== 'deferred'">Order has been deferred.</div>
-            <div class="msg" v-if="detail.customer.academicStatusID==1 && !detail.fee">Either enter a fee, defer or cancel this order.</div>
+            <div class="msg" v-if="detail.customer.academicStatusID==1 && !detail.fee && !detail.feeWaived">Either enter a fee, defer or cancel this order.</div>
             <template v-if="detail.status== 'await_fee'">
                <div class="msg">Order is awaiting customer fee payment.</div>
                <div class="msg" v-if="ordersStore.isFeePaid == false">Fee payment information must be added to the invoice.</div>
@@ -71,10 +71,13 @@
             <DataDisplay label="Date Submitted" :value="formatDate(detail.dateSubmitted)"/>
             <DataDisplay label="Date Due" :value="formatDate(detail.dateDue)"/>
             <template v-if="isExternalCustomer">
-               <DataDisplay label="Fee" :value="formatFee(detail.fee)"/>
-               <DataDisplay label="Date Fee Sent to Customer" :value="formatDate(detail.dateFeeEstimateSent)"/>
+               <DataDisplay v-if="detail.feeWaived" label="Date Fee Waived" :value="formatDate(detail.dateFeeWaived)"/>
+               <template v-else>
+                  <DataDisplay label="Fee" :value="formatFee(detail.fee)"/>
+                  <DataDisplay label="Date Fee Sent to Customer" :value="formatDate(detail.dateFeeEstimateSent)"/>
+               </template>
             </template>
-            <DataDisplay label="Date Deferred" :value="formatDate(detail.dateDeferred)"/>
+            <DataDisplay v-if="detail.dateDeferred" label="Date Deferred" :value="formatDate(detail.dateDeferred)"/>
             <DataDisplay label="Date Finalization Started" :value="formatDateTime(detail.dateFinalizationBegun)"/>
             <DataDisplay label="Date Archiving Complete" :value="formatDateTime(detail.dateArchivingComplete)"/>
             <DataDisplay label="Date Patron Deliverables Complete" :value="formatDateTime(detail.datePatronDeliverablesComplete)"/>
@@ -82,7 +85,7 @@
          </dl>
          <div class="acts-wrap" v-if="user.isAdmin || user.isSupervisor">
             <div class="actions" v-if="detail.status != 'complete'">
-               <DPGButton label="Claim for Processing" class="p-button-secondary" @click="claimOrder()"/>
+               <DPGButton label="Claim for Processing" class="p-button-secondary" @click="claimOrder()" :disabled="isProcessor"/>
                <AssignModal />
             </div>
             <div class="actions" v-if="detail.status == 'await_fee'">
@@ -92,7 +95,9 @@
             </div>
             <template v-else>
                <div class="actions" v-if="detail.status != 'completed' && detail.status != 'canceled'">
-                  <DPGButton v-if="isExternalCustomer" label="Send Fee Estimate" class="p-button-secondary right-pad"
+                  <DPGButton v-if="canWaiveFee" label="Waive Fee" class="p-button-secondary right-pad"
+                     @click="waiveFeeClicked()"/>
+                  <DPGButton v-if="isExternalCustomer && detail.feeWaived == false" label="Send Fee Estimate" class="p-button-secondary right-pad"
                      :disabled="isSendFeeDisabled" @click="sendFeeEstimateCllicked()"/>
                   <DPGButton v-if="detail.status == 'deferred'" label="Resume Order" class="p-button-secondary" @click="resumeOrderClicked()"/>
                   <DPGButton v-else label="Defer Order" class="p-button-secondary" @click="deferOrderClicked()"/>
@@ -111,7 +116,7 @@
                <DPGButton v-if="detail.email" label="View Customer PDF" class="p-button-secondary" @click="viewPDFClicked()" />
                <DPGButton v-if="detail.email" label="Recreate Customer PDF" class="p-button-secondary" @click="recreatePDFClicked()" />
             </div>
-            <div class="actions" v-if="detail.invoice || detail.fee">
+            <div class="actions" v-if="(detail.invoice || detail.fee) && !detail.feeWaived">
                <DPGButton v-if="detail.invoice" label="View Invoice" class="p-button-secondary" @click="viewInvoiceClicked()"/>
                <DPGButton v-else-if="detail.fee" label="Create Invoice" class="p-button-secondary" @click="createInvoiceClicked()"/>
             </div>
@@ -220,9 +225,14 @@ const canDelete = computed(() => {
 const hasMessages = computed(() => {
    if ( ordersStore.detail.id != 0 ) {
       if ( ordersStore.detail.status== 'requested' || ordersStore.detail.status == 'deferred' || ordersStore.detail.status== 'await_fee') return true
-      if ( ordersStore.detail.customer.academicStatusID==1 && !ordersStore.detail.fee) return true
+      if ( ordersStore.detail.customer.academicStatusID==1 && !ordersStore.detail.fee && !ordersStore.detail.feeWaived) return true
    }
    return false
+})
+
+const isProcessor = computed(() => {
+   if (!ordersStore.detail.processor ) return false
+   return (ordersStore.detail.processor.id == user.ID)
 })
 
 const isPaidDisabled = computed(() =>{
@@ -230,14 +240,32 @@ const isPaidDisabled = computed(() =>{
 })
 
 const isCompleteOrderDisabled = computed(() =>{
-   return ordersStore.detail.status != 'approved'
+   let disabled = true
+   if ( ordersStore.detail.status == 'approved' ) {
+      disabled = false
+      ordersStore.units.forEach( u => {
+         if (!u.datePatronDeliverablesReady && !u.dateDLDeliverablesReady) {
+            disabled = true
+         }
+      })
+   }
+   return disabled
 })
 
 const isApproveDisabled = computed(() =>{
    if (  ordersStore.detail.status == 'approved' ) return true // already approved; disable
    if (  ordersStore.hasApprovedUnits == false ) return true // no approved untis; disable
-   if ( isExternalCustomer.value && (ordersStore.detail.fee == null || ordersStore.isFeePaid == false)) return true // external unpaid; disable
+
+   // external unpaid, not waived; disable
+   if ( isExternalCustomer.value && (ordersStore.detail.fee == null || ordersStore.isFeePaid == false) && !ordersStore.detail.feeWaived) return true
    return false
+})
+
+const canWaiveFee = computed(() => {
+   if ( ordersStore.detail.customer == null ) return false
+   if ( customerStore.isExternal(ordersStore.detail.customer.id) == false ) return false
+   if ( ordersStore.detail.feeWaived ) return false
+   return ( user.isAdmin || user.isSupervisor)
 })
 
 const isSendFeeDisabled = computed(() => {
@@ -365,36 +393,48 @@ const discardItem = ((item) => {
    })
 })
 
+const waiveFeeClicked = ( () => {
+   confirm.require({
+      message: 'Waive the fee for this order? This cannot be reversed.',
+      header: 'Confirm Fee Waive',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         await ordersStore.waiveFee( user.computeID )
+      }
+   })
+})
+
 const sendFeeEstimateCllicked = (() => {
-   ordersStore.sendFeeEstimate()
+   ordersStore.sendFeeEstimate( user.computeID )
 })
 
 const deferOrderClicked = (() => {
-   ordersStore.deferOrder()
+   ordersStore.deferOrder( user.computeID )
 })
 
 const resumeOrderClicked = (() => {
-   ordersStore.resumeOrder()
+   ordersStore.resumeOrder( user.computeID )
 })
 
 const approveOrderClicked = (() => {
-   ordersStore.approveOrder()
+   ordersStore.approveOrder( user.computeID )
 })
 
 const cancelOrderClicked = (() => {
-   ordersStore.cancelOrder()
+   ordersStore.cancelOrder( user.computeID )
 })
 
 const completeOrderClicked = (() => {
-   ordersStore.completeOrder()
+   ordersStore.completeOrder( user.computeID )
 })
 
 const payFeeClicked = (() => {
-   ordersStore.feeAccepted()
+   ordersStore.feeAccepted( user.computeID )
 })
 
 const declineFeeClicked = (() => {
-   ordersStore.feeDeclined()
+   ordersStore.feeDeclined( user.computeID )
 })
 
 const checkOrderComplete = (() => {

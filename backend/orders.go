@@ -56,6 +56,7 @@ type order struct {
 	AgencyID                       *uint        `json:"-"`
 	Agency                         *agency      `gorm:"foreignKey:AgencyID" json:"agency,omitempty"`
 	Fee                            *float64     `json:"fee,omitempty"`
+	FeeWaived                      bool         `json:"feeWaived"`
 	Invoice                        *invoice     `gorm:"-" json:"invoice,omitempty"`
 	UnitCount                      int64        `json:"unitCount"`       // NOTE: this is different than the cached count field units_count
 	MasterFileCount                int64        `json:"masterFileCount"` // NOTE: this is different than the cached count master_files_count
@@ -66,6 +67,7 @@ type order struct {
 	DateOrderApproved              *time.Time   `json:"dateApproved"`
 	DateDeferred                   *time.Time   `json:"dateDeferred"`
 	DateCanceled                   *time.Time   `json:"dateCanceled"`
+	DateFeeWaived                  *time.Time   `json:"dateFeeWaived,omitempty"`
 	DateCustomerNotified           *time.Time   `json:"dateCustomerNotified"`
 	DatePatronDeliverablesComplete *time.Time   `json:"datePatronDeliverablesComplete"`
 	DateArchivingComplete          *time.Time   `json:"dateArchivingComplete"`
@@ -353,6 +355,34 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 	out := resp{Orders: o, Total: total}
 
 	c.JSON(http.StatusOK, out)
+}
+
+func (svc *serviceContext) waiveFee(c *gin.Context) {
+	oID := c.Param("id")
+	staffID := c.Query("staff")
+	if staffID == "" {
+		log.Printf("ERROR: staff param required for fee waive")
+		c.String(http.StatusBadRequest, "staff param is required")
+		return
+	}
+	oDetail, err := svc.loadOrder(oID)
+	if err != nil {
+		log.Printf("ERROR: unable to retrieve order %s: %s", oID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: staff %s waives fee for order %d", staffID, oDetail.ID)
+	now := time.Now()
+	oDetail.FeeWaived = true
+	oDetail.DateFeeWaived = &now
+	err = svc.DB.Model(oDetail).Select("FeeWaived", "DateFeeWaived").Updates(oDetail).Error
+	if err != nil {
+		log.Printf("ERROR: unable to waive fee for order %d: %s", oDetail.ID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, oDetail)
 }
 
 func (svc *serviceContext) acceptFee(c *gin.Context) {

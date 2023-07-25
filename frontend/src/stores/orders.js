@@ -351,7 +351,31 @@ export const useOrdersStore = defineStore('orders', {
          system.working = false
       },
 
-      sendFeeEstimate( staffID) {
+      waiveFee( staffID ) {
+         const system = useSystemStore()
+         system.working = true
+         let url = `/api/orders/${this.detail.id}/fee/waive?staff=${staffID}`
+         axios.post( url ).then( (resp) => {
+            this.detail.dateFeeWaived = resp.data.dateFeeWaived
+            this.detail.feeWaived = true
+            let tgtO = this.orders.find( o => o.id == this.detail.id)
+            if (tgtO ) {
+               tgtO.dateFeeWaived = resp.data.dateFeeWaived
+               tgtO.feeWaived = true
+            }
+            this.items = []
+            system.toastMessage("Fee Waived", "Fee has been waived for this order")
+            system.working = false
+         }).catch( e => {
+            if (e.response) {
+               system.setError("Unable to waive fee: "+e.response.data)
+            } else {
+               system.setError(e)
+            }
+         })
+      },
+
+      sendFeeEstimate( staffID ) {
          const system = useSystemStore()
          system.working = true
          let url = `${system.jobsURL}/orders/${this.detail.id}/fees?staff=${staffID}`
@@ -369,6 +393,7 @@ export const useOrdersStore = defineStore('orders', {
             system.setError(e)
          })
       },
+
       feeAccepted( staffID ) {
          const system = useSystemStore()
          system.working = true

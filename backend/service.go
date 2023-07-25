@@ -144,8 +144,8 @@ func initializeService(version string, cfg *configData) *serviceContext {
 }
 
 func (svc *serviceContext) cleanupExpiredData(c *gin.Context) {
-	log.Printf("INFO: cleanup job logs and deleted messages older than 1 month")
-	lastMonth := time.Now().AddDate(0, -3, 0)
+	log.Printf("INFO: cleanup job logs and deleted messages older than 2 months")
+	lastMonth := time.Now().AddDate(0, -2, 0)
 	out := struct {
 		DeletedJobs     int64 `json:"deletedJobs"`
 		DeletedMessages int64 `json:"deletedMessages"`
