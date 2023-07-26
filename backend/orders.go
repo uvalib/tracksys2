@@ -83,7 +83,7 @@ type orderRequest struct {
 	Title               string  `json:"title"`
 	SpecialInstructions string  `json:"specialInstructions"`
 	StaffNotes          string  `json:"staffNotes"`
-	Fee                 *string `json:"fee"`
+	Fee                 float64 `json:"fee"`
 	AgencyID            uint    `json:"agencyID"`
 	CustomerID          uint    `json:"customerID"`
 }
@@ -128,20 +128,11 @@ func (svc *serviceContext) createOrder(c *gin.Context) {
 		return
 	}
 	dueDate, _ := time.Parse("2006-01-02", req.DateDue)
-	var fee float64
-	if req.Fee != nil {
-		fee, _ = strconv.ParseFloat(*req.Fee, 64)
-	}
 	newOrder := order{OrderStatus: "requested", DateDue: dueDate, OrderTitle: req.Title,
 		SpecialInstructions: req.SpecialInstructions, StaffNotes: req.StaffNotes,
 		CustomerID: &req.CustomerID, DateRequestSubmitted: time.Now()}
 
-	omitFields := []string{"UnitCount", "MasterFileCount"}
-	if fee > 0 {
-		newOrder.Fee = &fee
-	} else {
-		omitFields = append(omitFields, "Fee")
-	}
+	omitFields := []string{"UnitCount", "MasterFileCount", "Fee"}
 	if req.AgencyID > 0 {
 		newOrder.AgencyID = &req.AgencyID
 	} else {
@@ -375,7 +366,8 @@ func (svc *serviceContext) waiveFee(c *gin.Context) {
 	now := time.Now()
 	oDetail.FeeWaived = true
 	oDetail.DateFeeWaived = &now
-	err = svc.DB.Model(oDetail).Select("FeeWaived", "DateFeeWaived").Updates(oDetail).Error
+	oDetail.Fee = nil
+	err = svc.DB.Model(oDetail).Select("FeeWaived", "DateFeeWaived", "Fee").Updates(oDetail).Error
 	if err != nil {
 		log.Printf("ERROR: unable to waive fee for order %d: %s", oDetail.ID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -881,9 +873,8 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 	oDetail.SpecialInstructions = updateRequest.SpecialInstructions
 	oDetail.StaffNotes = updateRequest.StaffNotes
 	oDetail.Fee = nil
-	if updateRequest.Fee != nil {
-		floatFee, _ := strconv.ParseFloat(*updateRequest.Fee, 64)
-		oDetail.Fee = &floatFee
+	if updateRequest.Fee > 0 {
+		oDetail.Fee = &updateRequest.Fee
 	}
 	oDetail.AgencyID = nil
 	if updateRequest.AgencyID != 0 {

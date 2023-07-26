@@ -39,7 +39,6 @@ export const useOrdersStore = defineStore('orders', {
          dateFeeEstimateSent: "",
          dateCompleted: "",
       },
-      events: [],
       items: [],
       units: [],
       showInvoice: false,
@@ -155,6 +154,8 @@ export const useOrdersStore = defineStore('orders', {
          this.detail.dateFinalizationBegun = ""
          this.detail.dateFeeEstimateSent = ""
          this.detail.dateCompleted = ""
+         this.items = []
+         this.units = []
       },
       async addUnit( metadataID, unitInfo, itemID=0) {
          const system = useSystemStore()
@@ -207,7 +208,6 @@ export const useOrdersStore = defineStore('orders', {
             if (this.detail.invoice && this.detail.invoice.feeAmountPaid) {
                this.detail.invoice.feeAmountPaid = `${this.detail.invoice.feeAmountPaid}`
             }
-            this.events = response.data.events
             this.items = response.data.items
             this.units = response.data.units
             system.working = false
@@ -251,9 +251,6 @@ export const useOrdersStore = defineStore('orders', {
       async createOrder( data ) {
          const system = useSystemStore()
          system.working = true
-         if (data.fee) {
-            data.fee = `${data.fee}`
-         }
          return axios.post( `/api/orders`, data ).then( (response ) => {
             this.detail = response.data
             if (this.detail.fee) {
@@ -272,9 +269,6 @@ export const useOrdersStore = defineStore('orders', {
       async submitEdit( edit ) {
          const system = useSystemStore()
          system.working = true
-         if (edit.fee) {
-            edit.fee = `${edit.fee}`
-         }
          return axios.post( `/api/orders/${this.detail.id}/update`, edit ).then( (resp) => {
             this.detail.status = resp.data.status
             this.detail.dateDue = resp.data.dateDue
@@ -284,7 +278,6 @@ export const useOrdersStore = defineStore('orders', {
             this.detail.fee = resp.data.fee
             this.detail.agency = resp.data.agency
             this.detail.customer = resp.data.customer
-
             system.working = false
          }).catch( e => {
             system.setError(e)

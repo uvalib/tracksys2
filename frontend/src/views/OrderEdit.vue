@@ -54,7 +54,7 @@ const edited = ref({
    title: "",
    specialInstructions: "",
    staffNotes: "",
-   fee: null,
+   fee: 0.0,
    agencyID: 0,
    customerID: 0,
 })
@@ -112,7 +112,7 @@ onMounted( async () =>{
    edited.value.title = ordersStore.detail.title
    edited.value.specialInstructions = ordersStore.detail.specialInstructions
    edited.value.staffNotes = ordersStore.detail.staffNotes
-   edited.value.fee = null
+   edited.value.fee = 0.0
    if (ordersStore.detail.fee && !ordersStore.detail.feeWaived ) {
       edited.value.fee = parseFloat(ordersStore.detail.fee).toFixed(2)
    }
@@ -141,6 +141,13 @@ const submitChanges = ( async () => {
       error.value = "Customer is required"
       return
    }
+
+   edited.value.fee = parseFloat(edited.value.fee)
+   if (isExternalCustomer.value && !ordersStore.detail.feeWaived && edited.value.fee == 0 ) {
+      error.value = "A non-zero fee is required"
+      return
+   }
+
    if ( newOrder.value == true) {
       await ordersStore.createOrder( edited.value )
    } else {
