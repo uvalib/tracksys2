@@ -64,7 +64,7 @@ export const useJobsStore = defineStore('jobs', {
             response.data.events.forEach( evt => {
                this.details.events.push({
                   id: evt.id, jobID: evt.jobID, level: levels[evt.level],
-                  text: evt.text, timeStamp: dayjs(evt.finishedAt).format("YYYY-MM-DD HH:mm:ss")
+                  text: evt.text, timeStamp: dayjs(evt.createdAt).format("YYYY-MM-DD HH:mm:ss")
                })
             })
             let job = this.jobs.find( j => j.id == jobID)

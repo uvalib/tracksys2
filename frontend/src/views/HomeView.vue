@@ -297,10 +297,16 @@ const createMetadataClosed = (() => {
    padding-bottom: 50px;
    min-height:600px;
    .image-search {
-      width: 250px;
-      margin: 30px auto 0 auto;
+      width: 275px;
+      margin: 50px auto 0 auto;
+      border: 1px solid var(--uvalib-grey-light);
+      padding: 15px 25px 25px 25px;
+      border-radius: 5px;
+
       label {
          font-weight: 600;
+         margin-bottom: 15px;
+         display: inline-block;
       }
       .p-fileupload.p-fileupload-basic {
          margin-top: 5px;
