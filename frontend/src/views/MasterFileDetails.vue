@@ -73,6 +73,9 @@
                </DataDisplay>
             </dl>
          </Panel>
+         <Panel header="Transcription"  v-if="masterFiles.details.transcription">
+            <pre>{{masterFiles.details.transcription}}</pre>
+         </Panel>
       </div>
       <div class="column">
          <Panel header="Technical Information">
@@ -112,11 +115,6 @@
             </div>
          </Panel>
       </div>
-   </div>
-   <div class="details" v-if="masterFiles.details.transcription">
-      <Panel header="Transcription">
-         <pre>{{masterFiles.details.transcription}}</pre>
-      </Panel>
    </div>
    <Dialog v-model:visible="pdfStore.downloading" :modal="true" header="Generating PDF" :style="{width: '350px'}">
       <div class="download">
