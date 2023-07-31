@@ -2,6 +2,9 @@
    <h2>
       <span>Job {{route.params.id}} Processing Log</span>
       <div class="actions">
+         <DPGButton v-if="jobsStore.details.status=='running'"
+            label="Watch status" @click="tailLog" :disabled="tailIntervalID > -1" />
+         <DPGButton v-else label="Jump to end" @click="jumpToEnd" />
          <DPGButton label="Delete" @click="deleteJobLog" />
       </div>
    </h2>
@@ -33,7 +36,7 @@
 </template>
 
 <script setup>
-import { onMounted} from 'vue'
+import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { useJobsStore } from '@/stores/jobs'
 import { useRoute, useRouter } from 'vue-router'
 import { useConfirm } from "primevue/useconfirm"
@@ -43,9 +46,18 @@ const router = useRouter()
 const jobsStore = useJobsStore()
 const confirm = useConfirm()
 
+const tailIntervalID = ref(-1)
+
 onMounted(() => {
    jobsStore.getJobDetails(route.params.id)
    document.title = `Job #${route.params.id}`
+   tailIntervalID.value = -1
+})
+
+onBeforeUnmount(() => {
+   if ( tailIntervalID.value > -1 ) {
+      clearInterval( tailIntervalID.value )
+   }
 })
 
 const getAssociatedObjectLink = (( objName ) => {
@@ -64,6 +76,17 @@ const getAssociatedObjectLink = (( objName ) => {
       return `/metadata/${objID}`
    }
    return ""
+})
+
+const tailLog = (() => {
+   tailIntervalID.value = setInterval( ()=> {
+      jumpToEnd()
+   }, 2000)
+})
+
+const jumpToEnd = (() => {
+   let lines = document.getElementsByClassName("line")
+   lines[lines.length-1].scrollIntoView()
 })
 
 const deleteJobLog = (() => {
