@@ -794,7 +794,7 @@ func (svc *serviceContext) addUnitToOrder(c *gin.Context) {
 	}
 
 	if addReq.IncludeInDL {
-		err = svc.validateIncludeInDL(md.ID)
+		err = svc.validateIncludeInDL(md.ID, 0)
 		if err != nil {
 			log.Printf("ERROR: cannnot add new unit flagged for inclusion in virgo: %s", err.Error())
 			c.String(http.StatusBadRequest, err.Error())

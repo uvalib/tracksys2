@@ -10,23 +10,37 @@ import (
 	"gorm.io/gorm"
 )
 
+type staffRole uint
+
+const (
+	admin      staffRole = 0
+	supervisor staffRole = 1
+	student    staffRole = 2
+	viewer     staffRole = 3
+)
+
 type staffMember struct {
-	ID          uint   `json:"id"`
-	ComputingID string `json:"computingID"`
-	FirstName   string `json:"firstName"`
-	LastName    string `json:"lastName"`
-	Email       string `json:"email"`
-	IsActive    bool   `json:"active"`
-	Role        uint   `json:"roleID"`
-	RoleName    string `gorm:"-" json:"role"`
+	ID          uint      `json:"id"`
+	ComputingID string    `json:"computingID"`
+	FirstName   string    `json:"firstName"`
+	LastName    string    `json:"lastName"`
+	Email       string    `json:"email"`
+	IsActive    bool      `json:"active"`
+	Role        staffRole `json:"roleID"`
+	RoleName    string    `gorm:"-" json:"role"`
 }
 
 func (sm *staffMember) roleString() string {
-	roles := []string{"admin", "supervisor", "student", "viewer"}
-	if sm.Role < 0 || sm.Role > uint(len(roles)-1) {
+	switch sm.Role {
+	case admin:
+		return "admin"
+	case supervisor:
+		return "supervisor"
+	case student:
+		return "student"
+	default:
 		return "viewer"
 	}
-	return roles[sm.Role]
 }
 
 func (svc *serviceContext) addOrUpdateStaff(c *gin.Context) {

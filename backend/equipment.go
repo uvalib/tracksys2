@@ -13,24 +13,32 @@ import (
 	"gorm.io/gorm"
 )
 
+type equipmentStatus uint
+
+const (
+	active   equipmentStatus = 0
+	inactive equipmentStatus = 1
+	retured  equipmentStatus = 2
+)
+
 type equipment struct {
-	ID           int64     `json:"id"`
-	Type         string    `json:"type"`
-	Name         string    `json:"name"`
-	SerialNumber string    `json:"serialNumber"`
-	Status       uint      `json:"status"` // [:active, :inactive, :retired]
-	CreatedAt    time.Time `json:"-"`
-	UpdatedAt    time.Time `json:"-"`
+	ID           int64           `json:"id"`
+	Type         string          `json:"type"`
+	Name         string          `json:"name"`
+	SerialNumber string          `json:"serialNumber"`
+	Status       equipmentStatus `json:"status"` // [:active, :inactive, :retired]
+	CreatedAt    time.Time       `json:"-"`
+	UpdatedAt    time.Time       `json:"-"`
 }
 
 type workstation struct {
-	ID           int64       `json:"id"`
-	Name         string      `json:"name"`
-	Status       uint        `json:"status"` // [:active, :inactive, :retired]
-	Equipment    []equipment `gorm:"many2many:workstation_equipment" json:"equipment"`
-	ProjectCount int64       `gorm:"column:proj_cnt" json:"projectCount"`
-	CreatedAt    time.Time   `json:"-"`
-	UpdatedAt    time.Time   `json:"-"`
+	ID           int64           `json:"id"`
+	Name         string          `json:"name"`
+	Status       equipmentStatus `json:"status"` // [:active, :inactive, :retired]
+	Equipment    []equipment     `gorm:"many2many:workstation_equipment" json:"equipment"`
+	ProjectCount int64           `gorm:"column:proj_cnt" json:"projectCount"`
+	CreatedAt    time.Time       `json:"-"`
+	UpdatedAt    time.Time       `json:"-"`
 }
 
 func (svc *serviceContext) getEquipment(c *gin.Context) {
@@ -78,9 +86,9 @@ func (svc *serviceContext) updateEquipment(c *gin.Context) {
 	}
 	log.Printf("INFO: update equipment %d", tgtEquip.ID)
 	var req struct {
-		Name         string `json:"name"`
-		SerialNumber string `json:"serialNumber"`
-		Status       uint   `json:"status"`
+		Name         string          `json:"name"`
+		SerialNumber string          `json:"serialNumber"`
+		Status       equipmentStatus `json:"status"`
 	}
 	err = c.BindJSON(&req)
 	if err != nil {
@@ -159,7 +167,7 @@ func (svc *serviceContext) updateWorkstation(c *gin.Context) {
 		return
 	}
 	log.Printf("INFO: update workstation %d status to %d", tgtWS.ID, tgtStatus)
-	tgtWS.Status = uint(tgtStatus)
+	tgtWS.Status = equipmentStatus(tgtStatus)
 	err = svc.DB.Model(&tgtWS).Update("status", tgtStatus).Error
 	if err != nil {
 		log.Printf("ERROR: unable to update workstation %d status: %s", tgtWS.ID, err.Error())
