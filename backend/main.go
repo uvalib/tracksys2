@@ -12,7 +12,7 @@ import (
 )
 
 // Version of the service
-const Version = "1.12.1"
+const Version = "1.12.2"
 
 func main() {
 	// Load cfg
@@ -34,6 +34,7 @@ func main() {
 	router.GET("/config", svc.getConfig)
 	router.POST("/cleanup", svc.cleanupExpiredData)
 	router.POST("/upload_search_image", svc.uploadSearchImage)
+	router.GET("/pdf", svc.downloadPDF)
 
 	router.GET("/script", svc.scriptRunner)
 
@@ -102,7 +103,6 @@ func main() {
 		api.DELETE("/units/:id", svc.deleteUnit)
 		api.GET("/units/:id/pdf", svc.requestPDF)
 		api.GET("/units/:id/pdf/status", svc.getPDFStatus)
-		api.GET("/units/:id/pdf/download", svc.downloadPDF)
 		api.GET("/units/:id/exists", svc.validateUnit)
 		api.POST("/units/:id/exemplar/:mfid", svc.setExemplar)
 		api.POST("/units/:id/project", svc.createProject)

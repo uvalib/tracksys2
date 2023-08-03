@@ -98,7 +98,7 @@ func (svc *serviceContext) checkPDFStatus(tgtUnit unit, token string) (string, e
 }
 
 func (svc *serviceContext) downloadPDF(c *gin.Context) {
-	unitID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	unitID, _ := strconv.ParseInt(c.Query("unit"), 10, 64)
 	token := c.Query("token")
 	includeText, _ := strconv.ParseBool(c.Query("text"))
 	pageStr := c.Query("pages")
@@ -125,7 +125,12 @@ func (svc *serviceContext) downloadPDF(c *gin.Context) {
 		return
 	}
 
-	// Write the PDF to the temp director
+	if includeText == false {
+		c.Data(http.StatusOK, "application/pdf", resp)
+		return
+	}
+
+	// Write the PDF to the temp directory
 	destDir := fmt.Sprintf("/tmp/%s", token)
 	os.MkdirAll(destDir, 0777)
 	pdfFileName := filepath.Join(destDir, fmt.Sprintf("%s.pdf", token))
@@ -137,24 +142,17 @@ func (svc *serviceContext) downloadPDF(c *gin.Context) {
 		return
 	}
 
-	if includeText == false {
-		c.Header("Content-Type", "application/pdf")
-		c.File(pdfFileName)
-		os.RemoveAll(destDir)
-		return
-	}
-
 	log.Printf("INFO: include text for masterfiles [%s]", pageStr)
 	textFileName := filepath.Join(destDir, fmt.Sprintf("%s.txt", token))
 	var textList []string
 
 	if pageStr == "all" {
-		dbErr := svc.DB.Debug().Table("master_files").Where("unit_id = ?", unitID).Select("transcription_text").Find(&textList).Error
+		dbErr := svc.DB.Table("master_files").Where("unit_id = ?", unitID).Select("transcription_text").Find(&textList).Error
 		if dbErr != nil {
 			log.Printf("ERROR: unable to get all master file text for unit %d: %s", unitID, dbErr.Error())
 		}
 	} else {
-		dbErr := svc.DB.Debug().Table("master_files").Where("id in ?", strings.Split(pageStr, ",")).Select("transcription_text").Find(&textList).Error
+		dbErr := svc.DB.Table("master_files").Where("id in ?", strings.Split(pageStr, ",")).Select("transcription_text").Find(&textList).Error
 		if dbErr != nil {
 			log.Printf("ERROR: unable to get master file text for unit %d, pages %s: %s", unitID, pageStr, dbErr.Error())
 		}
@@ -177,8 +175,7 @@ func (svc *serviceContext) downloadPDF(c *gin.Context) {
 	zipFile, osErr := os.Create(zipFileName)
 	if osErr != nil {
 		log.Printf("ERROR: unable to create %s: %s", zipFileName, osErr.Error())
-		c.Header("Content-Type", "application/pdf")
-		c.File(pdfFileName)
+		c.Data(http.StatusOK, "application/pdf", resp)
 	} else {
 		zipWriter := zip.NewWriter(zipFile)
 		addFileToZip(zipWriter, destDir, fmt.Sprintf("%s.pdf", token))

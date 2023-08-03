@@ -34,6 +34,7 @@ export const usePDFStore = defineStore('pdf', {
             this.token = resp.data.token
             if ( resp.data.status == "READY") {
                this.percent = 100
+               this.downloading = false
                this.downloadPDF()
             } else if ( resp.data.status == "FAILED") {
                this.downloading = false
@@ -55,14 +56,17 @@ export const usePDFStore = defineStore('pdf', {
             let statusURL = `/api/units/${this.unitID}/pdf/status?token=${this.token}`
             axios.get(statusURL).then( resp => {
                if ( resp.data == "READY") {
-                  this.percent = 100
-                  this.downloadPDF()
                   clearInterval(this.intervalID)
+                  this.intervalID = -1
+                  this.percent = 100
+                  this.downloading = false
+                  this.downloadPDF()
                } else if ( resp.data == "FAILED") {
                   this.downloading = false
                   this.percent = 0
                   system.setError("PDF generation failed")
                   clearInterval(this.intervalID)
+                  this.intervalID = -1
                } else {
                   this.percent = parseInt(resp.data.replace("%", ""), 10)
                }
@@ -70,12 +74,14 @@ export const usePDFStore = defineStore('pdf', {
                system.setError(e)
                this.downloading = false
                this.percent = 0
+               clearInterval(this.intervalID)
+               this.intervalID = -1
             })
-         }, 1000)
+         }, 10000)
       },
 
       downloadPDF() {
-         let downloadURL = `/api/units/${this.unitID}/pdf/download?token=${this.token}`
+         let downloadURL = `/pdf/?unit=${this.unitID}&token=${this.token}`
          if (this.includeText) {
             let pages = "all"
             if ( this.targetMasterFiles.length > 0) {
@@ -84,27 +90,9 @@ export const usePDFStore = defineStore('pdf', {
             downloadURL += `&text=1&pages=${pages}`
          }
 
-         const system = useSystemStore()
-         axios.get(downloadURL, {responseType: "blob"}).then((response) => {
-            let dataType = "application/zip"
-            let ext = "zip"
-            if ( response.headers['content-type'] == "application/pdf") {
-               dataType = "application/pdf"
-               ext = "pdf"
-            }
-            var fileURL = window.URL.createObjectURL(response.data, { type: dataType})
-            var fileLink = document.createElement('a')
-            fileLink.href = fileURL
-            fileLink.setAttribute('download', `unit-${this.unitID}.${ext}`)
-            fileLink.click()
-            fileLink.remove()
-            window.URL.revokeObjectURL(fileURL)
-            this.downloading = false
-         }).catch( e => {
-            system.setError(e)
-            this.downloading = false
-            this.percent = 0
-         })
+         window.open(downloadURL, "_blank")
+         this.downloading = false
+         this.percent = 100
       }
    }
 })
