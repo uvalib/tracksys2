@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -513,7 +514,7 @@ func handleAPIResponse(logURL string, resp *http.Response, err error) ([]byte, *
 		return nil, &RequestError{StatusCode: status, Message: errMsg}
 	} else if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		defer resp.Body.Close()
-		bodyBytes, _ := ioutil.ReadAll(resp.Body)
+		bodyBytes, _ := io.ReadAll(resp.Body)
 		status := resp.StatusCode
 		errMsg := string(bodyBytes)
 		return nil, &RequestError{StatusCode: status, Message: errMsg}

@@ -56,11 +56,9 @@ export const usePDFStore = defineStore('pdf', {
             let statusURL = `/api/units/${this.unitID}/pdf/status?token=${this.token}`
             axios.get(statusURL).then( resp => {
                if ( resp.data == "READY") {
+                  this.downloadPDF()
                   clearInterval(this.intervalID)
                   this.intervalID = -1
-                  this.percent = 100
-                  this.downloading = false
-                  this.downloadPDF()
                } else if ( resp.data == "FAILED") {
                   this.downloading = false
                   this.percent = 0
@@ -77,11 +75,15 @@ export const usePDFStore = defineStore('pdf', {
                clearInterval(this.intervalID)
                this.intervalID = -1
             })
-         }, 10000)
+         }, 1000)
       },
 
       downloadPDF() {
-         let downloadURL = `/pdf/?unit=${this.unitID}&token=${this.token}`
+         this.downloading = false
+         this.percent = 100
+
+         let baseURL = window.location.href.split("/units")[0]
+         let downloadURL = `${baseURL}/pdf?unit=${this.unitID}&token=${this.token}`
          if (this.includeText) {
             let pages = "all"
             if ( this.targetMasterFiles.length > 0) {
@@ -90,9 +92,10 @@ export const usePDFStore = defineStore('pdf', {
             downloadURL += `&text=1&pages=${pages}`
          }
 
-         window.open(downloadURL, "_blank")
-         this.downloading = false
-         this.percent = 100
+         let newWindow = window.open(downloadURL)
+         if ( newWindow == null ) {
+            window.location.href = downloadURL
+         }
       }
    }
 })

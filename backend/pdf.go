@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"bufio"
 	"crypto/md5"
 	"fmt"
 	"io"
@@ -118,15 +119,29 @@ func (svc *serviceContext) downloadPDF(c *gin.Context) {
 	} else {
 		url += fmt.Sprintf("?unit=%d", unitID)
 	}
-	resp, err := svc.getRequest(url)
-	if err != nil {
-		log.Printf("ERROR: unable to download pdf for unit %d: %d:%s", unitID, err.StatusCode, err.Message)
-		c.String(err.StatusCode, err.Message)
+
+	log.Printf("INFO: download pdf from: %s", url)
+	// req, _ := http.NewRequest("GET", url, nil)
+	// pdfResp, rawErr := svc.SlowHTTPCLient.Do(req)
+	pdfResp, rawErr := http.Get(url)
+	if rawErr != nil {
+		log.Printf("ERROR: download pdf from %s failed: %s", url, rawErr.Error())
+		c.String(http.StatusInternalServerError, rawErr.Error())
 		return
 	}
 
+	pdfReader := bufio.NewReader(pdfResp.Body)
+	defer pdfResp.Body.Close()
+
 	if includeText == false {
-		c.Data(http.StatusOK, "application/pdf", resp)
+		log.Printf("INFO: stream pdf response to client")
+		c.Header("Content-Type", "application/pdf")
+		cnt, writeErr := pdfReader.WriteTo(c.Writer)
+		if writeErr != nil {
+			log.Printf("ERROR: unable to stream pdf: %s", writeErr.Error())
+			c.String(http.StatusInternalServerError, writeErr.Error())
+		}
+		log.Printf("INFO: streamed %d bytes of pdf to client", cnt)
 		return
 	}
 
@@ -135,7 +150,15 @@ func (svc *serviceContext) downloadPDF(c *gin.Context) {
 	os.MkdirAll(destDir, 0777)
 	pdfFileName := filepath.Join(destDir, fmt.Sprintf("%s.pdf", token))
 	log.Printf("INFO: write PDF to %s", pdfFileName)
-	writeErr := os.WriteFile(pdfFileName, resp, 0644)
+	pdfFile, err := os.Create(pdfFileName)
+	if err != nil {
+		log.Printf("ERROR: unable to create pdf file for unit %d: %s", unitID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	defer pdfFile.Close()
+	pdfWriter := bufio.NewWriter(pdfFile)
+	_, writeErr := pdfReader.WriteTo(pdfWriter)
 	if writeErr != nil {
 		log.Printf("ERROR: unable to write PDF: %s", writeErr.Error())
 		c.String(http.StatusInternalServerError, writeErr.Error())
@@ -175,18 +198,20 @@ func (svc *serviceContext) downloadPDF(c *gin.Context) {
 	zipFile, osErr := os.Create(zipFileName)
 	if osErr != nil {
 		log.Printf("ERROR: unable to create %s: %s", zipFileName, osErr.Error())
-		c.Data(http.StatusOK, "application/pdf", resp)
-	} else {
-		zipWriter := zip.NewWriter(zipFile)
-		addFileToZip(zipWriter, destDir, fmt.Sprintf("%s.pdf", token))
-		if textFileName != "" {
-			addFileToZip(zipWriter, destDir, fmt.Sprintf("%s.txt", token))
-		}
-		zipWriter.Close()
-		zipFile.Close()
-		c.Header("Content-Type", "application/zip")
-		c.File(zipFileName)
+		c.Header("Content-Type", "application/pdf")
+		pdfReader.WriteTo(c.Writer)
+		return
 	}
+
+	zipWriter := zip.NewWriter(zipFile)
+	addFileToZip(zipWriter, destDir, fmt.Sprintf("%s.pdf", token))
+	if textFileName != "" {
+		addFileToZip(zipWriter, destDir, fmt.Sprintf("%s.txt", token))
+	}
+	zipWriter.Close()
+	zipFile.Close()
+	c.Header("Content-Type", "application/zip")
+	c.File(zipFileName)
 
 	log.Printf("INFO: cleaning up temp files")
 	os.Remove(zipFileName)
