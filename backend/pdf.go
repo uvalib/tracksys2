@@ -142,6 +142,7 @@ func (svc *serviceContext) downloadPDF(c *gin.Context) {
 			c.String(http.StatusInternalServerError, writeErr.Error())
 		}
 		log.Printf("INFO: streamed %d bytes of pdf to client", cnt)
+		c.Status(http.StatusOK)
 		return
 	}
 
@@ -199,7 +200,8 @@ func (svc *serviceContext) downloadPDF(c *gin.Context) {
 	if osErr != nil {
 		log.Printf("ERROR: unable to create %s: %s", zipFileName, osErr.Error())
 		c.Header("Content-Type", "application/pdf")
-		pdfReader.WriteTo(c.Writer)
+		c.File(pdfFileName)
+		c.Status(http.StatusOK)
 		return
 	}
 
@@ -212,6 +214,7 @@ func (svc *serviceContext) downloadPDF(c *gin.Context) {
 	zipFile.Close()
 	c.Header("Content-Type", "application/zip")
 	c.File(zipFileName)
+	c.Status(http.StatusOK)
 
 	log.Printf("INFO: cleaning up temp files")
 	os.Remove(zipFileName)
