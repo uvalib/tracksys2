@@ -113,8 +113,8 @@
             </div>
             <div class="actions" v-if="ordersStore.hasPatronDeliverables && (detail.status == 'approved' || detail.status == 'completed')">
                <DPGButton v-if="!detail.email" label="Check Order Completeness" class="p-button-secondary" @click="checkOrderComplete()" />
-               <DPGButton v-if="detail.email" label="View Customer PDF" class="p-button-secondary" @click="viewPDFClicked()" />
-               <DPGButton v-if="detail.email" label="Recreate Customer PDF" class="p-button-secondary" @click="recreatePDFClicked()" />
+               <DPGButton v-if="detail.email" label="View Order Summary" class="p-button-secondary" @click="viewSummaryClicked()" />
+               <DPGButton v-if="detail.email" label="Recreate Order Summary" class="p-button-secondary" @click="recreateSummaryClicked()" />
             </div>
             <div class="actions" v-if="(detail.invoice || detail.fee) && !detail.feeWaived">
                <DPGButton v-if="detail.invoice" label="View Invoice" class="p-button-secondary" @click="viewInvoiceClicked()"/>
@@ -324,12 +324,12 @@ const recreateEmailClicked = (() => {
    ordersStore.recreateEmail()
 })
 
-const recreatePDFClicked = (() => {
-   ordersStore.recreatePDF()
+const recreateSummaryClicked = (() => {
+   ordersStore.recreateSummary()
 })
 
-const viewPDFClicked = (() => {
-   let url = `${systemStore.jobsURL}/orders/${ordersStore.detail.id}/pdf`
+const viewSummaryClicked = (() => {
+   let url = `${systemStore.jobsURL}/orders/${ordersStore.detail.id}/summary`
    window.open(url)
 })
 

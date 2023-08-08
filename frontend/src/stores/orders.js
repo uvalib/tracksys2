@@ -317,12 +317,12 @@ export const useOrdersStore = defineStore('orders', {
          })
       },
 
-      async recreatePDF() {
+      async recreateSummary() {
          const system = useSystemStore()
          system.working = true
-         let url = `${system.jobsURL}/orders/${this.detail.id}/pdf`
+         let url = `${system.jobsURL}/orders/${this.detail.id}/summary`
          await axios.post( url ).then( () => {
-            system.toastMessage("PDF Recreated", "Customer PDF has been recreated")
+            system.toastMessage("Order Summary Recreated", "Customer order summary has been recreated")
             system.working = false
          }).catch( e => {
             system.setError(e)
