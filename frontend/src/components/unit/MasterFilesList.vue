@@ -66,6 +66,7 @@
                   <DPGButton label="Download PDF" class="p-button-secondary" @click="downloadPDF(slotProps.data)" v-if="unitsStore.canPDF"/>
                   <DPGButton v-if="slotProps.data.exemplar==false && (detail.intendedUse && detail.intendedUse.id == 110 || detail.includeInDL)"
                      label="Set Exemplar" class="p-button-secondary" @click="exemplarClicked(slotProps.data)"/>
+                  <DPGButton label="Republish IIIF" class="p-button-secondary" @click="republishIIIF(slotProps.data.id)" v-if="detail.reorder==false && userStore.isAdmin"/>
                </template>
             </Column>
          </DataTable>
@@ -171,7 +172,7 @@ onUnmounted(() => {
    window.removeEventListener("scroll", scrollHandler)
 })
 
-function scrollHandler( ) {
+const scrollHandler = (( ) => {
    if ( toolbar.value) {
       if ( window.scrollY <= toolbarTop.value ) {
          if ( toolbar.value.classList.contains("sticky") ) {
@@ -194,28 +195,28 @@ function scrollHandler( ) {
          }
       }
    }
-}
+})
 
-function cloneClicked() {
+const cloneClicked = (() => {
    cloneStore.show( true )
-}
-function cloneCanceled() {
+})
+const cloneCanceled = (() => {
    cloneStore.show( false )
-}
-function cloneCompleted() {
+})
+const cloneCompleted = (() => {
    cloneStore.show( false )
    systemStore.toastMessage("Clone Success", 'All master files have been cloned.')
-}
-function downloadClicked() {
+})
+const downloadClicked = (() => {
    unitsStore.downloadFromArchive(userStore.computeID, selectedFileNames.value)
-}
-function pdfClicked() {
+})
+const pdfClicked = (() => {
    let ids = []
    selectedMasterFiles.value.forEach( s => {
       ids.push(s.id)
    })
    requestPDF( ids )
-}
+})
 const requestPDF = (( masterFileIDs ) => {
    if (unitsStore.hasText == false ) {
       pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs )
@@ -234,11 +235,11 @@ const requestPDF = (( masterFileIDs ) => {
       })
    }
 })
-function downloadPDF(info) {
+const downloadPDF = ((info) => {
    requestPDF( [info.id] )
-}
+})
 
-function replaceClicked() {
+const replaceClicked = (() => {
    let unitDir = `${unitsStore.detail.id}`.padStart(9, '0')
    confirm.require({
       message: `Replace master files with .tif files from ./finalization/unit_update/${unitDir}?`,
@@ -250,9 +251,9 @@ function replaceClicked() {
          clearSelections()
       }
    })
-}
+})
 
-function addClicked() {
+const addClicked = (() => {
    let unitDir = `${unitsStore.detail.id}`.padStart(9, '0')
    confirm.require({
       message: `Add all .tif files from ./finalization/unit_update/${unitDir} to this unit?`,
@@ -263,9 +264,9 @@ function addClicked() {
          unitsStore.addMasterFiles()
       }
    })
-}
+})
 
-function deleteClicked() {
+const deleteClicked = (() => {
    confirm.require({
       message: 'Are you sure you want delete the selected master files? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Master Files',
@@ -276,23 +277,26 @@ function deleteClicked() {
          clearSelections()
       }
    })
-}
-function downloadFile( info) {
+})
+const downloadFile =(( info) => {
    unitsStore.downloadFromArchive(userStore.computeID, info.filename )
-}
-function viewClicked(data) {
+})
+const viewClicked = ((data) => {
    router.push(`/masterfiles/${data.id}`)
-}
-function exemplarClicked( info) {
+})
+const exemplarClicked = (( info) => {
    unitsStore.setExemplar( info.id )
-}
-function onRowSelect() {
+})
+const republishIIIF =((masterFileID) => {
+   unitsStore.regenerateIIIF( masterFileID )
+})
+const onRowSelect = (() => {
    selectAll.value = selectedMasterFiles.value < unitsStore.masterFiles.length
-}
-function onRowUnselect() {
+})
+const onRowUnselect = (() => {
    selectAll.value  = false
-}
-function onSelectAllChange(event) {
+})
+const onSelectAllChange = ((event) => {
    selectAll.value = event.checked
    if (selectAll.value) {
       selectedMasterFiles.value = unitsStore.masterFiles
@@ -300,22 +304,22 @@ function onSelectAllChange(event) {
    else {
       selectedMasterFiles.value = []
    }
-}
+})
 
-async function assignMetadata( metadataID ) {
+const assignMetadata = ( async ( metadataID ) => {
    await unitsStore.assignMetadata(metadataID, selectedIDs.value)
    clearSelections()
-}
+})
 
-async function assignComponent( componentID ) {
+const assignComponent= ( async ( componentID ) => {
    await unitsStore.assignComponent(componentID, selectedIDs.value)
    clearSelections()
-}
+})
 
-function clearSelections() {
+const clearSelections = (() => {
    selectAll.value = false
    selectedMasterFiles.value = []
-}
+})
 
 </script>
 

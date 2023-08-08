@@ -309,6 +309,15 @@ export const useUnitsStore = defineStore('units', {
          })
       },
 
+      regenerateIIIF( mfID ) {
+         const system = useSystemStore()
+         axios.post(`${system.jobsURL}/masterfiles/${mfID}/iiif`).then( () => {
+            system.toastMessage("IIIF Republish Started", `This file is being republished to the IIIF server. Check the Job Statuses page for updates.`)
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+
       requestPDF( masterFileIDs ) {
          if (this.pdf.downloading) return
 

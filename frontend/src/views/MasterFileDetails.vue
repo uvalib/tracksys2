@@ -12,6 +12,7 @@
          <DPGButton label="Replace" @click="replaceMasterFile()" v-if="masterFiles.details.originalID==0" :loading="masterFiles.replaceInProgress"/>
          <DPGButton label="OCR" @click="masterFiles.ocr()" v-if="masterFiles.isOCRCandidate  && (userStore.isAdmin || userStore.isSupervisor)"/>
          <DPGButton label="Edit" @click="editMasterFile()"/>
+         <DPGButton label="Republish IIIF" @click="masterFiles.regenerateIIIF()" v-if="userStore.isAdmin && masterFiles.details.originalID==0" />
       </div>
    </h2>
    <div class="details" v-if="systemStore.working==false">

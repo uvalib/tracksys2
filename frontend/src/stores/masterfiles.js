@@ -101,6 +101,14 @@ export const useMasterFilesStore = defineStore('masterfiles', {
             system.setError(e)
          })
       },
+      regenerateIIIF() {
+         const system = useSystemStore()
+         axios.post(`${system.jobsURL}/masterfiles/${this.details.id}/iiif`).then( () => {
+            system.toastMessage("IIIF Republish Started", `This file is being republished to the IIIF server. Check the Job Statuses page for updates.`)
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
       replace() {
          const system = useSystemStore()
          this.replaceInProgress = true
