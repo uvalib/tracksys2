@@ -309,8 +309,9 @@ export const useOrdersStore = defineStore('orders', {
          const system = useSystemStore()
          system.working = true
          let url = `${system.jobsURL}/orders/${this.detail.id}/email`
-         axios.post( url ).then( () => {
+         axios.post( url ).then( (response) => {
             system.toastMessage("Email Recreated", "New email generated, but not sent.")
+            this.detail.email = response.data
             system.working = false
          }).catch( e => {
             system.setError(e)
