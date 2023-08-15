@@ -281,7 +281,8 @@ export const useMetadataStore = defineStore('metadata', {
               'Content-Type': 'multipart/form-data'
             }
          }).then( resp => {
-            this.detail.xmlMetadata = resp.data
+            this.detail.xmlMetadata = resp.data.metadata
+            this.detail.title = resp.data.title
             system.toastMessage("XML Uploaded", "XML metadata has successfully been uploaded.")
          }).catch( e => {
             system.setError(`Upload XML meadtata file '${fileData.name}' failed: ${e.response.data}`)

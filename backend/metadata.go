@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"log"
@@ -887,8 +888,16 @@ func (svc *serviceContext) uploadXMLMetadata(c *gin.Context) {
 	}
 
 	descMetadata := string(xmlBytes)
+	modsTitle, err := parseModsTitle(xmlBytes)
+	if err != nil {
+		log.Printf("ERROR: unable to parse title from uploaded xml file %s: %s", formFile.Filename, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	md.DescMetadata = &descMetadata
-	err = svc.DB.Model(&md).Select("DescMetadata").Updates(md).Error
+	md.Title = modsTitle
+	err = svc.DB.Model(&md).Select("DescMetadata", "Title").Updates(md).Error
 	if err != nil {
 		log.Printf("ERROR: update xml metadata %d failed: %s", mdID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -911,5 +920,41 @@ func (svc *serviceContext) uploadXMLMetadata(c *gin.Context) {
 		}
 	}
 
-	c.String(http.StatusOK, *md.DescMetadata)
+	resp := struct {
+		DescMetadata string `json:"metadata"`
+		Title        string `json:"title"`
+	}{
+		DescMetadata: *md.DescMetadata,
+		Title:        md.Title,
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+func parseModsTitle(modsBytes []byte) (string, error) {
+
+	type modsTitle struct {
+		XMLName xml.Name `xml:"title"`
+		Value   string   `xml:",chardata"`
+	}
+
+	type modsTitleInfo struct {
+		XMLName xml.Name  `xml:"titleInfo"`
+		Title   modsTitle `xml:"title"`
+	}
+
+	type modsMetadata struct {
+		XMLName   xml.Name        `xml:"mods"`
+		TitleInfo []modsTitleInfo `xml:"titleInfo"`
+	}
+
+	mods := modsMetadata{}
+	err := xml.Unmarshal(modsBytes, &mods)
+	if err != nil {
+		return "", err
+	}
+
+	log.Printf("%+v", mods)
+
+	return mods.TitleInfo[0].Title.Value, nil
 }
