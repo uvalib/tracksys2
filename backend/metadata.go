@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -866,6 +867,15 @@ func (svc *serviceContext) uploadXMLMetadata(c *gin.Context) {
 	if err != nil {
 		log.Printf("ERROR: Unable to read uploaded xml file %s for metadata %d: %s", formFile.Filename, mdID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	cmdArray := []string{"--quiet", "--noout", savedXMLFile}
+	cmd := exec.Command("xmllint", cmdArray...)
+	xmlOut, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("ERROR: uploaded xml for %d is malformed: %s", mdID, string(xmlOut))
+		c.String(http.StatusBadRequest, string(xmlOut))
 		return
 	}
 

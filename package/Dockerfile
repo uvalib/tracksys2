@@ -20,7 +20,7 @@ RUN make linux-full
 FROM public.ecr.aws/docker/library/alpine:3.18
 
 # update the packages
-RUN apk update && apk upgrade && apk add bash tzdata ca-certificates curl && rm -rf /var/cache/apk/*
+RUN apk update && apk upgrade && apk add bash tzdata ca-certificates curl libxml2-utils && rm -rf /var/cache/apk/*
 
 # Create the run user and group
 RUN addgroup webservice && adduser webservice -G webservice -D

@@ -284,7 +284,7 @@ export const useMetadataStore = defineStore('metadata', {
             this.detail.xmlMetadata = resp.data
             system.toastMessage("XML Uploaded", "XML metadata has successfully been uploaded.")
          }).catch( e => {
-            system.setError(`Upload XML meadtata file '${fileData.name}' failed: ${e}`)
+            system.setError(`Upload XML meadtata file '${fileData.name}' failed: ${e.response.data}`)
          })
       },
 
