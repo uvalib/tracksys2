@@ -10,11 +10,15 @@ export const useMasterFilesStore = defineStore('masterfiles', {
       orderID: 0,
       nextID: 0,
       prevID: 0,
-      replaceInProgress: false,
+      working: false,
+      replacing: false,
    }),
 	getters: {
       hasText: state => {
          return state.details.transcription
+      },
+      isSensitive: state => {
+         return state.details.sensitive
       },
       isOCRCandidate: state => {
          if ( state.details.metadata == null) return false
@@ -53,6 +57,25 @@ export const useMasterFilesStore = defineStore('masterfiles', {
             system.setError(e)
          })
       },
+
+      async setSensitive( flag ) {
+         const system = useSystemStore()
+         this.working = true
+         try {
+            if ( flag ) {
+               await axios.post( `${system.jobsURL}/masterfiles/${this.details.id}/sensitive` )
+               this.details.sensitive = true
+            } else {
+               await axios.delete( `${system.jobsURL}/masterfiles/${this.details.id}/sensitive` )
+               this.details.sensitive = false
+            }
+         } catch (error) {
+            system.setError(error)
+         }
+
+         this.working = false
+      },
+
       async submitEdit( edit ) {
          const system = useSystemStore()
          system.working = true
@@ -111,7 +134,7 @@ export const useMasterFilesStore = defineStore('masterfiles', {
       },
       replace() {
          const system = useSystemStore()
-         this.replaceInProgress = true
+         this.replacing = true
          axios.post(`${system.jobsURL}/units/${this.details.unitID}/masterfiles/replace`).then( resp => {
             system.toastMessage("Please Wait", 'Replacing unit master file...')
             let jobID = resp.data
@@ -120,22 +143,22 @@ export const useMasterFilesStore = defineStore('masterfiles', {
                   let status = resp.data.status
                   if (status == 'failure') {
                      clearInterval(tid)
-                     this.replaceInProgress = false
+                     this.replacing = false
                      system.setError(`Replace failed: ${resp.data.error}. Check the job status logs for more information.`)
                   } else if (status == 'finished') {
                      clearInterval(tid)
-                     this.replaceInProgress = false
+                     this.replacing = false
                      window.location.reload()
                   }
                }).catch( e => {
                   system.setError(e)
-                  this.replaceInProgress = false
+                  this.replacing = false
                   clearInterval(tid)
                })
             }, 1000)
          }).catch( e => {
             system.setError(e)
-            this.replaceInProgress = false
+            this.replacing = false
          })
       },
    },

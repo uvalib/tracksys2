@@ -9,7 +9,7 @@
          <DPGButton label="Next" @click="nextImage()" v-if="masterFiles.nextID > 0"/>
          <DPGButton label="Download Image" @click="downloadImage()"/>
          <DPGButton label="Download PDF" @click="downloadPDF()" v-if="masterFiles.details.originalID==0"/>
-         <DPGButton label="Replace" @click="replaceMasterFile()" v-if="masterFiles.details.originalID==0" :loading="masterFiles.replaceInProgress"/>
+         <DPGButton label="Replace" @click="replaceMasterFile()" v-if="masterFiles.details.originalID==0" :loading="masterFiles.replacing"/>
          <DPGButton label="OCR" @click="masterFiles.ocr()" v-if="masterFiles.isOCRCandidate  && (userStore.isAdmin || userStore.isSupervisor)"/>
          <DPGButton label="Edit" @click="editMasterFile()"/>
          <DPGButton label="Republish IIIF" @click="masterFiles.regenerateIIIF()" v-if="userStore.isAdmin && masterFiles.details.originalID==0" />
@@ -20,6 +20,22 @@
          <a :href="masterFiles.viewerURL" target="_blank">
             <img :src="masterFiles.thumbURL" />
          </a>
+         <template v-if="masterFiles.details.originalID == 0">
+            <div v-if="masterFiles.isSensitive" class="sensitive">
+               <div class="heading">Sensitive Image</div>
+               <p class="note">
+                  This image has been flagged having sensitive content that some viewers may find offensive.<br/><br/>
+                  For all public facing uses, this image is presented at a lower resolution to mask the details.
+               </p>
+            </div>
+            <div class="image-acts" >
+               <DPGButton v-if="masterFiles.isSensitive"  label="View Original" @click="viewOriginal" class="p-button-secondary"  :loading="masterFiles.working"/>
+               <template v-if="userStore.isAdmin ">
+                  <DPGButton v-if="masterFiles.isSensitive"  label="Remove Sensitive Flag" @click="setSensitive(false)" class="p-button-secondary"  :loading="masterFiles.working"/>
+                  <DPGButton v-else  label="Flag Sensitive Image" @click="setSensitive(true)" class="p-button-secondary"  :loading="masterFiles.working"/>
+               </template>
+            </div>
+         </template>
       </div>
       <div class="column">
          <Panel header="General Information">
@@ -123,10 +139,13 @@
          <ProgressBar :value="pdfStore.percent"/>
       </div>
    </Dialog>
+   <Dialog v-model:visible="showOriginal" :modal="true" header="Orignal Master File" :style="{width: '650px', height: 'auto'}" @hide="showOriginal = false">
+      <img class="original-image" src="http://localhost:8180/masterfiles/902574/full_resolution" />
+   </Dialog>
 </template>
 
 <script setup>
-import { onBeforeMount, computed } from 'vue'
+import { onBeforeMount, computed, ref } from 'vue'
 import { useMasterFilesStore } from '@/stores/masterfiles'
 import { useSystemStore } from '@/stores/system'
 import { useUserStore } from '@/stores/user'
@@ -137,7 +156,6 @@ import ProgressBar from 'primevue/progressbar'
 import Dialog from 'primevue/dialog'
 import dayjs from 'dayjs'
 import DataDisplay from '../components/DataDisplay.vue'
-import Fieldset from 'primevue/fieldset'
 import TagsDialog from '../components/masterfile/TagsDialog.vue'
 import { useConfirm } from "primevue/useconfirm"
 
@@ -148,6 +166,8 @@ const systemStore = useSystemStore()
 const userStore = useUserStore()
 const pdfStore = usePDFStore()
 const confirm = useConfirm()
+
+const showOriginal = ref(false)
 
 const orientationName = computed( () => {
    let names = ["Normal", "Flip Y Axis", "Rotate 90&deg;", "Rotate 180&deg;", "Rotate 270&deg;"]
@@ -173,6 +193,28 @@ onBeforeMount(() => {
    let mfID = route.params.id
    masterFiles.getDetails(mfID)
    document.title = `Master File #${mfID}`
+})
+
+const viewOriginal = (() => {
+   showOriginal.value = true
+})
+
+const setSensitive = ( (flag) => {
+   let title = "Flag Sensitive Content"
+   let msg = "Flag this master file as having sensitive content? All public views will be low resolution. Are you sure?"
+   if (! flag) {
+      title = "Remove Sensitive Content Flag"
+      msg = "Remove the sensitive content designation for this master file? All public views will revert to full resolution. Are you sure?"
+   }
+   confirm.require({
+      message: msg,
+      header: title,
+      icon: 'pi pi-question-circle',
+      rejectClass: 'p-button-secondary',
+      accept: () => {
+         masterFiles.setSensitive( flag )
+      },
+   })
 })
 
 const prevImage = (() => {
@@ -247,6 +289,10 @@ const auditNow = (() => {
 </script>
 
 <style scoped lang="scss">
+img.original-image {
+   max-width: 100%;
+   max-height: 100%;
+}
 .clone {
    display: inline-block;
    margin-left: 10px;
@@ -273,8 +319,37 @@ const auditNow = (() => {
       margin: 10px;
       text-align: left;
    }
+   .image-acts {
+      margin-top: 5px;
+      button.p-button {
+         width: 240px;
+         font-size: 0.85em;
+         display: block;
+         margin-bottom: 5px;
+      }
+   }
    .thumb {
       margin: 10px;
+      .sensitive {
+         max-width: 240px;
+         text-align: left;
+         .heading {
+            font-weight: bold;
+            text-align: center;
+            padding: 5px;
+            background: var(--uvalib-red-emergency);
+            color: white;
+         }
+         p {
+            padding: 10px;
+            margin: 0;
+            border: 1px solid var(--uvalib-red);
+            border-top: 0;
+            font-size: 0.9em;
+            background: var(--uvalib-red-lightest);
+            text-align: center;
+         }
+      }
    }
 }
 .download {

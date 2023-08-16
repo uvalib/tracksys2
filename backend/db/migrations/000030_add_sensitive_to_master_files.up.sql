@@ -1,0 +1,1 @@
+ALTER table master_files ADD COLUMN `sensitive` tinyint(1) NOT NULL DEFAULT '0';
