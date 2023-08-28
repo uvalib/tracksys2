@@ -140,7 +140,7 @@
       </div>
    </Dialog>
    <Dialog v-model:visible="showOriginal" :modal="true" header="Orignal Master File" :style="{width: '650px', height: 'auto'}" @hide="showOriginal = false">
-      <img class="original-image" src="http://localhost:8180/masterfiles/902574/full_resolution" />
+      <img class="original-image" :src="`${systemStore.jobsURL}/masterfiles/${masterFiles.details.id}/full_resolution`" />
    </Dialog>
 </template>
 
