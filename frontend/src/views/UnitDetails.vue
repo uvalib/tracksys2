@@ -52,7 +52,7 @@
                <span :class="`flag ${flagString(detail.includeInDL)}`">{{displayFlag(detail.includeInDL)}}</span>
             </DataDisplay>
             <DataDisplay label="Date Archived" :value="formatDate(detail.dateArchived)" />
-            <DataDisplay label="Date Virgo Deliverables Ready" :value="formatDate(detail.dateDLDeliverablesReady)" v-if="unitsStore.canPublishToVirgo" />
+            <DataDisplay label="Date Virgo Deliverables Ready" :value="formatDate(detail.dateDLDeliverablesReady)" v-if="detail.includeInDL" />
             <DataDisplay label="Date Patron Deliverables Ready" :value="formatDate(detail.datePatronDeliverablesReady)" />
          </dl>
 

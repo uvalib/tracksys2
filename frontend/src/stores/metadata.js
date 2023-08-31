@@ -145,7 +145,7 @@ export const useMetadataStore = defineStore('metadata', {
 
          let canPublish =  false
          state.related.units.forEach( u => {
-            if ( u.inDL && u.masterFilesCount > 0 ) {
+            if ( u.inDL ) {
                canPublish = true
             }
          })

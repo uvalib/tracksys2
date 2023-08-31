@@ -42,7 +42,6 @@ export const useUnitsStore = defineStore('units', {
          if (system.working) return false
 
          if ( state.detail.metadata.type == "ExternalMetadata" ) return false
-         if ( state.masterFiles.length == 0) return false
          let canPublish =  true
          state.masterFiles.forEach( mf => {
             if ( mf.metadata.type == "ExternalMetadata" ) {
