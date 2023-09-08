@@ -283,6 +283,9 @@ export const useMetadataStore = defineStore('metadata', {
          }).then( resp => {
             this.detail.xmlMetadata = resp.data.metadata
             this.detail.title = resp.data.title
+            if ( this.detail.dateDLIngest || this.detail.dateDLUpdate ) {
+               this.publish()
+            }
             system.toastMessage("XML Uploaded", "XML metadata has successfully been uploaded.")
          }).catch( e => {
             system.setError(`Upload XML meadtata file '${fileData.name}' failed: ${e.response.data}`)
