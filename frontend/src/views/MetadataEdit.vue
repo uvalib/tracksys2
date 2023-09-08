@@ -119,7 +119,7 @@ const edited = ref({
    isCollection: false
 })
 const originalUseRight = ref(1)
-const updateValidatedURI = ref(false)
+const updatingURI = ref(true) // on page load, the URL is from existing data. consider it valid by default
 
 const pageHeader = computed( () => {
    let baseHdr = `Metadata ${route.params.id}`
@@ -261,7 +261,10 @@ onMounted( async () =>{
    edited.value.collectionID = metadataStore.detail.collectionID
    edited.value.collectionFacet = metadataStore.detail.collectionFacet
    if ( metadataStore.detail.type == "ExternalMetadata") {
-      validated.value = metadataStore.archivesSpace.error != ""
+      validated.value = (metadataStore.archivesSpace.error == "" && metadataStore.asMatch.error == "")
+      if ( edited.value.externalURI == "" ) {
+         validated.value = false
+      }
    }
    if ( metadataStore.detail.type == "SirsiMetadata" && (edited.value.catalogKey != "" || edited.value.barcode !="")) {
       validated.value = true
@@ -285,10 +288,10 @@ const sirsiLookup = ( async () => {
 })
 
 const uriChanged = (() => {
-   if (  updateValidatedURI.value == false ) {
+   if (  updatingURI.value == false ) {
       validated.value = false
    }
-   updateValidatedURI.value = false
+   updatingURI.value = false
 })
 
 const validateASMetadata = ( async () => {
@@ -297,7 +300,7 @@ const validateASMetadata = ( async () => {
       // set a flag to indicate that the validated URL is programatically being set
       // When the above uriChanged handler eventually happens check for this flag.
       // If set, don't mark the URL as invalid. Instead clear the updating flag.
-      updateValidatedURI.value = true
+      updatingURI.value = true
       edited.value.externalURI = metadataStore.asMatch.validatedURL
       edited.value.title = metadataStore.asMatch.title
       validated.value = true
@@ -305,21 +308,24 @@ const validateASMetadata = ( async () => {
 })
 
 const cancelEdit = (() => {
+   metadataStore.resetArchivesSpaceErrors()
    router.push(`/metadata/${route.params.id}`)
 })
 
 const submitChanges = ( async () => {
-   // SEE IF UR changed from CNE / UND to sotething else, or if RR chanegd from something valid to CNE/UND
-   // in these cases, send the new ID. Otehrwise send a 0 so backend ignores the request.
-   let origCNE = (originalUseRight.value == 1 || edited.value.useRight.value == 11)
-   let updatedCNE = ( edited.value.useRight == 1 ||  edited.value.useRight == 11)
-   if (origCNE && updatedCNE ) {
-      // no change from CNE... don't send
-      edited.value.useRight = 0
-   } else {
-      if ( originalUseRight.value == edited.value.useRight) {
-         // no change. do not send
+   if (metadataStore.detail.type != 'ExternalMetadata') {
+      // SEE IF UR changed from CNE / UND to sotething else, or if RR chanegd from something valid to CNE/UND
+      // in these cases, send the new ID. Otehrwise send a 0 so backend ignores the request.
+      let origCNE = (originalUseRight.value == 1 || edited.value.useRight.value == 11)
+      let updatedCNE = ( edited.value.useRight == 1 ||  edited.value.useRight == 11)
+      if (origCNE && updatedCNE ) {
+         // no change from CNE... don't send
          edited.value.useRight = 0
+      } else {
+         if ( originalUseRight.value == edited.value.useRight) {
+            // no change. do not send
+            edited.value.useRight = 0
+         }
       }
    }
    await metadataStore.submitEdit( edited.value )

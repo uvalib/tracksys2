@@ -21,26 +21,89 @@
          </a>
       </div>
       <Panel header="General Information">
-         <dl v-if="metadataStore.detail.type != 'ExternalMetadata'">
-            <DataDisplay label="Type" :value="metadataStore.detail.type"/>
-            <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey" v-if="metadataStore.detail.type == 'SirsiMetadata'" />
-            <DataDisplay label="Barcode" :value="metadataStore.detail.barcode" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
-            <DataDisplay label="Call Number" :value="metadataStore.detail.callNumber" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
-            <DataDisplay label="Title" :value="metadataStore.detail.title"/>
-            <template  v-if="metadataStore.detail.type == 'SirsiMetadata'">
-               <DataDisplay label="Creator Name" :value="metadataStore.detail.creatorName"/>
-               <DataDisplay label="Creator Name Type" :value="metadataStore.detail.creatorNameType"/>
-               <DataDisplay label="Year" :value="metadataStore.detail.year"/>
-               <DataDisplay label="Place of Publication" :value="metadataStore.detail.publicationPlace"/>
-               <DataDisplay label="Location" :value="metadataStore.detail.location"/>
+         <dl>
+            <template v-if="metadataStore.detail.type != 'ExternalMetadata'">
+               <DataDisplay label="Type" :value="metadataStore.detail.type"/>
+               <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey" v-if="metadataStore.detail.type == 'SirsiMetadata'" />
+               <DataDisplay label="Barcode" :value="metadataStore.detail.barcode" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
+               <DataDisplay label="Call Number" :value="metadataStore.detail.callNumber" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
+               <DataDisplay label="Title" :value="metadataStore.detail.title"/>
+               <template  v-if="metadataStore.detail.type == 'SirsiMetadata'">
+                  <DataDisplay label="Creator Name" :value="metadataStore.detail.creatorName"/>
+                  <DataDisplay label="Creator Name Type" :value="metadataStore.detail.creatorNameType"/>
+                  <DataDisplay label="Year" :value="metadataStore.detail.year"/>
+                  <DataDisplay label="Place of Publication" :value="metadataStore.detail.publicationPlace"/>
+                  <DataDisplay label="Location" :value="metadataStore.detail.location"/>
+               </template>
+               <DataDisplay v-if="metadataStore.related.collection" label="Collection" :value="metadataStore.related.collection.id">
+                  <router-link :to="`/metadata/${metadataStore.related.collection.id}`">
+                     {{ metadataStore.related.collection.title }}
+                  </router-link>
+               </DataDisplay>
             </template>
-            <DataDisplay v-if="metadataStore.related.collection" label="Collection" :value="metadataStore.related.collection.id">
-               <router-link :to="`/metadata/${metadataStore.related.collection.id}`">
-                  {{ metadataStore.related.collection.title }}
-               </router-link>
-            </DataDisplay>
-            <DataDisplay :spacer="true"/>
 
+            <template v-if="externalSystem == 'ArchivesSpace'">
+               <DataDisplay label="Type" :value="externalSystem"/>
+               <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
+                  <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
+                     {{metadataStore.detail.externalURI}}
+                     <i class="icon fas fa-external-link"></i>
+                  </a>
+               </DataDisplay>
+               <DataDisplay label="Repository" :value="metadataStore.archivesSpace.repo"/>
+               <DataDisplay label="Collection Title" :value="metadataStore.archivesSpace.collectionTitle"/>
+               <DataDisplay label="ID" :value="metadataStore.archivesSpace.id"/>
+               <DataDisplay label="Language" :value="metadataStore.archivesSpace.language"/>
+               <DataDisplay label="Dates" :value="metadataStore.archivesSpace.dates"/>
+               <DataDisplay label="Title" :value="metadataStore.detail.title"/>
+               <DataDisplay label="Level" :value="metadataStore.archivesSpace.level"/>
+               <DataDisplay label="Created By" :value="metadataStore.archivesSpace.createdBy"/>
+               <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
+               <DataDisplay v-if="metadataStore.archivesSpace.publishedAt" label="Published Date" :value="metadataStore.archivesSpace.publishedAt"/>
+            </template>
+
+            <template v-if="externalSystem == 'JSTOR Forum'">
+               <DataDisplay label="Type" :value="externalSystem"/>
+               <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
+                  <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
+                     {{metadataStore.detail.externalURI}}
+                     <i class="icon fas fa-external-link"></i>
+                  </a>
+               </DataDisplay>
+               <DataDisplay label="Collection" :value="metadataStore.jstor.collection"/>
+               <DataDisplay label="Title" :value="metadataStore.jstor.title"/>
+               <DataDisplay label="Description" :value="metadataStore.jstor.desc"/>
+               <DataDisplay label="Creator" :value="metadataStore.jstor.creator"/>
+               <DataDisplay label="Date" :value="metadataStore.jstor.date"/>
+               <DataDisplay label="Width" :value="metadataStore.jstor.width"/>
+               <DataDisplay label="Height" :value="metadataStore.jstor.height"/>
+               <DataDisplay label="Artstor ID" :value="metadataStore.jstor.id"/>
+               <DataDisplay label="Forum ID" :value="metadataStore.jstor.ssid"/>
+            </template>
+
+            <template v-if="externalSystem == 'Apollo'">
+               <DataDisplay label="Type" :value="externalSystem"/>
+               <DataDisplay label="URL" :value="metadataStore.apollo.itemURL">
+                  <a class="supplemental" :href="metadataStore.apollo.itemURL" target="_blank">
+                     {{metadataStore.apollo.itemURL}}
+                     <i class="icon fas fa-external-link"></i>
+                  </a>
+               </DataDisplay>
+               <DataDisplay label="Collection PID" :value="metadataStore.apollo.collectionPID">
+                  <a class="supplemental" :href="metadataStore.apollo.collectionURL" target="_blank">
+                     {{metadataStore.apollo.collectionPID}}
+                     <i class="icon fas fa-external-link"></i>
+                  </a>
+               </DataDisplay>
+               <DataDisplay label="Collection Title" :value="metadataStore.apollo.collectionTitle"/>
+               <DataDisplay label="Collection Barcode" :value="metadataStore.apollo.collectionBarcode"/>
+               <DataDisplay label="Collection Catalog Key" :value="metadataStore.apollo.collectionCatalogKey"/>
+               <DataDisplay label="Item PID" :value="metadataStore.apollo.pid"/>
+               <DataDisplay label="Item Type" :value="metadataStore.apollo.type"/>
+               <DataDisplay label="Item Title" :value="metadataStore.apollo.title"/>
+            </template>
+
+            <DataDisplay :spacer="true"/>
             <DataDisplay label="Manuscript/Unpublished Item" :value="formatBoolean(metadataStore.detail.isManuscript)"/>
             <DataDisplay label="Personal Item" :value="formatBoolean(metadataStore.detail.isPersonalItem)"/>
             <DataDisplay label="OCR Hint" :value="ocrHint"/>
@@ -59,26 +122,8 @@
                </DataDisplay>
             </template>
          </dl>
+
          <template v-if="externalSystem == 'ArchivesSpace'">
-            <dl>
-               <DataDisplay label="Type" :value="externalSystem"/>
-               <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
-                  <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
-                     {{metadataStore.detail.externalURI}}
-                     <i class="icon fas fa-external-link"></i>
-                  </a>
-               </DataDisplay>
-               <DataDisplay label="Repository" :value="metadataStore.archivesSpace.repo"/>
-               <DataDisplay label="Collection Title" :value="metadataStore.archivesSpace.collectionTitle"/>
-               <DataDisplay label="ID" :value="metadataStore.archivesSpace.id"/>
-               <DataDisplay label="Language" :value="metadataStore.archivesSpace.language"/>
-               <DataDisplay label="Dates" :value="metadataStore.archivesSpace.dates"/>
-               <DataDisplay label="Title" :value="metadataStore.detail.title"/>
-               <DataDisplay label="Level" :value="metadataStore.archivesSpace.level"/>
-               <DataDisplay label="Created By" :value="metadataStore.archivesSpace.createdBy"/>
-               <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
-               <DataDisplay v-if="metadataStore.archivesSpace.publishedAt" label="Published Date" :value="metadataStore.archivesSpace.publishedAt"/>
-            </dl>
             <div v-if="metadataStore.hasMasterFiles == false"  class="as-toolbar">
                <p>Not published to ArchivesSpace - no master files.</p>
             </div>
@@ -86,48 +131,8 @@
                <DPGButton label="Publish (immediate)" class="as-publish" @click="publishToAS(true)" :loading="publishing"/>
                <DPGButton label="Publish (reviewed)" class="as-publish" @click="publishToAS(false)" :loading="publishing"/>
             </div>
-
             <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
          </template>
-         <dl v-if="externalSystem == 'JSTOR Forum'">
-            <DataDisplay label="Type" :value="externalSystem"/>
-            <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
-               <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
-                  {{metadataStore.detail.externalURI}}
-                  <i class="icon fas fa-external-link"></i>
-               </a>
-            </DataDisplay>
-            <DataDisplay label="Collection" :value="metadataStore.jstor.collection"/>
-            <DataDisplay label="Title" :value="metadataStore.jstor.title"/>
-            <DataDisplay label="Description" :value="metadataStore.jstor.desc"/>
-            <DataDisplay label="Creator" :value="metadataStore.jstor.creator"/>
-            <DataDisplay label="Date" :value="metadataStore.jstor.date"/>
-            <DataDisplay label="Width" :value="metadataStore.jstor.width"/>
-            <DataDisplay label="Height" :value="metadataStore.jstor.height"/>
-            <DataDisplay label="Artstor ID" :value="metadataStore.jstor.id"/>
-            <DataDisplay label="Forum ID" :value="metadataStore.jstor.ssid"/>
-         </dl>
-         <dl v-if="externalSystem == 'Apollo'">
-            <DataDisplay label="Type" :value="externalSystem"/>
-            <DataDisplay label="URL" :value="metadataStore.apollo.itemURL">
-               <a class="supplemental" :href="metadataStore.apollo.itemURL" target="_blank">
-                  {{metadataStore.apollo.itemURL}}
-                  <i class="icon fas fa-external-link"></i>
-               </a>
-            </DataDisplay>
-            <DataDisplay label="Collection PID" :value="metadataStore.apollo.collectionPID">
-               <a class="supplemental" :href="metadataStore.apollo.collectionURL" target="_blank">
-                  {{metadataStore.apollo.collectionPID}}
-                  <i class="icon fas fa-external-link"></i>
-               </a>
-            </DataDisplay>
-            <DataDisplay label="Collection Title" :value="metadataStore.apollo.collectionTitle"/>
-            <DataDisplay label="Collection Barcode" :value="metadataStore.apollo.collectionBarcode"/>
-            <DataDisplay label="Collection Catalog Key" :value="metadataStore.apollo.collectionCatalogKey"/>
-            <DataDisplay label="Item PID" :value="metadataStore.apollo.pid"/>
-            <DataDisplay label="Item Type" :value="metadataStore.apollo.type"/>
-            <DataDisplay label="Item Title" :value="metadataStore.apollo.title"/>
-         </dl>
       </Panel>
       <Panel header="Digital Library Information">
          <dl>

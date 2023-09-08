@@ -168,6 +168,13 @@ export const useMetadataStore = defineStore('metadata', {
          this.asMatch.title = ""
          this.asMatch.id = ""
       },
+      resetArchivesSpaceErrors() {
+         this.asMatch.error = ""
+         this.asMatch.searching = false
+         this.asMatch.title = ""
+         this.asMatch.id = ""
+         this.archivesSpace.error = ""
+      },
       async validateArchivesSpaceURI( uri ) {
          this.resetSearch()
          this.asMatch.searching = true
