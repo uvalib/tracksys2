@@ -33,6 +33,44 @@ type hatiTrustUpdateRequest struct {
 	Notes               string `json:"notes"`
 }
 
+type hathiTrustBatchUpdateRequest struct {
+	Field string `json:"field"`
+	Value string `json:"value"`
+}
+
+func (svc *serviceContext) updateOrderHathiTrustStatus(c *gin.Context) {
+	orderID := c.Param("id")
+	log.Printf("INFO: received batch hathitrust update request for order %s", orderID)
+
+	var req hathiTrustBatchUpdateRequest
+	err := c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid batch update hathitrust request: %s", err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	log.Printf("INFO: batch update hathitrust %s=%s for order %s", req.Field, req.Value, orderID)
+	idQ := "select h.id from orders o inner join units u on u.order_id = o.id inner join metadata m on m.id = u.metadata_id "
+	idQ += "inner join hathitrust_statuses h on h.metadata_id = m.id where o.id=? and m.hathitrust = 1"
+	var statusIDs []int64
+	err = svc.DB.Raw(idQ, orderID).Scan(&statusIDs).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get hathitrust status ids for update: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf("INFO: hathitrust statues %v will be updated with %s=%s", statusIDs, req.Field, req.Value)
+	err = svc.DB.Exec(fmt.Sprintf("update hathitrust_statuses set %s=? where id in ?", req.Field), req.Value, statusIDs).Error
+	if err != nil {
+		log.Printf("ERROR: unable to update hathitrust status hathitrust %s=%s: %s", req.Field, req.Value, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.String(http.StatusOK, "updated")
+}
+
 func (svc *serviceContext) updateHathiTrustStatus(c *gin.Context) {
 	mdID := c.Param("id")
 	log.Printf("INFO: received hathitrust update request for metadata %s", mdID)

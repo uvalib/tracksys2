@@ -47,6 +47,15 @@ export const useOrdersStore = defineStore('orders', {
       totalLookupHits: 0,
 	}),
 	getters: {
+      hathiTrustMetadataCount: state => {
+         let cnt = 0
+         state.units.forEach( u => {
+            if (u.metadata.hathiTrust == true && u.metadata.hathiTrustStatus.metadataSubmittedAt &&  !u.metadata.hathiTrustStatus.finishedAt) {
+               cnt++
+            }
+         })
+         return cnt
+      },
       isFeePaid: state => {
          if ( state.detail.invoice == null) return false
          return state.detail.invoice.dateFeePaid != null
@@ -567,6 +576,18 @@ export const useOrdersStore = defineStore('orders', {
          axios.post( url ).then( () => {
             system.toastMessage("Order Checked", `Order ${this.detail.id} has been checked. See details in the job status log.`)
             system.working = false
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      batchUpdateHathiTrust(field, value) {
+         const system = useSystemStore()
+         let req = {field: field, value: value}
+         if ( field == "package_submitted_at" || field == "finished_at") {
+            req.value = dayjs(value).format("YYYY-MM-DD")
+         }
+         axios.post( `/api/orders/${this.detail.id}/hathitrust`, req ).then( () => {
+            system.toastMessage("Updated", `HathiTrust status records have been updated.`)
          }).catch( e => {
             system.setError(e)
          })

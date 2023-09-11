@@ -155,6 +155,9 @@
    </div>
    <div class="details">
       <Panel header="Units">
+         <div v-if="user.isAdmin &&  ordersStore.hathiTrustMetadataCount > 0" class="hathi">
+            <DPGButton label="Batch Update HathiTrust Status" class="p-button-secondary" @click="hathiUpdateClicked"/>
+         </div>
          <template #header v-if="detail.status != 'completed' && detail.status != 'canceled'">
             <div class="add-header">
                <span>Units</span>
@@ -164,6 +167,32 @@
          <RelatedUnits :units="ordersStore.units" />
       </Panel>
    </div>
+   <Dialog v-model:visible="showHathiTrustUpdate" :modal="true" header="Batch Update HathiTrust Status" @hide="emailClosed()" >
+      <div class="hathi-panel">
+         <p>Update {{  ordersStore.hathiTrustMetadataCount }} metadata records</p>
+         <div class="columns">
+            <div>
+               <label>Field</label>
+               <select v-model="hathiTrustField">
+                  <option value="" disabled selected>Select a field</option>
+                  <option value="metadata_status">Metadata Status</option>
+                  <option value="package_submitted_at">Date Package Submitted</option>
+                  <option value="package_status">Package Status</option>
+                  <option value="finished_at">Date Finished</option>
+               </select>
+            </div>
+            <div>
+               <label>Value</label>
+               <input v-if="hathiTrustField == 'metadata_status' || hathiTrustField == 'package_status'" type="text" v-model="hathiTrustValue" />
+               <Calendar v-else v-model="hathiTrustValue"  dateFormat="yy-mm-dd" showButtonBar/>
+            </div>
+         </div>
+         <div class="buttons">
+            <DPGButton label="Cancel" class="p-button-secondary" @click="showHathiTrustUpdate = false"/>
+            <DPGButton label="Update" class="p-button-primary" @click="updateHathiTrustStatuses"/>
+         </div>
+      </div>
+   </Dialog>
    <Dialog v-model:visible="showEmail" :modal="true" header="Customer Email" @hide="emailClosed()" :style="{width: '650px'}">
       <div v-html="detail.email" class="email"></div>
       <template #footer>
@@ -196,6 +225,7 @@ import SendEmailDialog from '../components/order/SendEmailDialog.vue'
 import AddUnitDialog from '../components/order/AddUnitDialog.vue'
 import { useConfirm } from "primevue/useconfirm"
 import AssignModal from '../components/order/AssignModal.vue'
+import Calendar from 'primevue/calendar'
 
 const confirm = useConfirm()
 const route = useRoute()
@@ -209,6 +239,10 @@ const { detail } = storeToRefs(ordersStore)
 
 const showEmail = ref(false)
 const customer = ref(null)
+
+const showHathiTrustUpdate = ref(false)
+const hathiTrustField = ref("metadata_status")
+const hathiTrustValue = ref("")
 
 const customerInfo = computed(() => {
    let cust = `${ordersStore.detail.customer.lastName}, ${ordersStore.detail.customer.firstName}`
@@ -292,6 +326,16 @@ onBeforeMount( async () => {
    document.title = `Order #${orderID}`
    await ordersStore.getOrderDetails(orderID)
    await customerStore.getCustomers()
+})
+
+const hathiUpdateClicked = (() => {
+   showHathiTrustUpdate.value = true
+   hathiTrustField.value = "metadata_status"
+   hathiTrustValue.value = ""
+})
+const updateHathiTrustStatuses = ( async () => {
+   await ordersStore.batchUpdateHathiTrust( hathiTrustField.value,  hathiTrustValue.value)
+   showHathiTrustUpdate.value = false
 })
 
 const deleteOrder = (() => {
@@ -506,6 +550,11 @@ div.item {
       margin-bottom: 10px !important;
    }
 
+   div.hathi {
+      margin: 0 0 15px 0;
+      font-size: 0.85em;
+   }
+
    div.customer, div.status {
       display: flex;
       flex-flow: row nowrap;
@@ -561,6 +610,41 @@ div.item {
       }
    }
 }
+.hathi-panel {
+   p {
+      padding: 0;
+      margin: 0 0 15px 0;
+   }
+   label {
+      font-weight: 500;
+      display: block;
+      margin-bottom: 5px
+   }
+   select, input[type=text] {
+      padding: 9px;
+   }
+   div.columns {
+      display: flex;
+      flex-flow: row nowrap;
+      .p-calendar.p-component.p-inputwrapper {
+         width: 100%;
+      }
+      div {
+         flex-grow: 1;
+      }
+      div:last-of-type {
+         margin-left: 15px;
+      }
+   }
+   .buttons {
+      text-align: right;
+      margin-top: 15px;
+      button {
+         margin-left: 10px;
+      }
+   }
+}
+
 :deep(dl) {
    margin: 0;
    display: inline-grid;

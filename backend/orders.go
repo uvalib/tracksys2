@@ -204,7 +204,9 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 	out := oResp{Order: oDetail}
 	// NOTE: Manually calculate the master files count and return it as num_master_files instead of using the inaccurate cache
 	mfCnt := "(select count(*) from master_files m inner join units u on u.id=m.unit_id where u.id=units.id) as num_master_files"
-	err = svc.DB.Debug().Where("order_id=?", oID).Preload("IntendedUse").Preload("Metadata").Select("units.*", mfCnt).Find(&out.Units).Error
+	err = svc.DB.Where("order_id=?", oID).Preload("IntendedUse").
+		Preload("Metadata").Preload("Metadata.HathiTrustStatus").
+		Select("units.*", mfCnt).Find(&out.Units).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get units for order %s: %s", oID, err.Error())
 	}
