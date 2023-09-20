@@ -71,7 +71,26 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	c.JSON(http.StatusOK, resp)
+
+	out := struct {
+		*sirsiResponse
+		ExistingPID string `json:"existingPID"`
+		ExistingID  int64  `json:"existingID"`
+		Exists      bool   `json:"exists"`
+	}{
+		sirsiResponse: resp,
+	}
+
+	var existMD metadata
+	err = svc.DB.Where("catalog_key = ?", resp.CatalogKey).Limit(1).Find(&existMD).Error
+	if err != nil {
+		log.Printf("ERROR: failed check for existing metadata with catkey %s: %s", resp.CatalogKey, err.Error())
+	} else {
+		out.Exists = true
+		out.ExistingID = existMD.ID
+		out.ExistingPID = existMD.PID
+	}
+	c.JSON(http.StatusOK, out)
 }
 
 type solrDocument struct {

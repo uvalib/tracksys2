@@ -15,6 +15,12 @@
                <DataDisplay label="Title" :value="info.title" blankValue="Unknown"/>
                <DataDisplay label="Call Number" :value="info.callNumber" blankValue="Unknown"/>
             </dl>
+            <div v-if="metadataStore.sirsiMatch.metadataExists" class="md-exists">
+               <p>
+                  TrackSys already contains a metadata record for this item. Details can be found
+                  <router-link :to="`/metadata/${metadataStore.sirsiMatch.existingID}`">here</router-link>.
+               </p>
+            </div>
          </template>
          <template v-if="info.type == 'XmlMetadata'">
             <FormKit label="Title" type="text" v-model="info.title" required @input="xmlTitleChanged"/>
@@ -70,7 +76,7 @@
       </Panel>
       <div class="acts">
          <DPGButton @click="cancelCreate" label="Cancel" class="p-button-secondary"/>
-         <FormKit type="submit" :label="createLabel" :disabled="!validated" :wrapper-class="submitClass"/>
+         <FormKit type="submit" :label="createLabel" :disabled="metadataStore.sirsiMatch.metadataExists" :wrapper-class="submitClass"/>
       </div>
    </FormKit>
 </template>
@@ -289,6 +295,24 @@ p.note {
 }
 ul.note {
    margin:5px 0 0 0;
+}
+.md-exists {
+   text-align: center;
+   p {
+      padding: 0;
+      margin: 0 0 15px 0;
+      font-weight: bold;
+      color: var(--uvalib-red-dark);
+   }
+   a {
+      color: var(--uvalib-brand-blue-light);
+      font-weight: 600;
+      text-decoration: none;
+
+      &:hover {
+         text-decoration: underline;
+      }
+   }
 }
 
 .split {

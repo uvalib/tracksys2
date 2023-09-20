@@ -36,8 +36,8 @@ button.dpg-form-input {
    @include primary-button();
    width: auto;
 }
-.submit-button.disabled button {
-   opacity: 0.3;
+.submit-button.disabled button, .submit-button button:disabled  {
+   opacity: 0.3 !important;
    cursor: default;
    &:hover {
       background-color: var(--uvalib-brand-blue-light);

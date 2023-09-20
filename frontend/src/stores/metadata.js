@@ -119,6 +119,9 @@ export const useMetadataStore = defineStore('metadata', {
          location: "",
          error: "",
          searching: false,
+         metadataExists: false,
+         existingID: 0,
+         existingPID: ""
       },
       asMatch: {
          error: "",
@@ -163,6 +166,9 @@ export const useMetadataStore = defineStore('metadata', {
          this.sirsiMatch.creatorName = ""
          this.sirsiMatch.error = ""
          this.sirsiMatch.searching = false
+         this.sirsiMatch.metadataExists = false
+         this.sirsiMatch.existingID = 0
+         this.sirsiMatch.existingPID = ""
          this.asMatch.error = ""
          this.asMatch.searching = false
          this.asMatch.title = ""
@@ -214,6 +220,9 @@ export const useMetadataStore = defineStore('metadata', {
             this.sirsiMatch.publicationPlace =  response.data.publicationPlace
             this.sirsiMatch.location =  response.data.location
             this.sirsiMatch.searching = false
+            this.sirsiMatch.metadataExists = response.data.exists
+            this.sirsiMatch.existingID = response.data.existingID
+            this.sirsiMatch.existingPID = response.data.existingPID
          }).catch( e => {
             this.sirsiMatch.searching = false
             this.sirsiMatch.error = e
