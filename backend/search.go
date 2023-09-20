@@ -596,7 +596,7 @@ func (svc *serviceContext) imageSearchRequest(c *gin.Context) {
 	resp := similarResult{Hits: make([]*similarImageHit, 0)}
 	startTime := time.Now()
 	distQ := "WHERE BIT_COUNT(phash ^ ?) <= ?"
-	err := svc.DB.Raw(fmt.Sprintf("SELECT count(id) FROM master_files %s", distQ), pHashQ, distance).Scan(&resp.Total).Error
+	err := svc.DB.Debug().Raw(fmt.Sprintf("SELECT count(id) FROM master_files %s", distQ), pHashQ, distance).Scan(&resp.Total).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get image search hit count: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -606,7 +606,7 @@ func (svc *serviceContext) imageSearchRequest(c *gin.Context) {
 	imgFields := "m.id as id, m.pid as pid, m.filename as filename, m.title as title, m.description as description, BIT_COUNT(phash ^ 16063924867715495670) as distance"
 	mdFields := "m.unit_id as unit_id, m2.id as md_id, m2.title as md_title, m2.pid as md_pid"
 	orderClause := "order by distance asc limit 0,50"
-	err = svc.DB.Raw(fmt.Sprintf("SELECT %s, %s FROM master_files m inner join metadata m2 on m2.id=metadata_id %s %s",
+	err = svc.DB.Debug().Raw(fmt.Sprintf("SELECT %s, %s FROM master_files m left join metadata m2 on m2.id=metadata_id %s %s",
 		imgFields, mdFields, distQ, orderClause), pHashQ, distance).Scan(&resp.Hits).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get image search hits: %s", err.Error())
