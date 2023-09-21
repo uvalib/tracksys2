@@ -90,6 +90,7 @@ type metadata struct {
 	OCRLanguageHint      string              `json:"ocrLanguageHint"`
 	AvailabilityPolicyID *int64              `json:"-"`
 	AvailabilityPolicy   *availabilityPolicy `gorm:"foreignKey:AvailabilityPolicyID" json:"availabilityPolicy"`
+	Locations            []location          `gorm:"foreignKey:MetadataID" json:"locations"`
 	ExternalSystemID     *int64              `json:"-"`
 	ExternalSystem       *externalSystem     `gorm:"foreignKey:ExternalSystemID" json:"externalSystem"`
 	ExternalURI          *string             `gorm:"column:external_uri" json:"externalURI"`
@@ -610,8 +611,8 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 	var md metadata
 	err := svc.DB.Preload("OCRHint").Preload("AvailabilityPolicy").
 		Preload("ExternalSystem").Preload("SupplementalSystem").Preload("HathiTrustStatus").
-		Preload("APTrustStatus").Preload("PreservationTier").Limit(1).
-		Find(&md, mdID).Error
+		Preload("APTrustStatus").Preload("PreservationTier").Preload("Locations").
+		Limit(1).Find(&md, mdID).Error
 	if err != nil {
 		return nil, err
 	}

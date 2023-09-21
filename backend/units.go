@@ -429,3 +429,33 @@ func (svc *serviceContext) validateIncludeInDL(metadataID int64, tgtUnitID int64
 
 	return nil
 }
+
+type unitLocations struct {
+	ID            int64      `json:"id"`
+	OrderID       int64      `gorm:"column:order_id" json:"orderID"`
+	OrderTitle    string     `gorm:"column:order_title" json:"orderTitle"`
+	UnitStatus    string     `json:"unitStatus"`
+	DateArchived  *time.Time `json:"dateArchived"`
+	IntendedUseID int64      `json:"intendedUseID"`
+	CompleteScan  bool       `json:"completeScan"`
+	StaffNotes    string     `json:"staffNotes"`
+}
+
+func (svc *serviceContext) getLocationUnits(c *gin.Context) {
+	tgtLocID := c.Param("id")
+	log.Printf("INFO: get units associated with location %s", tgtLocID)
+	sql := "select u.id,u.order_id,o.order_title, u.unit_status, u.date_archived, u.intended_use_id, u.complete_scan,u.staff_notes "
+	sql += " from master_file_locations l "
+	sql += " inner join master_files m on m.id = master_file_id "
+	sql += " inner join units u on u.id = unit_id "
+	sql += " inner join orders o on o.id = order_id "
+	sql += " where location_id=? group by u.id"
+	var out []unitLocations
+	err := svc.DB.Raw(sql, tgtLocID).Scan(&out).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get units related to locatipon %s: %s", tgtLocID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, out)
+}

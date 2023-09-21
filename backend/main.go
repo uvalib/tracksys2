@@ -62,6 +62,8 @@ func main() {
 		api.POST("/workstation/:id/update", svc.updateWorkstation)
 		api.POST("/workstation/:id/setup", svc.updateWorkstationSetup)
 
+		api.GET("/locations/:id/units", svc.getLocationUnits)
+
 		api.GET("/masterfiles/:id", svc.getMasterFile)
 		api.POST("/masterfiles/:id/update", svc.updateMasterFile)
 		api.POST("/masterfiles/:id/tags", svc.addMasterFileTag)

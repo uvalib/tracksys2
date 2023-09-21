@@ -34,6 +34,12 @@
                   <DataDisplay label="Year" :value="metadataStore.detail.year"/>
                   <DataDisplay label="Place of Publication" :value="metadataStore.detail.publicationPlace"/>
                   <DataDisplay label="Location" :value="metadataStore.detail.location"/>
+                  <DataDisplay v-if="metadataStore.detail.folders" label="Folders" :value="metadataStore.detail.folders.length">
+                     <span v-for="(l,idx) in metadataStore.detail.folders">
+                        <DPGButton text :label="l.folderID" @click="folderClicked(l)" />
+                        <span v-if="idx < (metadataStore.detail.folders.length-1)" class="comma">,</span>
+                     </span>
+                  </DataDisplay>
                </template>
                <DataDisplay v-if="metadataStore.related.collection" label="Collection" :value="metadataStore.related.collection.id">
                   <router-link :to="`/metadata/${metadataStore.related.collection.id}`">
@@ -205,6 +211,7 @@
       </div>
    </template>
    <HathiTrustDialog v-if="showHathiDialog == true" @closed="showHathiDialog=false" />
+   <LocationUnitsDialog v-if="showLocUnitsDialog == true" :folder="targetFolder" @closed="showLocUnitsDialog=false" @unit="unitPicked"/>
 </template>
 
 <script setup>
@@ -227,6 +234,7 @@ import FileUpload from 'primevue/fileupload'
 import { useConfirm } from "primevue/useconfirm"
 import CollectionRecords from '../components/related/CollectionRecords.vue'
 import HathiTrustDialog from '../components/metadata/HathiTrustDialog.vue'
+import LocationUnitsDialog from '../components/metadata/LocationUnitsDialog.vue'
 
 const confirm = useConfirm()
 const route = useRoute()
@@ -237,6 +245,8 @@ const userStore = useUserStore()
 
 const publishing = ref(false)
 const showHathiDialog = ref(false)
+const showLocUnitsDialog = ref(false)
+const targetFolder = ref("")
 
 const canDelete = computed(() => {
    if (!userStore.isAdmin && !userStore.isSupervisor) return false
@@ -287,6 +297,23 @@ onBeforeMount( async () => {
    let mdID = route.params.id
    document.title = `Metadata #${mdID}`
    await metadataStore.getDetails( mdID )
+})
+
+const folderClicked = (async (locInfo) => {
+   await metadataStore.getLocationUnits(locInfo)
+   if (systemStore.error == "") {
+      if ( metadataStore.locationUnits && metadataStore.locationUnits.length == 1) {
+         router.push("/units/"+metadataStore.locationUnits[0].id)
+      } else {
+         targetFolder.value = locInfo.folderID
+         showLocUnitsDialog.value = true
+      }
+   }
+})
+
+const unitPicked = ((unitID) => {
+   showLocUnitsDialog.value = false
+   router.push("/units/"+unitID)
 })
 
 const deleteMetadata = (() => {
@@ -429,6 +456,11 @@ const formatDate = (( date ) => {
    }
    .thumb {
       margin: 10px;
+   }
+   .comma {
+      display: inline-block;
+      padding: 0;
+      margin: 0 5px 0 0;
    }
    p.error {
       color: var(--uvalib-red-emergency);

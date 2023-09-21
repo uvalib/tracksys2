@@ -32,6 +32,7 @@ export const useMetadataStore = defineStore('metadata', {
          ocrHint: null,
          ocrLanguageHint: "",
          preservationTier: null,
+         folders: [],
          inDL: false,
          inDPLA: false,
          inHathiTrust: false,
@@ -105,6 +106,7 @@ export const useMetadataStore = defineStore('metadata', {
          masterFiles: [],
          collection: null
       },
+      locationUnits: [],
       searchHits: [],
       totalSearchHits: 0,
       sirsiMatch: {
@@ -328,6 +330,9 @@ export const useMetadataStore = defineStore('metadata', {
          this.detail.thumbURL = details.thumbURL
          this.detail.viewerURL = details.viewerURL
          this.detail.virgoURL = details.virgoURL
+         if ( details.metadata.locations ) {
+            this.detail.folders = details.metadata.locations
+         }
 
          if ( details.metadata.apTrustStatus) {
             this.apTrustStatus.etag = details.metadata.apTrustStatus.etag
@@ -499,6 +504,16 @@ export const useMetadataStore = defineStore('metadata', {
                   specialInstructions: r.order.specialInstructions,
                })
             }
+         })
+      },
+
+      async getLocationUnits( loc ) {
+         this.locationUnits = []
+         return axios.get( `/api/locations/${loc.id}/units` ).then(response => {
+            this.locationUnits = response.data
+         }).catch( (e) => {
+            const system = useSystemStore()
+            system.setError(e)
          })
       }
    }
