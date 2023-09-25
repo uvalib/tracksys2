@@ -82,8 +82,8 @@ export const usePDFStore = defineStore('pdf', {
          this.downloading = false
          this.percent = 100
 
-         let baseURL = window.location.href.split("/units")[0]
-         let downloadURL = `${baseURL}/pdf?unit=${this.unitID}&token=${this.token}`
+         let tgtURL = new URL(window.location.href)
+         let downloadURL = `${tgtURL.origin}/pdf?unit=${this.unitID}&token=${this.token}`
          if (this.includeText) {
             let pages = "all"
             if ( this.targetMasterFiles.length > 0) {
