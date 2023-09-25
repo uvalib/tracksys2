@@ -86,9 +86,12 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 	if err != nil {
 		log.Printf("ERROR: failed check for existing metadata with catkey %s: %s", resp.CatalogKey, err.Error())
 	} else {
-		out.Exists = true
-		out.ExistingID = existMD.ID
-		out.ExistingPID = existMD.PID
+		if existMD.ID > 0 {
+			log.Printf("INFO: metadata with barcode [%s] catkey [%s] already exists with id [%d]", barcode, catKey, existMD.ID)
+			out.Exists = true
+			out.ExistingID = existMD.ID
+			out.ExistingPID = existMD.PID
+		}
 	}
 	c.JSON(http.StatusOK, out)
 }
