@@ -50,8 +50,10 @@ export const useOrdersStore = defineStore('orders', {
       hathiTrustMetadataCount: state => {
          let cnt = 0
          state.units.forEach( u => {
-            if (u.metadata.hathiTrust == true && u.metadata.hathiTrustStatus.metadataSubmittedAt &&  !u.metadata.hathiTrustStatus.finishedAt) {
-               cnt++
+            if ( u.metadata ) {
+               if (u.metadata.hathiTrust == true && u.metadata.hathiTrustStatus.metadataSubmittedAt &&  !u.metadata.hathiTrustStatus.finishedAt) {
+                  cnt++
+               }
             }
          })
          return cnt

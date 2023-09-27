@@ -40,6 +40,7 @@ export const useUnitsStore = defineStore('units', {
       canPublishToVirgo: state => {
          const system = useSystemStore()
          if (system.working) return false
+         if ( !state.detail.metadata ) return false
 
          if ( state.detail.metadata.type == "ExternalMetadata" ) return false
          let canPublish =  true
@@ -373,6 +374,8 @@ export const useUnitsStore = defineStore('units', {
       },
 
       downloadPDF() {
+         if ( !state.detail.metadata ) return
+
          let downloadURL = `/api/units/${this.detail.id}/pdf/download`
          if (this.pdf.token != "") {
             downloadURL += `?token=${this.pdf.token}`

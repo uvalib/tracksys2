@@ -38,7 +38,8 @@
                   <InputText type="text" v-model="filterModel.value" placeholder="Metadata title"/>
                </template>
                <template #body="slotProps">
-                  <router-link :to="`/metadata/${slotProps.data.metadata.id}`">{{slotProps.data.metadata.title}}</router-link>
+                  <router-link v-if="slotProps.data.metadata" :to="`/metadata/${slotProps.data.metadata.id}`">{{slotProps.data.metadata.title}}</router-link>
+                  <span v-else class="empty">N/A</span>
                </template>
             </Column>
             <Column field="filename" header="File Name"/>
