@@ -1,5 +1,14 @@
 <template>
    <Menubar :model="items">
+      <template #item="{ label, item, props }">
+            <router-link v-if="item.route" :to="item.route">
+               {{ label }}
+            </router-link>
+            <a v-else :href="item.url" :target="item.target" v-bind="props.action">
+               <span v-bind="props.label">{{ label }}</span>
+               <span v-if="item.items" class="pi pi-fw pi-angle-down" v-bind="props.submenuicon" />
+            </a>
+      </template>
       <template #end>
          <span class="global-search p-input-icon-right" v-if="showSearch">
             <i class="pi pi-search" />
@@ -32,19 +41,19 @@ const showSearch = computed(() => {
 onMounted(() => {
    setTimeout( () => {
       items.value = [
-         {label: "Home", to: "/"},
-         {label: "Orders", to: "/orders"},
-         {label: "Collections", to: "/collections"},
-         {label: "Job Statuses", to: "/jobs"},
+         {label: "Home", route: "/"},
+         {label: "Orders", route: "/orders"},
+         {label: "Collections", route: "/collections"},
+         {label: "Job Statuses", route: "/jobs"},
          {label: "Digitization", items: [
-            {label: "Equipment", to: '/equipment'},
+            {label: "Equipment", route: '/equipment'},
             {label: "Projects", url: systemStore.projectsURL, target: "_blank"},
             {label: "Reports", url: `${systemStore.reportsURL}/reports`, target: "_blank"},
             {label: "Statistics", url: systemStore.reportsURL, target: "_blank"},
          ]},
          {label: "Miscellaneous", items: [
-            {label: "Staff Members", to: "/staff"},
-            {label: "Customers", to: "/customers"},
+            {label: "Staff Members", route: "/staff"},
+            {label: "Customers", route: "/customers"},
          ]}
       ]
    }, 500)
@@ -66,6 +75,17 @@ const searchEntered = (() => {
    padding: 0;
    border-radius: 0;
    min-height: 48px;
+   li.p-menuitem {
+      div.p-menuitem-content a {
+         color: #495057 !important;
+         padding: 0.75rem 1rem !important;
+         display: block;
+         border-radius: 0;
+         &:hover {
+            text-decoration: none !important;
+         }
+      }
+   }
 }
 .global-search {
    margin: 5px;
