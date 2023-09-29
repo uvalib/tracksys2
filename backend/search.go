@@ -603,11 +603,11 @@ func (svc *serviceContext) imageSearchRequest(c *gin.Context) {
 		return
 	}
 
-	imgFields := "m.id as id, m.pid as pid, m.filename as filename, m.title as title, m.description as description, BIT_COUNT(phash ^ 16063924867715495670) as distance"
+	imgFields := "m.id as id, m.pid as pid, m.filename as filename, m.title as title, m.description as description, BIT_COUNT(phash ^ ?) as distance"
 	mdFields := "m.unit_id as unit_id, m2.id as md_id, m2.title as md_title, m2.pid as md_pid"
 	orderClause := "order by distance asc limit 0,50"
 	err = svc.DB.Debug().Raw(fmt.Sprintf("SELECT %s, %s FROM master_files m left join metadata m2 on m2.id=metadata_id %s %s",
-		imgFields, mdFields, distQ, orderClause), pHashQ, distance).Scan(&resp.Hits).Error
+		imgFields, mdFields, distQ, orderClause), pHashQ, pHashQ, distance).Scan(&resp.Hits).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get image search hits: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
