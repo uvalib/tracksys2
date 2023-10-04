@@ -82,9 +82,9 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 	}
 
 	var existMD metadata
-	err = svc.DB.Where("catalog_key = ?", resp.CatalogKey).Limit(1).Find(&existMD).Error
+	err = svc.DB.Where("barcode = ?", resp.Barcode).Limit(1).Find(&existMD).Error
 	if err != nil {
-		log.Printf("ERROR: failed check for existing metadata with catkey %s: %s", resp.CatalogKey, err.Error())
+		log.Printf("ERROR: failed check for existing metadata with barcode %s: %s", resp.Barcode, err.Error())
 	} else {
 		if existMD.ID > 0 {
 			log.Printf("INFO: metadata with barcode [%s] catkey [%s] already exists with id [%d]", barcode, catKey, existMD.ID)
