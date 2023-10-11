@@ -124,9 +124,8 @@ function show() {
 
 
 .p-button  {
-      margin-left: 5px;
-      font-size: 0.8em;
-   }
+   margin-left: 5px;
+}
 
 .toolbar {
    padding: 10px 0;

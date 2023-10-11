@@ -33,6 +33,11 @@
                </div>
             </template>
             <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
+            <Column field="id" header="ID">
+               <template #body="slotProps">
+                  <router-link :to="`/masterfiles/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
+               </template>
+            </Column>
             <Column field="metadata.title" header="Metadata" filterField="metadata.title" :showFilterMatchModes="false" >
                <template #filter="{filterModel}">
                   <InputText type="text" v-model="filterModel.value" placeholder="Metadata title"/>

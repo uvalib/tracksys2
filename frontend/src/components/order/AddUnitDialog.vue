@@ -214,14 +214,13 @@ div.p-panel {
       flex-flow: row nowrap;
       justify-content: flex-start;
       align-items: flex-start;
-      input[type-text] {
-         flex-grow: 1;
-         margin-right: 5px;
-      }
+
       button {
          font-size: 0.9em;
          display: inline-block;
          margin-left: 5px;
+         padding: 0.5em 1em;
+         width: 75px;
       }
    }
    div.hint {

@@ -60,10 +60,18 @@ span.p-button.p-component.p-fileupload-choose {
    width: 100%;
 }
 
+.p-picklist-buttons.p-picklist-transfer-buttons, .p-picklist-buttons.p-picklist-target-controls {
+   button {
+      margin-bottom: 0.5rem;
+   }
+}
+.p-fileupload.p-fileupload-basic.p-component {
+   padding: 0.5em 1em;
+}
+
 button.p-button, .p-fileupload.p-fileupload-basic.p-component {
    font-family: inherit;
    font-size: 100%;
-   padding: 0.5em 1em;
    text-decoration: none;
    margin: 0;
    border-radius: 5px;
@@ -73,6 +81,7 @@ button.p-button, .p-fileupload.p-fileupload-basic.p-component {
    background-color: var(--uvalib-brand-blue-light);
    border: 1px solid var(--uvalib-brand-blue-light);
    margin: 0;
+
    &:hover {
       background-color: var(--uvalib-brand-blue-lighter);
       border: 1px solid var(--uvalib-brand-blue-lighter);
@@ -96,7 +105,7 @@ button.p-button, .p-fileupload.p-fileupload-basic.p-component {
 }
 
 button.p-button.p-disabled {
-   opacity: 0.3;
+   opacity: 0.4;
 }
 
 button.p-button.p-button-secondary {

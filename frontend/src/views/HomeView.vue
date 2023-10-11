@@ -67,7 +67,6 @@
       <template #footer>
          <div class="acts">
             <DPGButton @click="createCollectionClosed" label="Cancel" class="p-button-secondary"/>
-            <span class="spacer"></span>
             <DPGButton @click="createCollection()" label="Create" :disabled="newCollectionFacet.length == 0"/>
          </div>
       </template>
@@ -397,6 +396,11 @@ const createMetadataClosed = (() => {
             margin: 0;
          }
       }
+   }
+}
+.acts {
+   button.p-button {
+      margin-left: 10px;
    }
 }
 </style>

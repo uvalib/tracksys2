@@ -27,12 +27,11 @@ import PrimeVue from 'primevue/config'
 import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
 
-app.use(PrimeVue)
+app.use(PrimeVue, { ripple: true })
 app.use(ConfirmationService)
 app.use(ToastService)
 
 import 'primevue/resources/themes/saga-blue/theme.css'
-import 'primevue/resources/primevue.min.css'
 import 'primeicons/primeicons.css'
 
 import Button from 'primevue/button'
