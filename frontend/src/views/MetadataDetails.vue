@@ -35,9 +35,8 @@
                   <DataDisplay label="Place of Publication" :value="metadataStore.detail.publicationPlace"/>
                   <DataDisplay label="Location" :value="metadataStore.detail.location"/>
                   <DataDisplay v-if="metadataStore.detail.folders" label="Folders" :value="metadataStore.detail.folders.length">
-                     <span v-for="(l,idx) in metadataStore.detail.folders">
-                        <DPGButton text :label="l.folderID" @click="folderClicked(l)" />
-                        <span v-if="idx < (metadataStore.detail.folders.length-1)" class="comma">,</span>
+                     <span v-for="(l,idx) in sortedFolders">
+                        <DPGButton class="folder" severity="secondary" icon="pi pi-folder-open" :label="l.folderID" @click="folderClicked(l)" />
                      </span>
                   </DataDisplay>
                </template>
@@ -248,6 +247,14 @@ const showHathiDialog = ref(false)
 const showLocUnitsDialog = ref(false)
 const targetFolder = ref("")
 
+const sortedFolders = computed(() => {
+   return metadataStore.detail.folders.sort( (a,b) => {
+      if ( parseInt(a.folderID,10) < parseInt(b.folderID,10)) return -1
+      if ( parseInt(a.folderID,10) > parseInt(b.folderID,10)) return 1
+      return 0
+   })
+})
+
 const canDelete = computed(() => {
    if (!userStore.isAdmin && !userStore.isSupervisor) return false
    if (metadataStore.related.units.length > 0) return false
@@ -457,10 +464,10 @@ const formatDate = (( date ) => {
    .thumb {
       margin: 10px;
    }
-   .comma {
-      display: inline-block;
-      padding: 0;
-      margin: 0 5px 0 0;
+   button.folder {
+      font-size: 0.85em;
+      margin: 2px 4px;
+      padding: 3px 8px;
    }
    p.error {
       color: var(--uvalib-red-emergency);
