@@ -313,7 +313,7 @@ const cancelEdit = (() => {
 })
 
 const submitChanges = ( async () => {
-   if (metadataStore.detail.type != 'ExternalMetadata') {
+   if (metadataStore.detail.type == 'SirsiMetadata') {
       // SEE IF UR changed from CNE / UND to sotething else, or if RR chanegd from something valid to CNE/UND
       // in these cases, send the new ID. Otehrwise send a 0 so backend ignores the request.
       let origCNE = (originalUseRight.value == 1 || edited.value.useRight.value == 11)

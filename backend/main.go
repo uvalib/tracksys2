@@ -12,7 +12,7 @@ import (
 )
 
 // Version of the service
-const Version = "1.14.8"
+const Version = "1.14.9"
 
 func main() {
 	// Load cfg
@@ -146,6 +146,52 @@ func (svc *serviceContext) scriptRunner(c *gin.Context) {
 	log.Printf("INFO: script runner called")
 	c.String(http.StatusNotImplemented, "no script is available")
 }
+
+// SAMPLE SCRIPT TO BULK ADD ITEMS TO A COLLECTION
+// func (svc *serviceContext) scriptRunner(c *gin.Context) {
+// 	log.Printf("INFO: script runner called")
+// 	bytes, err := os.ReadFile("./vickery_units.txt")
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 	}
+
+// 	var collectionMD metadata
+// 	err = svc.DB.First(&collectionMD, 108065).Error
+// 	if err != nil {
+// 		log.Fatal("cannot find collection record: " + err.Error())
+// 	}
+
+// 	cnt := 0
+// 	for _, unitStr := range strings.Split(string(bytes), "\n") {
+// 		unitID, _ := strconv.ParseInt(unitStr, 10, 64)
+// 		if unitID == 0 {
+// 			continue
+// 		}
+// 		log.Printf("INFO: add %d to collection", unitID)
+// 		var tgtUnit unit
+// 		err = svc.DB.Preload("Metadata").First(&tgtUnit, unitID).Error
+// 		if err != nil {
+// 			log.Printf("ERROR: unable to get unit %d: %s", unitID, err.Error())
+// 			break
+// 		}
+
+// 		if tgtUnit.Metadata.ParentMetadataID != 0 {
+// 			log.Printf("WARNING: unit %d metadata %s already has parent metadata %d; skipping", unitID, tgtUnit.Metadata.PID, tgtUnit.Metadata.ParentMetadataID)
+// 			continue
+// 		}
+
+// 		tgtUnit.Metadata.ParentMetadataID = collectionMD.ID
+// 		err = svc.DB.Model(tgtUnit.Metadata).Update("parent_metadata_id", collectionMD.ID).Error
+// 		if err != nil {
+// 			log.Printf("ERROR: unable to update metadata %d parent: %s", tgtUnit.Metadata.ID, err.Error())
+// 			break
+// 		}
+
+// 		cnt++
+// 	}
+
+// 	c.String(http.StatusOK, fmt.Sprintf("%d records added to collection 108065", cnt))
+// }
 
 // SCRIPT TO FLAG ORDER METADATA FOR HATHITRUST PUBLISH
 // log.Printf("INFO: script runner called")
