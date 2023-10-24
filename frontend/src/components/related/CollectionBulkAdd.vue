@@ -31,6 +31,9 @@
          <Column field="masterFilesCount" header="Master Files" />
       </DataTable>
    </div>
+   <div v-else>
+      <p class="help">Search for metadata records by title, barcode, catalog key or call number to include in this collection.</p>
+   </div>
 </template>
 
 <script setup>
@@ -110,5 +113,9 @@ const onSelectAllChange = ((event) => {
    button.p-button {
       margin-left: 5px;
    }
+}
+p.help {
+   font-size: 1.2em;
+   text-align: center;
 }
 </stype>
