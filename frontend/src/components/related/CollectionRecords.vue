@@ -34,6 +34,18 @@
             </Column>
             <Column field="pid" header="PID" class="nowrap"/>
             <Column field="title" header="Title" />
+            <Column field="callNumber" header="Call Number">
+               <template #body="slotProps">
+                  <span v-if="slotProps.data.callNumber">{{ slotProps.data.callNumber }}</span>
+                  <span v-else class="none">N/A</span>
+               </template>
+            </Column>
+            <Column field="barcode" header="Barcode" >
+               <template #body="slotProps">
+                  <span v-if="slotProps.data.barcode">{{ slotProps.data.barcode }}</span>
+                  <span v-else class="none">N/A</span>
+               </template>
+            </Column>
             <Column header="" class="row-acts nowrap" v-if="userStore.isAdmin">
                <template #body="slotProps">
                   <DPGButton icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary" @click="deleteItem(slotProps.data)"/>
@@ -114,6 +126,10 @@ const exportCollection = (() => {
 <stype scoped lang="scss">
 .collection  {
    margin: 0;
+   .none {
+      color: var(--uvalib-grey-light);
+      font-style: italic;
+   }
    td.nowrap, th {
       white-space: nowrap;
    }

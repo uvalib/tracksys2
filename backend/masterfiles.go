@@ -14,7 +14,7 @@ import (
 
 type location struct {
 	ID              int64          `json:"id"`
-	MetadataID      int64          `gorm:"column:metadata_id" json:"-"`
+	MetadataID      int64          `gorm:"column:metadata_id" json:"metadataID"`
 	ContainerTypeID *int64         `json:"-"`
 	ContainerType   *containerType `gorm:"foreignKey:ContainerTypeID" json:"containerType"`
 	ContainerID     string         `gorm:"column:container_id" json:"containerID"`
