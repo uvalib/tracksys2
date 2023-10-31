@@ -7,6 +7,7 @@ export const useUnitsStore = defineStore('units', {
       detail: {},
 
       masterFiles: [],
+      loadingMasterFiles: false,
 
       updateInProgress: false,
 
@@ -154,9 +155,11 @@ export const useUnitsStore = defineStore('units', {
 
       getMasterFiles( unitID ) {
          const system = useSystemStore()
+         this.loadingMasterFiles = true
          axios.get( `/api/units/${unitID}/masterfiles` ).then(response => {
             this.masterFiles = response.data
             this.detail.masterFilesCount = this.masterFiles.length
+            this.loadingMasterFiles = false
          }).catch( e => {
             system.setError(e)
          })

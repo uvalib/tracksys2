@@ -145,7 +145,7 @@
          </div>
       </Panel>
    </div>
-   <div class="details">
+   <div class="details" v-if="unitsStore.loadingMasterFiles == false">
       <MasterFilesList v-if="unitsStore.masterFiles.length > 0" />
       <Panel header="Master Files" v-else>
          <template v-if="cloneStore.uiVisible == false">
