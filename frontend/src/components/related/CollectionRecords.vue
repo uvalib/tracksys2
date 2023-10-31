@@ -20,27 +20,27 @@
             <h3>No items found</h3>
          </div>
          <DataTable v-if="collectionStore.totalRecords>0" :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
-            stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+            removableSort stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
             :lazy="true" :paginator="collectionStore.totalRecords > 15" @page="onCollectionPage($event)"
             :rows="collectionStore.searchOpts.limit" :totalRecords="collectionStore.totalRecords"
             paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
             :rowsPerPageOptions="[15,30,100]" :first="collectionStore.searchOpts.start"
             currentPageReportTemplate="{first} - {last} of {totalRecords}"
          >
-            <Column field="id" header="ID">
+            <Column field="id" header="ID" :sortable="true">
                <template #body="slotProps">
                   <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
                </template>
             </Column>
             <Column field="pid" header="PID" class="nowrap"/>
-            <Column field="title" header="Title" />
-            <Column field="callNumber" header="Call Number">
+            <Column field="title" header="Title" :sortable="true"/>
+            <Column field="callNumber" header="Call Number" :sortable="true">
                <template #body="slotProps">
                   <span v-if="slotProps.data.callNumber">{{ slotProps.data.callNumber }}</span>
                   <span v-else class="none">N/A</span>
                </template>
             </Column>
-            <Column field="barcode" header="Barcode" >
+            <Column field="barcode" header="Barcode" :sortable="true">
                <template #body="slotProps">
                   <span v-if="slotProps.data.barcode">{{ slotProps.data.barcode }}</span>
                   <span v-else class="none">N/A</span>
