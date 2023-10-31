@@ -31,7 +31,10 @@
          </Tree>
       </Panel>
       <div class="master-files" id="master-files">
-         <MasterFiles />
+         <MasterFiles  v-if="componentsStore.relatedMasterFiles.length > 0" />
+         <Panel header="Related Master Files" v-else>
+            <p>No master files are associated with this component.</p>
+         </Panel>
       </div>
    </div>
 </template>

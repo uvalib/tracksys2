@@ -1,5 +1,5 @@
 <template>
-   <Panel header="Related Master Files" v-if="component.relatedMasterFiles.length > 0">
+   <Panel header="Related Master Files">
       <DataTable :value="component.relatedMasterFiles" ref="componentMasterFilesTable" dataKey="id"
          showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
          :lazy="false" :paginator="true" :alwaysShowPaginator="true" :rows="15"
@@ -9,7 +9,7 @@
          v-model:selection="selectedMasterFiles" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
       >
          <template #paginatorstart>
-            <div class="master-file-acts" id="sticky-toolbar">
+            <div class="master-file-acts">
                <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
                <DPGButton label="Download Selected" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
                <template  v-if="userStore.isAdmin || userStore.isSupervisor">
@@ -40,9 +40,6 @@
             </template>
          </Column>
       </DataTable>
-   </Panel>
-   <Panel header="Related Master Files" v-else>
-      <p>No master files are associated with this component.</p>
    </Panel>
    <Dialog v-model:visible="pdfStore.downloading" :modal="true" header="Generating PDF" :style="{width: '350px'}">
       <div class="download">
@@ -101,29 +98,27 @@ watch(() => component.loadingMasterFiles, (newVal) => {
 })
 
 onMounted(() => {
-   setTimeout( () => {
-      let tb = null
-      let tbs = document.getElementsByClassName("p-paginator-top")
-      if ( tbs ) {
-         tb = tbs[0]
-      }
-      if ( tb) {
-         toolbar.value = tb
-         toolbarHeight.value = tb.offsetHeight
-         toolbarWidth.value = tb.offsetWidth
-         toolbarTop.value = 0
+   let tb = null
+   let tbs = document.getElementsByClassName("p-paginator-top")
+   if ( tbs ) {
+      tb = tbs[0]
+   }
+   if ( tb) {
+      toolbar.value = tb
+      toolbarHeight.value = tb.offsetHeight
+      toolbarWidth.value = tb.offsetWidth
+      toolbarTop.value = 0
 
-         // walk the parents of the toolbar and add each top value
-         // to find the top of the toolbar relative to document top
-         let ele = tb
-         if (ele.offsetParent) {
-            do {
-               toolbarTop.value += ele.offsetTop
-               ele = ele.offsetParent
-            } while (ele)
-         }
+      // walk the parents of the toolbar and add each top value
+      // to find the top of the toolbar relative to document top
+      let ele = tb
+      if (ele.offsetParent) {
+         do {
+            toolbarTop.value += ele.offsetTop
+            ele = ele.offsetParent
+         } while (ele)
       }
-   }, 1000)
+   }
    window.addEventListener("scroll", scrollHandler)
 })
 

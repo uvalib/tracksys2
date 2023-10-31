@@ -1,97 +1,86 @@
 <template>
-   <div class="details">
-      <Panel header="Master Files" v-if="unitsStore.masterFiles.length > 0">
-         <DataTable :value="unitsStore.masterFiles" ref="unitMasterFilesTable" dataKey="id"
-            showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
-            :lazy="false" :paginator="true" :alwaysShowPaginator="true" :rows="15"
-            :rowsPerPageOptions="[15,30,50,100]" paginatorPosition="top"
-            paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-            currentPageReportTemplate="{first} - {last} of {totalRecords}"
-            v-model:selection="selectedMasterFiles" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
-            v-model:filters="filters" filterDisplay="menu"
-         >
-            <template #paginatorstart>
-               <div class="master-file-acts" id="sticky-toolbar">
-                  <template v-if="detail.reorder==false && userStore.isAdmin">
-                     <DPGButton label="Add" @click="addClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
-                     <DPGButton label="Replace" @click="replaceClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
-                  </template>
-                  <template v-if="userStore.isAdmin && (detail.dateArchived==null || detail.reorder || detail.dateDLDeliverablesReady == null)">
-                     <DPGButton label="Delete Selected" @click="deleteClicked()" class="p-button-secondary" :disabled="!filesSelected" />
-                  </template>
-                  <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
-                  <template v-if="unitsStore.canDownload">
-                     <DPGButton label="Download Selected" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
-                  </template>
-                  <template v-if="unitsStore.canPDF">
-                     <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="filesSelected == false" />
-                  </template>
-                  <template  v-if="userStore.isAdmin || userStore.isSupervisor">
-                     <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
-                     <LookupDialog :disabled="!filesSelected" label="Assign Componment" @selected="assignComponent" target="component" />
-                  </template>
-               </div>
-            </template>
-            <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
-            <Column field="id" header="ID">
-               <template #body="slotProps">
-                  <router-link :to="`/masterfiles/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
+   <Panel header="Master Files" class="masterfiles">
+      <DataTable :value="unitsStore.masterFiles" ref="unitMasterFilesTable" dataKey="id"
+         showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
+         :lazy="false" :paginator="true" :alwaysShowPaginator="true" :rows="15"
+         :rowsPerPageOptions="[15,30,50,100]" paginatorPosition="top"
+         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
+         currentPageReportTemplate="{first} - {last} of {totalRecords}"
+         v-model:selection="selectedMasterFiles" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
+         v-model:filters="filters" filterDisplay="menu"
+      >
+         <template #paginatorstart>
+            <div class="master-file-acts">
+               <template v-if="detail.reorder==false && userStore.isAdmin">
+                  <DPGButton label="Add" @click="addClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
+                  <DPGButton label="Replace" @click="replaceClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
                </template>
-            </Column>
-            <Column field="metadata.title" header="Metadata" filterField="metadata.title" :showFilterMatchModes="false" >
-               <template #filter="{filterModel}">
-                  <InputText type="text" v-model="filterModel.value" placeholder="Metadata title"/>
+               <template v-if="userStore.isAdmin && (detail.dateArchived==null || detail.reorder || detail.dateDLDeliverablesReady == null)">
+                  <DPGButton label="Delete Selected" @click="deleteClicked()" class="p-button-secondary" :disabled="!filesSelected" />
                </template>
-               <template #body="slotProps">
-                  <router-link v-if="slotProps.data.metadata" :to="`/metadata/${slotProps.data.metadata.id}`">{{slotProps.data.metadata.title}}</router-link>
-                  <span v-else class="empty">N/A</span>
+               <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
+               <template v-if="unitsStore.canDownload">
+                  <DPGButton label="Download Selected" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
                </template>
-            </Column>
-            <Column field="filename" header="File Name"/>
-            <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
-               <template #filter="{filterModel}">
-                  <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
+               <template v-if="unitsStore.canPDF">
+                  <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="filesSelected == false" />
                </template>
-            </Column>
-            <Column field="description" header="Description" filterField="description" :showFilterMatchModes="false" >
-               <template #filter="{filterModel}">
-                  <InputText type="text" v-model="filterModel.value" placeholder="Description"/>
+               <template  v-if="userStore.isAdmin || userStore.isSupervisor">
+                  <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
+                  <LookupDialog :disabled="!filesSelected" label="Assign Componment" @selected="assignComponent" target="component" />
                </template>
-            </Column>
-            <Column field="thumbnailURL" header="Thumb" class="thumb">
-               <template #body="slotProps">
-                  <a :href="slotProps.data.viewerURL" target="_blank">
-                     <img :src="slotProps.data.thumbnailURL" :class="{exemplar: slotProps.data.exemplar}"/>
-                  </a>
-               </template>
-            </Column>
-            <Column header="" class="row-acts">
-               <template #body="slotProps">
-                  <DPGButton label="View" class="p-button-secondary first" @click="viewClicked(slotProps.data)" />
-                  <DPGButton label="Download Image" class="p-button-secondary" @click="downloadFile(slotProps.data)" v-if="unitsStore.canDownload"/>
-                  <DPGButton label="Download PDF" class="p-button-secondary" @click="downloadPDF(slotProps.data)" v-if="unitsStore.canPDF"/>
-                  <DPGButton v-if="slotProps.data.exemplar==false && (detail.intendedUse && detail.intendedUse.id == 110 || detail.includeInDL)"
-                     label="Set Exemplar" class="p-button-secondary" @click="exemplarClicked(slotProps.data)"/>
-                  <DPGButton label="Republish IIIF" class="p-button-secondary" @click="republishIIIF(slotProps.data.id)" v-if="detail.reorder==false && userStore.isAdmin"/>
-               </template>
-            </Column>
-         </DataTable>
-      </Panel>
-      <Panel header="Master Files" v-else>
-         <template v-if="cloneStore.uiVisible == false">
-            <p>No master files are associated with this unit.</p>
-            <DPGButton label="Clone Existing Master Files" class="p-button-secondary" @click="cloneClicked()" />
+            </div>
          </template>
-         <CloneMasterFiles v-else @canceled="cloneCanceled()" @cloned="cloneCompleted()" />
-      </Panel>
-   </div>
+         <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
+         <Column field="id" header="ID">
+            <template #body="slotProps">
+               <router-link :to="`/masterfiles/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
+            </template>
+         </Column>
+         <Column field="metadata.title" header="Metadata" filterField="metadata.title" :showFilterMatchModes="false" >
+            <template #filter="{filterModel}">
+               <InputText type="text" v-model="filterModel.value" placeholder="Metadata title"/>
+            </template>
+            <template #body="slotProps">
+               <router-link v-if="slotProps.data.metadata" :to="`/metadata/${slotProps.data.metadata.id}`">{{slotProps.data.metadata.title}}</router-link>
+               <span v-else class="empty">N/A</span>
+            </template>
+         </Column>
+         <Column field="filename" header="File Name"/>
+         <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
+            <template #filter="{filterModel}">
+               <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
+            </template>
+         </Column>
+         <Column field="description" header="Description" filterField="description" :showFilterMatchModes="false" >
+            <template #filter="{filterModel}">
+               <InputText type="text" v-model="filterModel.value" placeholder="Description"/>
+            </template>
+         </Column>
+         <Column field="thumbnailURL" header="Thumb" class="thumb">
+            <template #body="slotProps">
+               <a :href="slotProps.data.viewerURL" target="_blank">
+                  <img :src="slotProps.data.thumbnailURL" :class="{exemplar: slotProps.data.exemplar}"/>
+               </a>
+            </template>
+         </Column>
+         <Column header="" class="row-acts">
+            <template #body="slotProps">
+               <DPGButton label="View" class="p-button-secondary first" @click="viewClicked(slotProps.data)" />
+               <DPGButton label="Download Image" class="p-button-secondary" @click="downloadFile(slotProps.data)" v-if="unitsStore.canDownload"/>
+               <DPGButton label="Download PDF" class="p-button-secondary" @click="downloadPDF(slotProps.data)" v-if="unitsStore.canPDF"/>
+               <DPGButton v-if="slotProps.data.exemplar==false && (detail.intendedUse && detail.intendedUse.id == 110 || detail.includeInDL)"
+                  label="Set Exemplar" class="p-button-secondary" @click="exemplarClicked(slotProps.data)"/>
+               <DPGButton label="Republish IIIF" class="p-button-secondary" @click="republishIIIF(slotProps.data.id)" v-if="detail.reorder==false && userStore.isAdmin"/>
+            </template>
+         </Column>
+      </DataTable>
+   </Panel>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useSystemStore } from '@/stores/system'
 import { useUnitsStore } from '@/stores/units'
-import { useCloneStore } from '@/stores/clone'
 import { useUserStore } from '@/stores/user'
 import { usePDFStore } from '@/stores/pdf'
 import Panel from 'primevue/panel'
@@ -101,18 +90,15 @@ import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useConfirm } from "primevue/useconfirm"
 import RenumberDialog from './RenumberDialog.vue'
-import CloneMasterFiles from './CloneMasterFiles.vue'
 import LookupDialog from '@/components/LookupDialog.vue'
 import InputText from 'primevue/inputtext'
 import { FilterMatchMode } from 'primevue/api'
 
 const confirm = useConfirm()
-const systemStore = useSystemStore()
 const unitsStore = useUnitsStore()
 const userStore = useUserStore()
 const pdfStore = usePDFStore()
 const router = useRouter()
-const cloneStore = useCloneStore()
 
 const selectedMasterFiles = ref([])
 const selectAll = ref(false)
@@ -148,29 +134,29 @@ const selectedIDs = computed(() => {
 })
 
 onMounted(() => {
-   setTimeout( () => {
-      let tb = null
-      let tbs = document.getElementsByClassName("p-paginator-top")
-      if ( tbs ) {
-         tb = tbs[0]
-      }
-      if ( tb) {
-         toolbar.value = tb
-         toolbarHeight.value = tb.offsetHeight
-         toolbarWidth.value = tb.offsetWidth
-         toolbarTop.value = 0
+   let tb = null
+   let tbs = document.getElementsByClassName("p-paginator-top")
+   if ( tbs ) {
+      tb = tbs[0]
+   }
+   if ( tb) {
+      toolbar.value = tb
+      toolbarHeight.value = tb.offsetHeight
+      toolbarWidth.value = tb.offsetWidth
+      toolbarTop.value = 0
 
-         // walk the parents of the toolbar and add each top value
-         // to find the top of the toolbar relative to document top
-         let ele = tb
-         if (ele.offsetParent) {
-            do {
-               toolbarTop.value += ele.offsetTop
-               ele = ele.offsetParent
-            } while (ele)
-         }
+      // walk the parents of the toolbar and add each top value
+      // to find the top of the toolbar relative to document top
+      let ele = tb
+      if (ele.offsetParent) {
+         do {
+            toolbarTop.value += ele.offsetTop
+            ele = ele.offsetParent
+         } while (ele)
       }
-   }, 1000)
+   } else {
+      console.error("NO TOOLBAR")
+   }
    window.addEventListener("scroll", scrollHandler)
 })
 
@@ -203,16 +189,6 @@ const scrollHandler = (( ) => {
    }
 })
 
-const cloneClicked = (() => {
-   cloneStore.show( true )
-})
-const cloneCanceled = (() => {
-   cloneStore.show( false )
-})
-const cloneCompleted = (() => {
-   cloneStore.show( false )
-   systemStore.toastMessage("Clone Success", 'All master files have been cloned.')
-})
 const downloadClicked = (() => {
    unitsStore.downloadFromArchive(userStore.computeID, selectedFileNames.value)
 })
@@ -348,12 +324,7 @@ const clearSelections = (() => {
       border-radius: 0;
    }
 }
-.details {
-   padding: 0 25px 10px 25px;
-   display: flex;
-   flex-flow: row wrap;
-   justify-content: flex-start;
-
+div.masterfiles {
    .p-datatable-sm {
       font-size: 0.9em;
    }

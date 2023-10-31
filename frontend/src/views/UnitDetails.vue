@@ -145,7 +145,16 @@
          </div>
       </Panel>
    </div>
-   <MasterFilesList />
+   <div class="details">
+      <MasterFilesList v-if="unitsStore.masterFiles.length > 0" />
+      <Panel header="Master Files" v-else>
+         <template v-if="cloneStore.uiVisible == false">
+            <p>No master files are associated with this unit.</p>
+            <DPGButton label="Clone Existing Master Files" class="p-button-secondary" @click="cloneClicked()" />
+         </template>
+         <CloneMasterFiles v-else @canceled="cloneCanceled()" @cloned="cloneCompleted()" />
+      </Panel>
+   </div>
    <Dialog v-model:visible="pdfStore.downloading" :modal="true" header="Generating PDF" :style="{width: '350px'}">
       <div class="download">
          <p>PDF generation in progress...</p>
@@ -171,6 +180,7 @@ import Column from 'primevue/column'
 import CreateProjectDialog from '../components/unit/CreateProjectDialog.vue'
 import AddAttachmentDialog from '../components/unit/AddAttachmentDialog.vue'
 import MasterFilesList from '../components/unit/MasterFilesList.vue'
+import CloneMasterFiles from '../components/unit/CloneMasterFiles.vue'
 import ProgressBar from 'primevue/progressbar'
 import Dialog from 'primevue/dialog'
 import { useConfirm } from "primevue/useconfirm"
@@ -264,6 +274,17 @@ const unitPDFClicked = (() => {
          }
       })
    }
+})
+
+const cloneClicked = (() => {
+   cloneStore.show( true )
+})
+const cloneCanceled = (() => {
+   cloneStore.show( false )
+})
+const cloneCompleted = (() => {
+   cloneStore.show( false )
+   systemStore.toastMessage("Clone Success", 'All master files have been cloned.')
 })
 
 const downloadClicked = (() => {
