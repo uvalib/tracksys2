@@ -1,25 +1,25 @@
 <template>
    <h2>Job Statuses</h2>
    <div class="job-status">
-      <div class="toolbar">
-         <DPGButton label="Delete selected" :disabled="selectedJobs.length == 0"  class="p-button-secondary" @click="deletAllClicked"/>
-         <span>
-            <span class="p-input-icon-right">
-               <i class="pi pi-search" />
-               <InputText v-model="jobsStore.searchOpts.query" placeholder="Job Status Search" @input="queryJobs()"/>
-            </span>
-            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="jobsStore.searchOpts.query.length == 0"/>
-         </span>
-      </div>
       <DataTable :value="jobsStore.jobs" ref="jobsTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll"
          :lazy="true" :paginator="true" @page="onPage($event)" :rowClass="rowClass"
          :rows="jobsStore.searchOpts.limit" :totalRecords="jobsStore.totalJobs"
          v-model:selection="selectedJobs" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         :rowsPerPageOptions="[10,30,100]" :first="jobsStore.searchOpts.start"
+         :rowsPerPageOptions="[10,30,100]" :first="jobsStore.searchOpts.start" paginatorPosition="top"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
+         <template #paginatorstart>
+            <DPGButton label="Delete selected" :disabled="selectedJobs.length == 0"  class="p-button-secondary" @click="deletAllClicked"/>
+         </template>
+         <template #paginatorend>
+            <span class="js-search p-input-icon-right">
+               <i class="pi pi-search" />
+               <InputText v-model="jobsStore.searchOpts.query" placeholder="Job Status Search" @input="queryJobs()"/>
+            </span>
+            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="jobsStore.searchOpts.query.length == 0"/>
+         </template>
          <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
          <Column field="name" header="Job Type"></Column>
          <Column field="associatedObject" header="Associated Object">
@@ -54,6 +54,9 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import { useConfirm } from "primevue/useconfirm"
+import { usePinnable } from '@/composables/pin'
+
+usePinnable("p-paginator-top")
 
 const jobsStore = useJobsStore()
 const confirm = useConfirm()
@@ -166,23 +169,12 @@ onMounted(() => {
       text-align: left;
       padding: 0 25px;
       margin-top: 10px;
+      .js-search {
+         margin-right: 10px;
+      }
       .sep {
          display: inline-block;
          margin: 0 10px;
-      }
-      .toolbar {
-         padding: 0 0 10px 0;
-         display: flex;
-         flex-flow: row nowrap;
-         justify-content: space-between;
-         label {
-            font-weight: bold;
-            margin-right: 5px;
-            display: inline-block;
-         }
-         button.p-button {
-            margin-left: 5px;
-         }
       }
       .p-datatable {
          font-size: 0.85em;

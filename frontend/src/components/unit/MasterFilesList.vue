@@ -79,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useUnitsStore } from '@/stores/units'
 import { useUserStore } from '@/stores/user'
 import { usePDFStore } from '@/stores/pdf'
@@ -93,6 +93,9 @@ import RenumberDialog from './RenumberDialog.vue'
 import LookupDialog from '@/components/LookupDialog.vue'
 import InputText from 'primevue/inputtext'
 import { FilterMatchMode } from 'primevue/api'
+import { usePinnable } from '@/composables/pin'
+
+usePinnable("p-paginator-top")
 
 const confirm = useConfirm()
 const unitsStore = useUnitsStore()
@@ -102,10 +105,6 @@ const router = useRouter()
 
 const selectedMasterFiles = ref([])
 const selectAll = ref(false)
-const toolbarTop = ref(0)
-const toolbarHeight = ref(0)
-const toolbarWidth = ref(0)
-const toolbar = ref(null)
 
 const { detail } = storeToRefs(unitsStore)
 
@@ -131,48 +130,6 @@ const selectedIDs = computed(() => {
       ids.push(s.id)
    })
    return ids
-})
-
-onMounted(() => {
-   let tb = null
-   let tbs = document.getElementsByClassName("p-paginator-top")
-   if ( tbs ) {
-      tb = tbs[0]
-   }
-   if ( tb) {
-      toolbar.value = tb
-      toolbarHeight.value = tb.offsetHeight
-      toolbarWidth.value = tb.offsetWidth
-      toolbarTop.value =  tb.getBoundingClientRect().top
-   }
-   window.addEventListener("scroll", scrollHandler)
-})
-
-onUnmounted(() => {
-   window.removeEventListener("scroll", scrollHandler)
-})
-
-const scrollHandler = (( ) => {
-   if ( toolbar.value) {
-      if ( window.scrollY <= toolbarTop.value ) {
-         if ( toolbar.value.classList.contains("sticky") ) {
-            toolbar.value.classList.remove("sticky")
-            let dts = document.getElementsByClassName("p-datatable-wrapper")
-            if ( dts ) {
-               dts[0].style.top = `0px`
-            }
-         }
-      } else {
-         if ( toolbar.value.classList.contains("sticky") == false ) {
-            let dts = document.getElementsByClassName("p-datatable-wrapper")
-            if ( dts ) {
-               dts[0].style.top = `${toolbarHeight.value}px`
-            }
-            toolbar.value.classList.add("sticky")
-            toolbar.value.style.width = `${toolbarWidth.value}px`
-         }
-      }
-   }
 })
 
 const downloadClicked = (() => {

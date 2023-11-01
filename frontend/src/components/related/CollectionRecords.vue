@@ -15,6 +15,10 @@
                      <DPGButton label="Add Item(s)" class="p-button-secondary" @click="bulkAddClicked()" v-if="userStore.isAdmin"/>
                      <DPGButton label="Export" class="p-button-secondary" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
                   </span>
+               </div>
+            </template>
+            <template #paginatorend>
+               <div class="toolbar">
                   <span class="search">
                      <span class="p-input-icon-right">
                         <i class="pi pi-search" />
@@ -58,67 +62,22 @@
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
-import { onMounted, onUnmounted, ref } from 'vue'
 import { useCollectionsStore } from '@/stores/collections'
 import { useConfirm } from "primevue/useconfirm"
 import { useUserStore } from '@/stores/user'
 import CollectionBulkAdd from './CollectionBulkAdd.vue'
+import { usePinnable } from '@/composables/pin'
+
+usePinnable("p-paginator-top")
 
 const userStore = useUserStore()
 const collectionStore = useCollectionsStore()
 const confirm = useConfirm()
 
-const toolbarTop = ref(0)
-const toolbarHeight = ref(0)
-const toolbarWidth = ref(0)
-const toolbar = ref(null)
-
 const props = defineProps({
    collectionID: {
       type: Number,
       required: true
-   }
-})
-
-onMounted(() => {
-   let tb = null
-   let tbs = document.getElementsByClassName("p-paginator-top")
-   if ( tbs ) {
-      tb = tbs[0]
-   }
-   if ( tb) {
-      toolbar.value = tb
-      toolbarHeight.value = tb.offsetHeight
-      toolbarWidth.value = tb.offsetWidth
-      toolbarTop.value = tb.getBoundingClientRect().top
-      window.addEventListener("scroll", scrollHandler)
-   }
-})
-
-onUnmounted(() => {
-   window.removeEventListener("scroll", scrollHandler)
-})
-
-const scrollHandler = (( ) => {
-   if ( toolbar.value) {
-      if ( window.scrollY <= toolbarTop.value ) {
-         if ( toolbar.value.classList.contains("sticky") ) {
-            toolbar.value.classList.remove("sticky")
-            let dts = document.getElementsByClassName("p-datatable-wrapper")
-            if ( dts ) {
-               dts[0].style.top = `0px`
-            }
-         }
-      } else {
-         if ( toolbar.value.classList.contains("sticky") == false ) {
-            let dts = document.getElementsByClassName("p-datatable-wrapper")
-            if ( dts ) {
-               dts[0].style.top = `${toolbarHeight.value}px`
-            }
-            toolbar.value.classList.add("sticky")
-            toolbar.value.style.width = `${toolbarWidth.value}px`
-         }
-      }
    }
 })
 
@@ -138,9 +97,6 @@ const queryCollection = (() => {
 const clearSearch = (() => {
    collectionStore.searchOpts.query = ""
    collectionStore.getItems()
-})
-const addItem = (( metadataID ) => {
-  collectionStore.addItems( [metadataID] )
 })
 const deleteItem = (( item ) => {
    confirm.require({
@@ -182,6 +138,7 @@ const exportCollection = (() => {
    .search {
       button.p-button {
          margin-left: 10px;
+         margin-right: 0;
       }
    }
    button.p-button {

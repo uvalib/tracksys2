@@ -56,19 +56,18 @@ import { usePDFStore } from '@/stores/pdf'
 import Panel from 'primevue/panel'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import LookupDialog from '@/components/LookupDialog.vue'
 import ProgressBar from 'primevue/progressbar'
 import Dialog from 'primevue/dialog'
+import { usePinnable } from '@/composables/pin'
+
+usePinnable("p-paginator-top")
 
 const component = useComponentsStore()
 const userStore = useUserStore()
 const pdfStore = usePDFStore()
 
-const toolbarTop = ref(0)
-const toolbarHeight = ref(0)
-const toolbarWidth = ref(0)
-const toolbar = ref(null)
 const selectedMasterFiles = ref([])
 const selectAll = ref(false)
 
@@ -94,50 +93,6 @@ watch(() => component.loadingMasterFiles, (newVal) => {
    if ( newVal == false) {
       selectedMasterFiles.value = []
       selectAll.value = false
-   }
-})
-
-onMounted(() => {
-   let tb = null
-   let tbs = document.getElementsByClassName("p-paginator-top")
-   if ( tbs ) {
-      tb = tbs[0]
-   }
-   if ( tb) {
-      var offsets = tb.getBoundingClientRect()
-      let scrollTop = window.scrollY || document.documentElement.scrollTop;
-      toolbar.value = tb
-      toolbarHeight.value = tb.offsetHeight
-      toolbarWidth.value = tb.offsetWidth
-      toolbarTop.value = offsets.top + scrollTop
-   }
-   window.addEventListener("scroll", scrollHandler)
-})
-
-onUnmounted(() => {
-   window.removeEventListener("scroll", scrollHandler)
-})
-
-const scrollHandler = ( () => {
-   if ( toolbar.value) {
-      if ( window.scrollY <= toolbarTop.value ) {
-         if ( toolbar.value.classList.contains("sticky") ) {
-            toolbar.value.classList.remove("sticky")
-            let dts = document.getElementsByClassName("p-datatable-wrapper")
-            if ( dts ) {
-               dts[0].style.top = `0px`
-            }
-         }
-      } else {
-         if ( toolbar.value.classList.contains("sticky") == false ) {
-            let dts = document.getElementsByClassName("p-datatable-wrapper")
-            if ( dts ) {
-               dts[0].style.top = `${toolbarHeight.value}px`
-            }
-            toolbar.value.classList.add("sticky")
-            toolbar.value.style.width = `${toolbarWidth.value}px`
-         }
-      }
    }
 })
 
