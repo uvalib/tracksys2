@@ -249,6 +249,9 @@ const clearSelections = (() => {
 </script>
 
 <style scoped lang="scss">
+:deep(div.p-panel-content) {
+   padding-top: 0;
+}
 div.masterfiles {
    .p-datatable-sm {
       font-size: 0.9em;
@@ -258,7 +261,10 @@ div.masterfiles {
       font-size: 0.85em;
       text-align: right;
       button.p-button {
-         margin-left: 5px;
+         margin-left: 10px;
+      }
+      button.p-button:first-of-type {
+         margin-left: 0;
       }
    }
    :deep(td.thumb) {

@@ -168,7 +168,7 @@ onMounted(() => {
       min-height: 600px;
       text-align: left;
       padding: 0 25px;
-      margin-top: 10px;
+
       .js-search {
          margin-right: 10px;
       }

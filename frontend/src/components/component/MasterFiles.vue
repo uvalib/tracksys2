@@ -144,6 +144,9 @@ const clearSelections = (() => {
 </script>
 
 <style scoped lang="scss">
+:deep(div.p-panel-content) {
+   padding-top: 0;
+}
 .p-datatable-sm {
    font-size: 0.9em;
 }

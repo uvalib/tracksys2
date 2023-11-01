@@ -1,30 +1,25 @@
 <template>
-   <h2>
-      <span>Staff Members</span>
-      <div class="actions" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
-         <DPGButton label="Add" class="p-button create" @click="addStaff()"/>
-      </div>
-   </h2>
-
+   <h2>Staff Members</h2>
    <div class="staff">
-      <div class="filter-controls">
-         <span>
-            <span class="p-input-icon-right">
-               <i class="pi pi-search" />
-               <InputText v-model="filter" placeholder="Staff Search" @input="applyFilter()"/>
-            </span>
-            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
-         </span>
-      </div>
       <DataTable :value="staffStore.staff" ref="staffTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
          :lazy="true" :paginator="true" @page="onPage($event)"
          sortField="lastName" :sortOrder="1" @sort="onSort($event)"
          :rows="staffStore.searchOpts.limit" :totalRecords="staffStore.total"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         :rowsPerPageOptions="[10,30,100]"
+         :rowsPerPageOptions="[10,30,100]" paginatorPosition="top"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
+         <template #paginatorstart  v-if="(userStore.isAdmin || userStore.isSupervisor)" >
+            <DPGButton label="Add Staff" class="p-button-secondary create" @click="addStaff()"/>
+         </template>
+         <template #paginatorend>
+            <span class="js-search p-input-icon-right">
+               <i class="pi pi-search" />
+               <InputText v-model="filter" placeholder="Staff Search" @input="applyFilter()"/>
+            </span>
+            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
+         </template>
          <Column field="id" header="ID" :sortable="true"/>
          <Column field="lastName" header="Last Name" :sortable="true"/>
          <Column field="firstName" header="First Name"/>
@@ -68,6 +63,9 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
+import { usePinnable } from '@/composables/pin'
+
+usePinnable("p-paginator-top")
 
 const staffStore = useStaffStore()
 const userStore = useUserStore()
@@ -188,15 +186,12 @@ onMounted(() => {
    min-height: 600px;
    text-align: left;
    padding: 0 25px 25px 25px;
-   .filter-controls {
-      display: flex;
-      flex-flow: row wrap;
-      justify-content: flex-end;
-       padding: 10px 0;
-      button.p-button-secondary.p-button {
-         margin-left: 5px;
-      }
+
+   .js-search {
+      margin-right: 10px;
    }
+
+
    :deep(.row-acts) {
       text-align: center;
    }

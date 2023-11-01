@@ -1,20 +1,6 @@
 <template>
-   <h2>
-      <span>Customers</span>
-      <div class="actions" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
-         <DPGButton label="Add" class="create" @click="addCustomer()"/>
-      </div>
-   </h2>
+   <h2>Customers</h2>
    <div class="customers">
-      <div class="filter-controls">
-         <span>
-            <span class="p-input-icon-right">
-               <i class="pi pi-search" />
-               <InputText v-model="filter['global'].value" placeholder="Customer Search"/>
-            </span>
-            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
-         </span>
-      </div>
       <DataTable :value="customersStore.customers" ref="customerTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
          :lazy="false" :paginator="true"  v-model:filters="filter"
@@ -23,9 +9,19 @@
          :rows="10" :totalRecords="customersStore.total"
          v-model:expandedRows="expandedRows"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         :rowsPerPageOptions="[10,30,100]"
+         :rowsPerPageOptions="[10,30,100]" paginatorPosition="top"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
+         <template #paginatorstart  v-if="(userStore.isAdmin || userStore.isSupervisor)" >
+            <DPGButton label="Add Customer" class="p-button-secondary create" @click="addCustomer()"/>
+         </template>
+         <template #paginatorend>
+            <span class="js-search p-input-icon-right">
+               <i class="pi pi-search" />
+               <InputText v-model="filter['global'].value" placeholder="Customer Search"/>
+            </span>
+            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
+         </template>
          <Column :expander="true" headerStyle="width: 3rem" />
          <Column field="lastName" header="Last Name" :sortable="true"/>
          <Column field="firstName" header="First Name"/>
@@ -120,6 +116,9 @@ import Dialog from 'primevue/dialog'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import { FilterMatchMode } from 'primevue/api'
+import { usePinnable } from '@/composables/pin'
+
+usePinnable("p-paginator-top")
 
 const customersStore = useCustomersStore()
 const systemStore = useSystemStore()
@@ -198,6 +197,9 @@ const clearSearch = (() => {
    min-height: 600px;
    text-align: left;
    padding: 0 25px 25px 25px;
+   .js-search {
+      margin-right: 10px;
+   }
    .filter-controls {
       padding: 10px 0;
       display: flex;
