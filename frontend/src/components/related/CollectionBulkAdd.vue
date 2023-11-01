@@ -106,16 +106,19 @@ const onSelectAllChange = ((event) => {
 
 <stype scoped lang="scss">
 .bulk-toolbar {
-   padding: 0 0 10px 0;
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: space-between;
+   padding: 0;
+   .search {
+      button.p-button {
+         margin-left: 10px;
+      }
+   }
    button.p-button {
-      margin-left: 5px;
+      margin-right: 10px;
    }
 }
 p.help {
    font-size: 1.2em;
    text-align: center;
+   margin-top: 50px;
 }
 </stype>

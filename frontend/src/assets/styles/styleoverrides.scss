@@ -56,6 +56,23 @@
    }
 }
 
+nav.p-paginator-top  {
+   div.p-paginator.p-component {
+      padding: 0 0 15px 0;
+   }
+   div.p-dropdown {
+      margin-right: 0;
+   }
+}
+nav.p-paginator-top.sticky {
+   position: fixed;
+   z-index: 1000;
+   top: 0;
+}
+.p-datatable-wrapper {
+   position: relative;
+}
+
 span.p-button.p-component.p-fileupload-choose {
    width: 100%;
 }

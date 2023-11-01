@@ -108,10 +108,6 @@ const props = defineProps({
       type: String,
       default: "wombat"
    },
-   collection: {
-      type: Number,
-      required: false
-   }
 })
 
 const metadataStore = useMetadataStore()
@@ -164,7 +160,7 @@ async function lookupRecords() {
    selectedHit.value = null
    searched.value = false
    if (props.target == "metadata") {
-      await metadataStore.lookup( query.value, props.collection )
+      await metadataStore.lookup( query.value )
    } else if  (props.target == "component") {
       await componentsStore.lookup( query.value )
    } else {

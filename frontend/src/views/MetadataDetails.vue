@@ -194,7 +194,13 @@
          <Panel header="Related Information">
             <TabView class="related">
                <TabPanel header="Collection" v-if="metadataStore.detail.isCollection">
-                  <CollectionRecords :collectionID="metadataStore.detail.id"/>
+                  <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
+                  <template v-else>
+                     <div v-if="collectionStore.totalRecords == 0" class="none">
+                        <h3>No items found</h3>
+                     </div>
+                     <CollectionRecords v-else :collectionID="metadataStore.detail.id"/>
+                  </template>
                </TabPanel>
                <TabPanel header="Orders">
                   <RelatedOrders :orders="metadataStore.related.orders" />
@@ -219,6 +225,7 @@ import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useMetadataStore } from '@/stores/metadata'
 import { useUserStore } from '@/stores/user'
+import { useCollectionsStore } from '@/stores/collections'
 import Panel from 'primevue/panel'
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab'
@@ -234,6 +241,7 @@ import { useConfirm } from "primevue/useconfirm"
 import CollectionRecords from '../components/related/CollectionRecords.vue'
 import HathiTrustDialog from '../components/metadata/HathiTrustDialog.vue'
 import LocationUnitsDialog from '../components/metadata/LocationUnitsDialog.vue'
+import WaitSpinner from '@/components/WaitSpinner.vue'
 
 const confirm = useConfirm()
 const route = useRoute()
@@ -241,6 +249,7 @@ const router = useRouter()
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
 const userStore = useUserStore()
+const collectionStore = useCollectionsStore()
 
 const publishing = ref(false)
 const showHathiDialog = ref(false)
@@ -298,12 +307,20 @@ onBeforeRouteUpdate(async (to) => {
    let mdID = to.params.id
    document.title = `Metadata #${mdID}`
    await metadataStore.getDetails( mdID )
+   if (metadataStore.detail.isCollection) {
+      collectionStore.setCollection( metadataStore.detail.id )
+      collectionStore.getItems()
+   }
 })
 
 onBeforeMount( async () => {
    let mdID = route.params.id
    document.title = `Metadata #${mdID}`
    await metadataStore.getDetails( mdID )
+   if (metadataStore.detail.isCollection) {
+      collectionStore.setCollection( metadataStore.detail.id )
+      collectionStore.getItems()
+   }
 })
 
 const folderClicked = (async (locInfo) => {

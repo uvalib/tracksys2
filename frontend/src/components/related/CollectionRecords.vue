@@ -1,32 +1,29 @@
 <template>
-   <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
    <div class="collection">
       <template v-if="collectionStore.bulkAdd == false">
-         <div class="toolbar">
-            <span class="left">
-               <LookupDialog label="Add Item" @selected="addItem" target="metadata" :create="false" :collection="collectionStore.collectionID" v-if="userStore.isAdmin"/>
-               <DPGButton label="Bulk Add" class="p-button-secondary" @click="bulkAddClicked()" v-if="userStore.isAdmin"/>
-               <DPGButton label="Export" class="p-button-secondary" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
-            </span>
-            <span class="search">
-               <span class="p-input-icon-right">
-                  <i class="pi pi-search" />
-                  <InputText v-model="collectionStore.searchOpts.query" placeholder="Collection Search" @input="queryCollection()"/>
-               </span>
-               <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="collectionStore.searchOpts.query.length == 0"/>
-            </span>
-         </div>
-         <div v-if="collectionStore.working == false && collectionStore.totalRecords == 0" class="none">
-            <h3>No items found</h3>
-         </div>
-         <DataTable v-if="collectionStore.totalRecords>0" :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
+         <DataTable :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
             removableSort stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-            :lazy="true" :paginator="collectionStore.totalRecords > 15" @page="onCollectionPage($event)"
+            :lazy="true" :paginator="collectionStore.totalRecords > 15" @page="onCollectionPage($event)" paginatorPosition="top"
             :rows="collectionStore.searchOpts.limit" :totalRecords="collectionStore.totalRecords"
             paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
             :rowsPerPageOptions="[15,30,100]" :first="collectionStore.searchOpts.start"
             currentPageReportTemplate="{first} - {last} of {totalRecords}"
          >
+            <template #paginatorstart>
+               <div class="toolbar">
+                  <span class="left">
+                     <DPGButton label="Add Item(s)" class="p-button-secondary" @click="bulkAddClicked()" v-if="userStore.isAdmin"/>
+                     <DPGButton label="Export" class="p-button-secondary" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
+                  </span>
+                  <span class="search">
+                     <span class="p-input-icon-right">
+                        <i class="pi pi-search" />
+                        <InputText v-model="collectionStore.searchOpts.query" placeholder="Collection Search" @input="queryCollection()"/>
+                     </span>
+                     <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="collectionStore.searchOpts.query.length == 0"/>
+                  </span>
+               </div>
+            </template>
             <Column field="id" header="ID" :sortable="true">
                <template #body="slotProps">
                   <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
@@ -61,18 +58,20 @@
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
-import { onBeforeMount } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useCollectionsStore } from '@/stores/collections'
 import { useConfirm } from "primevue/useconfirm"
 import { useUserStore } from '@/stores/user'
-import LookupDialog from '@/components/LookupDialog.vue'
-import WaitSpinner from '@/components/WaitSpinner.vue'
 import CollectionBulkAdd from './CollectionBulkAdd.vue'
 
 const userStore = useUserStore()
 const collectionStore = useCollectionsStore()
-
 const confirm = useConfirm()
+
+const toolbarTop = ref(0)
+const toolbarHeight = ref(0)
+const toolbarWidth = ref(0)
+const toolbar = ref(null)
 
 const props = defineProps({
    collectionID: {
@@ -81,9 +80,46 @@ const props = defineProps({
    }
 })
 
-onBeforeMount( async () => {
-   collectionStore.setCollection( props.collectionID )
-   await collectionStore.getItems()
+onMounted(() => {
+   let tb = null
+   let tbs = document.getElementsByClassName("p-paginator-top")
+   if ( tbs ) {
+      tb = tbs[0]
+   }
+   if ( tb) {
+      toolbar.value = tb
+      toolbarHeight.value = tb.offsetHeight
+      toolbarWidth.value = tb.offsetWidth
+      toolbarTop.value = tb.getBoundingClientRect().top
+      window.addEventListener("scroll", scrollHandler)
+   }
+})
+
+onUnmounted(() => {
+   window.removeEventListener("scroll", scrollHandler)
+})
+
+const scrollHandler = (( ) => {
+   if ( toolbar.value) {
+      if ( window.scrollY <= toolbarTop.value ) {
+         if ( toolbar.value.classList.contains("sticky") ) {
+            toolbar.value.classList.remove("sticky")
+            let dts = document.getElementsByClassName("p-datatable-wrapper")
+            if ( dts ) {
+               dts[0].style.top = `0px`
+            }
+         }
+      } else {
+         if ( toolbar.value.classList.contains("sticky") == false ) {
+            let dts = document.getElementsByClassName("p-datatable-wrapper")
+            if ( dts ) {
+               dts[0].style.top = `${toolbarHeight.value}px`
+            }
+            toolbar.value.classList.add("sticky")
+            toolbar.value.style.width = `${toolbarWidth.value}px`
+         }
+      }
+   }
 })
 
 const bulkAddClicked = (() => {
@@ -142,20 +178,14 @@ const exportCollection = (() => {
    }
 }
 .toolbar {
-   padding: 0 0 10px 0;
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: space-between;
+   padding: 0;
    .search {
-      margin-left: auto;
-   }
-   label {
-      font-weight: bold;
-      margin-right: 5px;
-      display: inline-block;
+      button.p-button {
+         margin-left: 10px;
+      }
    }
    button.p-button {
-      margin-left: 5px;
+      margin-right: 10px;
    }
 }
 </stype>

@@ -143,19 +143,7 @@ onMounted(() => {
       toolbar.value = tb
       toolbarHeight.value = tb.offsetHeight
       toolbarWidth.value = tb.offsetWidth
-      toolbarTop.value = 0
-
-      // walk the parents of the toolbar and add each top value
-      // to find the top of the toolbar relative to document top
-      let ele = tb
-      if (ele.offsetParent) {
-         do {
-            toolbarTop.value += ele.offsetTop
-            ele = ele.offsetParent
-         } while (ele)
-      }
-   } else {
-      console.error("NO TOOLBAR")
+      toolbarTop.value =  tb.getBoundingClientRect().top
    }
    window.addEventListener("scroll", scrollHandler)
 })
@@ -171,7 +159,6 @@ const scrollHandler = (( ) => {
             toolbar.value.classList.remove("sticky")
             let dts = document.getElementsByClassName("p-datatable-wrapper")
             if ( dts ) {
-               dts[0].classList.add("sticky")
                dts[0].style.top = `0px`
             }
          }
@@ -179,7 +166,6 @@ const scrollHandler = (( ) => {
          if ( toolbar.value.classList.contains("sticky") == false ) {
             let dts = document.getElementsByClassName("p-datatable-wrapper")
             if ( dts ) {
-               dts[0].classList.add("sticky")
                dts[0].style.top = `${toolbarHeight.value}px`
             }
             toolbar.value.classList.add("sticky")
@@ -306,24 +292,6 @@ const clearSelections = (() => {
 </script>
 
 <style scoped lang="scss">
-:deep(.p-datatable-wrapper.sticky) {
-   position: relative;
-}
-:deep(.p-paginator-top)  {
-   div.p-paginator.p-component {
-      padding: 0 0 15px 0;
-   }
-}
-:deep(.p-paginator-top.sticky) {
-   position: fixed;
-   z-index: 1000;
-   top: 0;
-   div.p-paginator.p-component {
-      padding: 0 0 10px 0;
-      border-bottom: 2px solid var(--uvalib-grey-lightest);
-      border-radius: 0;
-   }
-}
 div.masterfiles {
    .p-datatable-sm {
       font-size: 0.9em;

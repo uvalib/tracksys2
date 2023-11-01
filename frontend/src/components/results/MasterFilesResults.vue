@@ -146,7 +146,6 @@ function downloadCSV() {
 }
 
 function clearFilters() {
-   console.log(filters.value)
    Object.values(filters.value).forEach( fv => fv.value = null )
    searchStore.masterFiles.filters = []
    let query = Object.assign({}, route.query)

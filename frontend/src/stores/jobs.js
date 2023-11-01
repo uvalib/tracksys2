@@ -56,7 +56,6 @@ export const useJobsStore = defineStore('jobs', {
          const system = useSystemStore()
          system.working = true
          axios.get(`/api/jobs/${jobID}`).then(response => {
-            console.log(response)
             this.details.events = []
             this.details.error = response.data.error
             this.details.status = response.data.status

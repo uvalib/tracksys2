@@ -30,7 +30,7 @@
             </template>
          </Tree>
       </Panel>
-      <div class="master-files" id="master-files">
+      <div class="master-files" id="master-files" v-if="selected">
          <MasterFiles  v-if="componentsStore.relatedMasterFiles.length > 0" />
          <Panel header="Related Master Files" v-else>
             <p>No master files are associated with this component.</p>
@@ -55,6 +55,7 @@ const componentsStore = useComponentsStore()
 
 const expandedKeys = ref({})
 const selectedKey = ref({})
+const selected = ref(false)
 
 onBeforeRouteUpdate(async (to) => {
    let cID = to.params.id
@@ -112,6 +113,7 @@ const expandSelectedComponent = (( cID ) => {
          behavior: "smooth"
       })
       selectedKey.value[cID] = true
+      nextTick( () => selected.value = true )
    })
 })
 
