@@ -1,5 +1,5 @@
 <template>
-   <DPGButton @click="show" class="p-button-secondary renumber" label="Renumber Selected" :disabled="props.disabled"/>
+   <DPGButton @click="show" class="p-button-secondary renumber" label="Renumber" :disabled="props.disabled"/>
    <Dialog v-model:visible="isOpen" :modal="true" header="Renumber Master Files" :style="{width: '400px'}">
       <FormKit type="form" id="renumber" :actions="false" @submit="renumberPages">
          <FormKit label="New starting page number" type="text" v-model="startPage" required autofocus/>

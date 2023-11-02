@@ -11,6 +11,7 @@ export function usePinnable( pinClass ) {
       if ( window.scrollY <= toolbarTop.value ) {
          if ( toolbar.value.classList.contains("sticky") ) {
             toolbar.value.classList.remove("sticky")
+            toolbar.value.style.width = `auto`
             let dts = document.getElementsByClassName("p-datatable-wrapper")
             if ( dts ) {
                dts[0].style.top = `0px`
@@ -30,6 +31,20 @@ export function usePinnable( pinClass ) {
       }
    })
 
+   const resized = (() => {
+      if ( toolbar.value ) {
+         if ( pinned.value == false ) {
+            toolbarWidth.value = toolbar.value.getBoundingClientRect().width
+         } else {
+            // the toolbar is centered, so the new witdh is the window width
+            // monus double the left position
+            let left = toolbar.value.getBoundingClientRect().left
+            toolbarWidth.value = window.innerWidth - (left*2)
+            toolbar.value.style.width = `${toolbarWidth.value}px`
+         }
+      }
+   })
+
    onMounted( () => {
       let tb = null
       let tbs = document.getElementsByClassName( pinClass )
@@ -42,9 +57,13 @@ export function usePinnable( pinClass ) {
          toolbarWidth.value = tb.offsetWidth
          toolbarTop.value = tb.getBoundingClientRect().top
          window.addEventListener("scroll", scrolled)
+         window.addEventListener("resize", resized)
       }
    })
-   onUnmounted(() => window.removeEventListener("scroll", scrolled))
+   onUnmounted(() => {
+      window.removeEventListener("scroll", scrolled)
+      window.removeEventListener("resize", resized)
+   })
 
    return {toolbar, pinned}
 }

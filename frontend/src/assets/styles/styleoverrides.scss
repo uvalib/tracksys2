@@ -154,3 +154,11 @@ button.p-button.p-button-text {
       text-decoration: underline;
    }
 }
+
+.p-column-filter-menu-button {
+   margin-left: 5px;
+}
+.p-column-filter-menu-button.p-column-filter-menu-button-active {
+   background: var(--uvalib-blue-alt-light);
+   outline: 1px solid var(--uvalib-blue-alt);
+}

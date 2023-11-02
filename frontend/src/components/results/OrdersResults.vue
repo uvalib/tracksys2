@@ -1,35 +1,17 @@
 <template>
-   <div v-if="hasFilter" class="filters">
-      <div class="filter-head">Filters</div>
-      <div class="content">
-            <ul>
-               <li v-for="(vf,idx) in selectedFilters" :key="`order-filter=${idx}`">
-                  <label>{{vf.filter}}:</label>
-                  <span>{{vf.value}}</span>
-               </li>
-            </ul>
-         <div class="filter-acts">
-            <DPGButton label="Clear all" class="p-button-secondary" @click="clearFilters"/>
-         </div>
-      </div>
-   </div>
-   <div v-if="searchStore.orders.total == 0">
-      <h3>No matching orders found</h3>
-   </div>
-   <DataTable v-else :value="searchStore.orders.hits" ref="orderHitsTable" dataKey="id"
+   <DataTable :value="searchStore.orders.hits" ref="orderHitsTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="searchStore.orders.total > 15" @page="onPage($event)"
+      :lazy="true" :paginator="true" @page="onPage($event)"
       :rows="searchStore.orders.limit" :totalRecords="searchStore.orders.total"
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
       :rowsPerPageOptions="[15,30,100]" :first="searchStore.orders.start"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"
+      currentPageReportTemplate="{first} - {last} of {totalRecords}"  paginatorPosition="top"
    >
-      <template #header>
-         <div class="results-toolbar">
-            <div class="matches">{{searchStore.orders.total}} matches found</div>
-            <DPGButton label="Download Results CSV" class="p-button-secondary" @click="downloadCSV"/>
-         </div>
+      <template #empty><h3>No matching orders found</h3></template>
+      <template #paginatorstart>
+         <DPGButton label="Download Results CSV" class="p-button-secondary download" @click="downloadCSV" v-if="searchStore.orders.total>0" />
+         <DPGButton v-if="hasFilter" label="Clear All Filters" class="p-button-secondary" @click="clearFilters"/>
       </template>
       <Column field="id" header="ID">
          <template #body="slotProps">
@@ -84,6 +66,9 @@ import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
+import { usePinnable } from '@/composables/pin'
+
+usePinnable("p-paginator-top")
 
 const route = useRoute()
 const router = useRouter()
@@ -179,6 +164,12 @@ function onPage(event) {
 .results {
    margin: 20px;
    font-size: 0.9em;
+   button.download {
+      margin-right: 10px;
+   }
+   h3 {
+      text-align: center;
+   }
    td.nowrap, th {
       white-space: nowrap;
    }

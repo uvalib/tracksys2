@@ -16,14 +16,14 @@
                   <DPGButton label="Replace" @click="replaceClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
                </template>
                <template v-if="userStore.isAdmin && (detail.dateArchived==null || detail.reorder || detail.dateDLDeliverablesReady == null)">
-                  <DPGButton label="Delete Selected" @click="deleteClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+                  <DPGButton label="Delete" @click="deleteClicked()" class="p-button-secondary" :disabled="!filesSelected" />
                </template>
                <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
                <template v-if="unitsStore.canDownload">
-                  <DPGButton label="Download Selected" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+                  <DPGButton label="Download" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
                </template>
                <template v-if="unitsStore.canPDF">
-                  <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="filesSelected == false" />
+                  <DPGButton label="PDF" @click="pdfClicked()" class="p-button-secondary" :disabled="filesSelected == false" />
                </template>
                <template  v-if="userStore.isAdmin || userStore.isSupervisor">
                   <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
