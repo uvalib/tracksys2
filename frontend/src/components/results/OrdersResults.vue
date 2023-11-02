@@ -94,16 +94,6 @@ const orderStatuses = ref([
    {name: "Deferred", code: "deferred"},
 ])
 
-const selectedFilters = computed(() => {
-   let out = []
-   Object.entries(filters.value).forEach(([key, data]) => {
-      if (data.value && data.value != "") {
-         out.push( {filter: key, value: data.value})
-      }
-   })
-   return out
-})
-
 const hasFilter = computed(() => {
    let idx = Object.values(filters.value).findIndex( fv => fv.value && fv.value != "")
    return idx >= 0

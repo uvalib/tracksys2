@@ -1,35 +1,17 @@
 <template>
-   <div v-if="hasFilter" class="filters">
-      <div class="filter-head">Filters</div>
-      <div class="content">
-            <ul>
-               <li v-for="(vf,idx) in selectedFilters" :key="`mdfilter=${idx}`">
-                  <label>{{vf.filter}}:</label>
-                  <span>{{filterValue(vf.value)}}</span>
-               </li>
-            </ul>
-         <div class="filter-acts">
-            <DPGButton label="Clear filters" class="p-button-secondary" @click="clearFilters"/>
-         </div>
-      </div>
-   </div>
-   <div v-if="searchStore.metadata.total == 0">
-      <h3>No matching metadata records found</h3>
-   </div>
-   <DataTable v-else :value="searchStore.metadata.hits" ref="metadataTable" dataKey="id"
+   <DataTable :value="searchStore.metadata.hits" ref="metadataTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll"
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="showPaginator" @page="onMetadataPage($event)"
+      :lazy="true" :paginator="true" @page="onMetadataPage($event)"
       :rows="searchStore.metadata.limit" :totalRecords="searchStore.metadata.total"
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
       :rowsPerPageOptions="[15,30,100]" :first="searchStore.metadata.start"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"
+      currentPageReportTemplate="{first} - {last} of {totalRecords}"   paginatorPosition="top"
    >
-      <template #header>
-         <div class="results-toolbar">
-            <div class="matches">{{searchStore.metadata.total}} matches found</div>
-            <DPGButton label="Download Results CSV" class="p-button-secondary" @click="downloadCSV"/>
-         </div>
+      <template #empty><h3>No matching metadata records found</h3></template>
+      <template #paginatorstart>
+         <DPGButton label="Download Results CSV" class="p-button-secondary download" @click="downloadCSV" v-if="searchStore.metadata.total>0" />
+         <DPGButton v-if="hasFilter" label="Clear All Filters" class="p-button-secondary" @click="clearFilters"/>
       </template>
       <Column field="id" header="ID">
          <template #body="slotProps">
@@ -120,6 +102,9 @@ import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
 import {FilterMatchMode} from 'primevue/api'
 import { useRoute, useRouter } from 'vue-router'
+import { usePinnable } from '@/composables/pin'
+
+usePinnable("p-paginator-top")
 
 const route = useRoute()
 const router = useRouter()
@@ -155,33 +140,10 @@ const mdTypes = computed(() => {
    })
    return out
 })
-
-const showPaginator = computed( () => {
-   return searchStore.metadata.total > 15
-})
-const selectedFilters = computed(() => {
-   let out = []
-   Object.entries(filters.value).forEach(([key, data]) => {
-      if (data.value && data.value != "") {
-         out.push( {filter: key, value: decodeURIComponent(data.value)})
-      }
-   })
-   return out
-})
-
 const hasFilter = computed(() => {
    let idx = Object.values(filters.value).findIndex( fv => fv.value && fv.value != "")
    return idx >= 0
 })
-
-function filterValue(fv) {
-   let bits = fv.split(":")
-   if (bits.length == 1) {
-      return fv
-   }
-   let es = system.externalSystems.find( e => e.id == bits[1])
-   return es.name
-}
 
 onMounted(() =>{
    searchStore.metadata.filters.forEach( fv => {
@@ -228,39 +190,12 @@ function onFilter(event) {
 </script>
 
 <stype scoped lang="scss">
-div.filters {
-   text-align: left;
-   border: 1px solid #e9ecef;
-   margin-bottom: 15px;
-   div.filter-head {
-      padding: 5px 10px;
-      font-size: 1em;
-      background: var(--uvalib-grey-lightest);
-      border-bottom: 1px solid #e9ecef;
-   }
-   ul {
-      list-style: none;
-      margin: 10px;
-      padding: 5px 10px;
-      label {
-         font-weight: bold;
-         display: inline-block;
-         margin-right: 10px;
-      }
-   }
-   .content {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: space-between;
-   }
-   .filter-acts {
-      padding: 10px;
-      font-size: 0.85em;
-   }
-}
 .results {
    margin: 20px;
    font-size: 0.9em;
+   h3 {
+      text-align: center;
+   }
    td.nowrap, th {
       white-space: nowrap;
    }

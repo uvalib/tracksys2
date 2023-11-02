@@ -1,17 +1,16 @@
 <template>
    <div class="similar">
       <h3>Similar Images</h3>
-      <div v-if="searchStore.similarImages.total == 0">
-         <h4>No matching images found</h4>
-      </div>
-      <div class="hits" v-else >
+      <div class="hits">
          <DataTable :value="searchStore.similarImages.hits" ref="similarHitsTable" dataKey="id"
             stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm" :rowStyle="rowStyle"
             :totalRecords="searchStore.similarImages.total"
          >
-            <template #header>
+            <template #empty><h4>No matching images found</h4></template>
+            <template #header v-if="searchStore.similarImages.total > 0">
                <div class="results-toolbar">
-                  <div class="matches">{{searchStore.similarImages.total}} matches found, only showing the top 50</div>
+                  <div class="matches" v-if="searchStore.similarImages.total > 50">{{searchStore.similarImages.total}} matches found, only showing the top 50</div>
+                  <div class="matches" v-else>{{searchStore.similarImages.total}} matches found</div>
                </div>
             </template>
             <Column field="id" header="ID">
@@ -70,6 +69,10 @@ const rowStyle = (data) => {
       border-bottom: 2px solid #dee2e6;
       padding: 1rem;
       margin-bottom:0;
+   }
+   h4 {
+      text-align: center;
+      font-size: 1.1em;
    }
    .hits {
       padding: 1rem;

@@ -1,35 +1,17 @@
 <template>
-   <div v-if="hasFilter" class="filters">
-      <div class="filter-head">Filters</div>
-      <div class="content">
-            <ul>
-               <li v-for="(vf,idx) in selectedFilters" :key="`component-filter=${idx}`">
-                  <label>{{vf.filter}}:</label>
-                  <span>{{vf.value}}</span>
-               </li>
-            </ul>
-         <div class="filter-acts">
-            <DPGButton label="Clear all" class="p-button-secondary" @click="clearFilters"/>
-         </div>
-      </div>
-   </div>
-   <div v-if="searchStore.components.total == 0">
-      <h3>No matching components found</h3>
-   </div>
-   <DataTable v-else :value="searchStore.components.hits" ref="componentHitsTable" dataKey="id"
+   <DataTable :value="searchStore.components.hits" ref="componentHitsTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="searchStore.components.total > 15" @page="onPage($event)"
+      :lazy="true" :paginator="true" @page="onPage($event)" paginatorPosition="top"
       :rows="searchStore.components.limit" :totalRecords="searchStore.components.total"
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
       :rowsPerPageOptions="[15,30,100]" :first="searchStore.components.start"
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >
-      <template #header>
-         <div class="results-toolbar">
-            <div class="matches">{{searchStore.components.total}} matches found</div>
-            <DPGButton label="Download Results CSV" class="p-button-secondary" @click="downloadCSV"/>
-         </div>
+      <template #empty><h3>No matching components found</h3></template>
+      <template #paginatorstart>
+         <DPGButton label="Download Results CSV" class="p-button-secondary download" @click="downloadCSV" v-if="searchStore.components.total>0" />
+         <DPGButton v-if="hasFilter" label="Clear All Filters" class="p-button-secondary" @click="clearFilters"/>
       </template>
       <Column field="id" header="ID">
          <template #body="slotProps">
@@ -70,6 +52,9 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
+import { usePinnable } from '@/composables/pin'
+
+usePinnable("p-paginator-top")
 
 const route = useRoute()
 const router = useRouter()
@@ -82,16 +67,6 @@ const filters = ref( {
    'label': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'content_desc': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'date': {value: null, matchMode: FilterMatchMode.CONTAINS},
-})
-
-const selectedFilters = computed(() => {
-   let out = []
-   Object.entries(filters.value).forEach(([key, data]) => {
-      if (data.value && data.value != "") {
-         out.push( {filter: key, value: data.value})
-      }
-   })
-   return out
 })
 
 const hasFilter = computed(() => {
@@ -140,13 +115,15 @@ function onPage(event) {
    searchStore.components.limit = event.rows
    searchStore.executeSearch("components")
 }
-
 </script>
 
 <stype scoped lang="scss">
 .results {
    margin: 20px;
    font-size: 0.9em;
+   h3 {
+      text-align: center;
+   }
    td.nowrap, th {
       white-space: nowrap;
    }
