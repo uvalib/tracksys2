@@ -32,6 +32,7 @@ export function usePinnable( pinClass ) {
    })
 
    const resized = (() => {
+      // console.log("PIN RESIZE, scrollY "+window.scrollY)
       if ( toolbar.value ) {
          if ( pinned.value == false ) {
             toolbarWidth.value = toolbar.value.getBoundingClientRect().width
@@ -46,6 +47,7 @@ export function usePinnable( pinClass ) {
    })
 
    onMounted( () => {
+      // console.log("PIN MOUNT, scrollY "+window.scrollY)
       let tb = null
       let tbs = document.getElementsByClassName( pinClass )
       if ( tbs ) {
@@ -55,7 +57,7 @@ export function usePinnable( pinClass ) {
          toolbar.value = tb
          toolbarHeight.value = tb.offsetHeight
          toolbarWidth.value = tb.offsetWidth
-         toolbarTop.value = tb.getBoundingClientRect().top
+         toolbarTop.value = tb.getBoundingClientRect().top + window.scrollY
          window.addEventListener("scroll", scrolled)
          window.addEventListener("resize", resized)
       }

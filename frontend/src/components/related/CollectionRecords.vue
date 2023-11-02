@@ -3,7 +3,7 @@
       <template v-if="collectionStore.bulkAdd == false">
          <DataTable :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
             removableSort stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-            :lazy="true" :paginator="collectionStore.totalRecords > 15" @page="onCollectionPage($event)" paginatorPosition="top"
+            :lazy="true" :paginator="true" @page="onCollectionPage($event)" paginatorPosition="top"
             :rows="collectionStore.searchOpts.limit" :totalRecords="collectionStore.totalRecords"
             paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
             :rowsPerPageOptions="[15,30,100]" :first="collectionStore.searchOpts.start"

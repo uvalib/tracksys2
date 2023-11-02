@@ -1,5 +1,5 @@
 <template>
-   <TabView class="results" @tabChange="tabChanged()" v-model:activeIndex="searchStore.activeResultsIndex">
+   <TabView class="results" @tabChange="tabChanged()" v-model:activeIndex="searchStore.activeResultsIndex" :lazy="true">
       <TabPanel :header="`Orders`" v-if="searchStore.scope=='all' || searchStore.scope=='orders'" >
          <OrdersResults />
       </TabPanel>
@@ -20,10 +20,10 @@ import { useSearchStore } from '@/stores/search'
 import { useSystemStore } from '@/stores/system'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
-import MetadataResults from './MetadataResults.vue'
-import OrdersResults from './OrdersResults.vue'
-import MasterFilesResults from './MasterFilesResults.vue'
-import ComponentsResults from './ComponentsResults.vue'
+import MetadataResults from '@/components/results/MetadataResults.vue'
+import OrdersResults from '@/components/results/OrdersResults.vue'
+import MasterFilesResults from '@/components/results/MasterFilesResults.vue'
+import ComponentsResults from '@/components/results/ComponentsResults.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted, watch } from 'vue'
 

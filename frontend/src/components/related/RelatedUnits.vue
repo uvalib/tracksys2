@@ -6,9 +6,10 @@
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
       v-model:filters="filters" filterDisplay="menu" paginatorPosition="top"
    >
+      <template #empty><h3>No units found</h3></template>
       <template #paginatorstart>
          <HathiTrustUpdateDialog v-if="props.hathiTrust" />
-         <AddUnitDialog v-if="props.orderStatus != 'completed' && props.orderStatus != 'canceled'"/>
+         <AddUnitDialog v-if="props.canAdd && props.orderStatus != 'completed' && props.orderStatus != 'canceled'"/>
       </template>
       <Column field="id" header="ID" :sortable="true">
          <template #body="slotProps">
@@ -77,6 +78,10 @@ const props = defineProps({
       type: String,
       default: "requested"
    },
+   canAdd: {
+      type: Boolean,
+      default: false
+   },
    showMetadata: {
       type: Boolean,
       default: true
@@ -118,7 +123,9 @@ const formatDate = (  (date ) => {
 td.nowrap {
    white-space: nowrap;
 }
-
+h3 {
+   text-align: center;
+}
 .empty {
    color: #ccc;
 }

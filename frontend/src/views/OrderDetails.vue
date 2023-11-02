@@ -153,15 +153,9 @@
          </div>
       </Panel>
    </div>
-   <div class="details">
+   <div class="details" v-if="systemStore.working==false" >
       <Panel header="Units" class="units">
-         <template v-if="systemStore.working == false">
-            <div v-if="ordersStore.units.length == 0" class="no-units">
-               <AddUnitDialog v-if="detail.status != 'completed' && detail.status != 'canceled'"/>
-               <h3>No units found</h3>
-            </div>
-            <RelatedUnits v-else :units="ordersStore.units" :orderStatus="detail.status" :hathiTrust="canUpdateHathiTrust" />
-         </template>
+         <RelatedUnits :units="ordersStore.units" :orderStatus="detail.status" :hathiTrust="canUpdateHathiTrust" :canAdd="true"/>
       </Panel>
    </div>
    <Dialog v-model:visible="showEmail" :modal="true" header="Customer Email" @hide="emailClosed()" :style="{width: '650px'}">

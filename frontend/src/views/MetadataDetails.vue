@@ -192,7 +192,7 @@
       </div>
       <div class="details">
          <Panel header="Related Information">
-            <TabView class="related">
+            <TabView class="related" :lazy="true">
                <TabPanel header="Collection" v-if="metadataStore.detail.isCollection">
                   <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
                   <template v-else>
