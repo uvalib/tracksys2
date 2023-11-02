@@ -9,24 +9,17 @@
             :rowsPerPageOptions="[15,30,100]" :first="collectionStore.searchOpts.start"
             currentPageReportTemplate="{first} - {last} of {totalRecords}"
          >
+            <template #empty><h3>No items found</h3></template>
             <template #paginatorstart>
-               <div class="toolbar">
-                  <span class="left">
-                     <DPGButton label="Add Item(s)" class="p-button-secondary" @click="bulkAddClicked()" v-if="userStore.isAdmin"/>
-                     <DPGButton label="Export" class="p-button-secondary" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
-                  </span>
-               </div>
+               <DPGButton label="Add Item(s)" class="p-button-secondary" @click="bulkAddClicked()" v-if="userStore.isAdmin"/>
+               <DPGButton label="Export" class="p-button-secondary pad-left" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
             </template>
             <template #paginatorend>
-               <div class="toolbar">
-                  <span class="search">
-                     <span class="p-input-icon-right">
-                        <i class="pi pi-search" />
-                        <InputText v-model="collectionStore.searchOpts.query" placeholder="Collection Search" @input="queryCollection()"/>
-                     </span>
-                     <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="collectionStore.searchOpts.query.length == 0"/>
-                  </span>
-               </div>
+               <span class="p-input-icon-right">
+                  <i class="pi pi-search" />
+                  <InputText v-model="collectionStore.searchOpts.query" placeholder="Collection Search" @input="queryCollection()"/>
+               </span>
+               <DPGButton label="Clear" class="p-button-secondary pad-left" @click="clearSearch()" :disabled="collectionStore.searchOpts.query.length == 0"/>
             </template>
             <Column field="id" header="ID" :sortable="true">
                <template #body="slotProps">
@@ -118,6 +111,9 @@ const exportCollection = (() => {
 <stype scoped lang="scss">
 .collection  {
    margin: 0;
+   h3  {
+      text-align: center;
+   }
    .none {
       color: var(--uvalib-grey-light);
       font-style: italic;
@@ -132,17 +128,8 @@ const exportCollection = (() => {
       text-align: center;
       width: 25px;
    }
-}
-.toolbar {
-   padding: 0;
-   .search {
-      button.p-button {
-         margin-left: 10px;
-         margin-right: 0;
-      }
-   }
-   button.p-button {
-      margin-right: 10px;
+   button.pad-left {
+      margin-left: 10px;
    }
 }
 </stype>

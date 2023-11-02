@@ -195,12 +195,7 @@
             <TabView class="related" :lazy="true">
                <TabPanel header="Collection" v-if="metadataStore.detail.isCollection">
                   <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
-                  <template v-else>
-                     <div v-if="collectionStore.totalRecords == 0" class="none">
-                        <h3>No items found</h3>
-                     </div>
-                     <CollectionRecords v-else :collectionID="metadataStore.detail.id"/>
-                  </template>
+                  <CollectionRecords v-else :collectionID="metadataStore.detail.id"/>
                </TabPanel>
                <TabPanel header="Orders">
                   <RelatedOrders :orders="metadataStore.related.orders" />
