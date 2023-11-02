@@ -9,7 +9,7 @@
       <template #empty><h3>No units found</h3></template>
       <template #paginatorstart>
          <HathiTrustUpdateDialog v-if="props.hathiTrust" />
-         <AddUnitDialog v-if="props.canAdd && props.orderStatus != 'completed' && props.orderStatus != 'canceled'"/>
+         <AddUnitDialog v-if="props.canAdd"/>
       </template>
       <Column field="id" header="ID" :sortable="true">
          <template #body="slotProps">
@@ -73,10 +73,6 @@ const props = defineProps({
    units: {
       type: Array,
       required: true
-   },
-   orderStatus: {
-      type: String,
-      default: "requested"
    },
    canAdd: {
       type: Boolean,

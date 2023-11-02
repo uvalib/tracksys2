@@ -1,11 +1,12 @@
 <template>
    <DataTable :value="props.masterFiles" ref="relatedMasterFilesTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-      :lazy="false" :paginator="props.masterFiles.length > 15" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
+      :lazy="false" :paginator="true" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"
+      currentPageReportTemplate="{first} - {last} of {totalRecords}" paginatorPosition="top"
       v-model:filters="filters" filterDisplay="menu"
    >
+      <template #paginatorstart></template>
       <Column field="id" header="ID" :sortable="true">
          <template #body="slotProps">
             <router-link :to="`/masterfiles/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
@@ -38,6 +39,9 @@ import Column from 'primevue/column'
 import { ref } from 'vue'
 import InputText from 'primevue/inputtext'
 import { FilterMatchMode } from 'primevue/api'
+import { usePinnable } from '@/composables/pin'
+
+usePinnable("p-paginator-top")
 
 const props = defineProps({
    masterFiles: {

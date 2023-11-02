@@ -155,7 +155,7 @@
    </div>
    <div class="details" v-if="systemStore.working==false" >
       <Panel header="Units" class="units">
-         <RelatedUnits :units="ordersStore.units" :orderStatus="detail.status" :hathiTrust="canUpdateHathiTrust" :canAdd="true"/>
+         <RelatedUnits :units="ordersStore.units" :hathiTrust="canUpdateHathiTrust" :canAdd="detail.status != 'completed' && detail.status != 'canceled'"/>
       </Panel>
    </div>
    <Dialog v-model:visible="showEmail" :modal="true" header="Customer Email" @hide="emailClosed()" :style="{width: '650px'}">

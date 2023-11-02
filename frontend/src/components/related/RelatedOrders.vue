@@ -1,14 +1,13 @@
 <template>
-   <div v-if="props.orders.length == 0">
-      <h3>No related orders found</h3>
-   </div>
-   <DataTable v-else :value="props.orders" ref="relatedOrdersTable" dataKey="id"
+   <DataTable :value="props.orders" ref="relatedOrdersTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-      :lazy="false" :paginator="props.orders.length > 15" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
+      :lazy="false" :paginator="true" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"
+      currentPageReportTemplate="{first} - {last} of {totalRecords}" paginatorPosition="top"
       v-model:filters="filters" filterDisplay="menu"
    >
+      <template #empty><h3>No related orders found</h3></template>
+      <template #paginatorstart></template>
       <Column field="id" header="ID" :sortable="true">
          <template #body="slotProps">
             <router-link :to="`/orders/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
@@ -53,6 +52,9 @@ import { FilterMatchMode } from 'primevue/api'
 import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
 import { useSystemStore } from '@/stores/system'
+import { usePinnable } from '@/composables/pin'
+
+usePinnable("p-paginator-top")
 
 const systemStore = useSystemStore()
 
@@ -76,6 +78,9 @@ const filters = ref( {
 .results {
    margin: 20px;
    font-size: 0.9em;
+   h3 {
+      text-align: center;
+   }
    td.nowrap, th {
       white-space: nowrap;
    }
