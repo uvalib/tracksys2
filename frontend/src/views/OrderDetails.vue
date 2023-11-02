@@ -84,7 +84,7 @@
             <DataDisplay label="Date Customer Notified" :value="formatDateTime(detail.dateCustomerNotified)"/>
          </dl>
          <div class="acts-wrap" v-if="user.isAdmin || user.isSupervisor">
-            <div class="actions" v-if="detail.status != 'complete'">
+            <div class="actions" v-if="detail.status != 'completed'">
                <DPGButton label="Claim for Processing" class="p-button-secondary" @click="claimOrder()" :disabled="isProcessor"/>
                <AssignModal />
             </div>
@@ -154,45 +154,16 @@
       </Panel>
    </div>
    <div class="details">
-      <Panel header="Units">
-         <div v-if="user.isAdmin &&  ordersStore.hathiTrustMetadataCount > 0" class="hathi">
-            <DPGButton label="Batch Update HathiTrust Status" class="p-button-secondary" @click="hathiUpdateClicked"/>
-         </div>
-         <template #header v-if="detail.status != 'completed' && detail.status != 'canceled'">
-            <div class="add-header">
-               <span>Units</span>
-               <AddUnitDialog size="small" />
+      <Panel header="Units" class="units">
+         <template v-if="systemStore.working == false">
+            <div v-if="ordersStore.units.length == 0" class="no-units">
+               <AddUnitDialog v-if="detail.status != 'completed' && detail.status != 'canceled'"/>
+               <h3>No units found</h3>
             </div>
+            <RelatedUnits v-else :units="ordersStore.units" :orderStatus="detail.status" :hathiTrust="canUpdateHathiTrust" />
          </template>
-         <RelatedUnits :units="ordersStore.units" />
       </Panel>
    </div>
-   <Dialog v-model:visible="showHathiTrustUpdate" :modal="true" header="Batch Update HathiTrust Status" @hide="emailClosed()" >
-      <div class="hathi-panel">
-         <p>Update {{  ordersStore.hathiTrustMetadataCount }} metadata records</p>
-         <div class="columns">
-            <div>
-               <label>Field</label>
-               <select v-model="hathiTrustField">
-                  <option value="" disabled selected>Select a field</option>
-                  <option value="metadata_status">Metadata Status</option>
-                  <option value="package_submitted_at">Date Package Submitted</option>
-                  <option value="package_status">Package Status</option>
-                  <option value="finished_at">Date Finished</option>
-               </select>
-            </div>
-            <div>
-               <label>Value</label>
-               <input v-if="hathiTrustField == 'metadata_status' || hathiTrustField == 'package_status'" type="text" v-model="hathiTrustValue" />
-               <Calendar v-else v-model="hathiTrustValue"  dateFormat="yy-mm-dd" showButtonBar/>
-            </div>
-         </div>
-         <div class="buttons">
-            <DPGButton label="Cancel" class="p-button-secondary" @click="showHathiTrustUpdate = false"/>
-            <DPGButton label="Update" class="p-button-primary" @click="updateHathiTrustStatuses"/>
-         </div>
-      </div>
-   </Dialog>
    <Dialog v-model:visible="showEmail" :modal="true" header="Customer Email" @hide="emailClosed()" :style="{width: '650px'}">
       <div v-html="detail.email" class="email"></div>
       <template #footer>
@@ -201,7 +172,6 @@
    </Dialog>
    <InvoiceDialog />
 </template>
-
 
 <script setup>
 import Dialog from 'primevue/dialog'
@@ -225,7 +195,6 @@ import SendEmailDialog from '../components/order/SendEmailDialog.vue'
 import AddUnitDialog from '../components/order/AddUnitDialog.vue'
 import { useConfirm } from "primevue/useconfirm"
 import AssignModal from '../components/order/AssignModal.vue'
-import Calendar from 'primevue/calendar'
 
 const confirm = useConfirm()
 const route = useRoute()
@@ -240,9 +209,9 @@ const { detail } = storeToRefs(ordersStore)
 const showEmail = ref(false)
 const customer = ref(null)
 
-const showHathiTrustUpdate = ref(false)
-const hathiTrustField = ref("metadata_status")
-const hathiTrustValue = ref("")
+const canUpdateHathiTrust = computed( () => {
+   return user.isAdmin &&  ordersStore.hathiTrustMetadataCount > 0
+})
 
 const customerInfo = computed(() => {
    let cust = `${ordersStore.detail.customer.lastName}, ${ordersStore.detail.customer.firstName}`
@@ -326,16 +295,6 @@ onBeforeMount( async () => {
    document.title = `Order #${orderID}`
    await ordersStore.getOrderDetails(orderID)
    await customerStore.getCustomers()
-})
-
-const hathiUpdateClicked = (() => {
-   showHathiTrustUpdate.value = true
-   hathiTrustField.value = "metadata_status"
-   hathiTrustValue.value = ""
-})
-const updateHathiTrustStatuses = ( async () => {
-   await ordersStore.batchUpdateHathiTrust( hathiTrustField.value,  hathiTrustValue.value)
-   showHathiTrustUpdate.value = false
 })
 
 const deleteOrder = (() => {
@@ -505,6 +464,11 @@ const claimOrder = (() => {
       margin: 0 0 5px 0 !important;
    }
 }
+div.p-panel.p-component.units {
+   :deep(div.p-panel-content) {
+      padding-top: 0 !important;
+   }
+}
 div.item {
    margin: 15px;
    padding: 10px;
@@ -532,14 +496,10 @@ div.item {
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
-   .add-header {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: space-between;
-      align-items: baseline;
-      width: 100%;
-      span {
-         font-weight: 600;
+   .no-units {
+      padding: 20px 0 0 0;
+      h3 {
+         text-align: center;
       }
    }
    p {
@@ -550,22 +510,11 @@ div.item {
       margin-bottom: 10px !important;
    }
 
-   div.hathi {
-      margin: 0 0 15px 0;
-      font-size: 0.85em;
-   }
-
    div.customer, div.status {
       display: flex;
       flex-flow: row nowrap;
       justify-content: flex-start;
       align-items: center;
-      button.p-button {
-         height: auto;
-         width: auto;
-         margin-left: 10px;
-         font-weight: bold;;
-      }
       .name {
          color: var(--uvalib-blue-alt-dark);
          font-weight: 500;
@@ -607,40 +556,6 @@ div.item {
          :deep(button.p-button) {
             margin-right: 10px;
          }
-      }
-   }
-}
-.hathi-panel {
-   p {
-      padding: 0;
-      margin: 0 0 15px 0;
-   }
-   label {
-      font-weight: 500;
-      display: block;
-      margin-bottom: 5px
-   }
-   select, input[type=text] {
-      padding: 9px;
-   }
-   div.columns {
-      display: flex;
-      flex-flow: row nowrap;
-      .p-calendar.p-component.p-inputwrapper {
-         width: 100%;
-      }
-      div {
-         flex-grow: 1;
-      }
-      div:last-of-type {
-         margin-left: 15px;
-      }
-   }
-   .buttons {
-      text-align: right;
-      margin-top: 15px;
-      button {
-         margin-left: 10px;
       }
    }
 }

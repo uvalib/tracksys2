@@ -1,14 +1,15 @@
 <template>
-  <div v-if="props.units.length == 0">
-      <h3>No units found</h3>
-   </div>
-   <DataTable v-else :value="props.units" ref="relatedUnitsTable" dataKey="id"
+   <DataTable :value="props.units" ref="relatedUnitsTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-      :lazy="false" :paginator="props.units.length > 15" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
+      :lazy="false" :paginator="true" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
       currentPageReportTemplate="{first} - {last} of {totalRecords}"
-      v-model:filters="filters" filterDisplay="menu"
+      v-model:filters="filters" filterDisplay="menu" paginatorPosition="top"
    >
+      <template #paginatorstart>
+         <HathiTrustUpdateDialog v-if="props.hathiTrust" />
+         <AddUnitDialog v-if="props.orderStatus != 'completed' && props.orderStatus != 'canceled'"/>
+      </template>
       <Column field="id" header="ID" :sortable="true">
          <template #body="slotProps">
             <router-link :to="`/units/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
@@ -61,18 +62,28 @@ import Dropdown from 'primevue/dropdown'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import dayjs from 'dayjs'
-import { useSystemStore } from '@/stores/system'
+import AddUnitDialog from '@/components/order/AddUnitDialog.vue'
+import HathiTrustUpdateDialog from '@/components/order/HathiTrustUpdateDialog.vue'
+import { usePinnable } from '@/composables/pin'
 
-const systemStore = useSystemStore()
+usePinnable("p-paginator-top")
 
 const props = defineProps({
    units: {
       type: Array,
       required: true
    },
+   orderStatus: {
+      type: String,
+      default: "requested"
+   },
    showMetadata: {
       type: Boolean,
       default: true
+   },
+   hathiTrust: {
+      type: Boolean,
+      default: false
    }
 })
 
@@ -104,7 +115,6 @@ const formatDate = (  (date ) => {
 </script>
 
 <stype scoped lang="scss">
-
 td.nowrap {
    white-space: nowrap;
 }

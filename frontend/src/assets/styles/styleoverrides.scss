@@ -70,6 +70,9 @@ nav.p-paginator-top.sticky {
    position: fixed;
    z-index: 1000;
    top: 0;
+   div.p-paginator.p-component {
+      border-bottom: 1px solid var(--uvalib-grey-light);
+   }
 }
 .p-datatable-wrapper {
    position: relative;
