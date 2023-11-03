@@ -1,4 +1,5 @@
 <template>
+   <WaitSpinner v-if="cloneStore.status == 'cloning'" :overlay="true" message="<div>Please wait...</div><p>Masterfile clone is in progress</p>" />
    <div v-if="cloneStore.initialized && cloneStore.sourceUnits.length == 0">
       <p>There are no suittable units to clone master files from.</p>
       <div class="acts">
@@ -51,6 +52,7 @@ import { useCloneStore } from '@/stores/clone'
 import PickList from 'primevue/picklist'
 import DataDisplay from '../DataDisplay.vue'
 import { useConfirm } from "primevue/useconfirm"
+import WaitSpinner from "@/components/WaitSpinner.vue"
 
 const confirm = useConfirm()
 const unitsStore = useUnitsStore()

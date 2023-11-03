@@ -1,7 +1,7 @@
 <template>
    <div v-if="props.overlay" class="spinner-overlay">
       <div class="spinner">
-         <h3 v-if="message">{{ props.message }}</h3>
+         <h3 v-if="message" v-html="props.message"></h3>
          <div class="spinner-animation">
             <div class="dot bounce1"></div>
             <div class="dot bounce2"></div>

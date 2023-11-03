@@ -62,7 +62,6 @@ export const useCloneStore = defineStore('clone', {
          })
          this.status = "cloning"
          axios.post(`${system.jobsURL}/units/${destUnitID}/masterfiles/clone`, data).then( resp => {
-            system.toastMessage("Please Wait", 'Master files are being cloned...')
             this.awaitCloneCompletion( resp.data )
          }).catch( e => {
             system.setError(e)
