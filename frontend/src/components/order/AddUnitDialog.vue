@@ -9,15 +9,13 @@
                <DPGButton @click="createMetadata" label="Create" class="p-button-secondary"/>
             </div>
             <template v-if="searched">
-               <div class="no-results" v-if="metadataStore.totalSearchHits == 0">
-                  No matching metadata records found.
-               </div>
-               <div v-else class="hits">
+               <div class="hits">
                   <div class="scroller">
                      <DataTable :value="metadataStore.searchHits" ref="metadataHitsTable" dataKey="id"
                         stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
                         v-model:selection="selectedMetadata" selectionMode="single"
                         :lazy="false" :paginator="false" :rows="30" removableSort>
+                        <template #empty>No matching metadata records</template>
                         <Column field="pid" header="PID" :sortable="true"/>
                         <Column field="type" header="Type" :sortable="true"/>
                         <Column field="title" header="title" :sortable="true"/>

@@ -1,12 +1,10 @@
 <template>
-   <div v-if="equipment.length == 0">
-      <h3>No equipment found</h3>
-   </div>
-   <DataTable v-else :value="props.equipment" ref="equipmentTable" dataKey="id"
+   <DataTable :value="props.equipment" ref="equipmentTable" dataKey="id"
       stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
       :lazy="false" :paginator="false" :rows="props.equipment.length"
       v-model:editingRows="editingRows" editMode="row"
    >
+      <template #empty>No equipment found</template>
       <Column header="" headerStyle="width: 3em" v-if="equipmentStore.pendingEquipment.workstationID > 0">
          <template #body="slotProps">
             <Checkbox :value="slotProps.data" v-model="equipmentStore.pendingEquipment.equipment" :disabled="isItemDisabled(slotProps.data.id)" @click="equipmentClicked"/>

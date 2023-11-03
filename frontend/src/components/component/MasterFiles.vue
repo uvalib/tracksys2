@@ -8,6 +8,7 @@
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
          v-model:selection="selectedMasterFiles" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
       >
+         <template #empty><p class="none">No master files are associated with this component</p></template>
          <template #paginatorstart>
             <div class="master-file-acts">
                <DPGButton label="PDF" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
@@ -146,6 +147,9 @@ const clearSelections = (() => {
 <style scoped lang="scss">
 :deep(div.p-panel-content) {
    padding-top: 0;
+}
+p.none {
+   text-align:center;
 }
 .p-datatable-sm {
    font-size: 0.9em;

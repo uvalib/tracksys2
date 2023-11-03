@@ -8,17 +8,14 @@
       </div>
       <NewMetadataPanel v-else @canceled="metadataCreateCanceled" @created="metadataCreated" />
       <template v-if="searched && mode=='lookup'">
-         <div class="no-results"
-            v-if="(target=='metadata' && metadataStore.totalSearchHits == 0) || (target=='orders' && ordersStore.totalLookupHits == 0) || (target=='component' && componentsStore.totalLookupHits == 0)">
-            No matching records found.
-         </div>
-         <div v-else class="hits">
+         <div class="hits">
             <div class="scroller">
                <DataTable v-if="target=='metadata'" :value="metadataStore.searchHits" ref="metadataHitsTable" dataKey="id"
                   stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
                   v-model:selection="selectedHit" selectionMode="single"
                   :lazy="false" :paginator="false" :rows="30" removableSort
                >
+                  <template #empty>No matching metadata records</template>
                   <Column field="id" header="ID" :sortable="true"/>
                   <Column field="pid" header="PID" :sortable="true"/>
                   <Column field="type" header="Type" :sortable="true"/>
@@ -34,6 +31,7 @@
                   v-model:selection="selectedHit" selectionMode="single"
                   :lazy="false" :paginator="false" :rows="30" removableSort
                >
+                  <template #empty>No matching components</template>
                   <Column field="id" header="ID" :sortable="true"/>
                   <Column field="pid" header="PID" :sortable="true"/>
                   <Column field="title" header="Title" :sortable="true" >
@@ -52,6 +50,7 @@
                   v-model:selection="selectedHit" selectionMode="single"
                   :lazy="false" :paginator="false" :rows="30" removableSort
                >
+                  <template #empty>No matching orders</template>
                   <Column field="id" header="ID" :sortable="true"/>
                   <Column field="dateDue" header="Date Due" :sortable="true" />
                   <Column field="title" header="Title" :sortable="true"/>
