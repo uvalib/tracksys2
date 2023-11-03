@@ -10,8 +10,8 @@
       >
          <template #paginatorstart>
             <div class="master-file-acts">
-               <DPGButton label="PDF of Selected" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
-               <DPGButton label="Download Selected" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+               <DPGButton label="PDF" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+               <DPGButton label="Download" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
                <template  v-if="userStore.isAdmin || userStore.isSupervisor">
                   <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
                </template>

@@ -1,18 +1,16 @@
 <template>
-   <h2>
-      <span>Collections</span>
-      <div class="actions" v-if="userStore.isAdmin" >
-         <DPGButton label="Create Collection" class="create" @click="createCollection()"/>
-      </div>
-   </h2>
+   <h2>Collections</h2>
    <div class="collections">
       <DataTable :value="collectionStore.collections" ref="collectionRecordsTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-         :lazy="false" :paginator="collectionStore.totalCollections > 15"
+         :lazy="false" :paginator="true" paginatorPosition="top"
          :rows="pageSize"  :rowsPerPageOptions="[15,30,100]" :totalRecords="collectionStore.totalRecords"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
+         <template #paginatorstart>
+            <DPGButton v-if="userStore.isAdmin" label="Create Collection" class="p-button-secondary create" @click="createCollection()"/>
+         </template>
          <Column field="id" header="ID">
             <template #body="slotProps">
                <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
@@ -42,6 +40,9 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
 import NewMetadataPanel from '@/components/NewMetadataPanel.vue'
+import { usePinnable } from '@/composables/pin'
+
+usePinnable("p-paginator-top")
 
 const collectionStore = useCollectionsStore()
 const userStore = useUserStore()
@@ -75,6 +76,6 @@ const collectionCreated = (() => {
 .collections {
    min-height: 600px;
    text-align: left;
-   padding: 25px 40px;
+   padding: 5px 20px 20px 20px;
 }
 </style>

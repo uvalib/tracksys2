@@ -7,7 +7,7 @@
          sortField="lastName" :sortOrder="1" @sort="onSort($event)"
          :rows="staffStore.searchOpts.limit" :totalRecords="staffStore.total"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         :rowsPerPageOptions="[10,30,100]" paginatorPosition="top"
+         :rowsPerPageOptions="[30,50,100]" paginatorPosition="top"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
          <template #paginatorstart  v-if="(userStore.isAdmin || userStore.isSupervisor)" >

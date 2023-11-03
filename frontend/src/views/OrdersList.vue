@@ -1,36 +1,32 @@
 <template>
-   <h2>
-      <span>Orders</span>
-      <div class="actions" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
-         <DPGButton label="New Order" class="create" @click="createOrder()"/>
-      </div>
-   </h2>
+   <h2>Orders</h2>
    <div class="orders">
-      <div class="toolbar">
-         <span>
-            <label for="orders-filter">Filter:</label>
-            <Dropdown id="orders-filter" v-model="statusFilter" @change="getOrders()"
-               :options="filters" optionLabel="name" optionValue="code" />
-            <ToggleButton v-model="assignedToMe" onIcon="" offIcon="" onLabel="Assigned to Me" offLabel="Assigned to Me" @change="ownerToggled()" />
-         </span>
-         <span>
-            <span class="p-input-icon-right">
-               <i class="pi pi-search" />
-               <InputText v-model="ordersStore.searchOpts.query" placeholder="Orders Search" @input="queryOrders()"/>
-            </span>
-            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
-         </span>
-      </div>
       <DataTable :value="ordersStore.orders" ref="ordersTable" dataKey="id"
          stripedRows showGridlines responsiveLayout="scroll"
          :sortField="ordersStore.searchOpts.sortField" :sortOrder="sortOrder" @sort="onSort($event)"
-         :lazy="true" :paginator="true" @page="onPage($event)"
+         :lazy="true" :paginator="true" @page="onPage($event)"  paginatorPosition="top"
          :rows="ordersStore.searchOpts.limit" :totalRecords="ordersStore.total"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         :rowsPerPageOptions="[10,30,100]" :first="ordersStore.searchOpts.start"
+         :rowsPerPageOptions="[30,50,100]" :first="ordersStore.searchOpts.start"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
          v-model:filters="columnFilters" filterDisplay="menu" @filter="getOrders()"
       >
+         <template #paginatorstart>
+            <DPGButton v-if="(userStore.isAdmin || userStore.isSupervisor)" class="p-button-secondary" label="Create Order" @click="createOrder()"/>
+         </template>
+         <template #paginatorend>
+            <div class="filters">
+               <label for="orders-filter">Filter:</label>
+               <Dropdown id="orders-filter" v-model="statusFilter" @change="getOrders()"
+                  :options="filters" optionLabel="name" optionValue="code" />
+               <ToggleButton v-model="assignedToMe" class="left-pad right-pad" onIcon="" offIcon="" onLabel="Assigned to Me" offLabel="Assigned to Me" @change="ownerToggled()" />
+               <span class="p-input-icon-right">
+                  <i class="pi pi-search" />
+                  <InputText v-model="ordersStore.searchOpts.query" placeholder="Orders Search" @input="queryOrders()"/>
+               </span>
+               <DPGButton label="Clear" class="p-button-secondary left-pad" @click="clearSearch()"/>
+            </div>
+         </template>
          <Column field="id" header="ID" :sortable="true">
             <template #body="slotProps">
                <router-link :to="`/orders/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
@@ -92,6 +88,9 @@ import { useRoute, useRouter } from 'vue-router'
 import ToggleButton from 'primevue/togglebutton'
 import { FilterMatchMode } from 'primevue/api'
 import { useSystemStore } from '@/stores/system'
+import { usePinnable } from '@/composables/pin'
+
+usePinnable("p-paginator-top")
 
 const systemStore = useSystemStore()
 const route = useRoute()
@@ -234,22 +233,17 @@ const onSort = ((event) => {
    text-align: left;
    padding: 0 25px;
 
-   .toolbar {
-      padding: 10px 0;
+   .filters {
       display: flex;
       flex-flow: row nowrap;
-      justify-content: space-between;
-      label {
-         font-weight: bold;
-         margin-right: 5px;
-         display: inline-block;
-      }
-      button.p-button {
-         margin-left: 5px;
-      }
-      div.p-button.p-togglebutton {
-         margin-left: 10px;
-      }
+      justify-content: flex-end;
+      align-items: center;
+   }
+   .left-pad {
+      margin-left: 10px;
+   }
+   .right-pad {
+      margin-right: 10px;
    }
 
    .p-datatable {

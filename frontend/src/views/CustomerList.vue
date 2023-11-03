@@ -6,10 +6,10 @@
          :lazy="false" :paginator="true"  v-model:filters="filter"
          :globalFilterFields="['lastName','email']"
          sortField="lastName" :sortOrder="1"
-         :rows="10" :totalRecords="customersStore.total"
+         :rows="30" :totalRecords="customersStore.total"
          v-model:expandedRows="expandedRows"
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         :rowsPerPageOptions="[10,30,100]" paginatorPosition="top"
+         :rowsPerPageOptions="[30,50,100]" paginatorPosition="top"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
          <template #paginatorstart  v-if="(userStore.isAdmin || userStore.isSupervisor)" >
