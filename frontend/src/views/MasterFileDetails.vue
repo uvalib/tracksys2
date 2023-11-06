@@ -352,6 +352,9 @@ img.original-image {
       }
    }
 }
+pre {
+   white-space: pre-wrap;
+}
 .download {
    padding: 5px 15px 15px 15px;
    p {
