@@ -21,7 +21,7 @@ import (
 
 type apTrustStatus struct {
 	ID          int64      `json:"-"`
-	MetadataID  string     `gorm:"column:metadata_id" json:"-"`
+	MetadataID  int64      `gorm:"column:metadata_id" json:"-"`
 	Etag        string     `json:"etag"`
 	ObjectID    string     `json:"objectID"`
 	Status      string     `json:"status"`
@@ -664,6 +664,10 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 			} else if md.Type == "XmlMetadata" {
 				out.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
 			}
+		}
+
+		if *md.PreservationTierID > 1 {
+			svc.updateAPTrustStatus(&md)
 		}
 	}
 
