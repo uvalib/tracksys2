@@ -52,7 +52,7 @@
                   v-model="edited.ocrLanguageHint" placeholder="Select a language"/>
                <span class="sep"/>
                <FormKit label="Preservation Tier" type="select" :options="preservationTiers"
-                  v-model="edited.preservationTier" placeholder="Select a tier" :disabled="edited.preservationTier > 1"/>
+                  v-model="edited.preservationTier" placeholder="Select a tier" :disabled="preservationDisabled"/>
             </div>
          </Panel>
          <Panel v-if="metadataStore.detail.type != 'ExternalMetadata'" header="Digital Library Information">
@@ -120,6 +120,23 @@ const edited = ref({
 })
 const originalUseRight = ref(1)
 const updatingURI = ref(true) // on page load, the URL is from existing data. consider it valid by default
+
+const preservationDisabled = computed(() => {
+   if (edited.value.preservationTier < 2) {
+      // no aptrust requested
+      return false
+   }
+   if (!metadataStore.apTrustStatus) {
+      // aptrust requested, but not yet submitted
+      return false
+   }
+   if (metadataStore.apTrustStaus == "Canceled" || metadataStore.apTrustStaus == "Failed") {
+      // aptrust failed or canceled
+      return false
+   }
+   // aptrust submitted ot in progress
+   return true
+})
 
 const pageHeader = computed( () => {
    let baseHdr = `Metadata ${route.params.id}`

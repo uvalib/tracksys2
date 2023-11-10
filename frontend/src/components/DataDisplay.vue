@@ -1,8 +1,7 @@
 <template>
    <template v-if="props.spacer">
-      <dt v-if="props.label" class="spacer label">{{props.label}}</dt>
-      <dt v-else class="spacer"/>
-      <dd></dd>
+      <dt class="spacer"/>
+      <dd />
    </template>
    <template v-else>
       <dt>{{props.label}}:</dt>
@@ -45,11 +44,8 @@ const props = defineProps({
 }
 dt.spacer.label {
    margin-top: 25px;
-   margin-bottom: 5px !important;
    font-size: 1.15em;
-   color: #aaa;
-   margin-bottom: 5px;
-   font-weight: normal !important;
-   text-align: left !important;
+   font-weight: bold;
+   margin-bottom: 10px;
 }
 </style>

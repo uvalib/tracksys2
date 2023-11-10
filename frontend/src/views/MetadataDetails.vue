@@ -20,167 +20,182 @@
             <img :src="metadataStore.detail.thumbURL" />
          </a>
       </div>
-      <Panel header="General Information">
-         <dl>
-            <template v-if="metadataStore.detail.type != 'ExternalMetadata'">
-               <DataDisplay label="Type" :value="metadataStore.detail.type"/>
-               <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey" v-if="metadataStore.detail.type == 'SirsiMetadata'" />
-               <DataDisplay label="Barcode" :value="metadataStore.detail.barcode" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
-               <DataDisplay label="Call Number" :value="metadataStore.detail.callNumber" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
-               <DataDisplay label="Title" :value="metadataStore.detail.title"/>
-               <template  v-if="metadataStore.detail.type == 'SirsiMetadata'">
-                  <DataDisplay label="Creator Name" :value="metadataStore.detail.creatorName"/>
-                  <DataDisplay label="Creator Name Type" :value="metadataStore.detail.creatorNameType"/>
-                  <DataDisplay label="Year" :value="metadataStore.detail.year"/>
-                  <DataDisplay label="Place of Publication" :value="metadataStore.detail.publicationPlace"/>
-                  <DataDisplay label="Location" :value="metadataStore.detail.location"/>
-                  <DataDisplay v-if="metadataStore.detail.folders" label="Folders" :value="metadataStore.detail.folders.length">
-                     <span v-for="(l,idx) in sortedFolders">
-                        <DPGButton class="folder" severity="secondary" icon="pi pi-folder-open" :label="l.folderID" @click="folderClicked(l)" />
-                     </span>
+      <div class="column">
+         <Panel header="General Information">
+            <dl>
+               <template v-if="metadataStore.detail.type != 'ExternalMetadata'">
+                  <DataDisplay label="Type" :value="metadataStore.detail.type"/>
+                  <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey" v-if="metadataStore.detail.type == 'SirsiMetadata'" />
+                  <DataDisplay label="Barcode" :value="metadataStore.detail.barcode" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
+                  <DataDisplay label="Call Number" :value="metadataStore.detail.callNumber" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
+                  <DataDisplay label="Title" :value="metadataStore.detail.title"/>
+                  <template  v-if="metadataStore.detail.type == 'SirsiMetadata'">
+                     <DataDisplay label="Creator Name" :value="metadataStore.detail.creatorName"/>
+                     <DataDisplay label="Creator Name Type" :value="metadataStore.detail.creatorNameType"/>
+                     <DataDisplay label="Year" :value="metadataStore.detail.year"/>
+                     <DataDisplay label="Place of Publication" :value="metadataStore.detail.publicationPlace"/>
+                     <DataDisplay label="Location" :value="metadataStore.detail.location"/>
+                     <DataDisplay v-if="metadataStore.detail.folders" label="Folders" :value="metadataStore.detail.folders.length">
+                        <span v-for="(l,idx) in sortedFolders">
+                           <DPGButton class="folder" severity="secondary" icon="pi pi-folder-open" :label="l.folderID" @click="folderClicked(l)" />
+                        </span>
+                     </DataDisplay>
+                  </template>
+                  <DataDisplay v-if="metadataStore.related.collection" label="Collection" :value="metadataStore.related.collection.id">
+                     <router-link :to="`/metadata/${metadataStore.related.collection.id}`">
+                        {{ metadataStore.related.collection.title }}
+                     </router-link>
                   </DataDisplay>
                </template>
-               <DataDisplay v-if="metadataStore.related.collection" label="Collection" :value="metadataStore.related.collection.id">
-                  <router-link :to="`/metadata/${metadataStore.related.collection.id}`">
-                     {{ metadataStore.related.collection.title }}
-                  </router-link>
-               </DataDisplay>
-            </template>
+
+               <template v-if="externalSystem == 'ArchivesSpace'">
+                  <DataDisplay label="Type" :value="externalSystem"/>
+                  <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
+                     <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
+                        {{metadataStore.detail.externalURI}}
+                        <i class="icon fas fa-external-link"></i>
+                     </a>
+                  </DataDisplay>
+                  <DataDisplay label="Repository" :value="metadataStore.archivesSpace.repo"/>
+                  <DataDisplay label="Collection Title" :value="metadataStore.archivesSpace.collectionTitle"/>
+                  <DataDisplay label="ID" :value="metadataStore.archivesSpace.id"/>
+                  <DataDisplay label="Language" :value="metadataStore.archivesSpace.language"/>
+                  <DataDisplay label="Dates" :value="metadataStore.archivesSpace.dates"/>
+                  <DataDisplay label="Title" :value="metadataStore.detail.title"/>
+                  <DataDisplay label="Level" :value="metadataStore.archivesSpace.level"/>
+                  <DataDisplay label="Created By" :value="metadataStore.archivesSpace.createdBy"/>
+                  <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
+                  <DataDisplay v-if="metadataStore.archivesSpace.publishedAt" label="Published Date" :value="metadataStore.archivesSpace.publishedAt"/>
+               </template>
+
+               <template v-if="externalSystem == 'JSTOR Forum'">
+                  <DataDisplay label="Type" :value="externalSystem"/>
+                  <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
+                     <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
+                        {{metadataStore.detail.externalURI}}
+                        <i class="icon fas fa-external-link"></i>
+                     </a>
+                  </DataDisplay>
+                  <DataDisplay label="Collection" :value="metadataStore.jstor.collection"/>
+                  <DataDisplay label="Title" :value="metadataStore.jstor.title"/>
+                  <DataDisplay label="Description" :value="metadataStore.jstor.desc"/>
+                  <DataDisplay label="Creator" :value="metadataStore.jstor.creator"/>
+                  <DataDisplay label="Date" :value="metadataStore.jstor.date"/>
+                  <DataDisplay label="Width" :value="metadataStore.jstor.width"/>
+                  <DataDisplay label="Height" :value="metadataStore.jstor.height"/>
+                  <DataDisplay label="Artstor ID" :value="metadataStore.jstor.id"/>
+                  <DataDisplay label="Forum ID" :value="metadataStore.jstor.ssid"/>
+               </template>
+
+               <template v-if="externalSystem == 'Apollo'">
+                  <DataDisplay label="Type" :value="externalSystem"/>
+                  <DataDisplay label="URL" :value="metadataStore.apollo.itemURL">
+                     <a class="supplemental" :href="metadataStore.apollo.itemURL" target="_blank">
+                        {{metadataStore.apollo.itemURL}}
+                        <i class="icon fas fa-external-link"></i>
+                     </a>
+                  </DataDisplay>
+                  <DataDisplay label="Collection PID" :value="metadataStore.apollo.collectionPID">
+                     <a class="supplemental" :href="metadataStore.apollo.collectionURL" target="_blank">
+                        {{metadataStore.apollo.collectionPID}}
+                        <i class="icon fas fa-external-link"></i>
+                     </a>
+                  </DataDisplay>
+                  <DataDisplay label="Collection Title" :value="metadataStore.apollo.collectionTitle"/>
+                  <DataDisplay label="Collection Barcode" :value="metadataStore.apollo.collectionBarcode"/>
+                  <DataDisplay label="Collection Catalog Key" :value="metadataStore.apollo.collectionCatalogKey"/>
+                  <DataDisplay label="Item PID" :value="metadataStore.apollo.pid"/>
+                  <DataDisplay label="Item Type" :value="metadataStore.apollo.type"/>
+                  <DataDisplay label="Item Title" :value="metadataStore.apollo.title"/>
+               </template>
+
+               <DataDisplay :spacer="true"/>
+               <DataDisplay label="Manuscript/Unpublished Item" :value="formatBoolean(metadataStore.detail.isManuscript)"/>
+               <DataDisplay label="Personal Item" :value="formatBoolean(metadataStore.detail.isPersonalItem)"/>
+               <DataDisplay label="OCR Hint" :value="ocrHint"/>
+               <DataDisplay label="OCR Language Hint" :value="metadataStore.detail.ocrLanguageHint"/>
+               <DataDisplay label="Preservation Tier" :value="preservationTier"/>
+            </dl>
 
             <template v-if="externalSystem == 'ArchivesSpace'">
-               <DataDisplay label="Type" :value="externalSystem"/>
-               <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
-                  <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
-                     {{metadataStore.detail.externalURI}}
-                     <i class="icon fas fa-external-link"></i>
-                  </a>
-               </DataDisplay>
-               <DataDisplay label="Repository" :value="metadataStore.archivesSpace.repo"/>
-               <DataDisplay label="Collection Title" :value="metadataStore.archivesSpace.collectionTitle"/>
-               <DataDisplay label="ID" :value="metadataStore.archivesSpace.id"/>
-               <DataDisplay label="Language" :value="metadataStore.archivesSpace.language"/>
-               <DataDisplay label="Dates" :value="metadataStore.archivesSpace.dates"/>
-               <DataDisplay label="Title" :value="metadataStore.detail.title"/>
-               <DataDisplay label="Level" :value="metadataStore.archivesSpace.level"/>
-               <DataDisplay label="Created By" :value="metadataStore.archivesSpace.createdBy"/>
-               <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
-               <DataDisplay v-if="metadataStore.archivesSpace.publishedAt" label="Published Date" :value="metadataStore.archivesSpace.publishedAt"/>
-            </template>
-
-            <template v-if="externalSystem == 'JSTOR Forum'">
-               <DataDisplay label="Type" :value="externalSystem"/>
-               <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
-                  <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
-                     {{metadataStore.detail.externalURI}}
-                     <i class="icon fas fa-external-link"></i>
-                  </a>
-               </DataDisplay>
-               <DataDisplay label="Collection" :value="metadataStore.jstor.collection"/>
-               <DataDisplay label="Title" :value="metadataStore.jstor.title"/>
-               <DataDisplay label="Description" :value="metadataStore.jstor.desc"/>
-               <DataDisplay label="Creator" :value="metadataStore.jstor.creator"/>
-               <DataDisplay label="Date" :value="metadataStore.jstor.date"/>
-               <DataDisplay label="Width" :value="metadataStore.jstor.width"/>
-               <DataDisplay label="Height" :value="metadataStore.jstor.height"/>
-               <DataDisplay label="Artstor ID" :value="metadataStore.jstor.id"/>
-               <DataDisplay label="Forum ID" :value="metadataStore.jstor.ssid"/>
-            </template>
-
-            <template v-if="externalSystem == 'Apollo'">
-               <DataDisplay label="Type" :value="externalSystem"/>
-               <DataDisplay label="URL" :value="metadataStore.apollo.itemURL">
-                  <a class="supplemental" :href="metadataStore.apollo.itemURL" target="_blank">
-                     {{metadataStore.apollo.itemURL}}
-                     <i class="icon fas fa-external-link"></i>
-                  </a>
-               </DataDisplay>
-               <DataDisplay label="Collection PID" :value="metadataStore.apollo.collectionPID">
-                  <a class="supplemental" :href="metadataStore.apollo.collectionURL" target="_blank">
-                     {{metadataStore.apollo.collectionPID}}
-                     <i class="icon fas fa-external-link"></i>
-                  </a>
-               </DataDisplay>
-               <DataDisplay label="Collection Title" :value="metadataStore.apollo.collectionTitle"/>
-               <DataDisplay label="Collection Barcode" :value="metadataStore.apollo.collectionBarcode"/>
-               <DataDisplay label="Collection Catalog Key" :value="metadataStore.apollo.collectionCatalogKey"/>
-               <DataDisplay label="Item PID" :value="metadataStore.apollo.pid"/>
-               <DataDisplay label="Item Type" :value="metadataStore.apollo.type"/>
-               <DataDisplay label="Item Title" :value="metadataStore.apollo.title"/>
-            </template>
-
-            <DataDisplay :spacer="true"/>
-            <DataDisplay label="Manuscript/Unpublished Item" :value="formatBoolean(metadataStore.detail.isManuscript)"/>
-            <DataDisplay label="Personal Item" :value="formatBoolean(metadataStore.detail.isPersonalItem)"/>
-            <DataDisplay label="OCR Hint" :value="ocrHint"/>
-            <DataDisplay label="OCR Language Hint" :value="metadataStore.detail.ocrLanguageHint"/>
-            <DataDisplay label="Preservation Tier" :value="preservationTier"/>
-            <template v-if="metadataStore.apTrustStatus.etag">
-               <DataDisplay :spacer="true" label="APTrust Details"/>
-               <DataDisplay label="Submitted" :value="formatDate(metadataStore.apTrustStatus.submittedAt)"/>
-               <DataDisplay label="Finished" :value="formatDate(metadataStore.apTrustStatus.finishedAt)"/>
-               <DataDisplay label="eTag" :value="metadataStore.apTrustStatus.etag"/>
-               <DataDisplay label="Object" :value="metadataStore.apTrustStatus.objectID">
-                  <a class="supplemental" :href="`${systemStore.apTrustURL}/objects?identifier=${metadataStore.apTrustStatus.objectID}`" target="_blank">
-                     {{metadataStore.apTrustStatus.objectID}}
-                     <i class="icon fas fa-external-link"></i>
-                  </a>
-               </DataDisplay>
-            </template>
-         </dl>
-
-         <template v-if="externalSystem == 'ArchivesSpace'">
-            <div v-if="metadataStore.hasMasterFiles == false"  class="as-toolbar">
-               <p>Not published to ArchivesSpace - no master files.</p>
-            </div>
-            <div v-else-if="!metadataStore.archivesSpace.publishedAt" class="as-toolbar">
-               <DPGButton label="Publish (immediate)" class="as-publish" @click="publishToAS(true)" :loading="publishing"/>
-               <DPGButton label="Publish (reviewed)" class="as-publish" @click="publishToAS(false)" :loading="publishing"/>
-            </div>
-            <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
-         </template>
-      </Panel>
-      <Panel header="Digital Library Information">
-         <dl>
-            <DataDisplay label="PID" :value="metadataStore.detail.pid"/>
-            <DataDisplay label="Virgo" :value="formatBoolean(metadataStore.detail.inDL)">
-               <a v-if="metadataStore.detail.inDL" class="virgo no-pad" :href="metadataStore.detail.virgoURL" target="_blank">Yes<i class="icon fas fa-external-link"></i></a>
-               <span v-else>No</span>
-            </DataDisplay>
-            <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.detail.inDPLA)"/>
-            <DataDisplay label="HathiTrust" :value="formatBoolean(metadataStore.detail.inHathiTrust)">
-               <div class="hathi" v-if="metadataStore.detail.inHathiTrust" @click="showHathiDialog = true">
-                  <span>Yes</span>
-                  <i class="icon fas fa-info-circle" aria-label="HathiTrust status"></i>
+               <div v-if="metadataStore.hasMasterFiles == false"  class="as-toolbar">
+                  <p>Not published to ArchivesSpace - no master files.</p>
                </div>
-               <span v-else>No</span>
-            </DataDisplay>
-            <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
-               <DataDisplay label="Use Right" :value="metadataStore.detail.useRightName">
-                  <a :href="metadataStore.detail.useRightURI" target="_blank" class="supplemental">
-                     {{metadataStore.detail.useRightName}}<i class="icon fas fa-external-link"></i>
+               <div v-else-if="!metadataStore.archivesSpace.publishedAt" class="as-toolbar">
+                  <DPGButton label="Publish (immediate)" class="as-publish" @click="publishToAS(true)" :loading="publishing"/>
+                  <DPGButton label="Publish (reviewed)" class="as-publish" @click="publishToAS(false)" :loading="publishing"/>
+               </div>
+               <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
+            </template>
+         </Panel>
+      </div>
+      <div class="column">
+         <Panel header="Digital Library Information">
+            <dl>
+               <DataDisplay label="PID" :value="metadataStore.detail.pid"/>
+               <DataDisplay label="Virgo" :value="formatBoolean(metadataStore.detail.inDL)">
+                  <a v-if="metadataStore.detail.inDL" class="virgo no-pad" :href="metadataStore.detail.virgoURL" target="_blank">Yes<i class="icon fas fa-external-link"></i></a>
+                  <span v-else>No</span>
+               </DataDisplay>
+               <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.detail.inDPLA)"/>
+               <DataDisplay label="HathiTrust" :value="formatBoolean(metadataStore.detail.inHathiTrust)">
+                  <div class="hathi" v-if="metadataStore.detail.inHathiTrust" @click="showHathiDialog = true">
+                     <span>Yes</span>
+                     <i class="icon fas fa-info-circle" aria-label="HathiTrust status"></i>
+                  </div>
+                  <span v-else>No</span>
+               </DataDisplay>
+               <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
+                  <DataDisplay label="Use Right" :value="metadataStore.detail.useRightName">
+                     <a :href="metadataStore.detail.useRightURI" target="_blank" class="supplemental">
+                        {{metadataStore.detail.useRightName}}<i class="icon fas fa-external-link"></i>
+                     </a>
+                  </DataDisplay>
+                  <DataDisplay label="Use Right Statement" :value="metadataStore.detail.useRightStatement"/>
+               </template>
+               <DataDisplay label="Creator Death Date" :value="metadataStore.detail.creatorDeathDate"/>
+               <DataDisplay label="Availability Policy" :value="availabilityPolicy"/>
+               <DataDisplay label="Collection ID" :value="metadataStore.detail.collectionID"/>
+               <DataDisplay label="Collection Facet" :value="metadataStore.detail.collectionFacet"/>
+               <DataDisplay v-if="metadataStore.detail.supplementalURL" label="Supplemental System" :value="metadataStore.detail.supplementalURL">
+                  <a :href="metadataStore.detail.supplementalURL" target="_blank" class="supplemental">
+                     {{metadataStore.detail.supplementalSystem}}<i class="icon fas fa-external-link"></i>
                   </a>
                </DataDisplay>
-               <DataDisplay label="Use Right Statement" :value="metadataStore.detail.useRightStatement"/>
+               <template v-if="metadataStore.canPublishToVirgo && metadataStore.detail.dateDLIngest">
+                  <DataDisplay :spacer="true"/>
+                  <DataDisplay label="Virgo Ingest" :value="formatDate(metadataStore.detail.dateDLIngest)"/>
+                  <DataDisplay label="Virgo Update" :value="formatDate(metadataStore.detail.dateDLUpdate)"/>
+               </template>
+            </dl>
+            <div v-if="metadataStore.canPublishToVirgo" class="publish">
+               <DPGButton label="Publish to Virgo" autofocus class="p-button-secondary" @click="publishClicked()" :loading="publishing"/>
+            </div>
+         </Panel>
+         <Panel  v-if="apTrustPreservation" header="APTrust Information">
+            <template v-if="metadataStore.apTrustStatus">
+               <dl>
+                  <DataDisplay label="Submitted" :value="formatDate(metadataStore.apTrustStatus.submittedAt)"/>
+                  <DataDisplay label="Finished" :value="formatDate(metadataStore.apTrustStatus.finishedAt)"/>
+                  <DataDisplay label="eTag" :value="metadataStore.apTrustStatus.etag"/>
+                  <DataDisplay label="Object" :value="metadataStore.apTrustStatus.objectID">
+                     <a class="supplemental" :href="`${systemStore.apTrustURL}/objects?identifier=${metadataStore.apTrustStatus.objectID}`" target="_blank">
+                        {{metadataStore.apTrustStatus.objectID}}
+                        <i class="icon fas fa-external-link"></i>
+                     </a>
+                  </DataDisplay>
+                  <DataDisplay label="Status" :value="metadataStore.apTrustStatus.status"/>
+                  <DataDisplay label="Note" :value="metadataStore.apTrustStatus.note"/>
+               </dl>
             </template>
-            <DataDisplay label="Creator Death Date" :value="metadataStore.detail.creatorDeathDate"/>
-            <DataDisplay label="Availability Policy" :value="availabilityPolicy"/>
-            <DataDisplay label="Collection ID" :value="metadataStore.detail.collectionID"/>
-            <DataDisplay label="Collection Facet" :value="metadataStore.detail.collectionFacet"/>
-            <DataDisplay v-if="metadataStore.detail.supplementalURL" label="Supplemental System" :value="metadataStore.detail.supplementalURL">
-               <a :href="metadataStore.detail.supplementalURL" target="_blank" class="supplemental">
-                  {{metadataStore.detail.supplementalSystem}}<i class="icon fas fa-external-link"></i>
-               </a>
-            </DataDisplay>
-            <template v-if="metadataStore.canPublishToVirgo && metadataStore.detail.dateDLIngest">
-               <DataDisplay :spacer="true"/>
-               <DataDisplay label="Virgo Ingest" :value="formatDate(metadataStore.detail.dateDLIngest)"/>
-               <DataDisplay label="Virgo Update" :value="formatDate(metadataStore.detail.dateDLUpdate)"/>
-            </template>
-         </dl>
-         <div v-if="metadataStore.canPublishToVirgo" class="publish">
-            <DPGButton label="Publish to Virgo" autofocus class="p-button-secondary" @click="publishClicked()" :loading="publishing"/>
-         </div>
-      </Panel>
+            <div v-else>
+               <div>Preservation has been requested but the item has not been submitted</div>
+            </div>
+            <div class="apt-acts">
+               <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" class="p-button-secondary apt-submit" @click="apTrustSubmitClicked" />
+            </div>
+         </Panel>
+      </div>
    </div>
    <template v-if="systemStore.working==false">
       <div class="more-detail">
@@ -283,7 +298,17 @@ const availabilityPolicy = computed(() => {
    }
    return ""
 })
-
+const canSubmitAPTrust = computed (() => {
+   if (userStore.isAdmin == false) return false
+   if ( metadataStore.apTrustStatus == null) {
+      return true
+   }
+   return metadataStore.apTrustStatus.status == "Failed" || metadataStore.apTrustStatus.status == "Canceled"
+})
+const apTrustPreservation = computed( () => {
+   if ( metadataStore.detail.preservationTier && metadataStore.detail.preservationTier.id > 1 ) return true
+   return false
+})
 const preservationTier = computed(() => {
    if ( metadataStore.detail.preservationTier ) {
       return `${metadataStore.detail.preservationTier.name}: ${metadataStore.detail.preservationTier.description}`
@@ -383,6 +408,13 @@ const publishToAS = ( async ( immediate ) => {
    }
 })
 
+const apTrustSubmitClicked = ( async () => {
+   await metadataStore.sendToAPTRust()
+   if (systemStore.error == "") {
+      systemStore.toastMessage('Submitted', 'This item has begun the APTrust submission process')
+   }
+})
+
 const formatBoolean = (( flag) => {
    if (flag) return "Yes"
    return "No"
@@ -431,9 +463,21 @@ const formatDate = (( date ) => {
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
+
+   .column {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      flex: 1;
+   }
    :deep(p-tabview) {
       margin: 0 !important;
    }
+   .apt-acts {
+      margin-top: 10px;
+      text-align: right;
+   }
+
    div.hathi {
       color: var(--uvalib-brand-blue-light);
       cursor: pointer;

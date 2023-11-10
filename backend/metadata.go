@@ -97,7 +97,7 @@ type metadata struct {
 	SupplementalSystemID *int64              `json:"-"`
 	SupplementalSystem   *externalSystem     `gorm:"foreignKey:SupplementalSystemID" json:"supplementalSystem"`
 	SupplementalURI      *string             `json:"supplementalURI"`
-	PreservationTierID   *int64              `json:"-"`
+	PreservationTierID   int64               `json:"-"`
 	PreservationTier     *preservationTier   `gorm:"foreignKey:PreservationTierID" json:"preservationTier"`
 	APTrustStatus        *apTrustStatus      `gorm:"foreignKey:MetadataID" json:"apTrustStatus,omitempty"`
 	DPLA                 bool                `gorm:"column:dpla" json:"dpla"`
@@ -366,7 +366,7 @@ func (svc *serviceContext) createMetadata(c *gin.Context) {
 		}
 	}
 	if req.PreservationTierID > 0 {
-		newMD.PreservationTierID = &req.PreservationTierID
+		newMD.PreservationTierID = req.PreservationTierID
 	}
 
 	// For non-external, set digital library attributes
@@ -524,7 +524,7 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		fields = append(fields, "OCRLanguageHint")
 	}
 	if req.PreservationTierID > 0 {
-		md.PreservationTierID = &req.PreservationTierID
+		md.PreservationTierID = req.PreservationTierID
 		fields = append(fields, "PreservationTierID")
 	}
 	if req.AvailabilityPolicyID > 0 {
@@ -666,7 +666,8 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 			}
 		}
 
-		if *md.PreservationTierID > 1 {
+		log.Printf("INFO: metadata %d preservation tier id: %d", md.ID, md.PreservationTierID)
+		if md.PreservationTierID > 1 {
 			svc.updateAPTrustStatus(&md)
 		}
 	}

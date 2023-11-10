@@ -259,6 +259,13 @@ export const useMetadataStore = defineStore('metadata', {
             system.setError(e)
          })
       },
+      async sendToAPTRust() {
+         const system = useSystemStore()
+         return axios.post( `${system.jobsURL}/metadata/${this.detail.id}/aptrust` ).catch( e => {
+            const system = useSystemStore()
+            system.setError(e)
+         })
+      },
       async publishToArchivesSpace( userID, immediate ) {
          const system = useSystemStore()
          let payload = {userID: `${userID}`, metadataID: `${this.detail.id}`}
@@ -330,17 +337,15 @@ export const useMetadataStore = defineStore('metadata', {
          this.detail.thumbURL = details.thumbURL
          this.detail.viewerURL = details.viewerURL
          this.detail.virgoURL = details.virgoURL
+
+         details.metadata.locations = null
          if ( details.metadata.locations ) {
             this.detail.folders = details.metadata.locations
          }
 
+         this.apTrustStatus = null
          if ( details.metadata.apTrustStatus) {
-            this.apTrustStatus.etag = details.metadata.apTrustStatus.etag
-            this.apTrustStatus.objectID = details.metadata.apTrustStatus.objectID
-            this.apTrustStatus.status = details.metadata.apTrustStatus.status
-            this.apTrustStatus.note = details.metadata.apTrustStatus.note
-            this.apTrustStatus.submittedAt = details.metadata.apTrustStatus.submittedAt
-            this.apTrustStatus.finishedAt = details.metadata.apTrustStatus.finishedAt
+            this.apTrustStatus = details.metadata.apTrustStatus
          }
 
          if (this.detail.type == "SirsiMetadata") {
@@ -401,6 +406,7 @@ export const useMetadataStore = defineStore('metadata', {
          this.detail.inDL = (details.metadata.dateDLIngest != null)
          this.detail.inDPLA = details.metadata.dpla
          this.detail.inHathiTrust = details.metadata.hathiTrust
+         this.hathiTrustStatus = null
          if ( this.detail.inHathiTrust ) {
             this.hathiTrustStatus = details.metadata.hathiTrustStatus
          }

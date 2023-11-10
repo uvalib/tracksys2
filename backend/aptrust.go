@@ -24,11 +24,12 @@ func (svc *serviceContext) updateAPTrustStatus(md *metadata) {
 	log.Printf("INFO: check aptrust status for metadata %d", md.ID)
 
 	// possible APTrust status values: Cancelled, Failed, Pending, Started, Success, Suspended
-	// status will be created updated if:
-	// 1. there is no status in the DB
-	// 2. the DB status is not complete; Pending, Started, Suspended
-	if md.APTrustStatus != nil && (md.APTrustStatus.Status == "Cancelled" || md.APTrustStatus.Status == "Failed" || md.APTrustStatus.Status == "Success") {
-		log.Printf("INFO: metadata %d has aptrust status in a finished state; nothing to do", md.ID)
+	// in addition to the APTrust defined statuses, TrackSys adds: Baggit (bagging in process), Submit (submitting bag to S3 for preservation)
+	// status will be created/updated if:
+	//    1. there is no status in the DB
+	//    2. the DB status is not Success
+	if md.APTrustStatus != nil && md.APTrustStatus.Status == "Success" {
+		log.Printf("INFO: metadata %d has aptrust status success; nothing more to do", md.ID)
 		return
 	}
 
@@ -36,7 +37,7 @@ func (svc *serviceContext) updateAPTrustStatus(md *metadata) {
 	raw, getErr := svc.getRequest(fmt.Sprintf("%s/metadata/%d/aptrust", svc.ExternalSystems.Jobs, md.ID))
 	if getErr != nil {
 		if getErr.StatusCode == 404 {
-			log.Printf("INFO: metadata %d has aptrust status", md.ID)
+			log.Printf("INFO: metadata %d has no aptrust status", md.ID)
 		} else {
 			log.Printf("ERROR: aptrust status request for metadata %d failed: %d:%s", md.ID, getErr.StatusCode, getErr.Message)
 		}
@@ -52,24 +53,36 @@ func (svc *serviceContext) updateAPTrustStatus(md *metadata) {
 
 	if md.APTrustStatus == nil {
 		log.Printf("INFO: create new aptrust status record for metadata %d", md.ID)
-		aptStatus := apTrustStatus{MetadataID: md.ID, Etag: parsedStatus.ETag, ObjectID: parsedStatus.ObjectIdentifier}
+		aptStatus := apTrustStatus{MetadataID: md.ID}
 		md.APTrustStatus = &aptStatus
 	} else {
 		log.Printf("INFO: update aptrust status for metadata %d", md.ID)
 	}
 
+	md.APTrustStatus.Etag = parsedStatus.ETag
+	md.APTrustStatus.ObjectID = parsedStatus.ObjectIdentifier
 	md.APTrustStatus.Status = parsedStatus.Status
 	md.APTrustStatus.Note = parsedStatus.Note
-	parsedSubmit, err := time.Parse("2006-01-02T15:04:05Z", parsedStatus.QueuedAt)
-	if err != nil {
-		log.Printf("ERROR: unable to parse aptrust queued time: %s", err.Error())
+
+	// only update initial submit date if it is not set and there is valid data in the response
+	if md.APTrustStatus.SubmittedAt.IsZero() && parsedStatus.QueuedAt != "0001-01-01T00:00:00Z" {
+		parsedSubmit, err := time.Parse("2006-01-02T15:04:05Z", parsedStatus.QueuedAt)
+		if err != nil {
+			log.Printf("ERROR: unable to parse aptrust queued time %s, default to now: %s", parsedStatus.QueuedAt, err.Error())
+			parsedSubmit = time.Now()
+		}
+		md.APTrustStatus.SubmittedAt = parsedSubmit
 	}
-	md.APTrustStatus.SubmittedAt = parsedSubmit
-	parsedDone, err := time.Parse("2006-01-02T15:04:05Z", parsedStatus.ProcessedAt)
-	if err != nil {
-		log.Printf("ERROR: unable to parse aptrust processed time: %s", err.Error())
+
+	// only update processed date if there is valid data in teh response
+	if parsedStatus.ProcessedAt != "0001-01-01T00:00:00Z" {
+		parsedDone, err := time.Parse("2006-01-02T15:04:05Z", parsedStatus.ProcessedAt)
+		if err != nil {
+			log.Printf("ERROR: unable to parse aptrust processed time %s, default to now: %s", parsedStatus.ProcessedAt, err.Error())
+			parsedDone = time.Now()
+		}
+		md.APTrustStatus.FinishedAt = &parsedDone
 	}
-	md.APTrustStatus.FinishedAt = &parsedDone
 
 	// NOTE: Save will create a record if there is no primary key set
 	err = svc.DB.Save(md.APTrustStatus).Error
