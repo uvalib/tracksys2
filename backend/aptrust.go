@@ -44,20 +44,27 @@ type apTrustStatus struct {
 func (svc *serviceContext) getAPTrustStatus(md *metadata) (*apTrustStatus, error) {
 	log.Printf("INFO: check aptrust status for metadata %d", md.ID)
 
-	var attSubmission apTrustSubmission
-	err := svc.DB.Where("metadata_id=?", md.ID).Limit(1).Find(&attSubmission).Error
+	var aptSubmission apTrustSubmission
+	err := svc.DB.Where("metadata_id=?", md.ID).Limit(1).Find(&aptSubmission).Error
 	if err != nil {
 		return nil, fmt.Errorf("unable to get submission info: %s", err.Error())
 	}
 
 	// if ID is zeo, there is no submission record so the item has not yet been submitted
-	if attSubmission.ID == 0 {
+	if aptSubmission.ID == 0 {
 		return nil, nil
 	}
 
 	log.Printf("INFO: get status for metadata %d from aptrust", md.ID)
 	raw, getErr := svc.getRequest(fmt.Sprintf("%s/metadata/%d/aptrust", svc.ExternalSystems.Jobs, md.ID))
 	if getErr != nil {
+		if getErr.StatusCode == 404 {
+			out := apTrustStatus{Bag: aptSubmission.Bag,
+				Status:      "Failed",
+				Note:        "Bagging or submission failed; check job status logs for more details",
+				RequestedAt: aptSubmission.RequestedAt, SubmittedAt: aptSubmission.SubmittedAt}
+			return &out, nil
+		}
 		return nil, fmt.Errorf("%d:%s", getErr.StatusCode, getErr.Message)
 	}
 
@@ -68,9 +75,9 @@ func (svc *serviceContext) getAPTrustStatus(md *metadata) (*apTrustStatus, error
 	}
 
 	// merge TS submit data and APT status info into one record and return it
-	out := apTrustStatus{ID: parsedStatus.ID, Bag: attSubmission.Bag, ETag: parsedStatus.ETag, ObjectIdentifier: parsedStatus.ObjectIdentifier,
-		StorageOption: parsedStatus.StorageOption, Status: parsedStatus.Status, Note: parsedStatus.Note, RequestedAt: attSubmission.RequestedAt,
-		SubmittedAt: attSubmission.SubmittedAt}
+	out := apTrustStatus{ID: parsedStatus.ID, Bag: aptSubmission.Bag, ETag: parsedStatus.ETag, ObjectIdentifier: parsedStatus.ObjectIdentifier,
+		StorageOption: parsedStatus.StorageOption, Status: parsedStatus.Status, Note: parsedStatus.Note, RequestedAt: aptSubmission.RequestedAt,
+		SubmittedAt: aptSubmission.SubmittedAt}
 	if parsedStatus.ProcessedAt != "0001-01-01T00:00:00Z" {
 		finishedAt, err := time.Parse("2006-01-02T15:04:05Z", parsedStatus.ProcessedAt)
 		if err != nil {

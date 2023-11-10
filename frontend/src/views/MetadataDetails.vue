@@ -269,6 +269,7 @@ const publishing = ref(false)
 const showHathiDialog = ref(false)
 const showLocUnitsDialog = ref(false)
 const targetFolder = ref("")
+const aptSubmitted = ref(false)
 
 const sortedFolders = computed(() => {
    return metadataStore.detail.folders.sort( (a,b) => {
@@ -303,7 +304,7 @@ const availabilityPolicy = computed(() => {
    return ""
 })
 const canSubmitAPTrust = computed (() => {
-   if (userStore.isAdmin == false) return false
+   if ( userStore.isAdmin == false || aptSubmitted.value == true) return false
    if ( metadataStore.apTrustStatus == null) {
       return true
    }
@@ -413,9 +414,10 @@ const publishToAS = ( async ( immediate ) => {
 })
 
 const apTrustSubmitClicked = ( async () => {
+   aptSubmitted.value = true
    await metadataStore.sendToAPTRust()
    if (systemStore.error == "") {
-      systemStore.toastMessage('Submitted', 'This item has begun the APTrust submission process')
+      systemStore.toastMessage('Submitted', 'This item has begun the APTrust submission process; check the job status page for updates')
    }
 })
 
