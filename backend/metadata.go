@@ -19,17 +19,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type apTrustStatus struct {
-	ID          int64      `json:"-"`
-	MetadataID  int64      `gorm:"column:metadata_id" json:"-"`
-	Etag        string     `json:"etag"`
-	ObjectID    string     `json:"objectID"`
-	Status      string     `json:"status"`
-	Note        string     `json:"note"`
-	SubmittedAt time.Time  `json:"submittedAt"`
-	FinishedAt  *time.Time `json:"finishedAt"`
-}
-
 type availabilityPolicy struct {
 	ID   int64  `json:"id"`
 	PID  string `gorm:"column:pid" json:"pid"`
@@ -99,7 +88,6 @@ type metadata struct {
 	SupplementalURI      *string             `json:"supplementalURI"`
 	PreservationTierID   int64               `json:"-"`
 	PreservationTier     *preservationTier   `gorm:"foreignKey:PreservationTierID" json:"preservationTier"`
-	APTrustStatus        *apTrustStatus      `gorm:"foreignKey:MetadataID" json:"apTrustStatus,omitempty"`
 	DPLA                 bool                `gorm:"column:dpla" json:"dpla"`
 	HathiTrust           bool                `gorm:"column:hathitrust" json:"hathiTrust"`
 	HathiTrustStatus     *hathitrustStatus   `gorm:"foreignKey:MetadataID" json:"hathiTrustStatus,omitempty"`
@@ -200,18 +188,19 @@ type uvaMAP struct {
 }
 
 type metadataDetailResponse struct {
-	Metadata     *metadata       `json:"metadata"`
-	Collection   *metadata       `json:"collectionRecord"`
-	Units        []*unit         `json:"units"`
-	MasterFiles  []*masterFile   `json:"masterFiles,omitempty"`
-	Sirsi        *sirsiMetadata  `json:"sirsiDetails"`
-	ArchiveSpace *asMetadata     `json:"asDetails"`
-	JSTOR        *jstorMetadata  `json:"jstorDetails"`
-	Apollo       *apolloMetadata `json:"apolloDetails"`
-	ThumbURL     string          `json:"thumbURL,omitempty"`
-	ViewerURL    string          `json:"viewerURL,omitempty"`
-	VirgoURL     string          `json:"virgoURL,omitempty"`
-	Error        string          `json:"error"`
+	Metadata      *metadata       `json:"metadata"`
+	Collection    *metadata       `json:"collectionRecord"`
+	Units         []*unit         `json:"units"`
+	MasterFiles   []*masterFile   `json:"masterFiles,omitempty"`
+	Sirsi         *sirsiMetadata  `json:"sirsiDetails"`
+	ArchiveSpace  *asMetadata     `json:"asDetails"`
+	JSTOR         *jstorMetadata  `json:"jstorDetails"`
+	Apollo        *apolloMetadata `json:"apolloDetails"`
+	APTrustStatus *apTrustStatus  `json:"apTrustStatus,omitempty"`
+	ThumbURL      string          `json:"thumbURL,omitempty"`
+	ViewerURL     string          `json:"viewerURL,omitempty"`
+	VirgoURL      string          `json:"virgoURL,omitempty"`
+	Error         string          `json:"error"`
 }
 
 type metadataRequest struct {
@@ -611,7 +600,7 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 	var md metadata
 	err := svc.DB.Preload("OCRHint").Preload("AvailabilityPolicy").
 		Preload("ExternalSystem").Preload("SupplementalSystem").Preload("HathiTrustStatus").
-		Preload("APTrustStatus").Preload("PreservationTier").Preload("Locations").
+		Preload("PreservationTier").Preload("Locations").
 		Limit(1).Find(&md, mdID).Error
 	if err != nil {
 		return nil, err
@@ -668,7 +657,17 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 
 		log.Printf("INFO: metadata %d preservation tier id: %d", md.ID, md.PreservationTierID)
 		if md.PreservationTierID > 1 {
-			svc.updateAPTrustStatus(&md)
+			aptStatus, err := svc.getAPTrustStatus(&md)
+			if err != nil {
+				log.Printf("ERROR: get aptrust status for metadata %d failed: %s", md.ID, err.Error())
+			} else {
+				if aptStatus == nil {
+					log.Printf("INFO: metadata %d has not been submited to aptrust", md.ID)
+				} else {
+					log.Printf("INFO: metadata %d has aptrust status %+v", md.ID, aptStatus)
+					out.APTrustStatus = aptStatus
+				}
+			}
 		}
 	}
 

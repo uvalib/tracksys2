@@ -128,6 +128,33 @@
                <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
             </template>
          </Panel>
+         <Panel  v-if="apTrustPreservation" header="APTrust Information">
+            <template v-if="metadataStore.apTrustStatus">
+               <dl>
+                  <DataDisplay label="Bag" :value="metadataStore.apTrustStatus.bag"/>
+                  <DataDisplay label="Requested" :value="formatDate(metadataStore.apTrustStatus.requestedAt)"/>
+                  <DataDisplay label="Submitted" :value="formatDate(metadataStore.apTrustStatus.submittedAt)"/>
+                  <DataDisplay label="Finished" :value="formatDate(metadataStore.apTrustStatus.finishedAt)"/>
+                  <DataDisplay label="ID" :value="metadataStore.apTrustStatus.id"/>
+                  <DataDisplay label="eTag" :value="metadataStore.apTrustStatus.etag"/>
+                  <DataDisplay label="Object ID" :value="metadataStore.apTrustStatus.objectIdentifier">
+                     <a class="supplemental" :href="`${systemStore.apTrustURL}/objects?identifier=${metadataStore.apTrustStatus.objectIdentifier}`" target="_blank">
+                        {{metadataStore.apTrustStatus.objectIdentifier}}
+                        <i class="icon fas fa-external-link"></i>
+                     </a>
+                  </DataDisplay>
+                  <DataDisplay label="Storage" :value="metadataStore.apTrustStatus.storage"/>
+                  <DataDisplay label="Status" :value="metadataStore.apTrustStatus.status"/>
+                  <DataDisplay v-if="metadataStore.apTrustStatus.status != 'Success'" label="Note" :value="metadataStore.apTrustStatus.note"/>
+               </dl>
+            </template>
+            <div v-else>
+               <div>Preservation has been requested but the item has not been submitted</div>
+            </div>
+            <div class="apt-acts">
+               <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" class="p-button-secondary apt-submit" @click="apTrustSubmitClicked" />
+            </div>
+         </Panel>
       </div>
       <div class="column">
          <Panel header="Digital Library Information">
@@ -170,29 +197,6 @@
             </dl>
             <div v-if="metadataStore.canPublishToVirgo" class="publish">
                <DPGButton label="Publish to Virgo" autofocus class="p-button-secondary" @click="publishClicked()" :loading="publishing"/>
-            </div>
-         </Panel>
-         <Panel  v-if="apTrustPreservation" header="APTrust Information">
-            <template v-if="metadataStore.apTrustStatus">
-               <dl>
-                  <DataDisplay label="Submitted" :value="formatDate(metadataStore.apTrustStatus.submittedAt)"/>
-                  <DataDisplay label="Finished" :value="formatDate(metadataStore.apTrustStatus.finishedAt)"/>
-                  <DataDisplay label="eTag" :value="metadataStore.apTrustStatus.etag"/>
-                  <DataDisplay label="Object" :value="metadataStore.apTrustStatus.objectID">
-                     <a class="supplemental" :href="`${systemStore.apTrustURL}/objects?identifier=${metadataStore.apTrustStatus.objectID}`" target="_blank">
-                        {{metadataStore.apTrustStatus.objectID}}
-                        <i class="icon fas fa-external-link"></i>
-                     </a>
-                  </DataDisplay>
-                  <DataDisplay label="Status" :value="metadataStore.apTrustStatus.status"/>
-                  <DataDisplay label="Note" :value="metadataStore.apTrustStatus.note"/>
-               </dl>
-            </template>
-            <div v-else>
-               <div>Preservation has been requested but the item has not been submitted</div>
-            </div>
-            <div class="apt-acts">
-               <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" class="p-button-secondary apt-submit" @click="apTrustSubmitClicked" />
             </div>
          </Panel>
       </div>

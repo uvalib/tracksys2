@@ -60,12 +60,16 @@ export const useMetadataStore = defineStore('metadata', {
          notes: "",
       },
       apTrustStatus: {
+         id: 0,
+         bag: "",
          etag: "",
-			objectID: "",
-			status: "",
-			note: "",
-			submittedAt: "",
-			finishedAt: ""
+         objectIdentifier: "",
+         storage: "",
+         note: "",
+         status: "",
+         requestedAt: "",
+         submittedAt: "",
+         finishedAt: "",
       },
       archivesSpace: {
          id: "",
@@ -344,8 +348,8 @@ export const useMetadataStore = defineStore('metadata', {
          }
 
          this.apTrustStatus = null
-         if ( details.metadata.apTrustStatus) {
-            this.apTrustStatus = details.metadata.apTrustStatus
+         if ( details.apTrustStatus) {
+            this.apTrustStatus = details.apTrustStatus
          }
 
          if (this.detail.type == "SirsiMetadata") {
