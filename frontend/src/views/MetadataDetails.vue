@@ -413,7 +413,23 @@ const publishToAS = ( async ( immediate ) => {
    }
 })
 
-const apTrustSubmitClicked = ( async () => {
+const apTrustSubmitClicked = ( () => {
+   if (metadataStore.detail.isCollection) {
+      confirm.require({
+         message: "Submitting a collection record to APTrust will also submit all collection items. Are you sure?",
+         header: 'Confirm APTrust Submission',
+         icon: 'pi pi-question-circle',
+         rejectClass: 'p-button-secondary',
+         accept: () => {
+            doApTrustSubmission()
+         },
+      })
+   } else {
+      doApTrustSubmission()
+   }
+})
+
+const doApTrustSubmission = ( async () => {
    aptSubmitted.value = true
    await metadataStore.sendToAPTRust()
    if (systemStore.error == "") {

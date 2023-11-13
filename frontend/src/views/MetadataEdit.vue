@@ -90,7 +90,9 @@ import { useSystemStore } from '@/stores/system'
 import { useUserStore } from '@/stores/user'
 import Panel from 'primevue/panel'
 import DataDisplay from '@/components/DataDisplay.vue'
+import { useConfirm } from "primevue/useconfirm"
 
+const confirm = useConfirm()
 const route = useRoute()
 const router = useRouter()
 const metadataStore = useMetadataStore()
@@ -329,7 +331,23 @@ const cancelEdit = (() => {
    router.push(`/metadata/${route.params.id}`)
 })
 
-const submitChanges = ( async () => {
+const submitChanges = ( () => {
+   if ( metadataStore.detail.isCollection && metadataStore.detail.preservationTier.id != edited.value.preservationTier ) {
+      confirm.require({
+         message: "Updating the preservation tier for a collection will also update the preservation tier for all collection items. Are you sure?",
+         header: 'Confirm Preservation Tier',
+         icon: 'pi pi-question-circle',
+         rejectClass: 'p-button-secondary',
+         accept: () => {
+            doSubmit()
+         },
+      })
+   } else {
+      doSubmit()
+   }
+})
+
+const doSubmit = ( async () => {
    if (metadataStore.detail.type == 'SirsiMetadata') {
       // SEE IF UR changed from CNE / UND to sotething else, or if RR chanegd from something valid to CNE/UND
       // in these cases, send the new ID. Otehrwise send a 0 so backend ignores the request.

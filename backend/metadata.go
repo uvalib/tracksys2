@@ -554,6 +554,15 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		return
 	}
 
+	if md.IsCollection && req.PreservationTierID > 0 {
+		log.Printf("INFO: updated preservation tier of a collection; update all members to match")
+		sql := `update metadata set preservation_tier_id=? where parent_metadata_id = ? and (preservation_tier_id is null or preservation_tier_id <1)`
+		err = svc.DB.Exec(sql, req.PreservationTierID, md.ID).Error
+		if err != nil {
+			log.Printf("ERROR: unable to update preservation tier of collection members: %s", err.Error())
+		}
+	}
+
 	// after a successful update, send any updated use right info to sirsi
 	if md.Type == "SirsiMetadata" && req.UseRightID > 0 {
 		log.Printf("INFO: metadata %d updated with use right info; send to sirsi", md.ID)
