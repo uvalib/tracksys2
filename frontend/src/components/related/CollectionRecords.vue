@@ -2,7 +2,8 @@
    <div class="collection">
       <template v-if="collectionStore.bulkAdd == false">
          <DataTable :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
-            removableSort stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+            stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+            :sortField="collectionStore.searchOpts.sortField" :sortOrder="sortOrder" @sort="onSort($event)"
             :lazy="true" :paginator="true" @page="onCollectionPage($event)" paginatorPosition="top"
             :rows="collectionStore.searchOpts.limit" :totalRecords="collectionStore.totalRecords"
             paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
@@ -40,6 +41,12 @@
                   <span v-else class="none">N/A</span>
                </template>
             </Column>
+            <Column v-if="collectionStore.inAPTrust" header="APTrust" class="apt-status" field="aptStatus" :sortable="true">
+               <template #body="slotProps">
+                  <span v-if="slotProps.data.apTrustSubmission.success" class="pi pi-check-circle success"></span>
+                  <span v-else class="pi pi-times-circle fail"></span>
+               </template>
+            </Column>
             <Column header="" class="row-acts nowrap" v-if="userStore.isAdmin">
                <template #body="slotProps">
                   <DPGButton icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary" @click="deleteItem(slotProps.data)"/>
@@ -60,6 +67,7 @@ import { useConfirm } from "primevue/useconfirm"
 import { useUserStore } from '@/stores/user'
 import CollectionBulkAdd from './CollectionBulkAdd.vue'
 import { usePinnable } from '@/composables/pin'
+import { computed } from 'vue'
 
 usePinnable("p-paginator-top")
 
@@ -72,6 +80,22 @@ const props = defineProps({
       type: Number,
       required: true
    }
+})
+
+const sortOrder = computed(() => {
+   if (collectionStore.searchOpts.sortOrder == "desc") {
+      return -1
+   }
+   return 1
+})
+
+const onSort = ((event) => {
+   collectionStore.searchOpts.sortField = event.sortField
+   collectionStore.searchOpts.sortOrder = "asc"
+   if (event.sortOrder == -1) {
+      collectionStore.searchOpts.sortOrder = "desc"
+   }
+   collectionStore.getItems()
 })
 
 const bulkAddClicked = (() => {
@@ -120,6 +144,19 @@ const exportCollection = (() => {
    }
    td.nowrap, th {
       white-space: nowrap;
+   }
+   td.apt-status {
+      text-align: center;
+      span.pi {
+         font-size: 1.2em;
+         font-weight: bold;
+      }
+      span.pi.success {
+         color: var(--uvalib-green);
+      }
+      span.pi.fail {
+         color: var(--uvalib-red-dark);
+      }
    }
    .none{
       text-align: center;

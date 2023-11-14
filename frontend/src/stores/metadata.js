@@ -36,6 +36,7 @@ export const useMetadataStore = defineStore('metadata', {
          inDL: false,
          inDPLA: false,
          inHathiTrust: false,
+         inAPTrust: false,
          useRightName: "",
          useRightURI: "",
          useRightStatement: "",
@@ -348,8 +349,10 @@ export const useMetadataStore = defineStore('metadata', {
          }
 
          this.apTrustStatus = null
+         this.detail.inAPTrust = false
          if ( details.apTrustStatus) {
             this.apTrustStatus = details.apTrustStatus
+            this.detail.inAPTrust = true
          }
 
          if (this.detail.type == "SirsiMetadata") {

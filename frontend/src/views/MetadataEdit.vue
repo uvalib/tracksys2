@@ -332,7 +332,11 @@ const cancelEdit = (() => {
 })
 
 const submitChanges = ( () => {
-   if ( metadataStore.detail.isCollection && metadataStore.detail.preservationTier.id != edited.value.preservationTier ) {
+   let currTierID = null
+   if ( metadataStore.detail.preservationTier ) {
+      currTierID = metadataStore.detail.preservationTier.id
+   }
+   if ( metadataStore.detail.isCollection && currTierID != edited.value.preservationTier ) {
       confirm.require({
          message: "Updating the preservation tier for a collection will also update the preservation tier for all collection items. Are you sure?",
          header: 'Confirm Preservation Tier',

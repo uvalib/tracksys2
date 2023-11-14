@@ -64,6 +64,23 @@ func (svc *serviceContext) getCollectionItems(c *gin.Context) {
 	if pageSize == 0 {
 		pageSize = 30
 	}
+	sortBy := c.Query("by")
+	if sortBy == "" {
+		sortBy = "id"
+	}
+	sortOrder := c.Query("order")
+	if sortOrder == "" {
+		sortOrder = "desc"
+	}
+	sortField := fmt.Sprintf("metadata.%s", sortBy)
+	if sortBy == "callNumber" {
+		sortField = "call_number"
+	}
+	if sortBy == "aptStatus" {
+		sortField = "APTrustSubmission.success"
+	}
+	orderStr := fmt.Sprintf("%s %s", sortField, sortOrder)
+
 	qStr := c.Query("q")
 	var queryClause *gorm.DB
 	if qStr != "" {
@@ -71,7 +88,7 @@ func (svc *serviceContext) getCollectionItems(c *gin.Context) {
 		queryClause = svc.DB.Where("title like ? ", qLike)
 	}
 
-	log.Printf("INFO: get collection records for collection %d, start %d limit %d, query [%s]", collectionID, startIndex, pageSize, qStr)
+	log.Printf("INFO: get collection records for collection %d, start %d limit %d, order %s, query [%s]", collectionID, startIndex, pageSize, orderStr, qStr)
 
 	var resp struct {
 		Metadata []metadata `json:"records"`
@@ -84,7 +101,8 @@ func (svc *serviceContext) getCollectionItems(c *gin.Context) {
 			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
-		err = svc.DB.Where("parent_metadata_id=?", collectionID).Where(queryClause).Offset(startIndex).Limit(pageSize).Find(&resp.Metadata).Error
+		err = svc.DB.Joins("APTrustStatus").Where("parent_metadata_id=?", collectionID).Where(queryClause).
+			Offset(startIndex).Limit(pageSize).Order(orderStr).Find(&resp.Metadata).Error
 		if err != nil {
 			log.Printf("ERROR: unable to get filtered collection records for collection %d: %s", collectionID, err.Error())
 			c.String(http.StatusInternalServerError, err.Error())
@@ -97,7 +115,8 @@ func (svc *serviceContext) getCollectionItems(c *gin.Context) {
 			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
-		err = svc.DB.Where("parent_metadata_id=?", collectionID).Offset(startIndex).Limit(pageSize).Find(&resp.Metadata).Error
+		err = svc.DB.Joins("APTrustSubmission").Where("parent_metadata_id=?", collectionID).
+			Offset(startIndex).Limit(pageSize).Order(orderStr).Find(&resp.Metadata).Error
 		if err != nil {
 			log.Printf("ERROR: unable to get collection records for collection %d: %s", collectionID, err.Error())
 			c.String(http.StatusInternalServerError, err.Error())

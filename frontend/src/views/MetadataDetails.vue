@@ -128,33 +128,7 @@
                <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
             </template>
          </Panel>
-         <Panel  v-if="apTrustPreservation" header="APTrust Information">
-            <template v-if="metadataStore.apTrustStatus">
-               <dl>
-                  <DataDisplay label="Bag" :value="metadataStore.apTrustStatus.bag"/>
-                  <DataDisplay label="Requested" :value="formatDate(metadataStore.apTrustStatus.requestedAt)"/>
-                  <DataDisplay label="Submitted" :value="formatDate(metadataStore.apTrustStatus.submittedAt)"/>
-                  <DataDisplay label="Finished" :value="formatDate(metadataStore.apTrustStatus.finishedAt)"/>
-                  <DataDisplay label="ID" :value="metadataStore.apTrustStatus.id"/>
-                  <DataDisplay label="eTag" :value="metadataStore.apTrustStatus.etag"/>
-                  <DataDisplay label="Object ID" :value="metadataStore.apTrustStatus.objectIdentifier">
-                     <a class="supplemental" :href="`${systemStore.apTrustURL}/objects?identifier=${metadataStore.apTrustStatus.objectIdentifier}`" target="_blank">
-                        {{metadataStore.apTrustStatus.objectIdentifier}}
-                        <i class="icon fas fa-external-link"></i>
-                     </a>
-                  </DataDisplay>
-                  <DataDisplay label="Storage" :value="metadataStore.apTrustStatus.storage"/>
-                  <DataDisplay label="Status" :value="metadataStore.apTrustStatus.status"/>
-                  <DataDisplay v-if="metadataStore.apTrustStatus.status != 'Success'" label="Note" :value="metadataStore.apTrustStatus.note"/>
-               </dl>
-            </template>
-            <div v-else>
-               <div>Preservation has been requested but the item has not been submitted</div>
-            </div>
-            <div class="apt-acts">
-               <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" class="p-button-secondary apt-submit" @click="apTrustSubmitClicked" />
-            </div>
-         </Panel>
+         <APTrustPanel />
       </div>
       <div class="column">
          <Panel header="Digital Library Information">
@@ -247,6 +221,7 @@ import DataDisplay from '../components/DataDisplay.vue'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import dayjs from 'dayjs'
+import APTrustPanel from '@/components/metadata/APTrustPanel.vue'
 import RelatedOrders from '@/components/related/RelatedOrders.vue'
 import RelatedUnits from '@/components/related/RelatedUnits.vue'
 import RelatedMasterFiles from '@/components/related/RelatedMasterFiles.vue'
@@ -269,7 +244,6 @@ const publishing = ref(false)
 const showHathiDialog = ref(false)
 const showLocUnitsDialog = ref(false)
 const targetFolder = ref("")
-const aptSubmitted = ref(false)
 
 const sortedFolders = computed(() => {
    return metadataStore.detail.folders.sort( (a,b) => {
@@ -303,17 +277,6 @@ const availabilityPolicy = computed(() => {
    }
    return ""
 })
-const canSubmitAPTrust = computed (() => {
-   if ( userStore.isAdmin == false || aptSubmitted.value == true) return false
-   if ( metadataStore.apTrustStatus == null) {
-      return true
-   }
-   return metadataStore.apTrustStatus.status == "Failed" || metadataStore.apTrustStatus.status == "Canceled"
-})
-const apTrustPreservation = computed( () => {
-   if ( metadataStore.detail.preservationTier && metadataStore.detail.preservationTier.id > 1 ) return true
-   return false
-})
 const preservationTier = computed(() => {
    if ( metadataStore.detail.preservationTier ) {
       return `${metadataStore.detail.preservationTier.name}: ${metadataStore.detail.preservationTier.description}`
@@ -333,7 +296,7 @@ onBeforeRouteUpdate(async (to) => {
    document.title = `Metadata #${mdID}`
    await metadataStore.getDetails( mdID )
    if (metadataStore.detail.isCollection) {
-      collectionStore.setCollection( metadataStore.detail.id )
+      collectionStore.setCollection( metadataStore.detail )
       collectionStore.getItems()
    }
 })
@@ -343,7 +306,7 @@ onBeforeMount( async () => {
    document.title = `Metadata #${mdID}`
    await metadataStore.getDetails( mdID )
    if (metadataStore.detail.isCollection) {
-      collectionStore.setCollection( metadataStore.detail.id )
+      collectionStore.setCollection( metadataStore.detail )
       collectionStore.getItems()
    }
 })
@@ -413,30 +376,6 @@ const publishToAS = ( async ( immediate ) => {
    }
 })
 
-const apTrustSubmitClicked = ( () => {
-   if (metadataStore.detail.isCollection) {
-      confirm.require({
-         message: "Submitting a collection record to APTrust will also submit all collection items. Are you sure?",
-         header: 'Confirm APTrust Submission',
-         icon: 'pi pi-question-circle',
-         rejectClass: 'p-button-secondary',
-         accept: () => {
-            doApTrustSubmission()
-         },
-      })
-   } else {
-      doApTrustSubmission()
-   }
-})
-
-const doApTrustSubmission = ( async () => {
-   aptSubmitted.value = true
-   await metadataStore.sendToAPTRust()
-   if (systemStore.error == "") {
-      systemStore.toastMessage('Submitted', 'This item has begun the APTrust submission process; check the job status page for updates')
-   }
-})
-
 const formatBoolean = (( flag) => {
    if (flag) return "Yes"
    return "No"
@@ -494,10 +433,6 @@ const formatDate = (( date ) => {
    }
    :deep(p-tabview) {
       margin: 0 !important;
-   }
-   .apt-acts {
-      margin-top: 10px;
-      text-align: right;
    }
 
    div.hathi {

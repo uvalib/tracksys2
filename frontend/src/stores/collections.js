@@ -8,10 +8,13 @@ export const useCollectionsStore = defineStore('collections', {
       records: [],
       totalRecords: 0,
       collectionID: -1,
+      inAPTrust: false,
       searchOpts: {
          start: 0,
          limit: 30,
          query: "",
+         sortField: "id",
+         sortOrder: "desc",
       },
       collections: [],
       totalCollections: 0,
@@ -21,8 +24,9 @@ export const useCollectionsStore = defineStore('collections', {
    getters: {
 	},
 	actions: {
-      setCollection( collectionID ) {
-         this.collectionID = collectionID
+      setCollection( collection) {
+         this.collectionID = collection.id
+         this.inAPTrust = collection.inAPTrust
          this.records = []
          this.totalRecords = 0
          this.searchOpts.start = 0
@@ -85,7 +89,7 @@ export const useCollectionsStore = defineStore('collections', {
       getItems( ) {
          this.working = true
          let so = this.searchOpts
-         let url = `/api/collections/${this.collectionID}?start=${so.start}&limit=${so.limit}`
+         let url = `/api/collections/${this.collectionID}?start=${so.start}&limit=${so.limit}&by=${so.sortField}&order=${so.sortOrder}`
          if ( so.query != "") {
             url += `&q=${encodeURIComponent(so.query)}`
          }

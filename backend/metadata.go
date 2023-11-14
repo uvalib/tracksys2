@@ -88,6 +88,7 @@ type metadata struct {
 	SupplementalURI      *string             `json:"supplementalURI"`
 	PreservationTierID   int64               `json:"-"`
 	PreservationTier     *preservationTier   `gorm:"foreignKey:PreservationTierID" json:"preservationTier"`
+	APTrustSubmission    *apTrustSubmission  `gorm:"foreignKey:MetadataID" json:"apTrustSubmission,omitempty"`
 	DPLA                 bool                `gorm:"column:dpla" json:"dpla"`
 	HathiTrust           bool                `gorm:"column:hathitrust" json:"hathiTrust"`
 	HathiTrustStatus     *hathitrustStatus   `gorm:"foreignKey:MetadataID" json:"hathiTrustStatus,omitempty"`
@@ -607,7 +608,7 @@ func (svc *serviceContext) sendUseRightToSirsi(md *metadata, useRightID int64) {
 
 func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailResponse, error) {
 	var md metadata
-	err := svc.DB.Preload("OCRHint").Preload("AvailabilityPolicy").
+	err := svc.DB.Preload("OCRHint").Preload("AvailabilityPolicy").Preload("APTrustSubmission").
 		Preload("ExternalSystem").Preload("SupplementalSystem").Preload("HathiTrustStatus").
 		Preload("PreservationTier").Preload("Locations").
 		Limit(1).Find(&md, mdID).Error
