@@ -10,7 +10,7 @@
   "dependencies": {
     "@formkit/vue": "^0.16.4",
     "@fortawesome/fontawesome-free": "^6.1.2",
-    "axios": "^0.27.2",
+    "axios": "^1.6.2",
     "dayjs": "^1.11.4",
     "pinia": "^2.0.16",
     "primeicons": "^6.0.1",

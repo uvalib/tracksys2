@@ -557,7 +557,7 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 
 	if md.IsCollection && req.PreservationTierID > 0 {
 		log.Printf("INFO: updated preservation tier of a collection; update all members to match")
-		sql := `update metadata set preservation_tier_id=? where parent_metadata_id = ? and (preservation_tier_id is null or preservation_tier_id <1)`
+		sql := `update metadata set preservation_tier_id=? where parent_metadata_id = ? and (preservation_tier_id is null or preservation_tier_id <=1)`
 		err = svc.DB.Exec(sql, req.PreservationTierID, md.ID).Error
 		if err != nil {
 			log.Printf("ERROR: unable to update preservation tier of collection members: %s", err.Error())
