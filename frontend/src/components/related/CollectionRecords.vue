@@ -43,7 +43,7 @@
             </Column>
             <Column v-if="collectionStore.inAPTrust" header="APTrust" class="apt-status" field="aptStatus" :sortable="true">
                <template #body="slotProps">
-                  <span v-if="slotProps.data.apTrustSubmission.success" class="pi pi-check-circle success"></span>
+                  <span v-if="slotProps.data.apTrustSubmission && slotProps.data.apTrustSubmission.success" class="pi pi-check-circle success"></span>
                   <span v-else class="pi pi-times-circle fail"></span>
                </template>
             </Column>

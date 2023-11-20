@@ -676,6 +676,13 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 				} else {
 					log.Printf("INFO: metadata %d has aptrust status %+v", md.ID, aptStatus)
 					out.APTrustStatus = aptStatus
+					if md.APTrustSubmission.Success && aptStatus.Status != "Success" {
+						md.APTrustSubmission.Success = false
+						svc.DB.Save(&md.APTrustSubmission)
+					} else if md.APTrustSubmission.Success == false && aptStatus.Status == "Success" {
+						md.APTrustSubmission.Success = true
+						svc.DB.Save(&md.APTrustSubmission)
+					}
 				}
 			}
 		}

@@ -46,6 +46,7 @@ func main() {
 		api.GET("/collections/:id/export", svc.exportCollectionItems)
 		api.DELETE("/collections/:id/items/:item", svc.removeCollectionItem)
 		api.POST("/collections/:id/items", svc.addCollectionItems)
+		api.GET("/collections/:id/aptrust", svc.getCollectionAPTrustStatus)
 
 		api.GET("/components/:id", svc.getComponentTree)
 		api.GET("/components/:id/masterfiles", svc.getComponentMasterFiles)

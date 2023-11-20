@@ -19,7 +19,12 @@ export const useCollectionsStore = defineStore('collections', {
       collections: [],
       totalCollections: 0,
       bulkAdd: false,
-      metadataHits: []
+      metadataHits: [],
+      apTrustStatus: {
+         totalSubmitted: 0,
+         successCount: 0,
+         failures: []
+      }
    }),
    getters: {
 	},
@@ -133,6 +138,28 @@ export const useCollectionsStore = defineStore('collections', {
             })
          }).catch( e => {
             system.setError(e)
+         })
+      },
+      getAPTrustStatus() {
+         if (this.collectionID == -1 || !this.inAPTrust) return
+
+         this.working = true
+         axios.get(`/api/collections/${this.collectionID}/aptrust`).then((response) => {
+            this.apTrustStatus.totalSubmitted = response.data.length
+            response.data.forEach( (s) => {
+               if ( s.status == "Success" ) {
+                  this.apTrustStatus.successCount++
+               } else {
+                  let parts = s.object_identifier.split("-")
+                  let failID = parts[ parts.length-1 ]
+                  this.apTrustStatus.failures.push( {id: failID, error: s.note} )
+               }
+            })
+         }).catch((error) => {
+            const system = useSystemStore()
+            system.setError(error)
+         }).finally( () =>{
+            this.working = false
          })
       },
       addRecords( metadataIDs ) {
