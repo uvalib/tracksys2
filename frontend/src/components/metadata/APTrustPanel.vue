@@ -30,8 +30,7 @@
       </div>
       <div class="apt-acts">
          <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" class="p-button-secondary apt-submit" @click="apTrustSubmitClicked" />
-         <DPGButton v-if="metadataStore.apTrustStatus" label="Get APTrust Status Report"
-            class="p-button-secondary apt-submit" @click="apTrustStatusClicked" :loading="collectionStore.working" />
+         <APTrustReportDialog />
       </div>
    </Panel>
 </template>
@@ -40,17 +39,16 @@
 import { computed, ref } from 'vue'
 import { useSystemStore } from '@/stores/system'
 import { useMetadataStore } from '@/stores/metadata'
-import { useCollectionsStore } from '@/stores/collections'
 import { useUserStore } from '@/stores/user'
 import Panel from 'primevue/panel'
 import DataDisplay from '@/components/DataDisplay.vue'
+import APTrustReportDialog from '@/components/metadata/APTrustReportDialog.vue'
 import dayjs from 'dayjs'
 import { useConfirm } from "primevue/useconfirm"
 
 const confirm = useConfirm()
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
-const collectionStore = useCollectionsStore()
 const userStore = useUserStore()
 
 const aptSubmitted = ref(false)
@@ -81,10 +79,6 @@ const apTrustSubmitClicked = ( () => {
    } else {
       doApTrustSubmission()
    }
-})
-
-const apTrustStatusClicked = (() => {
-   collectionStore.getAPTrustStatus()
 })
 
 const doApTrustSubmission = ( async () => {

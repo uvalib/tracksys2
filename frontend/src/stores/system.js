@@ -28,6 +28,7 @@ export const useSystemStore = defineStore('system', {
       useRights: [],
       workflows: [],
       toast: {
+         error: false,
          summary: "",
          message: "",
          show: false
@@ -40,11 +41,19 @@ export const useSystemStore = defineStore('system', {
          this.toast.summary = summary
          this.toast.message = message
          this.toast.show = true
+         this.toast.error = false
+      },
+      toastError( summary, message, success=true ) {
+         this.toast.summary = summary
+         this.toast.message = message
+         this.toast.show = true
+         this.toast.error = true
       },
       clearToastMessage() {
          this.toast.summary = ""
          this.toast.message = ""
          this.toast.show = false
+         this.toast.error = false
       },
       setError( e ) {
          this.error = e

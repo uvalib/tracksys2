@@ -60,7 +60,11 @@ const signoutOverlay = ref()
 
 watch(() => systemStore.toast.show, (newShow) => {
    if ( newShow == true) {
-      toast.add({severity:'success', summary:  systemStore.toast.summary, detail:  systemStore.toast.message, life: 5000})
+      if ( systemStore.toast.error) {
+         toast.add({severity:'error', summary:  systemStore.toast.summary, detail:  systemStore.toast.message, life: 10000})
+      } else {
+         toast.add({severity:'success', summary:  systemStore.toast.summary, detail:  systemStore.toast.message, life: 5000})
+      }
       systemStore.clearToastMessage()
    }
 })

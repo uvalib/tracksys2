@@ -22,8 +22,8 @@ type apTrustSubmission struct {
 	Success     bool       `json:"success"`
 }
 
-// apTrustResult is the JSON workitem status object retruned by the APTrust API
-type apTrustResult struct {
+// APTrustResult is the JSON workitem status object retruned by the APTrust API
+type APTrustResult struct {
 	ID               int64  `json:"id"`
 	Name             string `json:"name"`
 	ETag             string `json:"etag"`
@@ -34,6 +34,13 @@ type apTrustResult struct {
 	Status           string `json:"status"`
 	CreatedAt        string `json:"created_at"`
 	ProcessedAt      string `json:"date_processed"`
+}
+
+type apTrustCollectionResult struct {
+	*APTrustResult
+	MetadataID    int64  `json:"metadata_id"`
+	MetadataPID   string `json:"metadata_pid"`
+	MetadataTitle string `json:"metadata_title"`
 }
 
 // apTrust status is a combination of the JSON APTrust work item record from the API and the
@@ -55,7 +62,7 @@ func (svc *serviceContext) getCollectionAPTrustStatus(c *gin.Context) {
 	collectionID := c.Param("id")
 	log.Printf("INFO: get collection %s aptrust status", collectionID)
 	var collMD metadata
-	err := svc.DB.Joins("APTRustSubmission").Find(&collMD, collectionID).Error
+	err := svc.DB.Joins("APTrustSubmission").Find(&collMD, collectionID).Error
 	if err != nil {
 		log.Printf("ERROR: unable to load collection %s: %s", collectionID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -68,8 +75,12 @@ func (svc *serviceContext) getCollectionAPTrustStatus(c *gin.Context) {
 		return
 	}
 
-	var collectionMemberIDs []int64
-	err = svc.DB.Raw("select id from metadata where parent_metadata_id=?", collectionID).Scan(&collectionMemberIDs).Error
+	var collectionMemberIDs []struct {
+		ID    int64
+		PID   string `gorm:"column:pid"`
+		Title string
+	}
+	err = svc.DB.Raw("select id, pid, title from metadata where parent_metadata_id=?", collectionID).Scan(&collectionMemberIDs).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get collection %s member id list: %s", collectionID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -83,7 +94,7 @@ func (svc *serviceContext) getCollectionAPTrustStatus(c *gin.Context) {
 		return
 	}
 
-	var parsedStatusList []*apTrustResult
+	var parsedStatusList []*apTrustCollectionResult
 	err = json.Unmarshal(raw, &parsedStatusList)
 	if err != nil {
 		log.Printf("ERROR: unable to parse aptrust response: %s", err.Error())
@@ -91,24 +102,28 @@ func (svc *serviceContext) getCollectionAPTrustStatus(c *gin.Context) {
 		return
 	}
 
-	for _, tgtID := range collectionMemberIDs {
+	for _, member := range collectionMemberIDs {
 		found := false
-		strID := fmt.Sprintf("%d", tgtID)
+		strID := fmt.Sprintf("%d", member.ID)
 		for _, aptStatus := range parsedStatusList {
 			idBits := strings.Split(aptStatus.ObjectIdentifier, "-")
 			objID := idBits[len(idBits)-1]
 			if strID == objID {
 				found = true
+				aptStatus.MetadataID = member.ID
+				aptStatus.MetadataPID = member.PID
+				aptStatus.MetadataTitle = member.Title
 				break
 			}
 		}
 		if !found {
-			log.Printf("INFO: metadata %d missing from collection %s aptrust status response; look up separately", tgtID, collectionID)
-			resp, err := svc.requestAPTStatus(tgtID)
+			log.Printf("INFO: metadata %d missing from collection %s aptrust status response; look up separately", member.ID, collectionID)
+			resp, err := svc.requestAPTStatus(member.ID)
 			if err != nil {
-				log.Printf("ERROR: unable to get aptrust status for %d: %s", tgtID, err.Error())
+				log.Printf("ERROR: unable to get aptrust status for %d: %s", member.ID, err.Error())
 			} else {
-				parsedStatusList = append(parsedStatusList, resp)
+				fail := apTrustCollectionResult{APTrustResult: resp, MetadataID: member.ID, MetadataPID: member.PID, MetadataTitle: member.Title}
+				parsedStatusList = append(parsedStatusList, &fail)
 			}
 		}
 	}
@@ -116,13 +131,13 @@ func (svc *serviceContext) getCollectionAPTrustStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, parsedStatusList)
 }
 
-func (svc *serviceContext) requestAPTStatus(mdID int64) (*apTrustResult, error) {
+func (svc *serviceContext) requestAPTStatus(mdID int64) (*APTrustResult, error) {
 	raw, getErr := svc.getRequest(fmt.Sprintf("%s/metadata/%d/aptrust", svc.ExternalSystems.Jobs, mdID))
 	if getErr != nil {
 		return nil, fmt.Errorf(getErr.Message)
 	}
 
-	var parsedStatus apTrustResult
+	var parsedStatus APTrustResult
 	err := json.Unmarshal(raw, &parsedStatus)
 	if err != nil {
 		return nil, err
@@ -168,7 +183,7 @@ func (svc *serviceContext) getAPTrustStatus(md *metadata) (*apTrustStatus, error
 		return nil, fmt.Errorf("%d:%s", getErr.StatusCode, getErr.Message)
 	}
 
-	var parsedStatus apTrustResult
+	var parsedStatus APTrustResult
 	err = json.Unmarshal(raw, &parsedStatus)
 	if err != nil {
 		return nil, fmt.Errorf("malformed status: %s", err.Error())
