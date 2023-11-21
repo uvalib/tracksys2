@@ -30,7 +30,7 @@
       </div>
       <div class="apt-acts">
          <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" class="p-button-secondary apt-submit" @click="apTrustSubmitClicked" />
-         <APTrustReportDialog v-if="metadataStore.detail.isCollection"/>
+         <APTrustReportDialog v-if="canGetAPTrustReport"/>
       </div>
    </Panel>
 </template>
@@ -52,6 +52,15 @@ const metadataStore = useMetadataStore()
 const userStore = useUserStore()
 
 const aptSubmitted = ref(false)
+
+const canGetAPTrustReport = computed(() => {
+   if (metadataStore.detail.isCollection == false) return false
+   if (metadataStore.apTrustStatus == null) return false
+   let yearStr =  metadataStore.apTrustStatus.requestedAt.split("-")[0]
+   let year = parseInt(yearStr, 10)
+   // group status only works for item submitted from 2023 onwards
+   return year >= 2023
+})
 
 const canSubmitAPTrust = computed (() => {
    if ( userStore.isAdmin == false || aptSubmitted.value == true) return false
