@@ -30,7 +30,7 @@
       </div>
       <div class="apt-acts">
          <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" class="p-button-secondary apt-submit" @click="apTrustSubmitClicked" />
-         <APTrustReportDialog />
+         <APTrustReportDialog v-if="metadataStore.detail.isCollection"/>
       </div>
    </Panel>
 </template>
