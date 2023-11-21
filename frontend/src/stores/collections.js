@@ -144,7 +144,7 @@ export const useCollectionsStore = defineStore('collections', {
       apTrustResubmit( metadataIDs ) {
          if (this.collectionID == -1 || !this.inAPTrust) return
 
-         let req = {metadataRecords: metadataIDs}
+         let req = {collectionID: this.collectionID, metadataRecords: metadataIDs}
          const system = useSystemStore()
          axios.post(`${system.jobsURL}/aptrust`, req).then((response) => {
             system.toastMessage('Submitted', 'The selected items have begun the APTrust submission process; check the job status page for updates')
