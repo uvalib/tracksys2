@@ -20,6 +20,7 @@
                   <i class="icon fas fa-external-link"></i>
                </a>
             </DataDisplay>
+            <DataDisplay label="Group Identifier" :value="metadataStore.apTrustStatus.groupIdentifier"/>
             <DataDisplay label="Storage" :value="metadataStore.apTrustStatus.storage"/>
             <DataDisplay label="Status" :value="metadataStore.apTrustStatus.status"/>
             <DataDisplay v-if="metadataStore.apTrustStatus.status != 'Success'" label="Note" :value="metadataStore.apTrustStatus.note"/>

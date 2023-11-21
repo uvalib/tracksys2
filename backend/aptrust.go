@@ -28,6 +28,7 @@ type APTrustResult struct {
 	Name             string `json:"name"`
 	ETag             string `json:"etag"`
 	ObjectIdentifier string `json:"object_identifier"`
+	GroupIdentifier  string `json:"bag_group_identifier"`
 	AltIdentifier    string `json:"alt_identifier"`
 	StorageOption    string `json:"storage_option"`
 	Note             string `json:"note"`
@@ -50,6 +51,7 @@ type apTrustStatus struct {
 	Bag              string     `json:"bag"`
 	ETag             string     `json:"etag"`
 	ObjectIdentifier string     `json:"objectIdentifier"`
+	GroupIdentifier  string     `json:"groupIdentifier"`
 	StorageOption    string     `json:"storage"`
 	Note             string     `json:"note"`
 	Status           string     `json:"status"`
@@ -193,7 +195,7 @@ func (svc *serviceContext) getAPTrustStatus(md *metadata) (*apTrustStatus, error
 	// merge TS submit data and APT status info into one record and return it
 	out := apTrustStatus{ID: parsedStatus.ID, Bag: aptSubmission.Bag, ETag: parsedStatus.ETag, ObjectIdentifier: parsedStatus.ObjectIdentifier,
 		StorageOption: parsedStatus.StorageOption, Status: parsedStatus.Status, Note: parsedStatus.Note, RequestedAt: aptSubmission.RequestedAt,
-		SubmittedAt: aptSubmission.SubmittedAt, FinishedAt: aptSubmission.ProcessedAt}
+		SubmittedAt: aptSubmission.SubmittedAt, FinishedAt: aptSubmission.ProcessedAt, GroupIdentifier: parsedStatus.GroupIdentifier}
 	if parsedStatus.ProcessedAt != "0001-01-01T00:00:00Z" {
 		finishedAt, err := time.Parse("2006-01-02T15:04:05Z", parsedStatus.ProcessedAt)
 		if err != nil {
