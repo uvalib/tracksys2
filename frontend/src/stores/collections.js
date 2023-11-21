@@ -167,13 +167,13 @@ export const useCollectionsStore = defineStore('collections', {
                   this.apTrustStatus.failures.push( {id: s.metadata_id, pid: s.metadata_pid,  error: s.note} )
                }
             })
-            for (let i=1400; i<1410; i++) {
-               let title = "Fake Title "+i
-               if ( i == 1400 ) {
-                  title = "Declaration of Independence of the State of South Carolina : in convention, at the city of Charleston, December 20, 1860. : An ordinance to dissolve the Union between the state of South Carolina and other states united with her under the compact entitled \"The constitution of the United States of America.\""
-               }
-               this.apTrustStatus.failures.push( {id: i, pid: "tsb:"+i, title: title,  error: "This is fake error #"+i} )
-            }
+            // for (let i=1400; i<1410; i++) {
+            //    let title = "Fake Title "+i
+            //    if ( i == 1400 ) {
+            //       title = "Declaration of Independence of the State of South Carolina : in convention, at the city of Charleston, December 20, 1860. : An ordinance to dissolve the Union between the state of South Carolina and other states united with her under the compact entitled \"The constitution of the United States of America.\""
+            //    }
+            //    this.apTrustStatus.failures.push( {id: i, pid: "tsb:"+i, title: title,  error: "This is fake error #"+i} )
+            // }
          }).catch((error) => {
             this.apTrustStatus.errorMessage = error
          }).finally( () =>{
