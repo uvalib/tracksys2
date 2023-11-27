@@ -264,9 +264,14 @@ export const useMetadataStore = defineStore('metadata', {
             system.setError(e)
          })
       },
-      async sendToAPTRust() {
+      async sendToAPTRust( resubmit ) {
          const system = useSystemStore()
-         return axios.post( `${system.jobsURL}/metadata/${this.detail.id}/aptrust` ).catch( e => {
+         let url = `${system.jobsURL}/metadata/${this.detail.id}/aptrust`
+         if (resubmit) {
+            url += "?resubmit=1"
+         }
+         console.log("APTRUST URL: "+url)
+         return axios.post( url ).catch( e => {
             const system = useSystemStore()
             system.setError(e)
          })

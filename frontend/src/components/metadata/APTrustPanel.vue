@@ -31,6 +31,7 @@
       </div>
       <div class="apt-acts">
          <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" class="p-button-secondary apt-submit" @click="apTrustSubmitClicked" />
+         <DPGButton v-else-if="canReubmitAPTrust" label="Resubmit to APTrust" class="p-button-secondary apt-submit" @click="apTrustResubmitClicked" />
          <APTrustReportDialog v-if="canGetAPTrustReport"/>
       </div>
    </Panel>
@@ -63,6 +64,12 @@ const canGetAPTrustReport = computed(() => {
    return year >= 2023
 })
 
+const canReubmitAPTrust = computed (() => {
+   if ( userStore.isAdmin == false || aptSubmitted.value == true) return false
+   if ( metadataStore.apTrustStatus == null) return false
+
+   return metadataStore.detail.isCollection == false && (metadataStore.apTrustStatus.status == "Success")
+})
 const canSubmitAPTrust = computed (() => {
    if ( userStore.isAdmin == false || aptSubmitted.value == true) return false
    if ( metadataStore.apTrustStatus == null) {
@@ -75,6 +82,18 @@ const apTrustPreservation = computed( () => {
    return false
 })
 
+const apTrustResubmitClicked = ( () => {
+   confirm.require({
+      message: "Resubmission will replace the current version with a newly created one. This cannot be reversed. Are you sure?",
+      header: 'Confirm APTrust Resubmission',
+      icon: 'pi pi-question-circle',
+      rejectClass: 'p-button-secondary',
+      accept: () => {
+         doApTrustSubmission(true)
+      },
+   })
+})
+
 const apTrustSubmitClicked = ( () => {
    if (metadataStore.detail.isCollection) {
       confirm.require({
@@ -83,17 +102,17 @@ const apTrustSubmitClicked = ( () => {
          icon: 'pi pi-question-circle',
          rejectClass: 'p-button-secondary',
          accept: () => {
-            doApTrustSubmission()
+            doApTrustSubmission(false)
          },
       })
    } else {
-      doApTrustSubmission()
+      doApTrustSubmission(false)
    }
 })
 
-const doApTrustSubmission = ( async () => {
+const doApTrustSubmission = ( async (resubmit) => {
    aptSubmitted.value = true
-   await metadataStore.sendToAPTRust()
+   await metadataStore.sendToAPTRust(resubmit)
    if (systemStore.error == "") {
       systemStore.toastMessage('Submitted', 'This item has begun the APTrust submission process; check the job status page for updates')
    }
