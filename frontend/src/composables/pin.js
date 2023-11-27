@@ -15,6 +15,10 @@ export function usePinnable( pinClass ) {
             let dts = document.getElementsByClassName("p-datatable-wrapper")
             if ( dts ) {
                dts[0].style.top = `0px`
+               let panel = dts[0].closest('.p-panel-content')
+               if (panel) {
+                  panel.style.height = `auto`
+               }
             }
          }
          pinned.value = false
@@ -23,6 +27,11 @@ export function usePinnable( pinClass ) {
             let dts = document.getElementsByClassName("p-datatable-wrapper")
             if ( dts ) {
                dts[0].style.top = `${toolbarHeight.value}px`
+               let panel = dts[0].closest('.p-panel-content')
+               if (panel) {
+                  let h = panel.clientHeight
+                  panel.style.height = `${h}px`
+               }
             }
             toolbar.value.classList.add("sticky")
             toolbar.value.style.width = `${toolbarWidth.value}px`
