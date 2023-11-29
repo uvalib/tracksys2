@@ -676,12 +676,13 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 				} else {
 					log.Printf("INFO: metadata %d has aptrust status %+v", md.ID, aptStatus)
 					out.APTrustStatus = aptStatus
-					if md.APTrustSubmission.Success && aptStatus.Status != "Success" {
-						md.APTrustSubmission.Success = false
-						svc.DB.Save(&md.APTrustSubmission)
-					} else if md.APTrustSubmission.Success == false && aptStatus.Status == "Success" {
-						md.APTrustSubmission.Success = true
-						svc.DB.Save(&md.APTrustSubmission)
+					if md.APTrustSubmission.ProcessedAt == nil && (aptStatus.Status == "Success" || aptStatus.Status == "Failed" || aptStatus.Status == "Canceled") {
+						md.APTrustSubmission.Success = (aptStatus.Status == "Success")
+						md.APTrustSubmission.ProcessedAt = aptStatus.FinishedAt
+						err = svc.DB.Save(&md.APTrustSubmission).Error
+						if err != nil {
+							log.Printf("ERROR: update aptrust status for %d failed: %s", md.ID, err.Error())
+						}
 					}
 				}
 			}
