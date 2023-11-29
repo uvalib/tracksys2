@@ -77,12 +77,18 @@ func (svc *serviceContext) getCollectionAPTrustStatus(c *gin.Context) {
 		return
 	}
 
-	var collectionMemberIDs []struct {
-		ID    int64
-		PID   string `gorm:"column:pid"`
-		Title string
+	var collectionMemberInfo []struct {
+		ID           int64
+		PID          string `gorm:"column:pid"`
+		Title        string
+		SubmissionID int64 `gorm:"column:submission_id"`
+		ProcessedAt  *time.Time
+		Success      bool
 	}
-	err = svc.DB.Raw("select id, pid, title from metadata where parent_metadata_id=?", collectionID).Scan(&collectionMemberIDs).Error
+	err = svc.DB.Raw(`
+	select metadata.id, pid, title, ap_trust_submissions.id as submission_id, processed_at, success from metadata
+	inner join ap_trust_submissions on metadata_id=metadata.id where parent_metadata_id=?`, collectionID).
+		Scan(&collectionMemberInfo).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get collection %s member id list: %s", collectionID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -104,7 +110,7 @@ func (svc *serviceContext) getCollectionAPTrustStatus(c *gin.Context) {
 		return
 	}
 
-	for _, member := range collectionMemberIDs {
+	for _, member := range collectionMemberInfo {
 		found := false
 		strID := fmt.Sprintf("%d", member.ID)
 		for _, aptStatus := range parsedStatusList {
@@ -115,6 +121,19 @@ func (svc *serviceContext) getCollectionAPTrustStatus(c *gin.Context) {
 				aptStatus.MetadataID = member.ID
 				aptStatus.MetadataPID = member.PID
 				aptStatus.MetadataTitle = member.Title
+				if member.ProcessedAt == nil && (aptStatus.Status == "Success" || aptStatus.Status == "Failed" || aptStatus.Status == "Canceled") {
+					log.Printf("INFO: metadata %d has completed processing; update submission record", member.ID)
+					finishedAt, err := time.Parse("2006-01-02T15:04:05Z", aptStatus.ProcessedAt)
+					if err != nil {
+						log.Printf("ERROR: unable to parse finished date %s for metadata %d", aptStatus.ProcessedAt, member.ID)
+					} else {
+						update := apTrustSubmission{ID: member.SubmissionID, ProcessedAt: &finishedAt, Success: aptStatus.Status == "Success"}
+						err = svc.DB.Model(&update).Select("ProcessedAt", "Success").Updates(update).Error
+						if err != nil {
+							log.Printf("ERROR: unable to update status for metadata %d: %s", member.ID, err.Error())
+						}
+					}
+				}
 				break
 			}
 		}
