@@ -46,7 +46,7 @@ func main() {
 		api.GET("/collections/:id/export", svc.exportCollectionItems)
 		api.DELETE("/collections/:id/items/:item", svc.removeCollectionItem)
 		api.POST("/collections/:id/items", svc.addCollectionItems)
-		api.GET("/collections/:id/aptrust", svc.getCollectionAPTrustStatus)
+		api.GET("/collections/:id/aptrust", svc.getAPTrustCollectionStatus)
 
 		api.GET("/components/:id", svc.getComponentTree)
 		api.GET("/components/:id/masterfiles", svc.getComponentMasterFiles)
@@ -79,6 +79,7 @@ func main() {
 		api.POST("/metadata/:id/xml", svc.uploadXMLMetadata)
 		api.GET("/metadata/:id/xml", svc.getXMLMetadata)
 		api.POST("/metadata", svc.createMetadata)
+		api.GET("/metadata/:id/aptrust", svc.getAPTrustMetadataStatus)
 
 		api.GET("/orders", svc.getOrders)
 		api.POST("/orders", svc.createOrder)

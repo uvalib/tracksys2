@@ -1,26 +1,26 @@
 <template>
-   <DPGButton v-if="metadataStore.apTrustStatus" label="Get APTrust Status Report"
-      class="p-button-secondary apt-submit" @click="apTrustStatusClicked" :loading="collectionStore.working" />
+   <DPGButton label="Get APTrust Status Report"
+      class="p-button-secondary apt-submit" @click="apTrustStatusClicked" :loading="apTrust.loadingReport" />
    <Dialog v-model:visible="showReport" header="APTrust Collection Status Report" :modal="true" position="top" style="width: 80%;" >
-      <div class="error" v-if="collectionStore.apTrustStatus.errorMessage">
-         {{ collectionStore.apTrustStatus.errorMessage }}
+      <div class="error" v-if="apTrust.collectionStatus.errorMessage">
+         {{ apTrust.collectionStatus.errorMessage }}
       </div>
       <div v-else class="resport">
          <div class="report-summary">
             <span>
-               <b>Total submitted</b>: {{ collectionStore.apTrustStatus.totalSubmitted }}
+               <b>Total submitted</b>: {{ apTrust.collectionStatus.totalSubmitted }}
             </span>
             <span>
-               <b>Success count:</b> {{ collectionStore.apTrustStatus.successCount }}
+               <b>Success count:</b> {{ apTrust.collectionStatus.successCount }}
             </span>
             <span>
-               <b>Error count</b>: {{ collectionStore.apTrustStatus.failures.length }}
+               <b>Error count</b>: {{ apTrust.collectionStatus.failures.length }}
             </span>
          </div>
-         <div v-if="collectionStore.apTrustStatus.failures.length > 0" class="error-details">
+         <div v-if="apTrust.collectionStatus.failures.length > 0" class="error-details">
             <label>Errors</label>
             <div class="error-scroller">
-               <DataTable :value="collectionStore.apTrustStatus.failures" ref="apTrustStatusTable" dataKey="id"
+               <DataTable :value="apTrust.collectionStatus.failures" ref="apTrustStatusTable" dataKey="id"
                   stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm" :lazy="false"
                   v-model:selection="selectedErrors" :resizableColumns="true" columnResizeMode="fit"
                >
@@ -49,18 +49,16 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useCollectionsStore } from '@/stores/collections'
+import { useAPTrustStore } from '@/stores/aptrust'
 import { useMetadataStore } from '@/stores/metadata'
-import { useSystemStore } from '@/stores/system'
 import Dialog from 'primevue/dialog'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { useConfirm } from "primevue/useconfirm"
 
 const confirm = useConfirm()
-const collectionStore = useCollectionsStore()
+const apTrust = useAPTrustStore()
 const metadataStore = useMetadataStore()
-const systemStore = useSystemStore()
 
 const showReport = ref(false)
 const selectedErrors = ref([])
@@ -73,17 +71,19 @@ const closeDialog = (() => {
    showReport.value = false
 })
 const apTrustStatusClicked = (async () => {
-   await collectionStore.getAPTrustStatus()
+   await apTrust.getCollectionStatusReport( metadataStore.detail.id )
    showReport.value = true
 })
 const resubmitClicked = (() => {
+   let msg = `Resubmit ${selectedErrors.value.length} selected metadata records. `
+   msg += "Depending upon the number and size of items selected, this process may take several days to complete. Are you sure?"
    confirm.require({
-      message: `Resubmit ${selectedErrors.value.length} selected metadata records. This process may take several days to complete. Are you sure?`,
+      message: msg,
       header: 'Confirm APTrust Resubmission',
       icon: 'pi pi-question-circle',
       rejectClass: 'p-button-secondary',
       accept: ( async () => {
-         await collectionStore.apTrustResubmit( selectedErrors.value.map( s => s.id) )
+         await apTrust.resubmitCollectionItems( metadataStore.detail.id, selectedErrors.value.map( s => s.id) )
       }),
    })
 })

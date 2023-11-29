@@ -189,19 +189,18 @@ type uvaMAP struct {
 }
 
 type metadataDetailResponse struct {
-	Metadata      *metadata       `json:"metadata"`
-	Collection    *metadata       `json:"collectionRecord"`
-	Units         []*unit         `json:"units"`
-	MasterFiles   []*masterFile   `json:"masterFiles,omitempty"`
-	Sirsi         *sirsiMetadata  `json:"sirsiDetails"`
-	ArchiveSpace  *asMetadata     `json:"asDetails"`
-	JSTOR         *jstorMetadata  `json:"jstorDetails"`
-	Apollo        *apolloMetadata `json:"apolloDetails"`
-	APTrustStatus *apTrustStatus  `json:"apTrustStatus,omitempty"`
-	ThumbURL      string          `json:"thumbURL,omitempty"`
-	ViewerURL     string          `json:"viewerURL,omitempty"`
-	VirgoURL      string          `json:"virgoURL,omitempty"`
-	Error         string          `json:"error"`
+	Metadata     *metadata       `json:"metadata"`
+	Collection   *metadata       `json:"collectionRecord"`
+	Units        []*unit         `json:"units"`
+	MasterFiles  []*masterFile   `json:"masterFiles,omitempty"`
+	Sirsi        *sirsiMetadata  `json:"sirsiDetails,omitempty"`
+	ArchiveSpace *asMetadata     `json:"asDetails,omitempty"`
+	JSTOR        *jstorMetadata  `json:"jstorDetails,omitempty"`
+	Apollo       *apolloMetadata `json:"apolloDetails,omitempty"`
+	ThumbURL     string          `json:"thumbURL,omitempty"`
+	ViewerURL    string          `json:"viewerURL,omitempty"`
+	VirgoURL     string          `json:"virgoURL,omitempty"`
+	Error        string          `json:"error"`
 }
 
 type metadataRequest struct {
@@ -662,29 +661,6 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 				out.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
 			} else if md.Type == "XmlMetadata" {
 				out.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
-			}
-		}
-
-		log.Printf("INFO: metadata %d preservation tier id: %d", md.ID, md.PreservationTierID)
-		if md.PreservationTierID > 1 {
-			aptStatus, err := svc.getAPTrustStatus(&md)
-			if err != nil {
-				log.Printf("ERROR: get aptrust status for metadata %d failed: %s", md.ID, err.Error())
-			} else {
-				if aptStatus == nil {
-					log.Printf("INFO: metadata %d has not been submited to aptrust", md.ID)
-				} else {
-					log.Printf("INFO: metadata %d has aptrust status %+v", md.ID, aptStatus)
-					out.APTrustStatus = aptStatus
-					if md.APTrustSubmission.ProcessedAt == nil && (aptStatus.Status == "Success" || aptStatus.Status == "Failed" || aptStatus.Status == "Canceled") {
-						md.APTrustSubmission.Success = (aptStatus.Status == "Success")
-						md.APTrustSubmission.ProcessedAt = aptStatus.FinishedAt
-						err = svc.DB.Save(&md.APTrustSubmission).Error
-						if err != nil {
-							log.Printf("ERROR: update aptrust status for %d failed: %s", md.ID, err.Error())
-						}
-					}
-				}
 			}
 		}
 	}

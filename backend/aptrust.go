@@ -60,7 +60,86 @@ type apTrustStatus struct {
 	FinishedAt       *time.Time `json:"finishedAt"`
 }
 
-func (svc *serviceContext) getCollectionAPTrustStatus(c *gin.Context) {
+func (svc *serviceContext) getAPTrustMetadataStatus(c *gin.Context) {
+	metadataID := c.Param("id")
+	log.Printf("INFO: get metadata %s aptrust status", metadataID)
+	var mdRec metadata
+	err := svc.DB.Joins("APTrustSubmission").Find(&mdRec, metadataID).Error
+	if err != nil {
+		log.Printf("ERROR: unable to load collection %s: %s", metadataID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if mdRec.APTrustSubmission == nil {
+		log.Printf("INFO: metadata %d has not been submitted to aptrust", mdRec.ID)
+		c.String(http.StatusBadRequest, fmt.Sprintf("metadata %d has not been submitted to aptrust", mdRec.ID))
+		return
+	}
+
+	if mdRec.IsCollection {
+		log.Printf("INFO: metadata %d is a collection; get overall submission status from the ts database, not aptrust", mdRec.ID)
+		out := apTrustStatus{RequestedAt: mdRec.APTrustSubmission.RequestedAt, SubmittedAt: mdRec.APTrustSubmission.SubmittedAt,
+			FinishedAt: mdRec.APTrustSubmission.ProcessedAt, Status: "Failed"}
+		if mdRec.APTrustSubmission.Success {
+			out.Status = "Success"
+		}
+		c.JSON(http.StatusOK, out)
+		return
+	}
+
+	raw, getErr := svc.getRequest(fmt.Sprintf("%s/metadata/%d/aptrust", svc.ExternalSystems.Jobs, mdRec.ID))
+	if getErr != nil {
+		if getErr.StatusCode == 404 {
+			log.Printf("INFO: no aptrust status found for metadata %d", mdRec.ID)
+			out := apTrustStatus{Bag: mdRec.APTrustSubmission.Bag,
+				Status:      "Failed",
+				Note:        "Bagging or submission failed; check job status logs for more details",
+				RequestedAt: mdRec.APTrustSubmission.RequestedAt, SubmittedAt: mdRec.APTrustSubmission.SubmittedAt}
+			c.JSON(http.StatusOK, out)
+			return
+		}
+		log.Printf("ERROR: unable to get aptrust status: %s", getErr.Message)
+		c.String(http.StatusInternalServerError, fmt.Sprintf("%d:%s", getErr.StatusCode, getErr.Message))
+		return
+	}
+
+	var parsedStatus APTrustResult
+	err = json.Unmarshal(raw, &parsedStatus)
+	if err != nil {
+		log.Printf("ERROR: unable to parse aptrust status: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// merge TS submit data and APT status info into one record and return it
+	out := apTrustStatus{ID: parsedStatus.ID, Bag: mdRec.APTrustSubmission.Bag, ETag: parsedStatus.ETag,
+		ObjectIdentifier: parsedStatus.ObjectIdentifier, StorageOption: parsedStatus.StorageOption,
+		Status: parsedStatus.Status, Note: parsedStatus.Note, RequestedAt: mdRec.APTrustSubmission.RequestedAt,
+		SubmittedAt: mdRec.APTrustSubmission.SubmittedAt, FinishedAt: mdRec.APTrustSubmission.ProcessedAt,
+		GroupIdentifier: parsedStatus.GroupIdentifier}
+	if parsedStatus.ProcessedAt != "0001-01-01T00:00:00Z" {
+		finishedAt, err := time.Parse("2006-01-02T15:04:05Z", parsedStatus.ProcessedAt)
+		if err != nil {
+			log.Printf("ERROR: unable to parse aptrust finished time: %s", err.Error())
+		} else {
+			out.FinishedAt = &finishedAt
+		}
+	}
+
+	// If the status is finished but TS submit record has not been updated, update it now
+	if mdRec.APTrustSubmission.ProcessedAt == nil && (parsedStatus.Status == "Success" || parsedStatus.Status == "Failed" || parsedStatus.Status == "Canceled") {
+		mdRec.APTrustSubmission.Success = (parsedStatus.Status == "Success")
+		mdRec.APTrustSubmission.ProcessedAt = out.FinishedAt
+		err = svc.DB.Save(&mdRec.APTrustSubmission).Error
+		if err != nil {
+			log.Printf("ERROR: update aptrust status for %d failed: %s", mdRec.ID, err.Error())
+		}
+	}
+	c.JSON(http.StatusOK, out)
+}
+
+func (svc *serviceContext) getAPTrustCollectionStatus(c *gin.Context) {
 	collectionID := c.Param("id")
 	log.Printf("INFO: get collection %s aptrust status", collectionID)
 	var collMD metadata
@@ -73,7 +152,7 @@ func (svc *serviceContext) getCollectionAPTrustStatus(c *gin.Context) {
 
 	if collMD.APTrustSubmission == nil {
 		log.Printf("INFO: collection %d has not been submitted to aptrust", collMD.ID)
-		c.String(http.StatusBadRequest, fmt.Sprintf("collection %d has not been submitted tp aptrust", collMD.ID))
+		c.String(http.StatusBadRequest, fmt.Sprintf("collection %d has not been submitted to aptrust", collMD.ID))
 		return
 	}
 
@@ -166,62 +245,4 @@ func (svc *serviceContext) requestAPTStatus(mdID int64) (*APTrustResult, error) 
 	}
 
 	return &parsedStatus, nil
-}
-
-func (svc *serviceContext) getAPTrustStatus(md *metadata) (*apTrustStatus, error) {
-	log.Printf("INFO: check aptrust status for metadata %d", md.ID)
-
-	var aptSubmission apTrustSubmission
-	err := svc.DB.Where("metadata_id=?", md.ID).Limit(1).Find(&aptSubmission).Error
-	if err != nil {
-		return nil, fmt.Errorf("unable to get submission info: %s", err.Error())
-	}
-
-	// if ID is zeo, there is no submission record so the item has not yet been submitted
-	if aptSubmission.ID == 0 {
-		return nil, nil
-	}
-
-	if md.IsCollection {
-		log.Printf("INFO: metadata %d is a collection; get overall submission status from the ts database, not aptrust", md.ID)
-		out := apTrustStatus{RequestedAt: aptSubmission.RequestedAt, SubmittedAt: aptSubmission.SubmittedAt,
-			FinishedAt: aptSubmission.ProcessedAt, Status: "Failed"}
-		if aptSubmission.Success {
-			out.Status = "Success"
-		}
-		return &out, nil
-	}
-
-	log.Printf("INFO: get status for metadata %d from aptrust", md.ID)
-	raw, getErr := svc.getRequest(fmt.Sprintf("%s/metadata/%d/aptrust", svc.ExternalSystems.Jobs, md.ID))
-	if getErr != nil {
-		if getErr.StatusCode == 404 {
-			out := apTrustStatus{Bag: aptSubmission.Bag,
-				Status:      "Failed",
-				Note:        "Bagging or submission failed; check job status logs for more details",
-				RequestedAt: aptSubmission.RequestedAt, SubmittedAt: aptSubmission.SubmittedAt, FinishedAt: aptSubmission.ProcessedAt}
-			return &out, nil
-		}
-		return nil, fmt.Errorf("%d:%s", getErr.StatusCode, getErr.Message)
-	}
-
-	var parsedStatus APTrustResult
-	err = json.Unmarshal(raw, &parsedStatus)
-	if err != nil {
-		return nil, fmt.Errorf("malformed status: %s", err.Error())
-	}
-
-	// merge TS submit data and APT status info into one record and return it
-	out := apTrustStatus{ID: parsedStatus.ID, Bag: aptSubmission.Bag, ETag: parsedStatus.ETag, ObjectIdentifier: parsedStatus.ObjectIdentifier,
-		StorageOption: parsedStatus.StorageOption, Status: parsedStatus.Status, Note: parsedStatus.Note, RequestedAt: aptSubmission.RequestedAt,
-		SubmittedAt: aptSubmission.SubmittedAt, FinishedAt: aptSubmission.ProcessedAt, GroupIdentifier: parsedStatus.GroupIdentifier}
-	if parsedStatus.ProcessedAt != "0001-01-01T00:00:00Z" {
-		finishedAt, err := time.Parse("2006-01-02T15:04:05Z", parsedStatus.ProcessedAt)
-		if err != nil {
-			log.Printf("ERROR: unable to parse aptrust finished time: %s", err.Error())
-		} else {
-			out.FinishedAt = &finishedAt
-		}
-	}
-	return &out, nil
 }

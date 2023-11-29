@@ -214,6 +214,7 @@ import { useSystemStore } from '@/stores/system'
 import { useMetadataStore } from '@/stores/metadata'
 import { useUserStore } from '@/stores/user'
 import { useCollectionsStore } from '@/stores/collections'
+import { useAPTrustStore } from '@/stores/aptrust'
 import Panel from 'primevue/panel'
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab'
@@ -239,6 +240,7 @@ const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
 const userStore = useUserStore()
 const collectionStore = useCollectionsStore()
+const apTrust = useAPTrustStore()
 
 const publishing = ref(false)
 const showHathiDialog = ref(false)
@@ -291,20 +293,23 @@ const ocrHint = computed(() => {
    return ""
 })
 
-onBeforeRouteUpdate(async (to) => {
+onBeforeRouteUpdate((to) => {
    let mdID = to.params.id
-   document.title = `Metadata #${mdID}`
-   await metadataStore.getDetails( mdID )
-   if (metadataStore.detail.isCollection) {
-      collectionStore.setCollection( metadataStore.detail )
-      collectionStore.getItems()
-   }
+   loadDetails(mdID)
 })
 
 onBeforeMount( async () => {
    let mdID = route.params.id
+   loadDetails(mdID)
+})
+
+const loadDetails = ( async (mdID) => {
    document.title = `Metadata #${mdID}`
    await metadataStore.getDetails( mdID )
+   apTrust.clearItemStatus()
+   if ( metadataStore.detail.inAPTrust) {
+      apTrust.getItemStatus(metadataStore.detail.id)
+   }
    if (metadataStore.detail.isCollection) {
       collectionStore.setCollection( metadataStore.detail )
       collectionStore.getItems()

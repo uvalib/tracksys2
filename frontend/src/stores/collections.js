@@ -20,12 +20,6 @@ export const useCollectionsStore = defineStore('collections', {
       totalCollections: 0,
       bulkAdd: false,
       metadataHits: [],
-      apTrustStatus: {
-         totalSubmitted: 0,
-         successCount: 0,
-         failures: [],
-         errorMessage: ""
-      },
    }),
    getters: {
 	},
@@ -139,45 +133,6 @@ export const useCollectionsStore = defineStore('collections', {
             })
          }).catch( e => {
             system.setError(e)
-         })
-      },
-      apTrustResubmit( metadataIDs ) {
-         if (this.collectionID == -1 || !this.inAPTrust) return
-
-         let req = {collectionID: this.collectionID, metadataRecords: metadataIDs}
-         const system = useSystemStore()
-         axios.post(`${system.jobsURL}/aptrust`, req).then((response) => {
-            system.toastMessage('Submitted', 'The selected items have begun the APTrust submission process; check the job status page for updates')
-         }).catch((error) => {
-            system.toastError('Submit Failed', `APTrust submission failed: ${error}`)
-         })
-      },
-      async getAPTrustStatus() {
-         if (this.collectionID == -1 || !this.inAPTrust) return
-
-         this.working = true
-         return axios.get(`/api/collections/${this.collectionID}/aptrust`).then((response) => {
-            this.apTrustStatus.totalSubmitted = response.data.length
-            this.apTrustStatus.errorMessage = ""
-            this.apTrustStatus.successCount = 0
-            response.data.forEach( (s) => {
-               if ( s.status == "Success" ) {
-                  this.apTrustStatus.successCount++
-               } else {
-                  this.apTrustStatus.failures.push( {id: s.metadata_id, pid: s.metadata_pid,  error: s.note} )
-               }
-            })
-            // for (let i=1400; i<1410; i++) {
-            //    let title = "Fake Title "+i
-            //    if ( i == 1400 ) {
-            //       title = "Declaration of Independence of the State of South Carolina : in convention, at the city of Charleston, December 20, 1860. : An ordinance to dissolve the Union between the state of South Carolina and other states united with her under the compact entitled \"The constitution of the United States of America.\""
-            //    }
-            //    this.apTrustStatus.failures.push( {id: i, pid: "tsb:"+i, title: title,  error: "This is fake error #"+i} )
-            // }
-         }).catch((error) => {
-            this.apTrustStatus.errorMessage = error
-         }).finally( () =>{
-            this.working = false
          })
       },
       addRecords( metadataIDs ) {

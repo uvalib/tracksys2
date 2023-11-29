@@ -60,18 +60,6 @@ export const useMetadataStore = defineStore('metadata', {
          finishedAt: null,
          notes: "",
       },
-      apTrustStatus: {
-         id: 0,
-         bag: "",
-         etag: "",
-         objectIdentifier: "",
-         storage: "",
-         note: "",
-         status: "",
-         requestedAt: "",
-         submittedAt: "",
-         finishedAt: "",
-      },
       archivesSpace: {
          id: "",
          createdBy: "",
@@ -264,18 +252,6 @@ export const useMetadataStore = defineStore('metadata', {
             system.setError(e)
          })
       },
-      async sendToAPTRust( resubmit ) {
-         const system = useSystemStore()
-         let url = `${system.jobsURL}/metadata/${this.detail.id}/aptrust`
-         if (resubmit) {
-            url += "?resubmit=1"
-         }
-         console.log("APTRUST URL: "+url)
-         return axios.post( url ).catch( e => {
-            const system = useSystemStore()
-            system.setError(e)
-         })
-      },
       async publishToArchivesSpace( userID, immediate ) {
          const system = useSystemStore()
          let payload = {userID: `${userID}`, metadataID: `${this.detail.id}`}
@@ -353,10 +329,8 @@ export const useMetadataStore = defineStore('metadata', {
             this.detail.folders = details.metadata.locations
          }
 
-         this.apTrustStatus = null
          this.detail.inAPTrust = false
-         if ( details.apTrustStatus) {
-            this.apTrustStatus = details.apTrustStatus
+         if ( details.metadata.apTrustSubmission) {
             this.detail.inAPTrust = true
          }
 
