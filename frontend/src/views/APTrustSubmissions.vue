@@ -26,10 +26,10 @@
          </Column>
          <Column field="pid" header="PID" :sortable="true"  class="nowrap"/>
          <Column field="title" header="Title" :sortable="true" />
-         <Column field="requestedAt" header="Date Requested" :sortable="true" class="nowrap">
+         <Column field="requestedAt" header="Requested" :sortable="true" class="nowrap">
             <template #body="slotProps">{{ formatDate(slotProps.data.requestedAt) }}</template>
          </Column>
-         <Column field="processedAt" header="Date Processed" :sortable="true" class="nowrap" >
+         <Column field="processedAt" header="Processed" :sortable="true" class="nowrap" >
             <template #body="slotProps">{{ formatDate(slotProps.data.processedAt) }}</template>
          </Column>
          <Column field="success" header="Status" :sortable="true" class="apt-status">

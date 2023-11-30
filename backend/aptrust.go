@@ -120,7 +120,8 @@ func (svc *serviceContext) getAPTrustSubmissions(c *gin.Context) {
 		searchQ += fmt.Sprintf(" where m.title like '%%%s%%'", queryStr)
 	}
 	searchQ += fmt.Sprintf(" order by %s", orderStr)
-	err = svc.DB.Raw(searchQ).Scan(&resp.Submissions).Error
+	searchQ += fmt.Sprintf(" limit %d,%d", startIndex, pageSize)
+	err = svc.DB.Debug().Raw(searchQ).Scan(&resp.Submissions).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get aptrust submissions: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
