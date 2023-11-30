@@ -9,6 +9,7 @@
          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
          :rowsPerPageOptions="[30,50,100]" :first="apTrust.searchOpts.start"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
+         :loading="apTrust.working"
       >
          <template #paginatorstart></template>
          <template #paginatorend>
