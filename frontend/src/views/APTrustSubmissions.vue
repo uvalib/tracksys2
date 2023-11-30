@@ -18,7 +18,11 @@
             </span>
             <DPGButton label="Clear" class="p-button-secondary pad" @click="clearSearch()"/>
          </template>
-         <Column field="id" header="ID" :sortable="true" />
+         <Column field="id" header="ID" :sortable="true" >
+            <template #body="slotProps">
+               <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
+            </template>
+         </Column>
          <Column field="pid" header="PID" :sortable="true"  class="nowrap"/>
          <Column field="title" header="Title" :sortable="true" />
          <Column field="requestedAt" header="Date Requested" :sortable="true" class="nowrap">
