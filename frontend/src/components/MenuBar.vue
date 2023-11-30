@@ -52,8 +52,9 @@ onMounted(() => {
             {label: "Statistics", url: systemStore.reportsURL, target: "_blank"},
          ]},
          {label: "Miscellaneous", items: [
-            {label: "Staff Members", route: "/staff"},
+            {label: "APTrust Submissions", route: "/aptrust"},
             {label: "Customers", route: "/customers"},
+            {label: "Staff Members", route: "/staff"},
          ]}
       ]
    }, 500)

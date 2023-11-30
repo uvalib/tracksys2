@@ -40,6 +40,8 @@ func main() {
 
 	api := router.Group("/api", svc.authMiddleware)
 	{
+		api.GET("/aptrust", svc.getAPTrustSubmissions)
+
 		api.POST("/collection-facet", svc.addCollectionFacet)
 		api.GET("/collections", svc.getCollections)
 		api.GET("/collections/:id", svc.getCollectionItems)

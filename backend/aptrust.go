@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,6 +45,18 @@ type apTrustCollectionResult struct {
 	MetadataTitle string `json:"metadata_title"`
 }
 
+type apTrustSubmissionsResonse struct {
+	Total       int64 `json:"total"`
+	Submissions []struct {
+		ID          int64      `json:"id"`
+		PID         string     `gorm:"column:pid" json:"pid"`
+		Title       string     `json:"title"`
+		RequestedAt time.Time  `json:"requestedAt"`
+		ProcessedAt *time.Time `json:"processedAt"`
+		Success     bool       `json:"success"`
+	} `json:"submissions"`
+}
+
 // apTrust status is a combination of the JSON APTrust work item record from the API and the
 // TrackSys DB submission record. It provides the complete picture of a submission
 type apTrustStatus struct {
@@ -58,6 +71,63 @@ type apTrustStatus struct {
 	RequestedAt      time.Time  `json:"requestedAt"`
 	SubmittedAt      *time.Time `json:"submittedAt"`
 	FinishedAt       *time.Time `json:"finishedAt"`
+}
+
+func (svc *serviceContext) getAPTrustSubmissions(c *gin.Context) {
+	startIndex, _ := strconv.Atoi(c.Query("start"))
+	pageSize, _ := strconv.Atoi(c.Query("limit"))
+	if pageSize == 0 {
+		pageSize = 30
+	}
+	queryStr := c.Query("q")
+
+	sortBy := c.Query("by")
+	if sortBy == "" {
+		sortBy = "id"
+	}
+	sortOrder := c.Query("order")
+	if sortOrder == "" {
+		sortOrder = "desc"
+	}
+
+	sortField := fmt.Sprintf("apt.%s", sortBy)
+	if sortBy == "requestedAt" {
+		sortField = "apt.requested_at"
+	} else if sortBy == "processedAt" {
+		sortField = "apt.processed_at"
+	} else if sortBy == "pid" {
+		sortField = "m.pid"
+	} else if sortBy == "title" {
+		sortField = "m.title"
+	}
+
+	orderStr := fmt.Sprintf("%s %s", sortField, sortOrder)
+	log.Printf("INFO: get %d aptrust submissions starting from offset %d order %s; query=[%s]", pageSize, startIndex, orderStr, queryStr)
+
+	resp := apTrustSubmissionsResonse{}
+	joinQ := "inner join metadata m on m.id = metadata_id"
+	countQ := "select count(apt.id) as total from ap_trust_submissions apt " + joinQ
+	err := svc.DB.Raw(countQ).Scan(&resp.Total).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get aptrust submissions count: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	searchQ := "select apt.id as id, m.pid as pid, m.title as title, requested_at, processed_at, success from ap_trust_submissions apt "
+	searchQ += joinQ
+	if queryStr != "" {
+		searchQ += fmt.Sprintf(" where m.title like '%%%s%%'", queryStr)
+	}
+	searchQ += fmt.Sprintf(" order by %s", orderStr)
+	err = svc.DB.Raw(searchQ).Scan(&resp.Submissions).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get aptrust submissions: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 func (svc *serviceContext) getAPTrustMetadataStatus(c *gin.Context) {

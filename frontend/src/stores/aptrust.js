@@ -25,6 +25,15 @@ export const useAPTrustStore = defineStore('aptrust', {
          finishedAt: "",
          errorMessage: ""
       },
+      submissions: [],
+      total: 0,
+      searchOpts: {
+         start: 0,
+         limit: 30,
+         sortField: "id",
+         sortOrder: "desc",
+         query: "",
+      },
    }),
    getters: {
       hasItemStatus: state => {
@@ -32,6 +41,23 @@ export const useAPTrustStore = defineStore('aptrust', {
       },
    },
    actions: {
+      getSubmissions() {
+         const system = useSystemStore()
+         this.working = true
+         let so = this.searchOpts
+         let url = `/api/aptrust?start=${so.start}&limit=${so.limit}&by=${so.sortField}&order=${so.sortOrder}`
+         if ( so.query != "") {
+            url += `&q=${encodeURIComponent(so.query)}`
+         }
+         axios.get( url ).then(response => {
+            this.submissions = response.data.submissions
+            this.total = response.data.total
+         }).catch( e => {
+            system.setError(e)
+         }).finally( () => {
+           this.working= false
+         })
+      },
       clearItemStatus() {
          this.itemStatus.id = 0
          this.itemStatus.bag = ""
