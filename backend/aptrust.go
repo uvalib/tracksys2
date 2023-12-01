@@ -108,6 +108,7 @@ func (svc *serviceContext) getAPTrustSubmissions(c *gin.Context) {
 	resp := apTrustSubmissionsResonse{}
 	joinQ := "inner join metadata m on m.id = metadata_id"
 	countQ := "select count(apt.id) as total from ap_trust_submissions apt " + joinQ
+	countQ += " where is_collection=0"
 	err := svc.DB.Raw(countQ).Scan(&resp.Total).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get aptrust submissions count: %s", err.Error())
@@ -118,7 +119,9 @@ func (svc *serviceContext) getAPTrustSubmissions(c *gin.Context) {
 	searchQ := "select apt.id as id, m.id as metadata_id, m.pid as pid, m.title as title, requested_at, processed_at, success from ap_trust_submissions apt "
 	searchQ += joinQ
 	if queryStr != "" {
-		searchQ += fmt.Sprintf(" where m.title like '%%%s%%'", queryStr)
+		searchQ += fmt.Sprintf(" where is_collection=0 and m.title like '%%%s%%'", queryStr)
+	} else {
+		searchQ += " where is_collection=0"
 	}
 	searchQ += fmt.Sprintf(" order by %s", orderStr)
 	searchQ += fmt.Sprintf(" limit %d,%d", startIndex, pageSize)
