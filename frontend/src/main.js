@@ -26,6 +26,9 @@ import './assets/styles/styleoverrides.scss'
 import PrimeVue from 'primevue/config'
 import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
+import Tooltip from 'primevue/tooltip';
+
+app.directive('tooltip', Tooltip)
 
 app.use(PrimeVue, { ripple: true })
 app.use(ConfirmationService)

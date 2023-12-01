@@ -38,9 +38,14 @@
                   <span v-else class="pi pi-times-circle fail"></span>
                </template>
                <span v-else class="pi pi-spin pi-cog"></span>
+               <span class="pi pi-info-circle info" @click="infoClicked(slotProps.data)"
+                  v-tooltip.left="{ value: 'View submisson status', showDelay: 250 }"></span>
             </template>
          </Column>
       </DataTable>
+      <Dialog v-model:visible="showDialog" :header="`Submission Status for ${tgtPID}`" :modal="true" position="top"  >
+         <APTrustPanel :readonly="true"/>
+      </Dialog>
    </div>
 </template>
 
@@ -51,11 +56,15 @@ import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import { useAPTrustStore } from '@/stores/aptrust'
 import { usePinnable } from '@/composables/pin'
+import APTrustPanel from '@/components/aptrust/APTrustPanel.vue'
+import Dialog from 'primevue/dialog'
 import dayjs from 'dayjs'
 
 usePinnable("p-paginator-top")
 
 const apTrust = useAPTrustStore()
+const showDialog = ref(false)
+const tgtPID = ref("")
 
 const sortOrder = computed(() => {
    if (apTrust.searchOpts.sortOrder == "desc") {
@@ -67,6 +76,12 @@ const sortOrder = computed(() => {
 onMounted(() => {
    apTrust.getSubmissions()
    document.title = `APTrust Submissions`
+})
+
+const infoClicked = ((submission) => {
+   tgtPID.value = submission.pid
+   showDialog.value = true
+   apTrust.getItemStatus( submission.metadataID )
 })
 
 const formatDate = ( ( dateStr ) => {
@@ -119,6 +134,16 @@ const onSort = ((event) => {
       }
       span.pi.fail {
          color: var(--uvalib-red-dark);
+      }
+      span.pi.info {
+         display: inline-block;
+         margin-left: 15px;
+         color: var(--uvalib-blue-alt);
+         font-weight: normal;
+         cursor: pointer;
+         &:hover {
+            font-weight: bold;
+         }
       }
    }
 }

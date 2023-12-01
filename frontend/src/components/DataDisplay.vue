@@ -48,4 +48,16 @@ dt.spacer.label {
    font-weight: bold;
    margin-bottom: 10px;
 }
+dt {
+   font-weight: bold;
+   text-align: right;
+}
+dd {
+   margin: 0 0 10px 0;
+   word-break: break-word;
+   -webkit-hyphens: auto;
+   -moz-hyphens: auto;
+   hyphens: auto;
+   white-space: break-spaces;
+}
 </style>

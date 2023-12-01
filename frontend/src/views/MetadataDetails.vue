@@ -128,7 +128,9 @@
                <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
             </template>
          </Panel>
-         <APTrustPanel />
+         <Panel header="APTrust Information" v-if="apTrustPreservation">
+            <APTrustPanel />
+         </Panel>
       </div>
       <div class="column">
          <Panel header="Digital Library Information">
@@ -222,7 +224,7 @@ import DataDisplay from '../components/DataDisplay.vue'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import dayjs from 'dayjs'
-import APTrustPanel from '@/components/metadata/APTrustPanel.vue'
+import APTrustPanel from '@/components/aptrust/APTrustPanel.vue'
 import RelatedOrders from '@/components/related/RelatedOrders.vue'
 import RelatedUnits from '@/components/related/RelatedUnits.vue'
 import RelatedMasterFiles from '@/components/related/RelatedMasterFiles.vue'
@@ -253,6 +255,11 @@ const sortedFolders = computed(() => {
       if ( parseInt(a.folderID,10) > parseInt(b.folderID,10)) return 1
       return 0
    })
+})
+
+const apTrustPreservation = computed( () => {
+   if ( metadataStore.detail.preservationTier && metadataStore.detail.preservationTier.id > 1 ) return true
+   return false
 })
 
 const canDelete = computed(() => {
