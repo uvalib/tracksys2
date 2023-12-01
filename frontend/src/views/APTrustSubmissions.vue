@@ -19,12 +19,11 @@
             </span>
             <DPGButton label="Clear" class="p-button-secondary pad" @click="clearSearch()"/>
          </template>
-         <Column field="id" header="ID" :sortable="true" >
+         <Column field="pid" header="PID" :sortable="true"  class="nowrap">
             <template #body="slotProps">
-               <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
+               <router-link :to="`/metadata/${slotProps.data.metadataID}`">{{slotProps.data.pid}}</router-link>
             </template>
          </Column>
-         <Column field="pid" header="PID" :sortable="true"  class="nowrap"/>
          <Column field="title" header="Title" :sortable="true" />
          <Column field="requestedAt" header="Requested" :sortable="true" class="nowrap">
             <template #body="slotProps">{{ formatDate(slotProps.data.requestedAt) }}</template>

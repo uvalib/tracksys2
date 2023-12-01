@@ -49,6 +49,7 @@ type apTrustSubmissionsResonse struct {
 	Total       int64 `json:"total"`
 	Submissions []struct {
 		ID          int64      `json:"id"`
+		MetadataID  int64      `gorm:"column:metadata_id" json:"metadataID"`
 		PID         string     `gorm:"column:pid" json:"pid"`
 		Title       string     `json:"title"`
 		RequestedAt time.Time  `json:"requestedAt"`
@@ -114,7 +115,7 @@ func (svc *serviceContext) getAPTrustSubmissions(c *gin.Context) {
 		return
 	}
 
-	searchQ := "select apt.id as id, m.pid as pid, m.title as title, requested_at, processed_at, success from ap_trust_submissions apt "
+	searchQ := "select apt.id as id, m.id as metadata_id, m.pid as pid, m.title as title, requested_at, processed_at, success from ap_trust_submissions apt "
 	searchQ += joinQ
 	if queryStr != "" {
 		searchQ += fmt.Sprintf(" where m.title like '%%%s%%'", queryStr)
