@@ -151,6 +151,76 @@ func (svc *serviceContext) scriptRunner(c *gin.Context) {
 	c.String(http.StatusNotImplemented, "no script is available")
 }
 
+// SCRIPT TO ADD TO A COLLECTION BASED ON ARCHIVESSPACE URI
+// func (svc *serviceContext) scriptRunner(c *gin.Context) {
+// 	log.Printf("INFO: script runner called")
+
+// 	// //randolph_nicholas
+// 	// asCollectionID := 1395
+// 	// tsCollectionID := 108160
+
+// 	// randolph
+// 	asCollectionID := 1426
+// 	tsCollectionID := 108159
+
+// 	var memberURIs []string
+// 	memberSQL := "select external_uri from metadata where parent_metadata_id=?"
+// 	err := svc.DB.Raw(memberSQL, tsCollectionID).Scan(&memberURIs).Error
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 		return
+// 	}
+// 	log.Printf("INFO: collection member uri list: %v", memberURIs)
+
+// 	bytes, reqErr := svc.getRequest(fmt.Sprintf("%s/archivesspace/collections/%d/records", svc.ExternalSystems.Jobs, asCollectionID))
+// 	if reqErr != nil {
+// 		log.Fatal(fmt.Sprintf("%d:%s", reqErr.StatusCode, reqErr.Message))
+// 	}
+
+// 	uris := make([]string, 0)
+// 	processedCount := 0
+// 	for _, extURI := range strings.Split(string(bytes), "\n") {
+// 		processedCount++
+// 		alreadyMember := false
+// 		for _, memberURI := range memberURIs {
+// 			if memberURI == extURI {
+// 				alreadyMember = true
+// 				break
+// 			}
+// 		}
+
+// 		if alreadyMember == false {
+// 			uris = append(uris, extURI)
+// 			log.Printf("INFO: %s added to the pending member list", extURI)
+// 			if len(uris) == 50 {
+// 				log.Printf("INFO: process chunk of %d items to add to collection", len(uris))
+// 				sql := "update metadata set parent_metadata_id=? where parent_metadata_id=? and external_system_id=? and external_uri in ?"
+// 				err := svc.DB.Exec(sql, tsCollectionID, 0, 1, uris).Error
+// 				if err != nil {
+// 					log.Fatal(err.Error())
+// 					break
+// 				}
+// 				uris = make([]string, 0)
+// 			}
+// 		} else {
+// 			log.Printf("INFO: %s is already part iof the colelction; skipping", extURI)
+// 		}
+// 	}
+
+// 	if len(uris) > 0 {
+// 		log.Printf("INFO: process final chunk of %d items to add to collection", len(uris))
+// 		sql := "update metadata set parent_metadata_id=? where parent_metadata_id=? and external_system_id=? and external_uri in ?"
+// 		err := svc.DB.Debug().Exec(sql, tsCollectionID, 0, 1, uris).Error
+// 		if err != nil {
+// 			log.Fatal(err.Error())
+// 		}
+// 	}
+
+// 	log.Printf("INFO: done. %d uris processed", processedCount)
+
+// 	c.String(http.StatusOK, fmt.Sprintf("%d uris processed", processedCount))
+// }
+
 // SAMPLE SCRIPT TO BULK ADD ITEMS TO A COLLECTION
 // func (svc *serviceContext) scriptRunner(c *gin.Context) {
 // 	log.Printf("INFO: script runner called")
