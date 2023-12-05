@@ -14,7 +14,7 @@ export const useCollectionsStore = defineStore('collections', {
          limit: 30,
          query: "",
          sortField: "id",
-         sortOrder: "desc",
+         sortOrder: "asc",
       },
       collections: [],
       totalCollections: 0,
