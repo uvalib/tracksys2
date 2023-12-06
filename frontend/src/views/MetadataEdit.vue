@@ -24,7 +24,7 @@
                </p>
             </template>
             <template v-if="metadataStore.detail.type == 'ExternalMetadata'">
-               <p class="note"><b>IMPORTANT</b>: Only URIs containing /resources/, /accessions/ or /archival_objects/ are supported.</p>
+               <p class="note"><b>IMPORTANT</b>: Only URIs containing /resources/ or /archival_objects/ are supported.</p>
                <div class="split">
                   <FormKit label="External URI" type="text" v-model="edited.externalURI" required @input="uriChanged"/>
                   <span class="sep"/>

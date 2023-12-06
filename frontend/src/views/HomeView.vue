@@ -84,7 +84,7 @@ import SimilarImages from '@/components/results/SimilarImages.vue'
 import { ref, computed, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Dialog from 'primevue/dialog'
-import NewMetadataPanel from '@/components/NewMetadataPanel.vue'
+import NewMetadataPanel from '@/components/metadata/NewMetadataPanel.vue'
 import FileUpload from 'primevue/fileupload'
 import Slider from 'primevue/slider'
 

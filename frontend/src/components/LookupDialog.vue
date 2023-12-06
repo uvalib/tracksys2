@@ -83,7 +83,7 @@ import { useOrdersStore } from '@/stores/orders'
 import { useComponentsStore } from '@/stores/components'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import NewMetadataPanel from '@/components/NewMetadataPanel.vue'
+import NewMetadataPanel from '@/components/metadata/NewMetadataPanel.vue'
 
 const emit = defineEmits( ['selected' ])
 const props = defineProps({

@@ -39,7 +39,7 @@ import { useMetadataStore } from '../stores/metadata'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
-import NewMetadataPanel from '@/components/NewMetadataPanel.vue'
+import NewMetadataPanel from '@/components/metadata/NewMetadataPanel.vue'
 import { usePinnable } from '@/composables/pin'
 
 usePinnable("p-paginator-top")

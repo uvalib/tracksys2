@@ -58,7 +58,7 @@
                   </DataDisplay>
                   <DataDisplay label="Repository" :value="metadataStore.archivesSpace.repo"/>
                   <DataDisplay label="Collection Title" :value="metadataStore.archivesSpace.collectionTitle"/>
-                  <DataDisplay label="ID" :value="metadataStore.archivesSpace.id"/>
+                  <DataDisplay label="Collection ID" :value="metadataStore.archivesSpace.collectionID"/>
                   <DataDisplay label="Language" :value="metadataStore.archivesSpace.language"/>
                   <DataDisplay label="Dates" :value="metadataStore.archivesSpace.dates"/>
                   <DataDisplay label="Title" :value="metadataStore.detail.title"/>

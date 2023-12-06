@@ -27,7 +27,7 @@
             <FormKit label="Author" type="text" v-model="info.author"/>
          </template>
          <template v-if="info.type == 'ExternalMetadata'">
-            <p class="note"><b>IMPORTANT</b>: Only URIs containing /resources/, /accessions/ or /archival_objects/ are supported.</p>
+            <p class="note"><b>IMPORTANT</b>: Only URIs containing /resources/ or /archival_objects/ are supported.</p>
             <p class="note">Examples:</p>
             <ul class="note">
                <li>/repositories/uva-sc/resources/a_brief_survey_of_printing_history_and_practice_ma</li>
@@ -83,7 +83,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import DataDisplay from './DataDisplay.vue'
+import DataDisplay from '@/components/DataDisplay.vue'
 import Panel from 'primevue/panel'
 import { useSystemStore } from "@/stores/system"
 import { useMetadataStore } from "@/stores/metadata"
@@ -236,7 +236,7 @@ function xmlTitleChanged() {
    validated.value = ( info.value.title.length > 0)
 }
 async function validateASMetadata() {
-   await metadataStore.validateArchivesSpaceURI(info.value.externalURI)
+   await metadataStore.validateArchivesSpaceURI(info.value.externalURI.trim())
    if (metadataStore.asMatch.error == "") {
       validated.value = true
       info.value.externalURI = metadataStore.asMatch.validatedURL

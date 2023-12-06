@@ -61,12 +61,12 @@ export const useMetadataStore = defineStore('metadata', {
          notes: "",
       },
       archivesSpace: {
-         id: "",
          createdBy: "",
          createDate: null,
          level: "",
          URL: "",
          repo: "",
+         collectionID: "",
          collectionTitle: "",
          language: "",
          dates: "",
@@ -360,12 +360,12 @@ export const useMetadataStore = defineStore('metadata', {
             if (details.metadata.externalSystem.name == "ArchivesSpace" ) {
                this.archivesSpace.error = ""
                if ( details.asDetails) {
-                  this.archivesSpace.id = details.asDetails.id
                   this.archivesSpace.createdBy = details.asDetails.created_by
                   this.archivesSpace.createDate = details.asDetails.create_time.split("T")[0]
                   this.archivesSpace.level = details.asDetails.level
                   this.archivesSpace.URL = details.asDetails.url
                   this.archivesSpace.repo = details.asDetails.repo
+                  this.archivesSpace.collectionID = details.asDetails.collection_id
                   this.archivesSpace.collectionTitle = details.asDetails.collection_title
                   this.archivesSpace.language = details.asDetails.language
                   this.archivesSpace.dates = details.asDetails.dates

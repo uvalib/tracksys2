@@ -118,13 +118,13 @@ type sirsiMetadata struct {
 }
 
 type asMetadata struct {
-	ID              string `json:"id"`
 	Title           string `json:"title"`
 	CreatedBy       string `json:"created_by"`
 	CreateTime      string `json:"create_time"`
 	Level           string `json:"level"`
 	URL             string `json:"url"`
 	Repo            string `json:"repo"`
+	CollectionID    string `json:"collection_id"`
 	CollectionTitle string `json:"collection_title"`
 	Language        string `json:"language"`
 	Dates           string `json:"dates"`
@@ -694,14 +694,14 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 			if getErr != nil {
 				log.Printf("ERROR: unable to get archivesSpace metadata for %s: %s", md.PID, getErr.Message)
 			} else {
-				log.Printf("INFO: raw as response: %s", raw)
-				var asData asMetadata
+				asData := asMetadata{}
 				err := json.Unmarshal(raw, &asData)
 				if err != nil {
 					log.Printf("ERROR: unable to parse AS response for %s: %s", md.PID, err.Error())
 				} else {
 					out.ArchiveSpace = &asData
 				}
+				log.Printf("Parsed AS metadta collectionID=%s", asData.CollectionID)
 			}
 		} else if md.ExternalSystem.Name == "JSTOR Forum" {
 			log.Printf("INFO: get external JSTOR Forum metadata for %s", md.PID)
