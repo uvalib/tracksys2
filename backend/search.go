@@ -51,9 +51,9 @@ type metadataHit struct {
 	DPLA             bool            `json:"dpla"`
 	HathiTrust       bool            `gorm:"column:hathitrust" json:"hathitrust"`
 	VirgoURL         string          `gorm:"-" json:"virgoURL"`
-	ExternalSystemID *int64          `json:"-"`
+	ExternalSystemID int64           `json:"-"`
 	ExternalSystem   *externalSystem `gorm:"foreignKey:ExternalSystemID" json:"externalSystem,omitempty"`
-	NumMasterFiles   uint            `json:"masterFilesCount,omitempty"`
+	NumMasterFiles   uint            `json:"masterFilesCount"`
 }
 
 type orderHit struct {
@@ -410,10 +410,10 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 
 			if sc.Collection == true {
 				// this is a special case search for metadata records that are candatates for inclusion in
-				// a collection. Don't include external metadata and only search a few fields
-				log.Printf("INFO: this is a search for internal metadata records that are candidates for being part of a collection")
+				// a collection; XML, Sirsi, ArchivesSpace... and only search a few fields
+				log.Printf("INFO: this is a search for metadata records that are candidates for being part of a collection")
 				mfCnt := "(select count(*) from master_files m inner join units mu on mu.id = m.unit_id where mu.metadata_id=metadata.id and mu.intended_use_id=110) as num_master_files"
-				searchQ = searchQ.Joins("inner join units u on u.metadata_id = metadata.id").Where("type != ? and u.intended_use_id=?", "ExternalMetadata", 110)
+				searchQ = searchQ.Joins("inner join units u on u.metadata_id = metadata.id").Where("u.intended_use_id=?", 110)
 				fieldQ := svc.DB.Or("title like ?", sc.QueryAny).Or("barcode like ?", sc.QueryStart).Or("catalog_key like ?", sc.QueryStart).
 					Or("call_number like ?", sc.QueryStart).Or("u.id=?", sc.IntQuery)
 				searchQ.Where("parent_metadata_id=?", 0).Where(fieldQ).Group("metadata.id").Select("metadata.*", mfCnt)
@@ -444,17 +444,20 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 
 		var err error
 		searchQ.Count(&resp.Total)
+
+		searchQ = searchQ.Preload("ExternalSystem")
 		if sc.Collection == false {
-			searchQ = searchQ.Preload("ExternalSystem")
 			err = searchQ.Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Hits).Error
 		} else {
 			// this is a search foe metdata records to include in a collection. get them all as this query
 			// is targetd and reaults will be small
 			err = searchQ.Limit(500).Find(&resp.Hits).Error
 		}
+
 		if err != nil {
 			log.Printf("ERROR: metadata search failed: %s", err.Error())
 		}
+
 		for _, md := range resp.Hits {
 			if md.DateDlIngest != nil {
 				if md.Type == "SirsiMetadata" {
@@ -466,6 +469,7 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 				}
 			}
 		}
+
 		elapsedNanoSec := time.Since(startTime)
 		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
 		log.Printf("INFO: metadata search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)

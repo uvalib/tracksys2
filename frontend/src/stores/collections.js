@@ -5,6 +5,7 @@ import axios from 'axios'
 export const useCollectionsStore = defineStore('collections', {
    state: () => ({
       working: false,
+      searching: false,
       records: [],
       totalRecords: 0,
       collectionID: -1,
@@ -124,15 +125,20 @@ export const useCollectionsStore = defineStore('collections', {
          const system = useSystemStore()
          let url = `/api/search?scope=metadata&q=${encodeURIComponent(query)}&collection=1`
          this.metadataHits = []
+         this.searching = true
          axios.get(url).then(response => {
             response.data.metadata.hits.forEach( mh => {
-               this.metadataHits.push(
-                  { id: mh.id, pid: mh.pid, title: mh.title, catalogKey: mh.catalogKey,
-                    callNumber: mh.callNumber, barcode: mh.barcode, masterFilesCount: mh.masterFilesCount }
-               )
+               let hit = { id: mh.id, pid: mh.pid, title: mh.title, catalogKey: mh.catalogKey, type: mh.type,
+                  callNumber: mh.callNumber, barcode: mh.barcode, masterFilesCount: mh.masterFilesCount }
+               if ( mh.externalSystem) {
+                  hit.type = mh.externalSystem.name
+               }
+               this.metadataHits.push( hit )
             })
          }).catch( e => {
             system.setError(e)
+         }).finally( () => {
+            this.searching =  false
          })
       },
       addRecords( metadataIDs ) {
