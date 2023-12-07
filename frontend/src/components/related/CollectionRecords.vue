@@ -43,11 +43,14 @@
             </Column>
             <Column v-if="collectionStore.inAPTrust" header="APTrust" class="apt-status" field="aptStatus" :sortable="true">
                <template #body="slotProps">
-                  <template v-if="slotProps.data.apTrustSubmission && slotProps.data.apTrustSubmission.processedAt">
-                     <span v-if="slotProps.data.apTrustSubmission.success" class="pi pi-check-circle success"></span>
-                     <span v-else class="pi pi-times-circle fail"></span>
+                  <template v-if="slotProps.data.apTrustSubmission">
+                     <template v-if="slotProps.data.apTrustSubmission.processedAt">
+                        <span v-if="slotProps.data.apTrustSubmission.success" class="pi pi-check-circle success"></span>
+                        <span v-else class="pi pi-times-circle fail"></span>
+                     </template>
+                     <span v-else class="pi pi-spin pi-cog"></span>
                   </template>
-                  <span v-else class="pi pi-spin pi-cog"></span>
+                  <span v-else class="none">N/A</span>
                </template>
             </Column>
             <Column header="" class="row-acts nowrap" v-if="userStore.isAdmin">

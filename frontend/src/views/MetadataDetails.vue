@@ -66,6 +66,14 @@
                   <DataDisplay label="Created By" :value="metadataStore.archivesSpace.createdBy"/>
                   <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
                   <DataDisplay v-if="metadataStore.archivesSpace.publishedAt" label="Published Date" :value="metadataStore.archivesSpace.publishedAt"/>
+                  <template  v-if="metadataStore.related.collection" >
+                     <DataDisplay :spacer="true"/>
+                     <DataDisplay label="TrackSys Collection" :value="metadataStore.related.collection.id">
+                        <router-link :to="`/metadata/${metadataStore.related.collection.id}`">
+                           {{ metadataStore.related.collection.title }}
+                        </router-link>
+                     </DataDisplay>
+                  </template>
                </template>
 
                <template v-if="externalSystem == 'JSTOR Forum'">
