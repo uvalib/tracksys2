@@ -53,6 +53,7 @@ onMounted(() => {
          ]},
          {label: "Miscellaneous", items: [
             {label: "APTrust Submissions", route: "/aptrust"},
+            {label: "ArchivesSpace Reviews", route: "/archivesspace"},
             {label: "Customers", route: "/customers"},
             {label: "Staff Members", route: "/staff"},
          ]}
