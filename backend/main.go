@@ -82,6 +82,7 @@ func main() {
 		api.GET("/metadata/:id/xml", svc.getXMLMetadata)
 		api.POST("/metadata", svc.createMetadata)
 		api.GET("/metadata/:id/aptrust", svc.getAPTrustMetadataStatus)
+		api.POST("/metadata/:id/archivesspace", svc.requestArchivesSpaceReview)
 
 		api.GET("/orders", svc.getOrders)
 		api.POST("/orders", svc.createOrder)
