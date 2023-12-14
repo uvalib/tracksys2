@@ -294,14 +294,10 @@ func (svc *serviceContext) getAPTrustCollectionStatus(c *gin.Context) {
 		}
 		if !found {
 			log.Printf("INFO: metadata %d missing from collection %s aptrust status response", member.ID, collectionID)
-			// 		log.Printf("INFO: metadata %d missing from collection %s aptrust status response; look up separately", member.ID, collectionID)
-			// 		resp, err := svc.requestAPTStatus(member.ID)
-			// 		if err != nil {
-			// 			log.Printf("ERROR: unable to get aptrust status for %d: %s", member.ID, err.Error())
-			// 		} else {
-			// 			fail := apTrustCollectionResult{APTrustResult: resp, MetadataID: member.ID, MetadataPID: member.PID, MetadataTitle: member.Title}
-			// 			parsedStatusList = append(parsedStatusList, &fail)
-			// 		}
+			// add a failed status
+			failedReslt := APTrustResult{Status: "Failed", Note: "Bagging failed; see job logs for details"}
+			fail := apTrustCollectionResult{APTrustResult: &failedReslt, MetadataID: member.ID, MetadataPID: member.PID, MetadataTitle: member.Title}
+			parsedStatusList = append(parsedStatusList, &fail)
 		}
 	}
 
