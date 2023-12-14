@@ -80,6 +80,7 @@ const getAssociatedObjectLink = (( objName ) => {
 
 const tailLog = (() => {
    tailIntervalID.value = setInterval( ()=> {
+      jobsStore.getJobDetails(route.params.id)
       jumpToEnd()
    }, 2000)
 })
