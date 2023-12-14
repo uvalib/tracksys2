@@ -84,6 +84,10 @@ export const useAPTrustStore = defineStore('aptrust', {
       },
       async getCollectionStatusReport( collectionID ) {
          this.loadingReport = true
+         this.collectionStatus.totalSubmitted = 0
+         this.collectionStatus.successCount = 0
+         this.collectionStatus.failures = []
+         this.collectionStatus.errorMessage = ""
          return axios.get(`/api/collections/${collectionID}/aptrust`).then((response) => {
             this.collectionStatus.totalSubmitted = response.data.length
             this.collectionStatus.errorMessage = ""
@@ -92,7 +96,7 @@ export const useAPTrustStore = defineStore('aptrust', {
                if ( s.status == "Success" ) {
                   this.collectionStatus.successCount++
                } else {
-                  this.collectionStatus.failures.push( {id: s.metadata_id, pid: s.metadata_pid,  error: s.note} )
+                  this.collectionStatus.failures.push( {id: s.metadata_id, pid: s.metadata_pid,  title: s.metadata_title, error: s.note} )
                }
             })
          }).catch((error) => {
