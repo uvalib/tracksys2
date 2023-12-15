@@ -83,6 +83,7 @@ const searchEntered = (() => {
          padding: 0.75rem 1rem !important;
          display: block;
          border-radius: 0;
+         white-space: nowrap;
          &:hover {
             text-decoration: none !important;
          }

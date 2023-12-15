@@ -12,7 +12,7 @@ import (
 )
 
 // Version of the service
-const Version = "1.17.0"
+const Version = "1.18.0"
 
 func main() {
 	// Load cfg
@@ -41,6 +41,7 @@ func main() {
 	api := router.Group("/api", svc.authMiddleware)
 	{
 		api.GET("/aptrust", svc.getAPTrustSubmissions)
+		api.GET("/archivesspace", svc.getArchivesSpaceReviews)
 
 		api.POST("/collection-facet", svc.addCollectionFacet)
 		api.GET("/collections", svc.getCollections)

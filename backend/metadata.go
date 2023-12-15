@@ -59,19 +59,6 @@ type preservationTier struct {
 	Description string `json:"description"`
 }
 
-type archivesspaceReview struct {
-	ID            int64
-	MetadataID    int64        `gorm:"column:metadata_id" json:"metadataID"`
-	SubmitStaffID int64        `gorm:"column:submit_staff_id" json:"-"`
-	Submitter     staffMember  `gorm:"foreignKey:SubmitStaffID" json:"submitter"`
-	SubmittedAt   time.Time    `json:"submittedAt"`
-	ReviewStaffID *int64       `gorm:"column:review_staff_id" json:"-"`
-	Reviewer      *staffMember `gorm:"foreignKey:ReviewStaffID" json:"reviewer,omitempty"`
-	Status        string       `json:"status"`
-	Notes         string       `json:"notes"`
-	PublishedAt   *time.Time   `json:"publishedAt,omitempty"`
-}
-
 type metadata struct {
 	ID                   int64               `json:"id"`
 	PID                  string              `gorm:"column:pid" json:"pid"`
