@@ -29,13 +29,19 @@
       </div>
       <div class="stats archivesspace">
          <div>
-            <label>ArchivesSpace reviews:</label>
+            <label>ArchivesSpace Requests:</label>
+            <router-link v-if="dashboard.asRequests" to='/archivesspace?view=request'>{{dashboard.asRequests}}</router-link>
+            <span v-else>0</span>
+         </div>
+         <span class="sep"></span>
+         <div>
+            <label>ArchivesSpace Reviews:</label>
             <router-link v-if="dashboard.asReviews" to='/archivesspace?view=review'>{{dashboard.asReviews}}</router-link>
             <span v-else>0</span>
          </div>
          <span class="sep"></span>
          <div>
-            <label>ArchivesSpace rejections:</label>
+            <label>ArchivesSpace Rejections:</label>
             <router-link v-if="dashboard.asRejections" to='/archivesspace?view=reject'>{{dashboard.asRejections}}</router-link>
             <span v-else>0</span>
          </div>

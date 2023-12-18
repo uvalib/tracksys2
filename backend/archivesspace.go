@@ -77,6 +77,31 @@ func (svc *serviceContext) beginArchivesSpaceReview(c *gin.Context) {
 	c.JSON(http.StatusOK, asR)
 }
 
+func (svc *serviceContext) resubmitArchivesSpaceReview(c *gin.Context) {
+	mdID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	if mdID == 0 {
+		log.Printf("ERROR: invalid metadata id %s in archivesspace review request", c.Param("id"))
+		c.String(http.StatusBadRequest, "invalid id")
+		return
+	}
+	log.Printf("INFO: resubmit metadata %d for archivesspace review", mdID)
+	var asR archivesspaceReview
+	err := svc.DB.Joins("Metadata").Where("metadata_id=?", mdID).First(&asR).Error
+	if err != nil {
+		log.Printf("ERROR: unable to find review for metadata %d: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	asR.Status = "requested"
+	err = svc.DB.Save(&asR).Error
+	if err != nil {
+		log.Printf("ERROR: unable resubmit metadata %d for archivespace review: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.String(http.StatusOK, "ok")
+}
+
 func (svc *serviceContext) requestArchivesSpaceReview(c *gin.Context) {
 	userID, _ := strconv.ParseInt(c.Query("user"), 10, 64)
 	mdID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -128,7 +153,7 @@ func (svc *serviceContext) getArchivesSpaceReviews(c *gin.Context) {
 		return
 	}
 
-	err = svc.DB.Debug().Joins("Submitter").Joins("Reviewer").Joins("Metadata").Order("submitted_at asc").Find(&resp.Reviews).Error
+	err = svc.DB.Joins("Submitter").Joins("Reviewer").Joins("Metadata").Where("published_at is null").Order("submitted_at asc").Find(&resp.Reviews).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get archivesspace reviews: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())

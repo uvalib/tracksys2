@@ -85,6 +85,7 @@ func main() {
 		api.GET("/metadata/:id/aptrust", svc.getAPTrustMetadataStatus)
 		api.POST("/metadata/:id/archivesspace", svc.requestArchivesSpaceReview)
 		api.POST("/metadata/:id/archivesspace/review", svc.beginArchivesSpaceReview)
+		api.POST("/metadata/:id/archivesspace/resubmit", svc.resubmitArchivesSpaceReview)
 
 		api.GET("/orders", svc.getOrders)
 		api.POST("/orders", svc.createOrder)

@@ -90,12 +90,14 @@ import { usePinnable } from '@/composables/pin'
 import { useArchivesSpaceStore } from '@/stores/archivesspace'
 import { useUserStore } from '@/stores/user'
 import dayjs from 'dayjs'
+import { useRoute } from 'vue-router'
 
 usePinnable("p-paginator-top")
 
 const archivesSpace = useArchivesSpaceStore()
 const user = useUserStore()
 const confirm = useConfirm()
+const route = useRoute()
 
 const filter = ref( {
       'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
@@ -106,6 +108,7 @@ const filter = ref( {
 
 const statuses = ref( [
    {id: "requested", name: "Requested"},
+   {id: "review", name:  "In Review"},
    {id: "rejected", name:  "Rejected"},
 ])
 
@@ -124,17 +127,36 @@ const canResubmit = ( (data) => {
 })
 
 onMounted(() => {
+   if ( route.query.view == "reject" ) {
+      filter.value.status.value = "rejected"
+   } else if ( route.query.view == "review" ) {
+      filter.value.status.value = "review"
+   } else if ( route.query.view == "request" ) {
+      filter.value.status.value = "requested"
+   }
    archivesSpace.getReviews()
 })
 
 const reviewClicked = ( (item) => {
    confirm.require({
       message: 'Are you sure you want claim this item for review?',
-      header: 'Confirm Rreview',
+      header: 'Confirm Review',
       icon: 'pi pi-exclamation-triangle',
       rejectClass: 'p-button-secondary',
       accept: async () => {
          await archivesSpace.claimForReview( item, user.ID )
+      }
+   })
+})
+
+const resubmitClicked = ( (item) => {
+   confirm.require({
+      message: 'Are you sure you want resubmit this item for review?',
+      header: 'Confirm Resubmit',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         await archivesSpace.resubmit( item )
       }
    })
 })

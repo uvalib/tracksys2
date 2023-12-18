@@ -12,6 +12,7 @@ type dashboardStats struct {
 	DueInOneWeek            int64 `json:"dueInOneWeek"`
 	Overdue                 int64 `json:"overdue"`
 	ReadyForDelivery        int64 `json:"readyForDelivery"`
+	ArchivesSpaceRequests   int64 `json:"asRequests"`
 	ArchivesSpaceReviews    int64 `json:"asReviews"`
 	ArchivesSpaceRejections int64 `json:"asRejections"`
 }
@@ -66,6 +67,8 @@ func (svc *serviceContext) getDashboardStats(c *gin.Context) {
 		for _, asR := range asActive {
 			if asR.Status == "rejected" {
 				stats.ArchivesSpaceRejections++
+			} else if asR.Status == "requested" {
+				stats.ArchivesSpaceRequests++
 			} else {
 				stats.ArchivesSpaceReviews++
 			}
