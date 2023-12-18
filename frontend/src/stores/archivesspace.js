@@ -7,6 +7,7 @@ export const useArchivesSpaceStore = defineStore('archivesspace', {
       working: false,
       reviews: [],
       total: 0,
+      viewerBaseURL: "",
       searchOpts: {
          sortField: "submittedAt",
          sortOrder: "asc",
@@ -27,6 +28,7 @@ export const useArchivesSpaceStore = defineStore('archivesspace', {
          axios.get( url ).then(response => {
             this.reviews = response.data.submissions
             this.total = response.data.total
+            this.viewerBaseURL = response.data.viewerBaseURL
          }).catch( e => {
             system.setError(e)
             this.reviews = []

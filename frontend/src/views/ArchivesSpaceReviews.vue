@@ -27,11 +27,7 @@
                </router-link>
             </template>
          </Column>
-         <Column field="metadata.title" header="Title">
-            <template #body="slotProps">
-               {{truncateTitle(slotProps.data.metadata.title)}}
-            </template>
-         </Column>
+         <Column field="metadata.title" header="Title" class="long-text" />
          <Column field="submittedAt" header="Requested" :sortable="true">
             <template #body="slotProps">
                {{formatDate(slotProps.data.submittedAt)}}
@@ -61,7 +57,17 @@
                <span v-else class="empty">N/A</span>
             </template>
          </Column>
-         <Column  header="Acts" />
+         <Column  header="Acts" class="acts">
+            <template #body="slotProps">
+               <DPGButton label="View images" class="p-button-secondary first" @click="viewClicked(slotProps.data)"/>
+               <DPGButton label="Claim for review" class="p-button-secondary first" @click="reviewClicked(slotProps.data)"
+                  :disabled="slotProps.data.status != 'requested' || user.ID == slotProps.data.submitter.id"/>
+               <DPGButton label="Resubmit" class="p-button-secondary first" @click="resubmitClicked(slotProps.data)"
+                  :disabled="!canResubmit(slotProps.data)" />
+               <DPGButton label="Publish" class="p-button-secondary first" @click="publishClicked(slotProps.data)"
+                  :disabled="slotProps.data.status != 'review' || user.ID != slotProps.data.reviewer.id" />
+            </template>
+         </Column>
       </DataTable>
    </div>
 </template>
@@ -75,11 +81,13 @@ import Dropdown from 'primevue/dropdown'
 import { FilterMatchMode } from 'primevue/api'
 import { usePinnable } from '@/composables/pin'
 import { useArchivesSpaceStore } from '@/stores/archivesspace'
+import { useUserStore } from '@/stores/user'
 import dayjs from 'dayjs'
 
 usePinnable("p-paginator-top")
 
 const archivesSpace = useArchivesSpaceStore()
+const user = useUserStore()
 
 const filter = ref( {
       'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
@@ -100,15 +108,20 @@ const sortOrder = computed(() => {
    return 1
 })
 
+const canResubmit = ( (data) => {
+   if ( data.status != 'rejected' ) return false
+   if ( !data.reviewer ) return false
+   if ( data.reviewer.id == user.ID) return false
+   return true
+})
+
 onMounted(() => {
    archivesSpace.getReviews()
 })
 
-const truncateTitle = ((t) => {
-   if (t.length <  75) return t
-   return t.slice(0,75)+"..."
+const viewClicked = ( (item) => {
+   window.open(`${archivesSpace.viewerBaseURL}/${item.metadata.pid}`, '_blank').focus()
 })
-
 const formatDate = (  (date ) => {
    if (date) {
       return dayjs(date).format("YYYY-MM-DD")
@@ -129,6 +142,24 @@ const clearSearch = (() => {
    padding: 0 25px;
    button.clear {
       margin-left: 10px;
+   }
+}
+:deep(td.long-text) {
+   white-space: break-spaces;
+   max-width: 25%;
+}
+td.acts {
+   vertical-align: top;
+
+   button.p-button.first {
+      margin: 0;
+   }
+   button.p-button.p-button-secondary {
+      font-size: 0.75em;
+      padding: 3px 6px;
+      display: block;
+      width: 100%;
+      margin-top: 5px;
    }
 }
 </style>

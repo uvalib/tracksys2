@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -23,8 +24,9 @@ type archivesspaceReview struct {
 }
 
 type asReviewsResponse struct {
-	Total   int64                 `json:"total"`
-	Reviews []archivesspaceReview `json:"submissions"`
+	Total         int64                 `json:"total"`
+	ViewerBaseURL string                `json:"viewerBaseURL"`
+	Reviews       []archivesspaceReview `json:"submissions"`
 }
 
 func (svc *serviceContext) getArchivesSpaceReviews(c *gin.Context) {
@@ -39,7 +41,7 @@ func (svc *serviceContext) getArchivesSpaceReviews(c *gin.Context) {
 		sortOrder = "desc"
 	}
 
-	resp := asReviewsResponse{}
+	resp := asReviewsResponse{ViewerBaseURL: fmt.Sprintf("%s/view", svc.ExternalSystems.Curio)}
 	countQ := "select count(id) as total from archivesspace_reviews"
 	err := svc.DB.Raw(countQ).Scan(&resp.Total).Error
 	if err != nil {
