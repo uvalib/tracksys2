@@ -59,10 +59,10 @@
             </template>
          </Column>
          <Column field="agency.name" header="Agency" filterField="agency" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <Dropdown v-model="filterModel.value" :options="systemStore.agencies" optionLabel="name" optionValue="id" placeholder="Select agency" />
-         </template>
-      </Column>
+            <template #filter="{filterModel}">
+               <Dropdown v-model="filterModel.value" :options="systemStore.agencies" optionLabel="name" optionValue="id" placeholder="Select agency" />
+            </template>
+         </Column>
          <Column field="processor" header="Processor" class="nowrap" filterField="processor" :showFilterMatchModes="false">
             <template #filter="{filterModel}">
                <InputText type="text" v-model="filterModel.value" placeholder="Last name"/>
