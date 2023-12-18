@@ -36,6 +36,22 @@ export const useArchivesSpaceStore = defineStore('archivesspace', {
          }).finally( () => {
            this.working = false
          })
+      },
+
+      async claimForReview( item, reviewerID ) {
+         const system = useSystemStore()
+         this.working = true
+         axios.post(`/api/metadata/${item.metadata.id}/archivesspace/review?reviewer=${reviewerID}`).then( (resp) => {
+            system.toastMessage('Review Started', 'You have successfully claimed this item for review')
+            let tgtIdx = this.reviews.findIndex( r => r.id == item.id)
+            this.reviews[tgtIdx].reviewer = resp.data.reviewer
+            this.reviews[tgtIdx].reviewStartedAt = resp.data.reviewStartedAt
+            this.reviews[tgtIdx].status = resp.data.status
+         }).catch( e => {
+            system.toastError('Review Failed', e)
+         }).finally( () => {
+           this.working = false
+         })
       }
    }
 })

@@ -827,47 +827,6 @@ func (svc *serviceContext) validateArchivesSpaceMetadata(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func (svc *serviceContext) requestArchivesSpaceReview(c *gin.Context) {
-	userID, _ := strconv.ParseInt(c.Query("user"), 10, 64)
-	mdID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	if mdID == 0 {
-		log.Printf("ERROR: invalid metadata id %s in archivesspace review request", c.Param("id"))
-		c.String(http.StatusBadRequest, "invalid id")
-		return
-	}
-	if userID == 0 {
-		log.Printf("ERROR: invalid user id %s in archivesspace review request", c.Param("user"))
-		c.String(http.StatusBadRequest, "invalid id")
-		return
-	}
-	log.Printf("INFO: user %d requests archivesspace review for metadata %d", userID, mdID)
-
-	var submitter staffMember
-	err := svc.DB.First(&submitter, userID).Error
-	if err != nil {
-		log.Printf("ERROR: unable to load staffmember %d: %s", userID, err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-	var mdRec metadata
-	err = svc.DB.First(&mdRec, mdID).Error
-	if err != nil {
-		log.Printf("ERROR: unable to load metadata %d: %s", mdID, err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	asReview := archivesspaceReview{SubmitStaffID: userID, Submitter: submitter, MetadataID: mdID, SubmittedAt: time.Now(), Status: "requested"}
-	err = svc.DB.Save(&asReview).Error
-	if err != nil {
-		log.Printf("ERROR: user %d unable to request archives spaces review for %d: %s", userID, mdID, err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, asReview)
-}
-
 func (svc *serviceContext) getXMLMetadata(c *gin.Context) {
 	mdID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	if mdID == 0 {

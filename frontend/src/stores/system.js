@@ -43,7 +43,7 @@ export const useSystemStore = defineStore('system', {
          this.toast.show = true
          this.toast.error = false
       },
-      toastError( summary, message, success=true ) {
+      toastError( summary, message ) {
          this.toast.summary = summary
          this.toast.message = message
          this.toast.show = true

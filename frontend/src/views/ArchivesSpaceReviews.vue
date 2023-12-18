@@ -57,6 +57,12 @@
                <span v-else class="empty">N/A</span>
             </template>
          </Column>
+         <Column field="reviewStartedAt" header="Review" :sortable="true">
+            <template #body="slotProps">
+               <span v-if="slotProps.data.reviewStartedAt">{{formatDate(slotProps.data.reviewStartedAt)}}</span>
+               <span v-else class="empty">N/A</span>
+            </template>
+         </Column>
          <Column  header="Acts" class="acts">
             <template #body="slotProps">
                <DPGButton label="View images" class="p-button-secondary first" @click="viewClicked(slotProps.data)"/>
@@ -79,6 +85,7 @@ import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
 import { FilterMatchMode } from 'primevue/api'
+import { useConfirm } from "primevue/useconfirm"
 import { usePinnable } from '@/composables/pin'
 import { useArchivesSpaceStore } from '@/stores/archivesspace'
 import { useUserStore } from '@/stores/user'
@@ -88,6 +95,7 @@ usePinnable("p-paginator-top")
 
 const archivesSpace = useArchivesSpaceStore()
 const user = useUserStore()
+const confirm = useConfirm()
 
 const filter = ref( {
       'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
@@ -117,6 +125,18 @@ const canResubmit = ( (data) => {
 
 onMounted(() => {
    archivesSpace.getReviews()
+})
+
+const reviewClicked = ( (item) => {
+   confirm.require({
+      message: 'Are you sure you want claim this item for review?',
+      header: 'Confirm Rreview',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         await archivesSpace.claimForReview( item, user.ID )
+      }
+   })
 })
 
 const viewClicked = ( (item) => {
