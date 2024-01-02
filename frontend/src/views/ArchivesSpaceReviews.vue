@@ -120,7 +120,7 @@ const sortOrder = computed(() => {
 })
 
 const canReview = ( (data) => {
-   return data.status == 'requested' && user.ID != data.submitter.id
+   return (data.status == 'requested' || data.status == 'review')  && user.ID != data.submitter.id
 })
 
 const canPublish = ((data) => {
