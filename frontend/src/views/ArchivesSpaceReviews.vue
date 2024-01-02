@@ -65,13 +65,13 @@
          </Column>
          <Column  header="Acts" class="acts">
             <template #body="slotProps">
-               <DPGButton label="View images" class="p-button-secondary first" @click="viewClicked(slotProps.data)"/>
-               <DPGButton label="Claim for review" class="p-button-secondary first" @click="reviewClicked(slotProps.data)"
-                  :disabled="slotProps.data.status != 'requested' || user.ID == slotProps.data.submitter.id"/>
-               <DPGButton label="Resubmit" class="p-button-secondary first" @click="resubmitClicked(slotProps.data)"
-                  :disabled="!canResubmit(slotProps.data)" />
-               <DPGButton label="Publish" class="p-button-secondary first" @click="publishClicked(slotProps.data)"
-                  :disabled="slotProps.data.status != 'review' || user.ID != slotProps.data.reviewer.id" />
+               <ul class="acts">
+                  <li><DPGButton label="View Images" icon="pi pi-external-link" iconPos="right"  class="p-button-secondary first" @click="viewClicked(slotProps.data)"/></li>
+                  <li v-if="canReview(slotProps.data)"><DPGButton label="Claim for Review" class="p-button-secondary first" @click="reviewClicked(slotProps.data)"/></li>
+                  <li v-if="canResubmit(slotProps.data)"><DPGButton label="Resubmit" class="p-button-secondary" @click="resubmitClicked(slotProps.data)"/></li>
+                  <li v-if="canPublish(slotProps.data)"><DPGButton label="Reject" class="p-button-secondary" @click="rejectClicked(slotProps.data)"/></li>
+                  <li v-if="canPublish(slotProps.data)"><DPGButton label="Publish Now" class="p-button-secondary" @click="publishClicked(slotProps.data.metadata)"/></li>
+               </ul>
             </template>
          </Column>
       </DataTable>
@@ -119,6 +119,13 @@ const sortOrder = computed(() => {
    return 1
 })
 
+const canReview = ( (data) => {
+   return data.status == 'requested' && user.ID != data.submitter.id
+})
+
+const canPublish = ((data) => {
+   return data.status == 'review' && user.ID == data.reviewer.id
+})
 const canResubmit = ( (data) => {
    if ( data.status != 'rejected' ) return false
    if ( !data.reviewer ) return false
@@ -161,6 +168,23 @@ const resubmitClicked = ( (item) => {
    })
 })
 
+const rejectClicked = ( (item) => {
+
+})
+
+const publishClicked = ( (item) => {
+   console.log(item)
+   confirm.require({
+      message: 'Are you sure you want publish this item to ArchivesSpace? After publication, the images will be visble to all ArchivesSpace users within a few minutes.',
+      header: 'Confirm Publish',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         await archivesSpace.publish( user.ID, item )
+      }
+   })
+})
+
 const viewClicked = ( (item) => {
    window.open(`${archivesSpace.viewerBaseURL}/${item.metadata.pid}`, '_blank').focus()
 })
@@ -190,18 +214,26 @@ const clearSearch = (() => {
    white-space: break-spaces;
    max-width: 25%;
 }
-td.acts {
-   vertical-align: top;
+:deep(td.acts) {
+   width: 130px;
 
-   button.p-button.first {
+   ul.acts {
+      list-style: none;
       margin: 0;
-   }
-   button.p-button.p-button-secondary {
-      font-size: 0.75em;
-      padding: 3px 6px;
-      display: block;
-      width: 100%;
-      margin-top: 5px;
+      padding: 0;
+      li {
+         width: max-content;
+         padding: 0;
+         button.p-button.p-button-secondary {
+            font-size: 0.75em;
+            width: 130px;
+            margin: 5px 0 0 0;
+            padding: 0.4em 1em;
+            .p-button-icon {
+               color: #bbb;
+            }
+         }
+      }
    }
 }
 </style>

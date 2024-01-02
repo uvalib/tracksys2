@@ -17,7 +17,7 @@ type archivesspaceReview struct {
 	SubmitStaffID   int64        `gorm:"column:submit_staff_id" json:"-"`
 	Submitter       staffMember  `gorm:"foreignKey:SubmitStaffID" json:"submitter"`
 	SubmittedAt     time.Time    `json:"submittedAt"`
-	ReviewStaffID   *int64       `gorm:"column:review_staff_id" json:"-"`
+	ReviewStaffID   int64        `gorm:"column:review_staff_id" json:"-"`
 	Reviewer        *staffMember `gorm:"foreignKey:ReviewStaffID" json:"reviewer,omitempty"`
 	ReviewStartedAt *time.Time   `json:"reviewStartedAt,omitempty"`
 	Status          string       `json:"status"`
@@ -31,50 +31,91 @@ type asReviewsResponse struct {
 	Reviews       []archivesspaceReview `json:"submissions"`
 }
 
+type asRequest struct {
+	ReviewInfo archivesspaceReview
+	Staff      staffMember
+}
+
 func (svc *serviceContext) beginArchivesSpaceReview(c *gin.Context) {
-	mdID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	if mdID == 0 {
-		log.Printf("ERROR: invalid metadata id %s in archivesspace begin review request", c.Param("id"))
-		c.String(http.StatusBadRequest, "invalid id")
-		return
+	asR, err := svc.validateASRequest(c.Param("id"), c.Query("user"))
+	if err != nil {
+		log.Printf("ERROR: as review request failed: %s", err.Error())
 	}
-	reviewID, _ := strconv.ParseInt(c.Query("reviewer"), 10, 64)
-	if reviewID == 0 {
-		log.Printf("ERROR: invalid reviewer id %s in archivesspace begin review request", c.Param("reviewer"))
-		c.String(http.StatusBadRequest, "invalid reviewer")
+	log.Printf("INFO: user %d:%s requets archivesspace review for metadata %d", asR.Staff.ID, asR.Staff.ComputingID, asR.ReviewInfo.MetadataID)
+
+	if asR.ReviewInfo.ReviewStartedAt == nil {
+		now := time.Now()
+		asR.ReviewInfo.ReviewStartedAt = &now
+	}
+	asR.ReviewInfo.ReviewStaffID = int64(asR.Staff.ID)
+	asR.ReviewInfo.Status = "review"
+	err = svc.DB.Save(&asR.ReviewInfo).Error
+	if err != nil {
+		log.Printf("ERROR: unable to begin as review for metadata %d: %s", asR.ReviewInfo.MetadataID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	var reviewUser staffMember
-	err := svc.DB.Find(&reviewUser, reviewID).Error
+	asR.ReviewInfo.Reviewer = &asR.Staff
+	c.JSON(http.StatusOK, asR.ReviewInfo)
+}
+
+func (svc *serviceContext) publishArchivesSpace(c *gin.Context) {
+	reqInfo, err := svc.validateASRequest(c.Param("id"), c.Query("user"))
 	if err != nil {
-		log.Printf("ERROR: unable to find reviewer %d: %s", reviewID, err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
+		log.Printf("ERROR: as publish request failed %s", err.Error())
+	}
+	log.Printf("INFO: user %s requests archivesspace publish for metadata %d to ", reqInfo.Staff.ComputingID, reqInfo.ReviewInfo.MetadataID)
+
+	pubPayload := struct {
+		UserID     int64 `json:"userID"`
+		MetadataID int64 `json:"metadataID"`
+	}{
+		UserID:     int64(reqInfo.Staff.ID),
+		MetadataID: reqInfo.ReviewInfo.MetadataID,
+	}
+	url := fmt.Sprintf("%s/archivesspace/publish", svc.ExternalSystems.Jobs)
+	_, asErr := svc.postJSON(url, pubPayload)
+	if asErr != nil {
+		log.Printf("ERROR: unable to publish metadata %d: %d %s", reqInfo.ReviewInfo.MetadataID, asErr.StatusCode, asErr.Message)
+		c.String(asErr.StatusCode, asErr.Message)
 		return
+	}
+
+	now := time.Now()
+	reqInfo.ReviewInfo.Status = "published"
+	reqInfo.ReviewInfo.PublishedAt = &now
+	err = svc.DB.Save(&reqInfo.ReviewInfo).Error
+	if err != nil {
+		log.Printf("ERROR: unable to update metadata published status for metadata %d: %s", reqInfo.ReviewInfo.MetadataID, err.Error())
+	}
+	c.String(http.StatusOK, "published")
+}
+
+func (svc *serviceContext) validateASRequest(mdParam, userParam string) (*asRequest, error) {
+	mdID, _ := strconv.ParseInt(mdParam, 10, 64)
+	if mdID == 0 {
+		return nil, fmt.Errorf("invalid metadata id %s", mdParam)
+	}
+	userID, _ := strconv.ParseInt(userParam, 10, 64)
+	if userID == 0 {
+		return nil, fmt.Errorf("invalid user id %s", userParam)
+	}
+
+	var reqUser staffMember
+	err := svc.DB.Find(&reqUser, userID).Error
+	if err != nil {
+		return nil, fmt.Errorf("unable to get user id %d: %s", userID, err.Error())
 	}
 
 	var asR archivesspaceReview
 	err = svc.DB.Joins("Metadata").Where("metadata_id=?", mdID).First(&asR).Error
 	if err != nil {
-		log.Printf("ERROR: unable to find review for metadata %d: %s", mdID, err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-	if asR.ReviewStartedAt == nil {
-		now := time.Now()
-		asR.ReviewStartedAt = &now
-	}
-	asR.ReviewStaffID = &reviewID
-	asR.Reviewer = &reviewUser
-	asR.Status = "review"
-	err = svc.DB.Save(&asR).Error
-	if err != nil {
-		log.Printf("ERROR: unable to begin as review for metadata %d: %s", mdID, err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
+		return nil, fmt.Errorf("user %s is unable to get as reciew recird for metadata %d: %s", reqUser.ComputingID, mdID, err.Error())
 	}
 
-	c.JSON(http.StatusOK, asR)
+	out := asRequest{Staff: reqUser, ReviewInfo: asR}
+	return &out, nil
 }
 
 func (svc *serviceContext) resubmitArchivesSpaceReview(c *gin.Context) {

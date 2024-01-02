@@ -38,10 +38,26 @@ export const useArchivesSpaceStore = defineStore('archivesspace', {
          })
       },
 
+      async publish( userID, metadata ) {
+         const system = useSystemStore()
+         this.working = true
+         await axios.post(`/api/metadata/${metadata.id}/archivesspace/publish?user=${userID}`).then( () => {
+            system.toastMessage('Published', `You have successfully published metadata ${metadata.pid} to ArchivesSpace. Images should appear within a few minutes.`)
+            let idx = this.reviews.findIndex( r => r.metadataID == metadata.id )
+            if ( idx > -1 )  {
+               this.reviews.splice(idx,1)
+            }
+         }).catch( e => {
+            system.setError(e)
+         }).finally( () => {
+            this.working = false
+          })
+      },
+
       async claimForReview( item, reviewerID ) {
          const system = useSystemStore()
          this.working = true
-         await axios.post(`/api/metadata/${item.metadata.id}/archivesspace/review?reviewer=${reviewerID}`).then( (resp) => {
+         await axios.post(`/api/metadata/${item.metadata.id}/archivesspace/review?user=${reviewerID}`).then( (resp) => {
             system.toastMessage('Review Started', 'You have successfully claimed this item for review')
             let tgtIdx = this.reviews.findIndex( r => r.id == item.id)
             this.reviews[tgtIdx].reviewer = resp.data.reviewer
