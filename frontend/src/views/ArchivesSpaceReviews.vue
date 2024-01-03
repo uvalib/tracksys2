@@ -66,16 +66,25 @@
          <Column  header="Acts" class="acts">
             <template #body="slotProps">
                <ul class="acts">
-                  <li><DPGButton label="View Images" icon="pi pi-external-link" iconPos="right"  class="p-button-secondary first" @click="viewClicked(slotProps.data)"/></li>
-                  <li v-if="canReview(slotProps.data)"><DPGButton label="Claim for Review" class="p-button-secondary first" @click="reviewClicked(slotProps.data)"/></li>
-                  <li v-if="canResubmit(slotProps.data)"><DPGButton label="Resubmit" class="p-button-secondary" @click="resubmitClicked(slotProps.data)"/></li>
-                  <li v-if="canPublish(slotProps.data)"><DPGButton label="Reject" class="p-button-secondary" @click="rejectClicked(slotProps.data)"/></li>
-                  <li v-if="canPublish(slotProps.data)"><DPGButton label="Publish Now" class="p-button-secondary" @click="publishClicked(slotProps.data.metadata)"/></li>
+                  <li><DPGButton label="View Images" icon="pi pi-external-link" iconPos="right" severity="secondary" class="first" @click="viewClicked(slotProps.data)"/></li>
+                  <li v-if="canReview(slotProps.data)"><DPGButton label="Claim for Review" severity="secondary" @click="reviewClicked(slotProps.data)"/></li>
+                  <li v-if="canResubmit(slotProps.data)"><DPGButton label="Resubmit" severity="secondary" @click="resubmitClicked(slotProps.data)"/></li>
+                  <li v-if="canPublish(slotProps.data)"><DPGButton label="Reject" severity="danger" @click="rejectClicked(slotProps.data)"/></li>
+                  <li v-if="canPublish(slotProps.data)"><DPGButton label="Publish Now" severity="primary" @click="publishClicked(slotProps.data.metadata)"/></li>
                </ul>
             </template>
          </Column>
       </DataTable>
    </div>
+   <Dialog v-model:visible="rejectRequested" :modal="true" header="Reject Submission">
+      <div>Reject submission {{ rejectItem.pid }} - {{ rejectItem.title }}</div>
+      <label class="reject-note">Please add some notes about the rejection:</label>
+      <textarea v-model="reason" autofocus rows="5" ref="reasontxt" :class="{'invalid': rejectError}"></textarea>
+      <template #footer>
+         <DPGButton label="Cancel" severity="secondary" @click="rejectCanceled()"/>
+         <DPGButton label="Reject" class="reject" severity="danger" @click="rejectSubmitted()"/>
+      </template>
+   </Dialog>
 </template>
 
 <script setup>
@@ -84,6 +93,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
+import Dialog from 'primevue/dialog'
 import { FilterMatchMode } from 'primevue/api'
 import { useConfirm } from "primevue/useconfirm"
 import { usePinnable } from '@/composables/pin'
@@ -98,6 +108,12 @@ const archivesSpace = useArchivesSpaceStore()
 const user = useUserStore()
 const confirm = useConfirm()
 const route = useRoute()
+
+const rejectRequested = ref(false)
+const rejectItem = ref()
+const reason = ref("")
+const reasontxt = ref()
+const rejectError = ref(false)
 
 const filter = ref( {
       'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
@@ -120,7 +136,7 @@ const sortOrder = computed(() => {
 })
 
 const canReview = ( (data) => {
-   return (data.status == 'requested' || data.status == 'review')  && user.ID != data.submitter.id
+   return data.status == 'requested' && user.ID != data.submitter.id
 })
 
 const canPublish = ((data) => {
@@ -151,7 +167,7 @@ const reviewClicked = ( (item) => {
       icon: 'pi pi-exclamation-triangle',
       rejectClass: 'p-button-secondary',
       accept: async () => {
-         await archivesSpace.claimForReview( item, user.ID )
+         await archivesSpace.claimForReview( item.metadata, user.ID )
       }
    })
 })
@@ -163,13 +179,32 @@ const resubmitClicked = ( (item) => {
       icon: 'pi pi-exclamation-triangle',
       rejectClass: 'p-button-secondary',
       accept: async () => {
-         await archivesSpace.resubmit( item )
+         await archivesSpace.resubmit( item.metadata )
       }
    })
 })
 
 const rejectClicked = ( (item) => {
+   rejectRequested.value = true
+   rejectItem.value = item.metadata
+   reason.value = ""
+   rejectError.value = false
+})
 
+const rejectCanceled = ( () => {
+   rejectRequested.value = false
+   rejectItem.value = null
+})
+
+const rejectSubmitted = ( async () => {
+   if ( reason.value == "") {
+      reasontxt.value.focus()
+      rejectError.value = true
+   } else {
+      await archivesSpace.reject( user.ID, rejectItem.value, reason.value )
+      rejectRequested.value = false
+      rejectItem.value = null
+   }
 })
 
 const publishClicked = ( (item) => {
@@ -224,7 +259,7 @@ const clearSearch = (() => {
       li {
          width: max-content;
          padding: 0;
-         button.p-button.p-button-secondary {
+         button.p-button {
             font-size: 0.75em;
             width: 130px;
             margin: 5px 0 0 0;
@@ -235,5 +270,25 @@ const clearSearch = (() => {
          }
       }
    }
+}
+textarea {
+   width: 100%;
+   width: 100%;
+   border-color: var(--uvalib-grey-light);
+   border-radius: 5px;
+   &:focus {
+      @include be-accessible();
+   }
+}
+textarea.invalid {
+   border-color: var(--uvalib-red);
+   border-width: 2px;
+}
+label.reject-note {
+   margin: 15px 0 10px 0;
+   display: block;
+}
+button.reject {
+   margin-left: 10px;
 }
 </style>

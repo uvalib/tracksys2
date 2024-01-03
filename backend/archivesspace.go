@@ -143,6 +143,41 @@ func (svc *serviceContext) resubmitArchivesSpaceReview(c *gin.Context) {
 	c.String(http.StatusOK, "ok")
 }
 
+func (svc *serviceContext) rejectArchivesSpaceSubmission(c *gin.Context) {
+	mdID := c.Param("id")
+	log.Printf("INFO: received archivesspace reject request for metadata %s", mdID)
+
+	var req struct {
+		UserID int64  `json:"userID"`
+		Notes  string `json:"notes"`
+	}
+	err := c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid archivesspace reject request: %s", err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	log.Printf("INFO: user %d rejects archivesspace submission %s with notes [%s]", req.UserID, mdID, req.Notes)
+	var asR archivesspaceReview
+	err = svc.DB.Joins("Metadata").Where("metadata_id=?", mdID).First(&asR).Error
+	if err != nil {
+		log.Printf("ERROR: unable to load submission info for metadata %s: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	asR.Status = "rejected"
+	asR.Notes = req.Notes
+	err = svc.DB.Save(&asR).Error
+	if err != nil {
+		log.Printf("ERROR: reject as submission %s failed: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, asR)
+}
+
 func (svc *serviceContext) requestArchivesSpaceReview(c *gin.Context) {
 	userID, _ := strconv.ParseInt(c.Query("user"), 10, 64)
 	mdID, _ := strconv.ParseInt(c.Param("id"), 10, 64)

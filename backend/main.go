@@ -87,6 +87,7 @@ func main() {
 		api.POST("/metadata/:id/archivesspace/review", svc.beginArchivesSpaceReview)
 		api.POST("/metadata/:id/archivesspace/resubmit", svc.resubmitArchivesSpaceReview)
 		api.POST("/metadata/:id/archivesspace/publish", svc.publishArchivesSpace)
+		api.POST("/metadata/:id/archivesspace/reject", svc.rejectArchivesSpaceSubmission)
 
 		api.GET("/orders", svc.getOrders)
 		api.POST("/orders", svc.createOrder)
