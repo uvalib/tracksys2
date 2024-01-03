@@ -45,6 +45,15 @@
             <template #filter="{filterModel}">
                <Dropdown v-model="filterModel.value" :options="statuses" optionLabel="name" optionValue="id" placeholder="Select status" />
             </template>
+            <template #body="slotProps">
+               <span class="as-status">{{ `${slotProps.data.status[0].toUpperCase()}${slotProps.data.status.slice(1)}` }}</span>
+            </template>
+         </Column>
+         <Column field="notes" header="Notes" >
+            <template #body="slotProps">
+               <DPGButton v-if="slotProps.data.notes"  class="notes" label="Click to View" severity="secondary" @click="notesClicked(slotProps.data)"/>
+               <DPGButton v-else  label="Click to Add" class="notes" severity="secondary" @click="notesClicked(slotProps.data)"/>
+            </template>
          </Column>
          <Column field="reviewer" header="Reviewer" filterField="reviewer.lastName" :showFilterMatchModes="false" >
             <template #filter="{filterModel}">
@@ -54,7 +63,6 @@
                <span v-if="slotProps.data.reviewer">
                   {{slotProps.data.reviewer.lastName}}, {{slotProps.data.reviewer.firstName}}
                </span>
-               <span v-else class="empty">N/A</span>
             </template>
          </Column>
          <Column field="reviewStartedAt" header="Review" :sortable="true">
@@ -85,10 +93,25 @@
          <DPGButton label="Reject" class="reject" severity="danger" @click="rejectSubmitted()"/>
       </template>
    </Dialog>
+   <Dialog v-model:visible="showNotes" :modal="true" header="Submission Notes">
+      <div>{{ notesItem.metadata.pid }} - {{ notesItem.metadata.title }}</div>
+      <textarea class="notes" v-if="editNote" v-model="newNotes" ref="noteedit" rows="10"></textarea>
+      <div v-else class="note-text">{{ newNotes }}</div>
+      <template #footer>
+         <template v-if="editNote">
+            <DPGButton label="Cancel" severity="secondary" @click="cancelNoteEdit()"/>
+            <DPGButton label="Submit" severity="primary" class="left-margin" @click="submitNoteEdit()"/>
+         </template>
+         <template v-else>
+            <DPGButton label="Add/Edit" severity="primary" @click="editNoteClicked()"/>
+            <DPGButton label="Close" severity="secondary" class="left-margin" @click="closeNotesClicked()"/>
+         </template>
+      </template>
+   </Dialog>
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, nextTick } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
@@ -114,6 +137,12 @@ const rejectItem = ref()
 const reason = ref("")
 const reasontxt = ref()
 const rejectError = ref(false)
+
+const showNotes = ref(false)
+const notesItem = ref()
+const newNotes = ref("")
+const editNote = ref(false)
+const noteedit = ref()
 
 const filter = ref( {
       'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
@@ -158,6 +187,32 @@ onMounted(() => {
       filter.value.status.value = "requested"
    }
    archivesSpace.getReviews()
+})
+
+const notesClicked= ((item) => {
+   notesItem.value = item
+   showNotes.value = true
+   newNotes.value = item.notes
+   editNote.value = false
+})
+
+const editNoteClicked = ( () => {
+   editNote.value = true
+   nextTick( () => {
+      noteedit.value.focus()
+   })
+})
+
+const closeNotesClicked = ( () => {
+   showNotes.value = false
+})
+
+const cancelNoteEdit = ( () => {
+   editNote.value = false
+})
+
+const submitNoteEdit = ( () => {
+   editNote.value = false
 })
 
 const reviewClicked = ( (item) => {
@@ -244,6 +299,10 @@ const clearSearch = (() => {
    button.clear {
       margin-left: 10px;
    }
+   button.notes {
+      font-size: 0.75em;
+      padding: 5px 10px;
+   }
 }
 :deep(td.long-text) {
    white-space: break-spaces;
@@ -276,9 +335,26 @@ textarea {
    width: 100%;
    border-color: var(--uvalib-grey-light);
    border-radius: 5px;
+   font-family: "franklin-gothic-urw", arial, sans-serif;
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+   color: var(--color-primary-text);
+   padding: 5px 10px;
    &:focus {
       @include be-accessible();
    }
+}
+div.note-text {
+   height: 250px;
+   overflow-y: scroll;
+   margin-top: 15px;
+   padding: 5px 10px;
+   border: 1px solid var(--uvalib-grey-light);
+   border-radius: 5px;
+   background-color: white;
+}
+textarea.notes {
+   margin-top: 15px;
 }
 textarea.invalid {
    border-color: var(--uvalib-red);
@@ -288,7 +364,7 @@ label.reject-note {
    margin: 15px 0 10px 0;
    display: block;
 }
-button.reject {
+button.reject, button.left-margin {
    margin-left: 10px;
 }
 </style>
