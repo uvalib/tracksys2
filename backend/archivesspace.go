@@ -194,7 +194,23 @@ func (svc *serviceContext) requestArchivesSpaceReview(c *gin.Context) {
 }
 
 func (svc *serviceContext) cancelArchivesSpaceSubmission(c *gin.Context) {
+	mdID := c.Param("id")
+	log.Printf("INFO: received archivesspace submission cancel request for metadata %s", mdID)
 
+	var asR archivesspaceReview
+	err := svc.DB.Where("metadata_id=?", mdID).First(&asR).Error
+	if err != nil {
+		log.Printf("ERROR: unable to load submission info for metadata %s: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	err = svc.DB.Delete(&asR).Error
+	if err != nil {
+		log.Printf("ERROR: unable to cancel archivesspace submission for metadata %s: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.String(http.StatusOK, "deleted")
 }
 
 func (svc *serviceContext) updateArchivesSpaceSubmissionNotes(c *gin.Context) {

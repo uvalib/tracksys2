@@ -54,6 +54,22 @@ export const useArchivesSpaceStore = defineStore('archivesspace', {
           })
       },
 
+      async cancel( item ) {
+         const system = useSystemStore()
+         this.working = true
+         await axios.delete(`/api/metadata/${item.metadata.id}/archivesspace`).then( () => {
+            let idx = this.reviews.findIndex( r => r.id == item.id )
+            if ( idx > -1 )  {
+               this.reviews.splice(idx,1)
+            }
+            system.toastMessage('Canceled', `You have canceled the ArchivesSpace submission for metadata ${item.metadata.pid}`)
+         }).catch( e => {
+            system.setError(e)
+         }).finally( () => {
+            this.working = false
+          })
+      },
+
       async reject( userID, item, notes ) {
          const system = useSystemStore()
          this.working = true

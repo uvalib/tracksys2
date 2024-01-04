@@ -89,7 +89,7 @@ func main() {
 		api.POST("/metadata/:id/archivesspace/resubmit", svc.resubmitArchivesSpaceReview)
 		api.POST("/metadata/:id/archivesspace/publish", svc.publishArchivesSpace)
 		api.POST("/metadata/:id/archivesspace/reject", svc.rejectArchivesSpaceSubmission)
-		api.POST("/metadata/:id/archivesspace/cancel", svc.cancelArchivesSpaceSubmission)
+		api.DELETE("/metadata/:id/archivesspace", svc.cancelArchivesSpaceSubmission)
 		api.POST("/metadata/:id/archivesspace/notes", svc.updateArchivesSpaceSubmissionNotes)
 
 		api.GET("/orders", svc.getOrders)

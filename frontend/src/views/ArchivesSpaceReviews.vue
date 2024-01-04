@@ -63,6 +63,7 @@
                <span v-if="slotProps.data.reviewer">
                   {{slotProps.data.reviewer.lastName}}, {{slotProps.data.reviewer.firstName}}
                </span>
+               <span v-else class="empty">N/A</span>
             </template>
          </Column>
          <Column field="reviewStartedAt" header="Review" :sortable="true">
@@ -77,6 +78,7 @@
                   <li><DPGButton label="View Images" icon="pi pi-external-link" iconPos="right" severity="secondary" class="first" @click="viewClicked(slotProps.data)"/></li>
                   <li v-if="canReview(slotProps.data)"><DPGButton label="Claim for Review" severity="secondary" @click="reviewClicked(slotProps.data)"/></li>
                   <li v-if="canResubmit(slotProps.data)"><DPGButton label="Resubmit" severity="secondary" @click="resubmitClicked(slotProps.data)"/></li>
+                  <li v-if="canCancel(slotProps.data)"><DPGButton label="Cancel Submission" severity="danger" @click="cancelClicked(slotProps.data)"/></li>
                   <li v-if="canPublish(slotProps.data)"><DPGButton label="Reject" severity="danger" @click="rejectClicked(slotProps.data)"/></li>
                   <li v-if="canPublish(slotProps.data)"><DPGButton label="Publish Now" severity="primary" @click="publishClicked(slotProps.data.metadata)"/></li>
                </ul>
@@ -165,13 +167,23 @@ const sortOrder = computed(() => {
 })
 
 const canReview = ( (data) => {
-   return data.status == 'requested' && user.ID != data.submitter.id
+   if (data.status == 'requested' ) {
+      return user.ID != data.submitter.id
+   }
+   if (data.status == 'review' ) {
+      return user.ID != data.submitter.id && user.ID != data.reviewer.id
+   }
+   return false
 })
 
 const canPublish = ((data) => {
    return data.status == 'review' && user.ID == data.reviewer.id
 })
+const canCancel = ((data) => {
+   return data.status != 'review'
+})
 const canResubmit = ( (data) => {
+   // must be in a a rejected state and the current user is not the reviewer
    if ( data.status != 'rejected' ) return false
    if ( !data.reviewer ) return false
    if ( data.reviewer.id == user.ID) return false
@@ -240,6 +252,18 @@ const resubmitClicked = ( (item) => {
       rejectClass: 'p-button-secondary',
       accept: async () => {
          await archivesSpace.resubmit( item.metadata )
+      }
+   })
+})
+
+const cancelClicked = ( (item) => {
+   confirm.require({
+      message: 'Are you sure you want cancel this submission? All review data will be lost.',
+      header: 'Confirm Cancel',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         await archivesSpace.cancel( item )
       }
    })
 })
