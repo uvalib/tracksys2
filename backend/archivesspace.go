@@ -92,32 +92,6 @@ func (svc *serviceContext) publishArchivesSpace(c *gin.Context) {
 	c.String(http.StatusOK, "published")
 }
 
-func (svc *serviceContext) validateASRequest(mdParam, userParam string) (*asRequest, error) {
-	mdID, _ := strconv.ParseInt(mdParam, 10, 64)
-	if mdID == 0 {
-		return nil, fmt.Errorf("invalid metadata id %s", mdParam)
-	}
-	userID, _ := strconv.ParseInt(userParam, 10, 64)
-	if userID == 0 {
-		return nil, fmt.Errorf("invalid user id %s", userParam)
-	}
-
-	var reqUser staffMember
-	err := svc.DB.Find(&reqUser, userID).Error
-	if err != nil {
-		return nil, fmt.Errorf("unable to get user id %d: %s", userID, err.Error())
-	}
-
-	var asR archivesspaceReview
-	err = svc.DB.Joins("Metadata").Where("metadata_id=?", mdID).First(&asR).Error
-	if err != nil {
-		return nil, fmt.Errorf("user %s is unable to get as reciew recird for metadata %d: %s", reqUser.ComputingID, mdID, err.Error())
-	}
-
-	out := asRequest{Staff: reqUser, ReviewInfo: asR}
-	return &out, nil
-}
-
 func (svc *serviceContext) resubmitArchivesSpaceReview(c *gin.Context) {
 	mdID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	if mdID == 0 {
@@ -219,6 +193,42 @@ func (svc *serviceContext) requestArchivesSpaceReview(c *gin.Context) {
 	c.JSON(http.StatusOK, asReview)
 }
 
+func (svc *serviceContext) cancelArchivesSpaceSubmission(c *gin.Context) {
+
+}
+
+func (svc *serviceContext) updateArchivesSpaceSubmissionNotes(c *gin.Context) {
+	mdID := c.Param("id")
+	log.Printf("INFO: received archivesspace update notes for metadata %s", mdID)
+
+	var req struct {
+		Notes string `json:"notes"`
+	}
+	err := c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid archivesspace notes request: %s", err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var asR archivesspaceReview
+	err = svc.DB.Joins("Metadata").Where("metadata_id=?", mdID).First(&asR).Error
+	if err != nil {
+		log.Printf("ERROR: unable to load submission info for metadata %s: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	asR.Notes = req.Notes
+	err = svc.DB.Save(&asR).Error
+	if err != nil {
+		log.Printf("ERROR: update notes for as submission %s failed: %s", mdID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, asR)
+}
+
 func (svc *serviceContext) getArchivesSpaceReviews(c *gin.Context) {
 	resp := asReviewsResponse{ViewerBaseURL: fmt.Sprintf("%s/view", svc.ExternalSystems.Curio)}
 	countQ := "select count(id) as total from archivesspace_reviews"
@@ -237,4 +247,30 @@ func (svc *serviceContext) getArchivesSpaceReviews(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) validateASRequest(mdParam, userParam string) (*asRequest, error) {
+	mdID, _ := strconv.ParseInt(mdParam, 10, 64)
+	if mdID == 0 {
+		return nil, fmt.Errorf("invalid metadata id %s", mdParam)
+	}
+	userID, _ := strconv.ParseInt(userParam, 10, 64)
+	if userID == 0 {
+		return nil, fmt.Errorf("invalid user id %s", userParam)
+	}
+
+	var reqUser staffMember
+	err := svc.DB.Find(&reqUser, userID).Error
+	if err != nil {
+		return nil, fmt.Errorf("unable to get user id %d: %s", userID, err.Error())
+	}
+
+	var asR archivesspaceReview
+	err = svc.DB.Joins("Metadata").Where("metadata_id=?", mdID).First(&asR).Error
+	if err != nil {
+		return nil, fmt.Errorf("user %s is unable to get as reciew recird for metadata %d: %s", reqUser.ComputingID, mdID, err.Error())
+	}
+
+	out := asRequest{Staff: reqUser, ReviewInfo: asR}
+	return &out, nil
 }

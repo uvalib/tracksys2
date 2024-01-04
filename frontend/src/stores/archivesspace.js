@@ -75,6 +75,22 @@ export const useArchivesSpaceStore = defineStore('archivesspace', {
          })
       },
 
+      async updateNotes( review, notes ) {
+         const system = useSystemStore()
+         this.working = true
+         await axios.post(`/api/metadata/${review.metadata.id}/archivesspace/notes`, {notes: notes}).then( () => {
+            let tgtIdx = this.reviews.findIndex( r => r.id == review.id)
+            if ( tgtIdx > -1 ) {
+               this.reviews[tgtIdx].notes = notes
+               system.toastMessage('Notes Updated', 'You have successfully update the notes for the selected item')
+            }
+         }).catch( e => {
+            system.toastError('Review Failed', e)
+         }).finally( () => {
+           this.working = false
+         })
+      },
+
       async claimForReview( item, reviewerID ) {
          const system = useSystemStore()
          this.working = true

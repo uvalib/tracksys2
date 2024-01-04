@@ -85,7 +85,7 @@
       </DataTable>
    </div>
    <Dialog v-model:visible="rejectRequested" :modal="true" header="Reject Submission">
-      <div>Reject submission {{ rejectItem.pid }} - {{ rejectItem.title }}</div>
+      <div>Reject submission {{ tgtReview.metadata.pid }} - {{ tgtReview.metadata.title }}</div>
       <label class="reject-note">Please add some notes about the rejection:</label>
       <textarea v-model="reason" autofocus rows="5" ref="reasontxt" :class="{'invalid': rejectError}"></textarea>
       <template #footer>
@@ -94,7 +94,7 @@
       </template>
    </Dialog>
    <Dialog v-model:visible="showNotes" :modal="true" header="Submission Notes">
-      <div>{{ notesItem.metadata.pid }} - {{ notesItem.metadata.title }}</div>
+      <div>{{ tgtReview.metadata.pid }} - {{ tgtReview.metadata.title }}</div>
       <textarea class="notes" v-if="editNote" v-model="newNotes" ref="noteedit" rows="10"></textarea>
       <div v-else class="note-text">{{ newNotes }}</div>
       <template #footer>
@@ -103,7 +103,7 @@
             <DPGButton label="Submit" severity="primary" class="left-margin" @click="submitNoteEdit()"/>
          </template>
          <template v-else>
-            <DPGButton label="Add/Edit" severity="primary" @click="editNoteClicked()"/>
+            <DPGButton label="Edit" severity="primary" @click="editNoteClicked()"/>
             <DPGButton label="Close" severity="secondary" class="left-margin" @click="closeNotesClicked()"/>
          </template>
       </template>
@@ -132,14 +132,14 @@ const user = useUserStore()
 const confirm = useConfirm()
 const route = useRoute()
 
+const tgtReview = ref()
+
 const rejectRequested = ref(false)
-const rejectItem = ref()
 const reason = ref("")
 const reasontxt = ref()
 const rejectError = ref(false)
 
 const showNotes = ref(false)
-const notesItem = ref()
 const newNotes = ref("")
 const editNote = ref(false)
 const noteedit = ref()
@@ -190,10 +190,10 @@ onMounted(() => {
 })
 
 const notesClicked= ((item) => {
-   notesItem.value = item
+   tgtReview.value = item
    showNotes.value = true
    newNotes.value = item.notes
-   editNote.value = false
+   editNote.value = item.notes == ""
 })
 
 const editNoteClicked = ( () => {
@@ -205,14 +205,19 @@ const editNoteClicked = ( () => {
 
 const closeNotesClicked = ( () => {
    showNotes.value = false
+   tgtReview.value = null
 })
 
 const cancelNoteEdit = ( () => {
    editNote.value = false
+   tgtReview.value = null
 })
 
-const submitNoteEdit = ( () => {
+const submitNoteEdit = ( async () => {
+   await archivesSpace.updateNotes( tgtReview.value, newNotes.value )
    editNote.value = false
+   tgtReview.value = null
+   showNotes.value = false
 })
 
 const reviewClicked = ( (item) => {
@@ -241,14 +246,14 @@ const resubmitClicked = ( (item) => {
 
 const rejectClicked = ( (item) => {
    rejectRequested.value = true
-   rejectItem.value = item.metadata
+   tgtReview.value = item
    reason.value = ""
    rejectError.value = false
 })
 
 const rejectCanceled = ( () => {
    rejectRequested.value = false
-   rejectItem.value = null
+   tgtReview.value = null
 })
 
 const rejectSubmitted = ( async () => {
@@ -256,9 +261,9 @@ const rejectSubmitted = ( async () => {
       reasontxt.value.focus()
       rejectError.value = true
    } else {
-      await archivesSpace.reject( user.ID, rejectItem.value, reason.value )
+      await archivesSpace.reject( user.ID, tgtReview.value.metadata, reason.value )
       rejectRequested.value = false
-      rejectItem.value = null
+      tgtReview.value = null
    }
 })
 
