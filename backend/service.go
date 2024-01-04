@@ -196,6 +196,36 @@ func (svc *serviceContext) cleanupExpiredData(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+func (svc *serviceContext) addAgency(c *gin.Context) {
+	var req struct {
+		Name string `json:"name"`
+		Desc string `json:"desc"`
+	}
+	err := c.BindJSON(&req)
+	if err != nil {
+		log.Printf("ERROR: invalid create agency request: %s", err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	log.Printf("INFO: create new agency [%s] - [%s]", req.Name, req.Desc)
+	newAgency := agency{Name: req.Name, Description: req.Desc}
+	err = svc.DB.Create(&newAgency).Error
+	if err != nil {
+		log.Printf("ERROR: unable to create agency %s: %s", req.Name, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	var agencies []agency
+	err = svc.DB.Order("name asc").Find(&agencies).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get updated agencies: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, agencies)
+}
+
 func (svc *serviceContext) getConfig(c *gin.Context) {
 	log.Printf("INFO: get service configuration")
 	type searchField struct {

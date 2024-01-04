@@ -105,6 +105,15 @@ export const useSystemStore = defineStore('system', {
          }).catch( err => {
             this.setError(  err )
          })
+      },
+      async createAgency( name, desc ) {
+         let data = {name: name, desc: desc}
+         return axios.post("/api/agency", data).then(response => {
+            this.agencies = response.data
+            this.toastMessage("Agency Created", `Agency ${name} has been created`)
+         }).catch( err => {
+            this.setError(  err )
+         })
       }
 	}
 })

@@ -361,7 +361,6 @@ const clearSearch = (() => {
 }
 textarea {
    width: 100%;
-   width: 100%;
    border-color: var(--uvalib-grey-light);
    border-radius: 5px;
    font-family: "franklin-gothic-urw", arial, sans-serif;

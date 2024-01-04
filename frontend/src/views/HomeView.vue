@@ -2,6 +2,7 @@
    <h2>
       <span>Home</span>
       <div class="actions" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
+         <DPGButton v-if="userStore.isAdmin" label="Create Agency" class="create" @click="showCreateAgencyClicked()"/>
          <DPGButton v-if="userStore.isAdmin" label="Create Collection Facet" class="create" @click="showCreateCollectionDialog()"/>
          <DPGButton label="Create Metadata" class="create" @click="createMetadata()"/>
          <DPGButton label="Create Order" class="create" @click="createOrder()"/>
@@ -80,6 +81,20 @@
          <SimilarImages v-if="searchStore.similarSearch && systemStore.working == false" />
       </div>
    </div>
+   <Dialog v-model:visible="showCreateAgency" :modal="true" header="Create Agency" @hide="createAgencyClosed" :style="{width: '450px'}">
+      <div class="agency">
+         <label>Name</label>
+         <input type="text" v-model="newAgencyName" autofocus/>
+         <label>Description</label>
+         <textarea rows="4" v-model="newAgencyDesc"/>
+      </div>
+      <template #footer>
+         <div class="acts">
+            <DPGButton @click="createAgencyClosed()" label="Cancel" severity="secondary"/>
+            <DPGButton @click="createAgency()" label="Create" :disabled="newAgencyName.length == 0"/>
+         </div>
+      </template>
+   </Dialog>
    <Dialog v-model:visible="showCreateMetadata" :modal="true" header="Create Metadata" @hide="createMetadataClosed" :style="{width: '750px'}">
       <NewMetadataPanel @canceled="createMetadataClosed" @created="metadataCreated" />
    </Dialog>
@@ -123,6 +138,10 @@ const unitError = ref("")
 const showCreateMetadata = ref(false)
 const showCreateCollection = ref(false)
 const newCollectionFacet = ref("")
+
+const showCreateAgency = ref(false)
+const newAgencyName = ref("")
+const newAgencyDesc = ref("")
 
 const selectedScope = ref("all")
 const selectedField = ref("all")
@@ -280,6 +299,19 @@ const doSearch = (() => {
    }
 })
 
+const showCreateAgencyClicked = ( () => {
+   newAgencyDesc.value = ""
+   newAgencyName.value = ""
+   showCreateAgency.value = true
+})
+const createAgency = ( async () => {
+   await systemStore.createAgency(newAgencyName.value, newAgencyDesc.value)
+   showCreateAgency.value = false
+})
+const createAgencyClosed = ( () => {
+   showCreateAgency.value = false
+})
+
 const createOrder = (() => {
    router.push("/orders/new")
 })
@@ -421,6 +453,25 @@ const createMetadataClosed = (() => {
          select {
             margin: 0;
          }
+      }
+   }
+}
+div.agency {
+   label {
+      display: block;
+      margin: 10px 0 5px 0;
+   }
+   textarea {
+      width: 100%;
+      border-color: var(--uvalib-grey-light);
+      border-radius: 5px;
+      font-family: "franklin-gothic-urw", arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      color: var(--color-primary-text);
+      padding: 5px 10px;
+      &:focus {
+         @include be-accessible();
       }
    }
 }
