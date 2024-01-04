@@ -53,6 +53,7 @@ onMounted(() => {
          ]},
          {label: "Miscellaneous", items: [
             {label: "APTrust Submissions", route: "/aptrust"},
+            {label: "ArchivesSpace Reviews", route: "/archivesspace"},
             {label: "Customers", route: "/customers"},
             {label: "Staff Members", route: "/staff"},
          ]}
@@ -82,6 +83,7 @@ const searchEntered = (() => {
          padding: 0.75rem 1rem !important;
          display: block;
          border-radius: 0;
+         white-space: nowrap;
          &:hover {
             text-decoration: none !important;
          }

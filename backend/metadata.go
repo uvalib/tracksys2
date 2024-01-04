@@ -189,18 +189,19 @@ type uvaMAP struct {
 }
 
 type metadataDetailResponse struct {
-	Metadata     *metadata       `json:"metadata"`
-	Collection   *metadata       `json:"collectionRecord"`
-	Units        []*unit         `json:"units"`
-	MasterFiles  []*masterFile   `json:"masterFiles,omitempty"`
-	Sirsi        *sirsiMetadata  `json:"sirsiDetails,omitempty"`
-	ArchiveSpace *asMetadata     `json:"asDetails,omitempty"`
-	JSTOR        *jstorMetadata  `json:"jstorDetails,omitempty"`
-	Apollo       *apolloMetadata `json:"apolloDetails,omitempty"`
-	ThumbURL     string          `json:"thumbURL,omitempty"`
-	ViewerURL    string          `json:"viewerURL,omitempty"`
-	VirgoURL     string          `json:"virgoURL,omitempty"`
-	Error        string          `json:"error"`
+	Metadata            *metadata            `json:"metadata"`
+	Collection          *metadata            `json:"collectionRecord"`
+	Units               []*unit              `json:"units"`
+	MasterFiles         []*masterFile        `json:"masterFiles,omitempty"`
+	Sirsi               *sirsiMetadata       `json:"sirsiDetails,omitempty"`
+	ArchiveSpace        *asMetadata          `json:"asDetails,omitempty"`
+	ArchivesSpaceReview *archivesspaceReview `json:"asReview,omitempty"`
+	JSTOR               *jstorMetadata       `json:"jstorDetails,omitempty"`
+	Apollo              *apolloMetadata      `json:"apolloDetails,omitempty"`
+	ThumbURL            string               `json:"thumbURL,omitempty"`
+	ViewerURL           string               `json:"viewerURL,omitempty"`
+	VirgoURL            string               `json:"virgoURL,omitempty"`
+	Error               string               `json:"error"`
 }
 
 type metadataRequest struct {
@@ -703,6 +704,17 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 				}
 				log.Printf("Parsed AS metadta collectionID=%s", asData.CollectionID)
 			}
+
+			var reviewInfo archivesspaceReview
+			err = svc.DB.Preload("Submitter").Preload("Reviewer").Where("metadata_id=?", md.ID).Limit(1).Find(&reviewInfo).Error
+			if err != nil {
+				log.Printf("ERROR: unable to load archivesspace review info: %s", err.Error())
+			} else {
+				if reviewInfo.ID > 0 {
+					out.ArchivesSpaceReview = &reviewInfo
+				}
+			}
+
 		} else if md.ExternalSystem.Name == "JSTOR Forum" {
 			log.Printf("INFO: get external JSTOR Forum metadata for %s", md.PID)
 			var mfInfo struct {
@@ -818,7 +830,7 @@ func (svc *serviceContext) validateArchivesSpaceMetadata(c *gin.Context) {
 func (svc *serviceContext) getXMLMetadata(c *gin.Context) {
 	mdID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	if mdID == 0 {
-		log.Printf("ERROR: invalid metadata id %s for get xml", c.Param("iid"))
+		log.Printf("ERROR: invalid metadata id %s for get xml", c.Param("id"))
 		c.String(http.StatusBadRequest, "invalid id")
 		return
 	}

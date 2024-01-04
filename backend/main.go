@@ -12,7 +12,7 @@ import (
 )
 
 // Version of the service
-const Version = "1.17.0"
+const Version = "1.18.0"
 
 func main() {
 	// Load cfg
@@ -41,6 +41,7 @@ func main() {
 	api := router.Group("/api", svc.authMiddleware)
 	{
 		api.GET("/aptrust", svc.getAPTrustSubmissions)
+		api.GET("/archivesspace", svc.getArchivesSpaceReviews)
 
 		api.POST("/collection-facet", svc.addCollectionFacet)
 		api.GET("/collections", svc.getCollections)
@@ -82,6 +83,14 @@ func main() {
 		api.GET("/metadata/:id/xml", svc.getXMLMetadata)
 		api.POST("/metadata", svc.createMetadata)
 		api.GET("/metadata/:id/aptrust", svc.getAPTrustMetadataStatus)
+
+		api.POST("/metadata/:id/archivesspace", svc.requestArchivesSpaceReview)
+		api.POST("/metadata/:id/archivesspace/review", svc.beginArchivesSpaceReview)
+		api.POST("/metadata/:id/archivesspace/resubmit", svc.resubmitArchivesSpaceReview)
+		api.POST("/metadata/:id/archivesspace/publish", svc.publishArchivesSpace)
+		api.POST("/metadata/:id/archivesspace/reject", svc.rejectArchivesSpaceSubmission)
+		api.DELETE("/metadata/:id/archivesspace", svc.cancelArchivesSpaceSubmission)
+		api.POST("/metadata/:id/archivesspace/notes", svc.updateArchivesSpaceSubmissionNotes)
 
 		api.GET("/orders", svc.getOrders)
 		api.POST("/orders", svc.createOrder)

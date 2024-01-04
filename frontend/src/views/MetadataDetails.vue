@@ -129,9 +129,12 @@
                <div v-if="metadataStore.hasMasterFiles == false"  class="as-toolbar">
                   <p>Not published to ArchivesSpace - no master files.</p>
                </div>
+               <div v-else-if="metadataStore.asReviewInProgress" class="as-review">
+                  ArchivesSpace review has been requested.
+               </div>
                <div v-else-if="!metadataStore.archivesSpace.publishedAt" class="as-toolbar">
-                  <DPGButton label="Publish (immediate)" class="as-publish" @click="publishToAS(true)" :loading="publishing"/>
-                  <DPGButton label="Publish (reviewed)" class="as-publish" @click="publishToAS(false)" :loading="publishing"/>
+                  <DPGButton label="Publish now" class="as-publish" @click="publishToAS()" :loading="publishing"/>
+                  <DPGButton label="Submit for review" class="as-publish" @click="submitForASReview()" :loading="publishing"/>
                </div>
                <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
             </template>
@@ -180,7 +183,7 @@
                </template>
             </dl>
             <div v-if="metadataStore.canPublishToVirgo" class="publish">
-               <DPGButton label="Publish to Virgo" autofocus class="p-button-secondary" @click="publishClicked()" :loading="publishing"/>
+               <DPGButton label="Publish to Virgo" autofocus class="p-button-secondary" @click="publishVirgoClicked()" :loading="publishing"/>
             </div>
          </Panel>
       </div>
@@ -378,7 +381,7 @@ const xmlUploader = (( event ) => {
    metadataStore.uploadXML( event.files[0] )
 })
 
-const publishClicked = (async () => {
+const publishVirgoClicked = (async () => {
    publishing.value = true
    await metadataStore.publish()
    publishing.value = false
@@ -387,13 +390,23 @@ const publishClicked = (async () => {
    }
 })
 
-const publishToAS = ( async ( immediate ) => {
+const publishToAS = ( async () => {
    publishing.value = true
-   await metadataStore.publishToArchivesSpace(userStore.ID, immediate)
+   await metadataStore.publishToArchivesSpace(userStore.ID)
    publishing.value = false
    if (systemStore.error == "") {
       systemStore.toastMessage('Publish Success', 'This item has successfully been published to ArchivesSpace')
    }
+})
+
+const submitForASReview = ( async () => {
+   publishing.value = true
+   await metadataStore.requestArchivesSpaceReview(userStore.ID)
+   publishing.value = false
+   if (systemStore.error == "") {
+      systemStore.toastMessage('Submnission Success', 'This item has successfully been submitted for ArchivesSpace review')
+   }
+   console.log("PUBLISHING: "+publishing.value)
 })
 
 const formatBoolean = (( flag) => {
@@ -465,6 +478,11 @@ const formatDate = (( date ) => {
       &:hover {
          text-decoration: underline;
       }
+   }
+   .as-review {
+      text-align: center;
+      margin: 25px 0 10px 0;
+      font-weight: bold;
    }
    .as-toolbar {
       text-align: right;

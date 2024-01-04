@@ -70,8 +70,9 @@ export const useMetadataStore = defineStore('metadata', {
          collectionTitle: "",
          language: "",
          dates: "",
-         publishedAt: ""
+         publishedAt: "",
       },
+      archivesSpaceReview: null,
       jstor: {
          id: "",
          ssid: "",
@@ -148,6 +149,10 @@ export const useMetadataStore = defineStore('metadata', {
             }
          })
          return canPublish
+      },
+      asReviewInProgress: state => {
+         if ( !state.archivesSpaceReview ) return false
+         return !state.archivesSpaceReview.publishedAt
       }
 	},
 	actions: {
@@ -252,10 +257,18 @@ export const useMetadataStore = defineStore('metadata', {
             system.setError(e)
          })
       },
-      async publishToArchivesSpace( userID, immediate ) {
+      async requestArchivesSpaceReview(userID) {
          const system = useSystemStore()
-         let payload = {userID: `${userID}`, metadataID: `${this.detail.id}`}
-         let url = `${system.jobsURL}/archivesspace/publish?immediate=${immediate}`
+         return axios.post( `/api/metadata/${this.detail.id}/archivesspace?user=${userID}` ).then( (response) => {
+          this.archivesSpaceReview = response.data
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      async publishToArchivesSpace( userID ) {
+         const system = useSystemStore()
+         let payload = {userID: userID, metadataID: this.detail.id}
+         let url = `${system.jobsURL}/archivesspace/publish`
          return axios.post( url, payload ).then( () => {
             var now = dayjs().format("YYYY-MM-DD hh:mm A")
             this.archivesSpace.publishedAt = now
@@ -374,6 +387,9 @@ export const useMetadataStore = defineStore('metadata', {
                   }
                } else {
                   this.archivesSpace.error = "Unable to get details for "+details.metadata.externalURI
+               }
+               if ( details.asReview) {
+                  this.archivesSpaceReview = details.asReview
                }
             } else if (details.metadata.externalSystem.name == "JSTOR Forum") {
                this.jstor = details.jstorDetails

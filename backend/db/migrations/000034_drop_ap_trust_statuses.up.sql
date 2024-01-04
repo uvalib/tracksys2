@@ -1,0 +1,1 @@
+DROP TABLE iF EXISTS ap_trust_statuses;

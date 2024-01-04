@@ -264,6 +264,7 @@ func (svc *serviceContext) getAPTrustCollectionStatus(c *gin.Context) {
 		return
 	}
 
+	// walk the list of aptrust submissions from the DB abd compare with the APTrust status response
 	for _, member := range collectionMemberInfo {
 		found := false
 		strID := fmt.Sprintf("%d", member.ID)

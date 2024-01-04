@@ -9,9 +9,12 @@ import (
 )
 
 type dashboardStats struct {
-	DueInOneWeek     int64 `json:"dueInOneWeek"`
-	Overdue          int64 `json:"overdue"`
-	ReadyForDelivery int64 `json:"readyForDelivery"`
+	DueInOneWeek            int64 `json:"dueInOneWeek"`
+	Overdue                 int64 `json:"overdue"`
+	ReadyForDelivery        int64 `json:"readyForDelivery"`
+	ArchivesSpaceRequests   int64 `json:"asRequests"`
+	ArchivesSpaceReviews    int64 `json:"asReviews"`
+	ArchivesSpaceRejections int64 `json:"asRejections"`
 }
 
 func (svc *serviceContext) getDashboardStats(c *gin.Context) {
@@ -53,6 +56,23 @@ func (svc *serviceContext) getDashboardStats(c *gin.Context) {
 		Distinct("orders.id").Count(&stats.ReadyForDelivery).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get ready for delivery orders: %s", err.Error())
+	}
+
+	// archivesspace
+	var asActive []archivesspaceReview
+	err = svc.DB.Where("published_at is null").Find(&asActive).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get active archivesspace review stats: %s", err.Error())
+	} else {
+		for _, asR := range asActive {
+			if asR.Status == "rejected" {
+				stats.ArchivesSpaceRejections++
+			} else if asR.Status == "requested" {
+				stats.ArchivesSpaceRequests++
+			} else {
+				stats.ArchivesSpaceReviews++
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, stats)

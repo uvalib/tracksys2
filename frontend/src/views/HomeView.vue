@@ -11,17 +11,39 @@
       <div class="stats">
          <div>
             <label>Orders due in one week:</label>
-            <router-link to='/orders??filters=["status|equals|due_week"]&sort=id+desc'>{{dashboard.dueInOneWeek}}</router-link>
+            <router-link  v-if="dashboard.dueInOneWeek" to='/orders?filters=["status|equals|due_week"]&sort=id+desc'>{{dashboard.dueInOneWeek}}</router-link>
+            <span v-else>0</span>
          </div>
          <span class="sep"></span>
          <div>
             <label>Overdue orders:</label>
-            <router-link to='/orders??filters=["status|equals|overdue"]&sort=id+desc'>{{dashboard.overdue}}</router-link>
+            <router-link  v-if="dashboard.overdue" to='/orders?filters=["status|equals|overdue"]&sort=id+desc'>{{dashboard.overdue}}</router-link>
+            <span v-else>0</span>
          </div>
          <span class="sep"></span>
          <div>
             <label>Orders ready for delivery:</label>
-            <router-link to='/orders??filters=["status|equals|ready"]&sort=id+desc'>{{dashboard.readyForDelivery}}</router-link>
+            <router-link v-if="dashboard.readyForDelivery" to='/orders?filters=["status|equals|ready"]&sort=id+desc'>{{dashboard.readyForDelivery}}</router-link>
+            <span v-else>0</span>
+         </div>
+      </div>
+      <div class="stats archivesspace">
+         <div>
+            <label>ArchivesSpace Requests:</label>
+            <router-link v-if="dashboard.asRequests" to='/archivesspace?view=request'>{{dashboard.asRequests}}</router-link>
+            <span v-else>0</span>
+         </div>
+         <span class="sep"></span>
+         <div>
+            <label>ArchivesSpace Reviews:</label>
+            <router-link v-if="dashboard.asReviews" to='/archivesspace?view=review'>{{dashboard.asReviews}}</router-link>
+            <span v-else>0</span>
+         </div>
+         <span class="sep"></span>
+         <div>
+            <label>ArchivesSpace Rejections:</label>
+            <router-link v-if="dashboard.asRejections" to='/archivesspace?view=reject'>{{dashboard.asRejections}}</router-link>
+            <span v-else>0</span>
          </div>
       </div>
       <div class="search">
@@ -326,14 +348,18 @@ const createMetadataClosed = (() => {
          }
       }
    }
+  .stats.archivesspace {
+      margin: 0 auto 40px auto;
+      border-bottom: 1px solid var(--uvalib-grey-light);
+      padding: 10px 0 10px 0;
+   }
    .stats {
-      margin: 0px auto 40px auto;
+      margin: 0 auto 0 auto;
       display: flex;
       flex-flow: row wrap;
       justify-content: center;
       background: #fafafa;
-      padding: 15px;
-      border-bottom: 1px solid var(--uvalib-grey-light);
+      padding: 15px 0 5px;
 
       label {
          font-weight: 600;
