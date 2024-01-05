@@ -344,7 +344,7 @@ func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan sear
 		log.Printf("INFO: searching masterfiles for [%s]...", sc.Query)
 		startTime := time.Now()
 		origQ := "(select mo.pid from master_files mo where mo.id = master_files.original_mf_id) as original_pid"
-		searchQ := svc.DB.Debug().Table("master_files").Joins("inner join metadata md on md.id=metadata_id").Select("master_files.*", origQ)
+		searchQ := svc.DB.Debug().Table("master_files").Joins("left outer join metadata md on md.id=metadata_id").Select("master_files.*", origQ)
 
 		if sc.QueryType != "pid" {
 			if sc.Filter.Target == "masterfiles" {
@@ -364,7 +364,7 @@ func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan sear
 				fieldQ = svc.DB.Where("unit_id=?", sc.IntQuery)
 			} else if sc.Field == "call_number" {
 				fieldQ = svc.DB.Where("call_number like ?", sc.QueryStart)
-			} else if sc.Field == "title" || sc.Field == "description" {
+			} else if sc.Field == "title" || sc.Field == "description" || sc.Field == "filename" {
 				fieldQ = svc.DB.Where(fmt.Sprintf("master_files.%s like ?", sc.Field), sc.QueryAny)
 			} else if sc.Field == "tag" {
 				searchQ = searchQ.

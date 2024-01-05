@@ -405,6 +405,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 			searchField{Field: "title", Label: "Title"},
 			searchField{Field: "description", Label: "Description"},
 			searchField{Field: "call_number", Label: "Call number"},
+			searchField{Field: "filename", Label: "Filename"},
 			searchField{Field: "tag", Label: "Tag"},
 		},
 		"metadata": {
