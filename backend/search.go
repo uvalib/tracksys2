@@ -364,8 +364,10 @@ func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan sear
 				fieldQ = svc.DB.Where("unit_id=?", sc.IntQuery)
 			} else if sc.Field == "call_number" {
 				fieldQ = svc.DB.Where("call_number like ?", sc.QueryStart)
-			} else if sc.Field == "title" || sc.Field == "description" || sc.Field == "filename" {
+			} else if sc.Field == "title" || sc.Field == "description" {
 				fieldQ = svc.DB.Where(fmt.Sprintf("master_files.%s like ?", sc.Field), sc.QueryAny)
+			} else if sc.Field == "filename" {
+				fieldQ = svc.DB.Where(fmt.Sprintf("master_files.%s like ?", sc.Field), sc.QueryStart)
 			} else if sc.Field == "tag" {
 				searchQ = searchQ.
 					Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
