@@ -140,7 +140,9 @@
       </div>
    </Dialog>
    <Dialog v-model:visible="showOriginal" :modal="true" header="Orignal Master File" :style="{width: '650px', height: 'auto'}" @hide="showOriginal = false">
-      <img class="original-image" :src="`${systemStore.jobsURL}/masterfiles/${masterFiles.details.id}/full_resolution`" />
+      <div class="original">
+         <img class="original-image" :src="`${systemStore.jobsURL}/masterfiles/${masterFiles.details.id}/full_resolution`" />
+      </div>
    </Dialog>
 </template>
 
@@ -289,9 +291,18 @@ const auditNow = (() => {
 </script>
 
 <style scoped lang="scss">
-img.original-image {
-   max-width: 100%;
-   max-height: 100%;
+div.original {
+   background-image: url('@/assets/spinner2.gif');
+   background-repeat: no-repeat;
+   background-position: center,center;
+   min-height: 600px;
+
+   img.original-image {
+      max-width: 100%;
+      max-height: 100%;
+      min-height: 600px;
+      background: white;
+   }
 }
 .clone {
    display: inline-block;
