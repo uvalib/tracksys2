@@ -162,6 +162,62 @@ func (svc *serviceContext) scriptRunner(c *gin.Context) {
 	c.String(http.StatusNotImplemented, "no script is available")
 }
 
+// SCRIPT TO VERIFY BARCODES ARE SUBMITTED TO HATHITRUST AND ARE DISCOVERABLE
+// func (svc *serviceContext) scriptRunner(c *gin.Context) {
+// 	log.Printf("INFO: script runner called")
+// 	bytes, err := os.ReadFile("./verified_missing.txt")
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 	}
+
+// 	count := 0
+// 	missing := make([]string, 0)
+// 	templateMARC := "https://ils.lib.virginia.edu/uhtbin/getMarc?barcode=BC&hathitrust=yes&type=xml"
+// 	templateURL := "https://babel.hathitrust.org/cgi/ls?q1=sdr-uva.KEY&field1=ocr&a=srchls&ft=ft&lmt=all"
+// 	for _, bc := range strings.Split(string(bytes), "\n") {
+// 		cleanBC := strings.TrimSpace(bc)
+// 		if cleanBC == "" {
+// 			continue
+// 		}
+// 		count++
+
+// 		// get the MARC data from Sirsi
+// 		url := strings.ReplaceAll(templateMARC, "BC", cleanBC)
+// 		resp, reqErr := svc.getRequest(url)
+// 		if reqErr != nil {
+// 			log.Fatal(fmt.Sprintf("%d: %s", reqErr.StatusCode, reqErr.Message))
+// 		}
+
+// 		// Parse cat key from the first control field
+// 		// find this: <controlfield tag="001">u500878</controlfield>
+// 		respStr := string(resp)
+// 		cfIdx := strings.Index(respStr, "<controlfield")
+// 		if cfIdx == -1 {
+// 			log.Fatal("<controlfield not found")
+// 		}
+// 		trimmed := respStr[cfIdx+24:]
+// 		endIdx := strings.Index(trimmed, "<")
+// 		catKey := trimmed[:endIdx]
+
+// 		// search HT using specially formatted cat key
+// 		htURL := strings.ReplaceAll(templateURL, "KEY", catKey)
+// 		resp, reqErr = svc.getRequest(htURL)
+// 		if reqErr != nil {
+// 			log.Fatal(fmt.Sprintf("%d: %s", reqErr.StatusCode, reqErr.Message))
+// 		}
+
+// 		if strings.Contains(string(resp), "No results") {
+// 			log.Printf("INFO: ..... NOT FOUND")
+// 			missing = append(missing, cleanBC)
+// 		} else {
+// 			log.Printf("INFO: ..... OK")
+// 		}
+// 	}
+
+// 	log.Printf("INFO: MISSING %s", strings.Join(missing, ","))
+// 	c.String(http.StatusOK, fmt.Sprintf("%d processed, %d missing", count, len(missing)))
+// }
+
 // SCRIPT TO ADD TO A COLLECTION BASED ON ARCHIVESSPACE URI
 // func (svc *serviceContext) scriptRunner(c *gin.Context) {
 // 	log.Printf("INFO: script runner called")
