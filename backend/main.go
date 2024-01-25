@@ -12,7 +12,7 @@ import (
 )
 
 // Version of the service
-const Version = "1.18.1"
+const Version = "1.18.2"
 
 func main() {
 	// Load cfg
@@ -44,6 +44,7 @@ func main() {
 
 		api.GET("/aptrust", svc.getAPTrustSubmissions)
 		api.GET("/archivesspace", svc.getArchivesSpaceReviews)
+		api.GET("/hathitrust", svc.getHathiTrustSubmissions)
 
 		api.POST("/collection-facet", svc.addCollectionFacet)
 		api.GET("/collections", svc.getCollections)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,7 @@ import (
 type hathitrustStatus struct {
 	ID                  uint       `json:"id"`
 	MetadataID          int64      `json:"metadataID"`
+	Metadata            *metadata  `gorm:"foreignKey:MetadataID" json:"metadata,omitempty"`
 	RequestedAt         time.Time  `json:"requestedAt"`
 	PackageCreatedAt    *time.Time `json:"packageCreatedAt"`
 	PackageSubmittedAt  *time.Time `json:"packageSubmittedAt"`
@@ -36,6 +38,61 @@ type hatiTrustUpdateRequest struct {
 type hathiTrustBatchUpdateRequest struct {
 	Field string `json:"field"`
 	Value string `json:"value"`
+}
+
+type hathiTrustSubmissionsResonse struct {
+	Total       int64              `json:"total"`
+	Submissions []hathitrustStatus `json:"submissions"`
+}
+
+func (svc *serviceContext) getHathiTrustSubmissions(c *gin.Context) {
+	startIndex, _ := strconv.Atoi(c.Query("start"))
+	pageSize, _ := strconv.Atoi(c.Query("limit"))
+	if pageSize == 0 {
+		pageSize = 30
+	}
+	queryStr := c.Query("q")
+
+	sortBy := c.Query("by")
+	if sortBy == "" {
+		sortBy = "pid"
+	}
+	sortOrder := c.Query("order")
+	if sortOrder == "" {
+		sortOrder = "desc"
+	}
+
+	sortField := fmt.Sprintf("hathitrust_statuses.%s", sortBy)
+	if sortBy == "pid" {
+		sortField = "Metadata.pid"
+	} else if sortBy == "title" {
+		sortField = "Metadata.title"
+	} else if sortBy == "barcode" {
+		sortField = "Metadata.barcode"
+	}
+
+	orderStr := fmt.Sprintf("%s %s", sortField, sortOrder)
+	log.Printf("INFO: get %d hathitrust submissions starting from offset %d order %s; query=[%s]", pageSize, startIndex, orderStr, queryStr)
+
+	resp := hathiTrustSubmissionsResonse{}
+	err := svc.DB.Table("hathitrust_statuses").Count(&resp.Total).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get hathi submissions count: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = svc.DB.Joins("Metadata").Order(orderStr).Offset(startIndex).Limit(pageSize).
+		Where("title like ? or barcode like ?", fmt.Sprintf("%%%s%%", queryStr), fmt.Sprintf("%s%%", queryStr)).
+		Find(&resp.Submissions).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get hathi submissions: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+
 }
 
 func (svc *serviceContext) updateOrderHathiTrustStatus(c *gin.Context) {

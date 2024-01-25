@@ -26,10 +26,10 @@
          </Column>
          <Column field="title" header="Title" :sortable="true" />
          <Column field="requestedAt" header="Requested" :sortable="true" class="nowrap">
-            <template #body="slotProps">{{ formatDate(slotProps.data.requestedAt) }}</template>
+            <template #body="slotProps">{{ $formatDate(slotProps.data.requestedAt) }}</template>
          </Column>
          <Column field="processedAt" header="Processed" :sortable="true" class="nowrap" >
-            <template #body="slotProps">{{ formatDate(slotProps.data.processedAt) }}</template>
+            <template #body="slotProps">{{ $formatDate(slotProps.data.processedAt) }}</template>
          </Column>
          <Column field="success" header="Status" :sortable="true" class="apt-status">
             <template #body="slotProps">
@@ -58,7 +58,6 @@ import { useAPTrustStore } from '@/stores/aptrust'
 import { usePinnable } from '@/composables/pin'
 import APTrustPanel from '@/components/aptrust/APTrustPanel.vue'
 import Dialog from 'primevue/dialog'
-import dayjs from 'dayjs'
 
 usePinnable("p-paginator-top")
 
@@ -82,14 +81,6 @@ const infoClicked = ((submission) => {
    tgtPID.value = submission.pid
    showDialog.value = true
    apTrust.getItemStatus( submission.metadataID )
-})
-
-const formatDate = ( ( dateStr ) => {
-   if (dateStr) {
-      let d = dayjs(dateStr)
-      return d.format("YYYY-MM-DD HH:mm")
-   }
-   return ""
 })
 
 const clearSearch = (() => {
