@@ -167,6 +167,9 @@ const onSort = ((event) => {
    min-height: 600px;
    text-align: left;
    padding: 0 25px;
+   th {
+      white-space: break-spaces !important;
+   }
    button.pad {
       margin-left: 10px;
    }
