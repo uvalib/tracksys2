@@ -10,6 +10,7 @@
          :rowsPerPageOptions="[30,50,100]" :first="hathiTrust.searchOpts.start"
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
          :loading="hathiTrust.working"
+         v-model:filters="columnFilters" filterDisplay="menu" @filter="getSubmissions()"
       >
          <template #paginatorstart></template>
          <template #paginatorend>
@@ -39,7 +40,11 @@
                <span v-else class="none">N/A</span>
             </template>
          </Column>
-         <Column field="metadataStatus" header="Metadata Status" class="nowrap" ></Column>
+         <Column field="metadataStatus" header="Metadata Status" class="nowrap" filterField="metadataStatus" :showFilterMatchModes="false" >
+            <template #filter="{filterModel}">
+               <Dropdown v-model="filterModel.value" :options="statuses" optionLabel="name" optionValue="value" placeholder="Select status" />
+            </template>
+         </Column>
 
          <Column field="package_created_at" header="Package Created" :sortable="true" class="nowrap" >
             <template #body="slotProps">
@@ -53,7 +58,11 @@
                <span v-else class="none">N/A</span>
             </template>
          </Column>
-         <Column field="packageStatus" header="Package Status" class="nowrap" ></Column>
+         <Column field="packageStatus" header="Package Status" class="nowrap" filterField="packageStatus" :showFilterMatchModes="false" >
+            <template #filter="{filterModel}">
+               <Dropdown v-model="filterModel.value" :options="statuses" optionLabel="name" optionValue="value" placeholder="Select status" />
+            </template>
+         </Column>
 
          <Column field="finished_at" header="Finished" :sortable="true" class="nowrap" >
             <template #body="slotProps">
@@ -61,8 +70,18 @@
                <span v-else class="none">N/A</span>
             </template>
          </Column>
+         <Column field="notes" header="Notes" >
+            <template #body="slotProps">
+               <DPGButton v-if="slotProps.data.notes"  class="notes" label="View" severity="secondary" @click="notesClicked(slotProps.data)"/>
+               <span v-else class="none">N/A</span>
+            </template>
+         </Column>
       </DataTable>
    </div>
+   <Dialog v-model:visible="showNotes" :modal="true" header="Submission Notes">
+      <div>{{ tgtSubmission.metadata.pid }} - {{ tgtSubmission.metadata.title }}</div>
+      <div class="note-text">{{ tgtSubmission.notes }}</div>
+   </Dialog>
 </template>
 
 <script setup>
@@ -70,12 +89,29 @@ import { onMounted, ref, computed } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
+import Dialog from 'primevue/dialog'
+import Dropdown from 'primevue/dropdown'
+import { FilterMatchMode } from 'primevue/api'
 import { useHathiTrustStore } from '@/stores/hathitrust'
 import { usePinnable } from '@/composables/pin'
 
 usePinnable("p-paginator-top")
 
 const hathiTrust = useHathiTrustStore()
+
+const showNotes = ref(false)
+const tgtSubmission = ref()
+
+const columnFilters = ref( {
+   'metadataStatus': {value: null, matchMode: FilterMatchMode.EQUALS},
+   'packageStatus': {value: null, matchMode: FilterMatchMode.EQUALS},
+})
+
+const statuses = ref([
+   {name: "Submitted", value: "submitted"},
+   {name: "Accepted", value: "accepted"},
+   {name: "Failed", value: "failed"},
+])
 
 const sortOrder = computed(() => {
    if (hathiTrust.searchOpts.sortOrder == "desc") {
@@ -85,19 +121,34 @@ const sortOrder = computed(() => {
 })
 
 onMounted(() => {
-   hathiTrust.getSubmissions()
+   getSubmissions()
    document.title = `HathiTrust Submissions`
+})
+
+const getSubmissions = (() => {
+   hathiTrust.searchOpts.filters = []
+   Object.entries(columnFilters.value).forEach(([key, data]) => {
+      if (data.value && data.value != "") {
+         hathiTrust.searchOpts.filters.push({field: key, match: data.matchMode, value: data.value})
+      }
+   })
+   hathiTrust.getSubmissions()
+})
+
+const notesClicked = ( (s) => {
+   tgtSubmission.value = s
+   showNotes.value = true
 })
 
 const clearSearch = (() => {
    hathiTrust.searchOpts.query = ""
-   hathiTrust.getSubmissions()
+   getSubmissions()
 })
 
 const onPage = ((event) => {
    hathiTrust.searchOpts.start = event.first
    hathiTrust.searchOpts.limit = event.rows
-   hathiTrust.getSubmissions()
+   getSubmissions()
 })
 
 const onSort = ((event) => {
@@ -106,7 +157,7 @@ const onSort = ((event) => {
    if (event.sortOrder == -1) {
       hathiTrust.searchOpts.sortOrder = "desc"
    }
-   hathiTrust.getSubmissions()
+   getSubmissions()
 })
 
 </script>
@@ -119,9 +170,22 @@ const onSort = ((event) => {
    button.pad {
       margin-left: 10px;
    }
+   button.notes {
+      font-size: 0.75em;
+      padding: 5px 10px;
+   }
    .none {
       color: var(--uvalib-grey-light);
       font-style: italic;
    }
+}
+div.note-text {
+   height: 150px;
+   overflow-y: scroll;
+   margin: 15px 0 10px 0;
+   padding: 5px 10px;
+   border: 1px solid var(--uvalib-grey-light);
+   border-radius: 5px;
+   background-color: white;
 }
 </style>

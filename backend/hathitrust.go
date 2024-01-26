@@ -1,13 +1,17 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type hathitrustStatus struct {
@@ -74,6 +78,37 @@ func (svc *serviceContext) getHathiTrustSubmissions(c *gin.Context) {
 	orderStr := fmt.Sprintf("%s %s", sortField, sortOrder)
 	log.Printf("INFO: get %d hathitrust submissions starting from offset %d order %s; query=[%s]", pageSize, startIndex, orderStr, queryStr)
 
+	var filterQ *gorm.DB
+	filterStr := c.Query("filters")
+	if filterStr != "" {
+		log.Printf("INFO: raw filters [%s]", filterStr)
+		var filters []string
+		err := json.Unmarshal([]byte(filterStr), &filters)
+		if err != nil {
+			log.Printf("ERROR: unable to parse filter payload %s: %s", filterStr, err.Error())
+			c.String(http.StatusBadRequest, fmt.Sprintf("invalid filters param: %s", filterStr))
+			return
+		}
+		for _, filter := range filters {
+			bits := strings.Split(filter, "|") // target | comparison | value
+			tgtField := bits[0]
+			tgtVal, _ := url.QueryUnescape(bits[2])
+			log.Printf("INFO: filter %s=%s", tgtField, tgtVal)
+			if tgtField == "metadataStatus" {
+				tgtField = "metadata_status"
+			} else if tgtField == "packageStatus" {
+				tgtField = "package_status"
+			} else {
+				continue
+			}
+			if filterQ == nil {
+				filterQ = svc.DB.Where(fmt.Sprintf("%s=?", tgtField), tgtVal)
+			} else {
+				filterQ = filterQ.Where(fmt.Sprintf("%s=?", tgtField), tgtVal)
+			}
+		}
+	}
+
 	resp := hathiTrustSubmissionsResonse{}
 	err := svc.DB.Table("hathitrust_statuses").Count(&resp.Total).Error
 	if err != nil {
@@ -82,9 +117,12 @@ func (svc *serviceContext) getHathiTrustSubmissions(c *gin.Context) {
 		return
 	}
 
-	err = svc.DB.Joins("Metadata").Order(orderStr).Offset(startIndex).Limit(pageSize).
-		Where("title like ? or barcode like ?", fmt.Sprintf("%%%s%%", queryStr), fmt.Sprintf("%s%%", queryStr)).
-		Find(&resp.Submissions).Error
+	searchQ := svc.DB.Joins("Metadata").Order(orderStr).Offset(startIndex).Limit(pageSize).
+		Where("title like ? or barcode like ?", fmt.Sprintf("%%%s%%", queryStr), fmt.Sprintf("%s%%", queryStr))
+	if filterQ != nil {
+		searchQ = searchQ.Where(filterQ)
+	}
+	err = searchQ.Debug().Find(&resp.Submissions).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get hathi submissions: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
