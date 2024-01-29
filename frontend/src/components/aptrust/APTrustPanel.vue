@@ -2,16 +2,16 @@
    <div v-if="apTrust.working" class="loading"><WaitSpinner :overlay="false" message="Processing APTRust request..." /></div>
    <template v-else-if="apTrust.hasItemStatus">
       <dl v-if="metadataStore.detail.isCollection">
-         <DataDisplay label="Requested" :value="$formatDate(apTrust.itemStatus.requestedAt)"/>
-         <DataDisplay label="Finished" :value="$formatDate(apTrust.itemStatus.finishedAt)"/>
+         <DataDisplay label="Requested" :value="$formatDateTime(apTrust.itemStatus.requestedAt)"/>
+         <DataDisplay label="Finished" :value="$formatDateTime(apTrust.itemStatus.finishedAt)"/>
          <DataDisplay label="Status" :value="apTrust.itemStatus.status"/>
          <DataDisplay label="Note" value="Initial submission of the collection is complete. Resubmissions are handed at the item level."/>
       </dl>
       <dl v-else>
          <DataDisplay label="Bag" :value="apTrust.itemStatus.bag"/>
-         <DataDisplay label="Requested" :value="$formatDate(apTrust.itemStatus.requestedAt)"/>
-         <DataDisplay label="Submitted" :value="$formatDate(apTrust.itemStatus.submittedAt)"/>
-         <DataDisplay label="Finished" :value="$formatDate(apTrust.itemStatus.finishedAt)"/>
+         <DataDisplay label="Requested" :value="$formatDateTime(apTrust.itemStatus.requestedAt)"/>
+         <DataDisplay label="Submitted" :value="$formatDateTime(apTrust.itemStatus.submittedAt)"/>
+         <DataDisplay label="Finished" :value="$formatDateTime(apTrust.itemStatus.finishedAt)"/>
          <DataDisplay label="ID" :value="apTrust.itemStatus.id"/>
          <DataDisplay label="eTag" :value="apTrust.itemStatus.etag"/>
          <DataDisplay label="Object ID" :value="apTrust.itemStatus.objectIdentifier">

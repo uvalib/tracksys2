@@ -23,10 +23,10 @@
             <DataDisplay label="Special Instructions" :value="detail.specialInstructions"/>
             <DataDisplay label="Staff Notes" :value="detail.staffNotes"/>
             <DataDisplay label="Complete Scan" :value="flagString(detail.completeScan)">
-               <span :class="`flag ${flagString(detail.completeScan)}`">{{displayFlag(detail.completeScan)}}</span>
+               <span :class="`flag ${flagString(detail.completeScan)}`">{{$formatBool(detail.completeScan)}}</span>
             </DataDisplay>
             <DataDisplay label="Throwaway" :value="flagString(detail.throwAway)">
-               <span :class="`flag ${flagString(detail.throwAway)}`">{{displayFlag(detail.throwAway)}}</span>
+               <span :class="`flag ${flagString(detail.throwAway)}`">{{$formatBool(detail.throwAway)}}</span>
             </DataDisplay>
          </dl>
       </Panel>
@@ -43,17 +43,17 @@
                <DataDisplay label="Deliverable Resolution" value=""/>
             </template>
             <DataDisplay label="OCR Master Files" :value="flagString(detail.ocrMasterFiles)">
-               <span :class="`flag ${flagString(detail.ocrMasterFiles)}`">{{displayFlag(detail.ocrMasterFiles)}}</span>
+               <span :class="`flag ${flagString(detail.ocrMasterFiles)}`">{{$formatBool(detail.ocrMasterFiles)}}</span>
             </DataDisplay>
             <DataDisplay label="Remove Watermark" :value="flagString(detail.removeWatermark)">
-               <span :class="`flag ${flagString(detail.removeWatermark)}`">{{displayFlag(detail.removeWatermark)}}</span>
+               <span :class="`flag ${flagString(detail.removeWatermark)}`">{{$formatBool(detail.removeWatermark)}}</span>
             </DataDisplay>
             <DataDisplay label="Virgo" :value="flagString(detail.includeInDL)" v-if="unitsStore.canPublishToVirgo">
-               <span :class="`flag ${flagString(detail.includeInDL)}`">{{displayFlag(detail.includeInDL)}}</span>
+               <span :class="`flag ${flagString(detail.includeInDL)}`">{{$formatBool(detail.includeInDL)}}</span>
             </DataDisplay>
-            <DataDisplay label="Date Archived" :value="formatDate(detail.dateArchived)" />
-            <DataDisplay label="Date Virgo Deliverables Ready" :value="formatDate(detail.dateDLDeliverablesReady)" v-if="detail.includeInDL" />
-            <DataDisplay label="Date Patron Deliverables Ready" :value="formatDate(detail.datePatronDeliverablesReady)" />
+            <DataDisplay label="Date Archived" :value="$formatDateTime(detail.dateArchived)" />
+            <DataDisplay label="Date Virgo Deliverables Ready" :value="$formatDateTime(detail.dateDLDeliverablesReady)" v-if="detail.includeInDL" />
+            <DataDisplay label="Date Patron Deliverables Ready" :value="$formatDateTime(detail.datePatronDeliverablesReady)" />
          </dl>
 
          <div class="acts-wrap" v-if="detail.status != 'finalizing' && (userStore.isAdmin || userStore.isSupervisor)">
@@ -174,7 +174,6 @@ import { usePDFStore } from '@/stores/pdf'
 import Panel from 'primevue/panel'
 import { storeToRefs } from "pinia"
 import DataDisplay from '../components/DataDisplay.vue'
-import dayjs from 'dayjs'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import CreateProjectDialog from '../components/unit/CreateProjectDialog.vue'
@@ -337,19 +336,6 @@ const displayStatus = (( id) => {
       return "Await Fee"
    }
    return id.charAt(0).toUpperCase() + id.slice(1)
-})
-
-const displayFlag = (( f ) => {
-   if (f) return "Yes"
-   return "No"
-})
-
-const formatDate = (( dateStr ) => {
-   if (dateStr) {
-      let d = dayjs(dateStr)
-      return d.format("YYYY-MM-DD HH:mm A")
-   }
-   return ""
 })
 
 </script>

@@ -34,8 +34,12 @@
          </Column>
          <Column field="status" header="Status"></Column>
          <Column field="warnings" header="Warnings"></Column>
-         <Column field="startedAt" header="Started"></Column>
-         <Column field="finishedAt" header="Finished"></Column>
+         <Column field="startedAt" header="Started">
+            <template #body="slotProps">{{ $formatDateTime(slotProps.data.startedAt) }}</template>
+         </Column>
+         <Column field="finishedAt" header="Finished">
+            <template #body="slotProps">{{ $formatDateTime(slotProps.data.finishedAt) }}</template>
+         </Column>
          <Column header="" class="row-acts">
             <template #body="slotProps">
                <router-link :to="`/jobs/${slotProps.data.id}`">View</router-link>

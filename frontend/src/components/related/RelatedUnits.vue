@@ -31,7 +31,7 @@
       <Column field="datePatronDeliverablesReady"  header="Date Patron Deliverables Ready" :sortable="true">
          <template #body="slotProps">
             <span v-if="slotProps.data.datePatronDeliverablesReady">
-               {{formatDate(slotProps.data.datePatronDeliverablesReady)}}
+               {{$formatDate(slotProps.data.datePatronDeliverablesReady)}}
             </span>
             <span v-else class="empty">N/A</span>
          </template>
@@ -39,7 +39,7 @@
       <Column field="dateDLDeliverablesReady" header="Date DL Deliverables Ready" :sortable="true">
          <template #body="slotProps">
             <span v-if="slotProps.data.dateDLDeliverablesReady">
-               {{formatDate(slotProps.data.dateDLDeliverablesReady)}}
+               {{$formatDate(slotProps.data.dateDLDeliverablesReady)}}
             </span>
             <span v-else class="empty">N/A</span>
          </template>
@@ -49,7 +49,7 @@
             <Dropdown v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a reorder status" />
          </template>
          <template #body="slotProps">
-            {{formatBoolean(slotProps.data.reorder)}}
+            {{$formatBool(slotProps.data.reorder)}}
          </template>
       </Column>
       <Column field="masterFilesCount" header="Master Files Count" :sortable="true"/>
@@ -62,7 +62,6 @@ import { FilterMatchMode } from 'primevue/api'
 import Dropdown from 'primevue/dropdown'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import dayjs from 'dayjs'
 import AddUnitDialog from '@/components/order/AddUnitDialog.vue'
 import HathiTrustUpdateDialog from '@/components/order/HathiTrustUpdateDialog.vue'
 import { usePinnable } from '@/composables/pin'
@@ -100,19 +99,6 @@ const filters = ref( {
    'intendedUse.id': {value: null, matchMode: FilterMatchMode.EQUALS},
    'reorder': {value: null, matchMode: FilterMatchMode.EQUALS},
 })
-
-const formatBoolean = ( (flag) => {
-   if (flag) return "Yes"
-   return "No"
-})
-
-const formatDate = (  (date ) => {
-   if (date) {
-      return dayjs(date).format("YYYY-MM-DD")
-   }
-   return ""
-})
-
 </script>
 
 <stype scoped lang="scss">

@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { useSystemStore } from './system'
 import axios from 'axios'
-import dayjs from 'dayjs'
 
 export const useMetadataStore = defineStore('metadata', {
 	state: () => ({
@@ -247,11 +246,10 @@ export const useMetadataStore = defineStore('metadata', {
       async publish( ) {
          const system = useSystemStore()
          return axios.post( `${system.jobsURL}/metadata/${this.detail.id}/publish` ).then( () => {
-            var now = dayjs().format("YYYY-MM-DD hh:mm A")
             if ( this.detail.dateDLIngest ) {
-               this.detail.dateDLUpdate = now
+               this.detail.dateDLUpdate = new Date()
             } else {
-               this.detail.dateDLIngest = now
+               this.detail.dateDLIngest = new Date()
             }
          }).catch( e => {
             system.setError(e)
@@ -270,8 +268,7 @@ export const useMetadataStore = defineStore('metadata', {
          let payload = {userID: userID, metadataID: this.detail.id}
          let url = `${system.jobsURL}/archivesspace/publish`
          return axios.post( url, payload ).then( () => {
-            var now = dayjs().format("YYYY-MM-DD hh:mm A")
-            this.archivesSpace.publishedAt = now
+            this.archivesSpace.publishedAt = new Date()
          }).catch( e => {
             system.setError(e)
          })

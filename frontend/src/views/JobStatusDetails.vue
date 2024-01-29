@@ -25,7 +25,7 @@
    <div class="log">
       <div class="scroller">
          <div class="line" v-for="le in jobsStore.details.events" :key="le.id">
-            <span class="date">{{le.timeStamp}}</span>
+            <span class="date">{{ formatTimeStamp(le.timeStamp) }}</span>
             <span class="sep">:</span>
             <span :class="le.level">{{le.level.toUpperCase()}}</span>
             <span class="sep">:</span>
@@ -40,6 +40,7 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { useJobsStore } from '@/stores/jobs'
 import { useRoute, useRouter } from 'vue-router'
 import { useConfirm } from "primevue/useconfirm"
+import dayjs from 'dayjs'
 
 const route = useRoute()
 const router = useRouter()
@@ -58,6 +59,10 @@ onBeforeUnmount(() => {
    if ( tailIntervalID.value > -1 ) {
       clearInterval( tailIntervalID.value )
    }
+})
+
+const formatTimeStamp = ( (ts) => {
+   return dayjs(ts).format("YYYY-MM-DD HH:mm:ss")
 })
 
 const getAssociatedObjectLink = (( objName ) => {

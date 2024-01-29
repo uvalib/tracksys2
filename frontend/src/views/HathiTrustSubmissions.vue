@@ -32,11 +32,11 @@
             <template #body="slotProps">{{ slotProps.data.metadata.barcode }}</template>
          </Column>
          <Column field="requested_at" header="Requested" :sortable="true" class="nowrap" >
-            <template #body="slotProps">{{ $formatDate(slotProps.data.requestedAt, false) }}</template>
+            <template #body="slotProps">{{ $formatDate(slotProps.data.requestedAt) }}</template>
          </Column>
          <Column field="metadata_submitted_at" header="Metadata Submitted" :sortable="true" class="nowrap" >
             <template #body="slotProps">
-               <span v-if="slotProps.data.metadataSubmittedAt">{{ $formatDate(slotProps.data.metadataSubmittedAt, false) }}</span>
+               <span v-if="slotProps.data.metadataSubmittedAt">{{ $formatDate(slotProps.data.metadataSubmittedAt) }}</span>
                <span v-else class="none">N/A</span>
             </template>
          </Column>
@@ -48,13 +48,13 @@
 
          <Column field="package_created_at" header="Package Created" :sortable="true" class="nowrap" >
             <template #body="slotProps">
-               <span v-if="slotProps.data.packageCreatedAt">{{ $formatDate(slotProps.data.packageCreatedAt, false) }}</span>
+               <span v-if="slotProps.data.packageCreatedAt">{{ $formatDate(slotProps.data.packageCreatedAt) }}</span>
                <span v-else class="none">N/A</span>
             </template>
          </Column>
          <Column field="package_submitted_at" header="Package Submitted" :sortable="true" class="nowrap" >
             <template #body="slotProps">
-               <span v-if="slotProps.data.packageSubmittedAt">{{ $formatDate(slotProps.data.packageSubmittedAt, false) }}</span>
+               <span v-if="slotProps.data.packageSubmittedAt">{{ $formatDate(slotProps.data.packageSubmittedAt) }}</span>
                <span v-else class="none">N/A</span>
             </template>
          </Column>
@@ -66,7 +66,7 @@
 
          <Column field="finished_at" header="Finished" :sortable="true" class="nowrap" >
             <template #body="slotProps">
-               <span v-if="slotProps.data.finishedAt">{{ $formatDate(slotProps.data.finishedAt, false) }}</span>
+               <span v-if="slotProps.data.finishedAt">{{ $formatDate(slotProps.data.finishedAt) }}</span>
                <span v-else class="none">N/A</span>
             </template>
          </Column>
@@ -163,13 +163,14 @@ const onSort = ((event) => {
 </script>
 
 <style scoped lang="scss">
+:deep(th.p-sortable-column)  {
+   white-space: break-spaces !important;
+}
 .submissions {
    min-height: 600px;
    text-align: left;
    padding: 0 25px;
-   th {
-      white-space: break-spaces !important;
-   }
+
    button.pad {
       margin-left: 10px;
    }

@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { useSystemStore } from './system'
 import axios from 'axios'
-import dayjs from 'dayjs'
 
 export const useJobsStore = defineStore('jobs', {
 	state: () => ({
@@ -33,7 +32,7 @@ export const useJobsStore = defineStore('jobs', {
                }
                let finished = "N/A"
                if (js.finishedAt ) {
-                  finished = dayjs(js.finishedAt).format("YYYY-MM-DD hh:mm A")
+                  finished = js.finishedAt
                }
                this.jobs.push({
                   id: js.id,
@@ -42,7 +41,7 @@ export const useJobsStore = defineStore('jobs', {
                   status: js.status,
                   warnings: js.failures,
                   error: js.error,
-                  startedAt: dayjs(js.startedAt).format("YYYY-MM-DD hh:mm A"),
+                  startedAt: js.startedAt,
                   finishedAt: finished,
                })
             })
@@ -63,7 +62,7 @@ export const useJobsStore = defineStore('jobs', {
             response.data.events.forEach( evt => {
                this.details.events.push({
                   id: evt.id, jobID: evt.jobID, level: levels[evt.level],
-                  text: evt.text, timeStamp: dayjs(evt.createdAt).format("YYYY-MM-DD HH:mm:ss")
+                  text: evt.text, timeStamp: evt.createdAt
                })
             })
             let job = this.jobs.find( j => j.id == jobID)

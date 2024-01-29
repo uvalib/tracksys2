@@ -30,7 +30,7 @@
          <Column field="metadata.title" header="Title" class="long-text" />
          <Column field="submittedAt" header="Requested" :sortable="true">
             <template #body="slotProps">
-               {{formatDate(slotProps.data.submittedAt)}}
+               {{$formatDate(slotProps.data.submittedAt)}}
             </template>
          </Column>
          <Column field="submitter" header="Requested By" filterField="submitter.lastName" :showFilterMatchModes="false" >
@@ -68,7 +68,7 @@
          </Column>
          <Column field="reviewStartedAt" header="Review" :sortable="true">
             <template #body="slotProps">
-               <span v-if="slotProps.data.reviewStartedAt">{{formatDate(slotProps.data.reviewStartedAt)}}</span>
+               <span v-if="slotProps.data.reviewStartedAt">{{$formatDate(slotProps.data.reviewStartedAt)}}</span>
                <span v-else class="empty">N/A</span>
             </template>
          </Column>
@@ -124,7 +124,6 @@ import { useConfirm } from "primevue/useconfirm"
 import { usePinnable } from '@/composables/pin'
 import { useArchivesSpaceStore } from '@/stores/archivesspace'
 import { useUserStore } from '@/stores/user'
-import dayjs from 'dayjs'
 import { useRoute } from 'vue-router'
 
 usePinnable("p-paginator-top")
@@ -306,12 +305,6 @@ const publishClicked = ( (item) => {
 
 const viewClicked = ( (item) => {
    window.open(`${archivesSpace.viewerBaseURL}/${item.metadata.pid}`, '_blank').focus()
-})
-const formatDate = (  (date ) => {
-   if (date) {
-      return dayjs(date).format("YYYY-MM-DD")
-   }
-   return ""
 })
 
 const clearSearch = (() => {

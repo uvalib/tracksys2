@@ -21,7 +21,7 @@
                <Column field="dateArchived" header="Date Ingested"  class="nowrap">
                   <template #body="slotProps">
                      <span v-if="slotProps.data.dateArchived">
-                        {{ dayjs(slotProps.data.dateArchived).format("YYYY-MM-DD") }}
+                        {{ $formatDate(slotProps.data.dateArchived) }}
                      </span>
                      <span v-else class="na">N/A</span>
                   </template>
@@ -44,7 +44,6 @@ import { useSystemStore } from '@/stores/system'
 import Dialog from 'primevue/dialog'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import dayjs from 'dayjs'
 
 const metadataStore = useMetadataStore()
 const systemStore = useSystemStore()

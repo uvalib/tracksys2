@@ -15,7 +15,7 @@
                      <span :class="`status ${detail.status}`">{{displayStatus(detail.status)}}</span>
                   </div>
                </DataDisplay>
-               <DataDisplay v-if="detail.status=='completed'" label="Date Completed" :value="formatDateTime(detail.dateCompleted)"/>
+               <DataDisplay v-if="detail.status=='completed'" label="Date Completed" :value="$formatDateTime(detail.dateCompleted)"/>
                <DataDisplay v-if="detail.customer" label="Customer" :value="customerInfo">
                   <div class="customer">
                      <span class="name" aria-haspopup="true" aria-controls="events-panel" @click="toggleCustomer">{{customerInfo}}</span>
@@ -68,20 +68,20 @@
       </div>
       <Panel header="Workflow">
          <dl>
-            <DataDisplay label="Date Submitted" :value="formatDate(detail.dateSubmitted)"/>
-            <DataDisplay label="Date Due" :value="formatDate(detail.dateDue)"/>
+            <DataDisplay label="Date Submitted" :value="$formatDate(detail.dateSubmitted)"/>
+            <DataDisplay label="Date Due" :value="$formatDate(detail.dateDue)"/>
             <template v-if="isExternalCustomer">
-               <DataDisplay v-if="detail.feeWaived" label="Date Fee Waived" :value="formatDate(detail.dateFeeWaived)"/>
+               <DataDisplay v-if="detail.feeWaived" label="Date Fee Waived" :value="$formatDate(detail.dateFeeWaived)"/>
                <template v-else>
                   <DataDisplay label="Fee" :value="formatFee(detail.fee)"/>
-                  <DataDisplay label="Date Fee Sent to Customer" :value="formatDate(detail.dateFeeEstimateSent)"/>
+                  <DataDisplay label="Date Fee Sent to Customer" :value="$formatDate(detail.dateFeeEstimateSent)"/>
                </template>
             </template>
-            <DataDisplay v-if="detail.dateDeferred" label="Date Deferred" :value="formatDate(detail.dateDeferred)"/>
-            <DataDisplay label="Date Finalization Started" :value="formatDateTime(detail.dateFinalizationBegun)"/>
-            <DataDisplay label="Date Archiving Complete" :value="formatDateTime(detail.dateArchivingComplete)"/>
-            <DataDisplay label="Date Patron Deliverables Complete" :value="formatDateTime(detail.datePatronDeliverablesComplete)"/>
-            <DataDisplay label="Date Customer Notified" :value="formatDateTime(detail.dateCustomerNotified)"/>
+            <DataDisplay v-if="detail.dateDeferred" label="Date Deferred" :value="$formatDate(detail.dateDeferred)"/>
+            <DataDisplay label="Date Finalization Started" :value="$formatDateTime(detail.dateFinalizationBegun)"/>
+            <DataDisplay label="Date Archiving Complete" :value="$formatDateTime(detail.dateArchivingComplete)"/>
+            <DataDisplay label="Date Patron Deliverables Complete" :value="$formatDateTime(detail.datePatronDeliverablesComplete)"/>
+            <DataDisplay label="Date Customer Notified" :value="$formatDateTime(detail.dateCustomerNotified)"/>
          </dl>
          <div class="acts-wrap" v-if="user.isAdmin || user.isSupervisor">
             <div class="actions" v-if="detail.status != 'completed'">
@@ -181,7 +181,6 @@ import { useCustomersStore } from '@/stores/customers'
 import Panel from 'primevue/panel'
 import DataDisplay from '../components/DataDisplay.vue'
 import { storeToRefs } from 'pinia'
-import dayjs from 'dayjs'
 import InvoiceDialog from '@/components/order/InvoiceDialog.vue'
 import RelatedUnits from '../components/related/RelatedUnits.vue'
 import Divider from 'primevue/divider'
@@ -343,21 +342,6 @@ const displayStatus = ((id) => {
       return "Await Fee"
    }
    return id.charAt(0).toUpperCase() + id.slice(1)
-})
-
-const formatDateTime = (( dateStr ) => {
-   if (dateStr) {
-      let d = dayjs(dateStr)
-      return d.format("YYYY-MM-DD HH:mm")
-   }
-   return ""
-})
-
-const formatDate = (( dateStr ) => {
-   if (dateStr) {
-      return dateStr.split("T")[0]
-   }
-   return ""
 })
 
 const viewEmailClicked = (() => {

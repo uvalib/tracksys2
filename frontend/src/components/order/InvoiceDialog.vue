@@ -3,9 +3,9 @@
       <div v-if="ordersStore.editInvoice == false">
          <Panel header="Date Information" :style="{marginBottom: '20px'}">
             <dl>
-               <DataDisplay label="Date Invoice" :value="formatDate(detail.invoice.invoiceDate)"/>
-               <DataDisplay label="Date Fee Paid" :value="formatDate(detail.invoice.dateFeePaid)"/>
-               <DataDisplay label="Date Fee Declined" :value="formatDate(detail.invoice.dateFeeDeclined)"/>
+               <DataDisplay label="Date Invoice" :value="$formatDate(detail.invoice.invoiceDate)"/>
+               <DataDisplay label="Date Fee Paid" :value="$formatDate(detail.invoice.dateFeePaid)"/>
+               <DataDisplay label="Date Fee Declined" :value="$formatDate(detail.invoice.dateFeeDeclined)"/>
             </dl>
          </Panel>
          <Panel header="Billing Information">
@@ -68,14 +68,6 @@ function submitChanges() {
 function formatFee( fee ) {
    if (fee) {
       return `$${fee}`
-   }
-   return ""
-}
-
-function formatDate( dateStr ) {
-   if (dateStr) {
-      let d = dayjs(dateStr)
-      return d.format("YYYY-MM-DD")
    }
    return ""
 }

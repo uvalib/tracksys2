@@ -45,10 +45,10 @@
                <DataDisplay label="Title" :value="masterFiles.details.title" />
                <DataDisplay label="Description" :value="masterFiles.details.description" />
                <DataDisplay label="Orientation" :value="orientationName" />
-               <DataDisplay label="Created" :value="formatTimestamp(masterFiles.details.createdAt)" blankValue="N/A" />
-               <DataDisplay label="Date Archived" :value="formatDate(masterFiles.details.dateArchived)" blankValue="N/A" />
-               <DataDisplay label="Date DL Ingest" :value="formatDate(masterFiles.details.dateDLIngest)" blankValue="N/A" />
-               <DataDisplay label="Date DL Update" :value="formatDate(masterFiles.details.dateDLUpdate)" blankValue="N/A" />
+               <DataDisplay label="Created" :value="$formatDateTime(masterFiles.details.createdAt)" blankValue="N/A" />
+               <DataDisplay label="Date Archived" :value="$formatDate(masterFiles.details.dateArchived)" blankValue="N/A" />
+               <DataDisplay label="Date DL Ingest" :value="$formatDate(masterFiles.details.dateDLIngest)" blankValue="N/A" />
+               <DataDisplay label="Date DL Update" :value="$formatDate(masterFiles.details.dateDLUpdate)" blankValue="N/A" />
                <DataDisplay label="Tags" :value="tagList" blankValue="N/A" />
             </dl>
             <div class="tags">
@@ -121,11 +121,11 @@
          <Panel header="Audit Information">
             <div class="no-audit" v-if="!masterFiles.details.audit">Not Audited</div>
             <dl v-else>
-               <DataDisplay label="Audited" :value="formatTimestamp(masterFiles.details.audit.auditedAt)" />
-               <DataDisplay label="Archive Exists" :value="formatBool(masterFiles.details.audit.archiveExists)" />
-               <DataDisplay label="Checksum Match" :value="formatBool(masterFiles.details.audit.checksumMatch)" />
+               <DataDisplay label="Audited" :value="$formatDateTime(masterFiles.details.audit.auditedAt)" />
+               <DataDisplay label="Archive Exists" :value="$formatBool(masterFiles.details.audit.archiveExists)" />
+               <DataDisplay label="Checksum Match" :value="$formatBool(masterFiles.details.audit.checksumMatch)" />
                <DataDisplay v-if="masterFiles.details.audit.checksumMatch==false" label="Audit Checksum" :value="masterFiles.details.audit.auditChecksum" />
-               <DataDisplay label="IIIF Exists" :value="formatBool(masterFiles.details.audit.iiifExists)" />
+               <DataDisplay label="IIIF Exists" :value="$formatBool(masterFiles.details.audit.iiifExists)" />
             </dl>
             <div class="audit-toolbar">
                <DPGButton @click="auditNow" class="p-button-secondary" label="Audit Now"/>
@@ -156,7 +156,6 @@ import { useRouter, useRoute,onBeforeRouteUpdate } from 'vue-router'
 import Panel from 'primevue/panel'
 import ProgressBar from 'primevue/progressbar'
 import Dialog from 'primevue/dialog'
-import dayjs from 'dayjs'
 import DataDisplay from '../components/DataDisplay.vue'
 import TagsDialog from '../components/masterfile/TagsDialog.vue'
 import { useConfirm } from "primevue/useconfirm"
@@ -265,24 +264,6 @@ const replaceMasterFile = (() => {
 
 const editMasterFile = (() => {
    router.push(`/masterfiles/${route.params.id}/edit`)
-})
-
-const formatBool = (( val ) => {
-   if (val) return "Yes"
-   return "No"
-})
-
-const formatDate = (( date ) => {
-   if (date) {
-      return dayjs(date).format("YYYY-MM-DD")
-   }
-   return ""
-})
-const formatTimestamp = (( ts ) => {
-   if (ts) {
-      return dayjs(ts).format("YYYY-MM-DD HH:MM:ss")
-   }
-   return ""
 })
 
 const auditNow = (() => {

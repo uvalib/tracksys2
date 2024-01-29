@@ -1,6 +1,8 @@
 import { createApp, markRaw } from 'vue'
 import { createPinia } from 'pinia'
 import formatDatePlugin from './plugins/formatdate'
+import formatDateTimePlugin from './plugins/formatdatetime'
+import formatBoolPlugin from './plugins/formatbool'
 
 import App from './App.vue'
 import router from './router'
@@ -13,7 +15,9 @@ pinia.use(({ store }) => {
    store.router = markRaw(router)
 })
 
+app.use(formatBoolPlugin)
 app.use(formatDatePlugin)
+app.use(formatDateTimePlugin)
 app.use(pinia)
 app.use(router)
 

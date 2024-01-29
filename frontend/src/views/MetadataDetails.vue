@@ -118,8 +118,8 @@
                </template>
 
                <DataDisplay :spacer="true"/>
-               <DataDisplay label="Manuscript/Unpublished Item" :value="formatBoolean(metadataStore.detail.isManuscript)"/>
-               <DataDisplay label="Personal Item" :value="formatBoolean(metadataStore.detail.isPersonalItem)"/>
+               <DataDisplay label="Manuscript/Unpublished Item" :value="$formatBool(metadataStore.detail.isManuscript)"/>
+               <DataDisplay label="Personal Item" :value="$formatBool(metadataStore.detail.isPersonalItem)"/>
                <DataDisplay label="OCR Hint" :value="ocrHint"/>
                <DataDisplay label="OCR Language Hint" :value="metadataStore.detail.ocrLanguageHint"/>
                <DataDisplay label="Preservation Tier" :value="preservationTier"/>
@@ -147,12 +147,12 @@
          <Panel header="Digital Library Information">
             <dl>
                <DataDisplay label="PID" :value="metadataStore.detail.pid"/>
-               <DataDisplay label="Virgo" :value="formatBoolean(metadataStore.detail.inDL)">
+               <DataDisplay label="Virgo" :value="$formatBool(metadataStore.detail.inDL)">
                   <a v-if="metadataStore.detail.inDL" class="virgo no-pad" :href="metadataStore.detail.virgoURL" target="_blank">Yes<i class="icon fas fa-external-link"></i></a>
                   <span v-else>No</span>
                </DataDisplay>
-               <DataDisplay label="DPLA" :value="formatBoolean(metadataStore.detail.inDPLA)"/>
-               <DataDisplay label="HathiTrust" :value="formatBoolean(metadataStore.detail.inHathiTrust)">
+               <DataDisplay label="DPLA" :value="$formatBool(metadataStore.detail.inDPLA)"/>
+               <DataDisplay label="HathiTrust" :value="$formatBool(metadataStore.detail.inHathiTrust)">
                   <div class="hathi" v-if="metadataStore.detail.inHathiTrust" @click="showHathiDialog = true">
                      <span>Yes</span>
                      <i class="icon fas fa-info-circle" aria-label="HathiTrust status"></i>
@@ -178,8 +178,8 @@
                </DataDisplay>
                <template v-if="metadataStore.canPublishToVirgo && metadataStore.detail.dateDLIngest">
                   <DataDisplay :spacer="true"/>
-                  <DataDisplay label="Virgo Ingest" :value="formatDate(metadataStore.detail.dateDLIngest)"/>
-                  <DataDisplay label="Virgo Update" :value="formatDate(metadataStore.detail.dateDLUpdate)"/>
+                  <DataDisplay label="Virgo Ingest" :value="$formatDateTime(metadataStore.detail.dateDLIngest)"/>
+                  <DataDisplay label="Virgo Update" :value="$formatDateTime(metadataStore.detail.dateDLUpdate)"/>
                </template>
             </dl>
             <div v-if="metadataStore.canPublishToVirgo" class="publish">
@@ -234,7 +234,6 @@ import AccordionTab from 'primevue/accordiontab'
 import DataDisplay from '../components/DataDisplay.vue'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
-import dayjs from 'dayjs'
 import APTrustPanel from '@/components/aptrust/APTrustPanel.vue'
 import RelatedOrders from '@/components/related/RelatedOrders.vue'
 import RelatedUnits from '@/components/related/RelatedUnits.vue'
@@ -407,18 +406,6 @@ const submitForASReview = ( async () => {
       systemStore.toastMessage('Submnission Success', 'This item has successfully been submitted for ArchivesSpace review')
    }
    console.log("PUBLISHING: "+publishing.value)
-})
-
-const formatBoolean = (( flag) => {
-   if (flag) return "Yes"
-   return "No"
-})
-
-const formatDate = (( date ) => {
-   if (date) {
-      return dayjs(date).format("YYYY-MM-DD HH:mm")
-   }
-   return ""
 })
 
 </script>
