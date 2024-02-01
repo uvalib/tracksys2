@@ -15,7 +15,7 @@
                      <span :class="`status ${detail.status}`">{{displayStatus(detail.status)}}</span>
                   </div>
                </DataDisplay>
-               <DataDisplay v-if="detail.status=='completed'" label="Date Completed" :value="$formatDateTime(detail.dateCompleted)"/>
+               <DataDisplay v-if="detail.status=='completed'" label="Date Completed" :value="$formatDate(detail.dateCompleted)"/>
                <DataDisplay v-if="detail.customer" label="Customer" :value="customerInfo">
                   <div class="customer">
                      <span class="name" aria-haspopup="true" aria-controls="events-panel" @click="toggleCustomer">{{customerInfo}}</span>

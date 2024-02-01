@@ -51,9 +51,9 @@
             <DataDisplay label="Virgo" :value="flagString(detail.includeInDL)" v-if="unitsStore.canPublishToVirgo">
                <span :class="`flag ${flagString(detail.includeInDL)}`">{{$formatBool(detail.includeInDL)}}</span>
             </DataDisplay>
-            <DataDisplay label="Date Archived" :value="$formatDateTime(detail.dateArchived)" />
-            <DataDisplay label="Date Virgo Deliverables Ready" :value="$formatDateTime(detail.dateDLDeliverablesReady)" v-if="detail.includeInDL" />
-            <DataDisplay label="Date Patron Deliverables Ready" :value="$formatDateTime(detail.datePatronDeliverablesReady)" />
+            <DataDisplay label="Date Archived" :value="$formatDate(detail.dateArchived)" />
+            <DataDisplay label="Date Virgo Deliverables Ready" :value="$formatDate(detail.dateDLDeliverablesReady)" v-if="detail.includeInDL" />
+            <DataDisplay label="Date Patron Deliverables Ready" :value="$formatDate(detail.datePatronDeliverablesReady)" />
          </dl>
 
          <div class="acts-wrap" v-if="detail.status != 'finalizing' && (userStore.isAdmin || userStore.isSupervisor)">
