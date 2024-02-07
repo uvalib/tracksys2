@@ -198,6 +198,7 @@ onMounted(() => {
       filter.value.status.value = "requested"
    }
    archivesSpace.getReviews()
+   document.title = "ArchivesSpace Reviews"
 })
 
 const notesClicked= ((item) => {

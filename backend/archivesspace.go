@@ -17,7 +17,7 @@ type archivesspaceReview struct {
 	SubmitStaffID   int64        `gorm:"column:submit_staff_id" json:"-"`
 	Submitter       staffMember  `gorm:"foreignKey:SubmitStaffID" json:"submitter"`
 	SubmittedAt     time.Time    `json:"submittedAt"`
-	ReviewStaffID   int64        `gorm:"column:review_staff_id" json:"-"`
+	ReviewStaffID   *int64       `gorm:"column:review_staff_id" json:"-"`
 	Reviewer        *staffMember `gorm:"foreignKey:ReviewStaffID" json:"reviewer,omitempty"`
 	ReviewStartedAt *time.Time   `json:"reviewStartedAt,omitempty"`
 	Status          string       `json:"status"`
@@ -47,7 +47,8 @@ func (svc *serviceContext) beginArchivesSpaceReview(c *gin.Context) {
 		now := time.Now()
 		asR.ReviewInfo.ReviewStartedAt = &now
 	}
-	asR.ReviewInfo.ReviewStaffID = int64(asR.Staff.ID)
+	reviewStaffID := int64(asR.Staff.ID)
+	asR.ReviewInfo.ReviewStaffID = &reviewStaffID
 	asR.ReviewInfo.Status = "review"
 	err = svc.DB.Save(&asR.ReviewInfo).Error
 	if err != nil {
@@ -182,13 +183,14 @@ func (svc *serviceContext) requestArchivesSpaceReview(c *gin.Context) {
 		return
 	}
 
-	asReview := archivesspaceReview{SubmitStaffID: userID, Submitter: submitter, MetadataID: mdID, SubmittedAt: time.Now(), Status: "requested"}
-	err = svc.DB.Save(&asReview).Error
+	asReview := archivesspaceReview{SubmitStaffID: userID, MetadataID: mdID, SubmittedAt: time.Now(), Status: "requested"}
+	err = svc.DB.Create(&asReview).Error
 	if err != nil {
 		log.Printf("ERROR: user %d unable to request archives spaces review for %d: %s", userID, mdID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
+	asReview.Submitter = submitter
 
 	c.JSON(http.StatusOK, asReview)
 }
