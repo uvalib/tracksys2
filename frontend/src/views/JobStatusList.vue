@@ -14,11 +14,13 @@
             <DPGButton label="Delete selected" :disabled="selectedJobs.length == 0"  class="p-button-secondary" @click="deletAllClicked"/>
          </template>
          <template #paginatorend>
-            <span class="js-search p-input-icon-right">
-               <i class="pi pi-search" />
-               <InputText v-model="jobsStore.searchOpts.query" placeholder="Job Status Search" @input="queryJobs()"/>
-            </span>
-            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="jobsStore.searchOpts.query.length == 0"/>
+            <div class="job-search">
+               <span class="js-search p-input-icon-right">
+                  <i class="pi pi-search" />
+                  <InputText v-model="jobsStore.searchOpts.query" placeholder="Job Status Search" @input="queryJobs()"/>
+               </span>
+               <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="jobsStore.searchOpts.query.length == 0"/>
+            </div>
          </template>
          <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
          <Column field="name" header="Job Type"></Column>
@@ -168,57 +170,61 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-   .job-status {
-      min-height: 600px;
-      text-align: left;
-      padding: 0 25px;
+.job-search {
+   display: flex;
+   flex-flow: row nowrap;
+}
+.job-status {
+   min-height: 600px;
+   text-align: left;
+   padding: 0 25px;
 
-      .js-search {
-         margin-right: 10px;
+   .js-search {
+      margin-right: 10px;
+   }
+   .sep {
+      display: inline-block;
+      margin: 0 10px;
+   }
+   .p-datatable {
+      font-size: 0.85em;
+      :deep(td), :deep(th) {
+         padding: 10px;
       }
-      .sep {
-         display: inline-block;
-         margin: 0 10px;
-      }
-      .p-datatable {
-         font-size: 0.85em;
-         :deep(td), :deep(th) {
-            padding: 10px;
-         }
-         :deep(.row-acts) {
-            text-align: center;
-            padding: 0;
-            a {
-               display: inline-block;
-            };
-         }
-      }
-      :deep(.error-row) {
-         background-color: #944 !important;
-         color: #fff;
+      :deep(.row-acts) {
+         text-align: center;
+         padding: 0;
          a {
-            color: #fff !important;
-         }
-         .row-acts {
-            a, button.p-button-text {
-               color: #fff !important;
-            }
-         }
-         &:hover {
-            background-color: #a44 !important;
-         }
-      }
-      :deep(tr.p-highlight.error-row) {
-         color: white !important;
-      }
-      :deep(.running-row)  {
-         background-color: var(--uvalib-blue-alt-light) !important;
-         &:hover {
-            background-color: #def !important;
-         }
-      }
-      :deep(.warn-row)  {
-         background-color: var(--uvalib-yellow-light) !important;
+            display: inline-block;
+         };
       }
    }
+   :deep(.error-row) {
+      background-color: #944 !important;
+      color: #fff;
+      a {
+         color: #fff !important;
+      }
+      .row-acts {
+         a, button.p-button-text {
+            color: #fff !important;
+         }
+      }
+      &:hover {
+         background-color: #a44 !important;
+      }
+   }
+   :deep(tr.p-highlight.error-row) {
+      color: white !important;
+   }
+   :deep(.running-row)  {
+      background-color: var(--uvalib-blue-alt-light) !important;
+      &:hover {
+         background-color: #def !important;
+      }
+   }
+   :deep(.warn-row)  {
+      background-color: var(--uvalib-yellow-light) !important;
+   }
+}
 </style>

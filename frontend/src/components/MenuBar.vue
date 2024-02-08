@@ -92,7 +92,7 @@ const searchEntered = (() => {
    }
 }
 .global-search {
-   margin: 5px;
-   width: 300px;
+   display: inline-block;
+   margin-right: 5px;
 }
 </style>
