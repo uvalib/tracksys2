@@ -263,6 +263,15 @@ export const useMetadataStore = defineStore('metadata', {
             system.setError(e)
          })
       },
+      async unpublishFromArchivesSpace() {
+         const system = useSystemStore()
+         let url = `${system.jobsURL}/metadata/${this.detail.id}/archivesspace`
+         return axios.delete( url ).then( () => {
+            this.archivesSpace.publishedAt = null
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
       async publishToArchivesSpace( userID ) {
          const system = useSystemStore()
          let payload = {userID: userID, metadataID: this.detail.id}

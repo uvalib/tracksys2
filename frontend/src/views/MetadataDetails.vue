@@ -132,7 +132,10 @@
                <div v-else-if="metadataStore.asReviewInProgress" class="as-review">
                   ArchivesSpace review has been requested.
                </div>
-               <div v-else-if="!metadataStore.archivesSpace.publishedAt" class="as-toolbar">
+               <div v-else-if="metadataStore.archivesSpace.publishedAt" class="as-toolbar">
+                  <DPGButton label="Unpublish" class="as-publish" @click="unpublishAS()" :loading="publishing"/>
+               </div>
+               <div v-else class="as-toolbar">
                   <DPGButton label="Publish now" class="as-publish" @click="publishToAS()" :loading="publishing"/>
                   <DPGButton label="Submit for review" class="as-publish" @click="submitForASReview()" :loading="publishing"/>
                </div>
@@ -387,6 +390,23 @@ const publishVirgoClicked = (async () => {
    if (systemStore.error == "") {
       systemStore.toastMessage('Publish Success', 'This item has successfully been published to Virgo')
    }
+})
+
+const unpublishAS = ( async () => {
+   confirm.require({
+      message: 'Are you sure you want remove this item from ArchivesSpace? After this, the digitial content will no longer be publicly visible.',
+      header: 'Confirm Unpublish',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: async () => {
+         publishing.value = true
+         await metadataStore.unpublishFromArchivesSpace()
+         publishing.value = false
+         if (systemStore.error == "") {
+            systemStore.toastMessage('Unpublish Success', 'This item has successfully been removed from ArchivesSpace')
+         }
+      }
+   })
 })
 
 const publishToAS = ( async () => {
