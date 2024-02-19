@@ -20,22 +20,6 @@
          <a :href="masterFiles.viewerURL" target="_blank">
             <img :src="masterFiles.thumbURL" />
          </a>
-         <template v-if="masterFiles.details.originalID == 0">
-            <div v-if="masterFiles.isSensitive" class="sensitive">
-               <div class="heading">Sensitive Image</div>
-               <p class="note">
-                  This image has been flagged having sensitive content that some viewers may find offensive.<br/><br/>
-                  For all public facing uses, this image is presented at a lower resolution to mask the details.
-               </p>
-            </div>
-            <div class="image-acts" >
-               <DPGButton v-if="masterFiles.isSensitive"  label="View Original" @click="viewOriginal" class="p-button-secondary"  :loading="masterFiles.working"/>
-               <template v-if="userStore.isAdmin ">
-                  <DPGButton v-if="masterFiles.isSensitive"  label="Remove Sensitive Flag" @click="setSensitive(false)" class="p-button-secondary"  :loading="masterFiles.working"/>
-                  <DPGButton v-else  label="Flag Sensitive Image" @click="setSensitive(true)" class="p-button-secondary"  :loading="masterFiles.working"/>
-               </template>
-            </div>
-         </template>
       </div>
       <div class="column">
          <Panel header="General Information">
@@ -139,11 +123,6 @@
          <ProgressBar :value="pdfStore.percent"/>
       </div>
    </Dialog>
-   <Dialog v-model:visible="showOriginal" :modal="true" header="Orignal Master File" :style="{width: '650px', height: 'auto'}" @hide="showOriginal = false">
-      <div class="original">
-         <img class="original-image" :src="`${systemStore.jobsURL}/masterfiles/${masterFiles.details.id}/full_resolution`" />
-      </div>
-   </Dialog>
 </template>
 
 <script setup>
@@ -167,8 +146,6 @@ const systemStore = useSystemStore()
 const userStore = useUserStore()
 const pdfStore = usePDFStore()
 const confirm = useConfirm()
-
-const showOriginal = ref(false)
 
 const orientationName = computed( () => {
    let names = ["Normal", "Flip Y Axis", "Rotate 90&deg;", "Rotate 180&deg;", "Rotate 270&deg;"]
@@ -194,28 +171,6 @@ onBeforeMount(() => {
    let mfID = route.params.id
    masterFiles.getDetails(mfID)
    document.title = `Master File #${mfID}`
-})
-
-const viewOriginal = (() => {
-   showOriginal.value = true
-})
-
-const setSensitive = ( (flag) => {
-   let title = "Flag Sensitive Content"
-   let msg = "Flag this master file as having sensitive content? All public views will be low resolution. Are you sure?"
-   if (! flag) {
-      title = "Remove Sensitive Content Flag"
-      msg = "Remove the sensitive content designation for this master file? All public views will revert to full resolution. Are you sure?"
-   }
-   confirm.require({
-      message: msg,
-      header: title,
-      icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
-      accept: () => {
-         masterFiles.setSensitive( flag )
-      },
-   })
 })
 
 const prevImage = (() => {

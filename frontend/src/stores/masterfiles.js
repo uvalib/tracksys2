@@ -17,9 +17,6 @@ export const useMasterFilesStore = defineStore('masterfiles', {
       hasText: state => {
          return state.details.transcription
       },
-      isSensitive: state => {
-         return state.details.sensitive
-      },
       isOCRCandidate: state => {
          if ( state.details.metadata == null) return false
          if ( state.details.metadata.ocrHint == null ) return false
@@ -56,24 +53,6 @@ export const useMasterFilesStore = defineStore('masterfiles', {
          }).catch( e => {
             system.setError(e)
          })
-      },
-
-      async setSensitive( flag ) {
-         const system = useSystemStore()
-         this.working = true
-         try {
-            if ( flag ) {
-               await axios.post( `${system.jobsURL}/masterfiles/${this.details.id}/sensitive` )
-               this.details.sensitive = true
-            } else {
-               await axios.delete( `${system.jobsURL}/masterfiles/${this.details.id}/sensitive` )
-               this.details.sensitive = false
-            }
-         } catch (error) {
-            system.setError(error)
-         }
-
-         this.working = false
       },
 
       async submitEdit( edit ) {
