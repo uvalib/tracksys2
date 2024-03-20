@@ -4,11 +4,11 @@
          <DPGButton label="Add Selected" class="p-button-secondary" @click="submitClicked()" :disabled="selectedRecords.length == 0" />
          <DPGButton label="Cancel" class="p-button-secondary" @click="cancelClicked()" />
       </span>
-      <span class="search">
-         <span class="p-input-icon-right">
-            <i class="pi pi-search" @click="queryMetadata()"/>
-            <InputText v-model="query" placeholder="Metadata Search" @keypress="searchKeyPressed($event)"/>
-         </span>
+      <span class="collection-search">
+         <IconField iconPosition="left">
+            <InputIcon class="pi pi-search" />
+            <InputText v-model="query" placeholder="Search" @keypress="searchKeyPressed($event)"/>
+         </IconField>
          <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="query.length == 0"/>
       </span>
    </div>
@@ -54,6 +54,8 @@
 
 <script setup>
 import { ref } from 'vue'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -130,6 +132,10 @@ const onSelectAllChange = ((event) => {
    button.p-button {
       margin-left: 5px;
    }
+}
+.collection-search {
+   display: flex;
+   flex-flow: row nowrap;
 }
 td.nowrap, th {
    white-space: nowrap;

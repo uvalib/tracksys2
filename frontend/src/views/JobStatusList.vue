@@ -14,13 +14,10 @@
             <DPGButton label="Delete selected" :disabled="selectedJobs.length == 0"  class="p-button-secondary" @click="deletAllClicked"/>
          </template>
          <template #paginatorend>
-            <div class="job-search">
-               <span class="js-search p-input-icon-right">
-                  <i class="pi pi-search" />
-                  <InputText v-model="jobsStore.searchOpts.query" placeholder="Job Status Search" @input="queryJobs()"/>
-               </span>
-               <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="jobsStore.searchOpts.query.length == 0"/>
-            </div>
+            <IconField iconPosition="left">
+               <InputIcon class="pi pi-search" />
+               <InputText v-model="jobsStore.searchOpts.query" placeholder="Search Job Status" @input="queryJobs()"/>
+            </IconField>
          </template>
          <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
          <Column field="name" header="Job Type"></Column>
@@ -58,6 +55,8 @@ import { onMounted, ref} from 'vue'
 import { useJobsStore } from '@/stores/jobs'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import { useConfirm } from "primevue/useconfirm"
 import { usePinnable } from '@/composables/pin'
@@ -71,12 +70,7 @@ const selectedJobs = ref([])
 const selectAll = ref(false)
 
 const queryJobs = (() => {
-   jobsStore.getJobs()
-})
-
-const clearSearch = (() => {
-   jobsStore.searchOpts.query = ""
-   jobsStore.getJobs()
+   jobsStore.getJobs(false)
 })
 
 const deletAllClicked = (() => {

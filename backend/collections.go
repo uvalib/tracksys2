@@ -101,7 +101,7 @@ func (svc *serviceContext) getCollectionItems(c *gin.Context) {
 			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
-		err = svc.DB.Joins("APTrustStatus").Where("parent_metadata_id=?", collectionID).Where(queryClause).
+		err = svc.DB.Joins("APTrustSubmission").Where("parent_metadata_id=?", collectionID).Where(queryClause).
 			Offset(startIndex).Limit(pageSize).Order(orderStr).Find(&resp.Metadata).Error
 		if err != nil {
 			log.Printf("ERROR: unable to get filtered collection records for collection %d: %s", collectionID, err.Error())

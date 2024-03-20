@@ -20,11 +20,10 @@
                <Dropdown id="orders-filter" v-model="statusFilter" @change="getOrders()"
                   :options="filters" optionLabel="name" optionValue="code" />
                <ToggleButton v-model="assignedToMe" class="left-pad right-pad" onIcon="" offIcon="" onLabel="Assigned to Me" offLabel="Assigned to Me" @change="ownerToggled()" />
-               <span class="p-input-icon-right">
-                  <i class="pi pi-search" />
-                  <InputText v-model="ordersStore.searchOpts.query" placeholder="Orders Search" @input="queryOrders()"/>
-               </span>
-               <DPGButton label="Clear" class="p-button-secondary left-pad" @click="clearSearch()"/>
+               <IconField iconPosition="left">
+                  <InputIcon class="pi pi-search" />
+                  <InputText v-model="ordersStore.searchOpts.query" placeholder="Search Orders" @input="queryOrders()"/>
+               </IconField>
             </div>
          </template>
          <Column field="id" header="ID" :sortable="true">
@@ -83,6 +82,8 @@ import { useUserStore } from '@/stores/user'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
 import ToggleButton from 'primevue/togglebutton'
@@ -166,11 +167,6 @@ const displayStatus = ( (id) => {
       return "Await Fee"
    }
    return id.charAt(0).toUpperCase() + id.slice(1)
-})
-
-const clearSearch = (() => {
-   ordersStore.searchOpts.query = ""
-   getOrders()
 })
 
 const queryOrders = (() => {

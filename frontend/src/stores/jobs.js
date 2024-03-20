@@ -16,9 +16,10 @@ export const useJobsStore = defineStore('jobs', {
 	getters: {
 	},
 	actions: {
-      getJobs() {
+      getJobs(showWorking=true ) {
          const system = useSystemStore()
-         system.working = true
+         if ( showWorking ) system.working = true
+
          let url = `/api/jobs?start=${this.searchOpts.start}&limit=${this.searchOpts.limit}`
          if ( this.searchOpts.query != "") {
             url += `&q=${this.searchOpts.query}`

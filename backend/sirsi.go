@@ -264,7 +264,7 @@ func (svc *serviceContext) doSirsiLookup(catKey, barcode string) (*sirsiResponse
 		log.Printf("INFO: no use right data found in sirsi response; default to CNE")
 		var cne useRight
 		dbErr := svc.DB.First(&cne, 1).Error
-		if err != nil {
+		if dbErr != nil {
 			log.Printf("ERROR: unable to load CNE data: %s", dbErr.Error())
 		} else {
 			resp.UseRightName = cne.Name

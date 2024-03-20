@@ -87,8 +87,8 @@ export const useCollectionsStore = defineStore('collections', {
             system.setError(e)
          })
       },
-      getItems( ) {
-         this.working = true
+      getItems( showWorking=true ) {
+         if ( showWorking ) this.working = true
          let so = this.searchOpts
          let url = `/api/collections/${this.collectionID}?start=${so.start}&limit=${so.limit}&by=${so.sortField}&order=${so.sortOrder}`
          if ( so.query != "") {

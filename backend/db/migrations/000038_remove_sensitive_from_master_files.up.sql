@@ -1,0 +1,1 @@
+ALTER table master_files DROP COLUMN `sensitive`;

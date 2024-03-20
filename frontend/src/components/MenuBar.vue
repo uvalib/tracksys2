@@ -10,10 +10,10 @@
          </a>
       </template>
       <template #end>
-         <span class="global-search p-input-icon-right" v-if="showSearch">
-            <i class="pi pi-search" />
-            <InputText v-model="newQuery" @keyup.enter="searchEntered" placeholder="Search Tracksys..."/>
-         </span>
+         <IconField iconPosition="left" v-if="showSearch" class="global-search">
+            <InputIcon class="pi pi-search"> </InputIcon>
+            <InputText v-model="newQuery" placeholder="Search TrackSys" @keyup.enter="searchEntered" />
+         </IconField>
       </template>
    </Menubar>
 </template>
@@ -23,6 +23,8 @@ import { ref, onMounted, computed } from 'vue'
 import Menubar from 'primevue/menubar'
 import { useSystemStore } from "@/stores/system"
 import { useSearchStore } from '@/stores/search'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
 

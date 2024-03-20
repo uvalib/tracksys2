@@ -14,11 +14,10 @@
             <DPGButton label="Add Staff" class="p-button-secondary create" @click="addStaff()"/>
          </template>
          <template #paginatorend>
-            <span class="js-search p-input-icon-right">
-               <i class="pi pi-search" />
-               <InputText v-model="filter" placeholder="Staff Search" @input="applyFilter()"/>
-            </span>
-            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
+            <IconField iconPosition="left">
+               <InputIcon class="pi pi-search" />
+               <InputText v-model="filter" placeholder="Search Staff" @input="applyFilter()" />
+            </IconField>
          </template>
          <Column field="id" header="ID" :sortable="true"/>
          <Column field="lastName" header="Last Name" :sortable="true"/>
@@ -61,6 +60,8 @@ import { useStaffStore } from '@/stores/staff'
 import { useUserStore } from '../stores/user'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
 import { usePinnable } from '@/composables/pin'

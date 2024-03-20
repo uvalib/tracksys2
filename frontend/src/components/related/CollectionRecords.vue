@@ -16,11 +16,10 @@
                <DPGButton label="Export" class="p-button-secondary pad-left" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
             </template>
             <template #paginatorend>
-               <span class="p-input-icon-right">
-                  <i class="pi pi-search" />
+               <IconField iconPosition="left">
+                  <InputIcon class="pi pi-search" />
                   <InputText v-model="collectionStore.searchOpts.query" placeholder="Collection Search" @input="queryCollection()"/>
-               </span>
-               <DPGButton label="Clear" class="p-button-secondary pad-left" @click="clearSearch()" :disabled="collectionStore.searchOpts.query.length == 0"/>
+               </IconField>
             </template>
             <Column field="id" header="ID" :sortable="true">
                <template #body="slotProps">
@@ -67,6 +66,8 @@
 <script setup>
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import { useCollectionsStore } from '@/stores/collections'
 import { useConfirm } from "primevue/useconfirm"
@@ -115,11 +116,7 @@ const onCollectionPage = ((event) => {
 })
 
 const queryCollection = (() => {
-   collectionStore.getItems()
-})
-const clearSearch = (() => {
-   collectionStore.searchOpts.query = ""
-   collectionStore.getItems()
+   collectionStore.getItems( false )
 })
 const deleteItem = (( item ) => {
    confirm.require({

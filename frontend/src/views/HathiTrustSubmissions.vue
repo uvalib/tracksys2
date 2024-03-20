@@ -14,11 +14,10 @@
       >
          <template #paginatorstart></template>
          <template #paginatorend>
-            <span class="p-input-icon-right">
-               <i class="pi pi-search" />
-               <InputText v-model="hathiTrust.searchOpts.query" placeholder="Submission Search" @input="hathiTrust.getSubmissions()"/>
-            </span>
-            <DPGButton label="Clear" class="p-button-secondary pad" @click="clearSearch()"/>
+            <IconField iconPosition="left">
+               <InputIcon class="pi pi-search" />
+               <InputText v-model="hathiTrust.searchOpts.query" placeholder="Search Submissions" @input="hathiTrust.getSubmissions(false)"/>
+            </IconField>
          </template>
          <Column field="pid" header="PID" :sortable="true"  class="nowrap">
             <template #body="slotProps">
@@ -88,6 +87,8 @@
 import { onMounted, ref, computed } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
 import Dropdown from 'primevue/dropdown'
@@ -138,11 +139,6 @@ const getSubmissions = (() => {
 const notesClicked = ( (s) => {
    tgtSubmission.value = s
    showNotes.value = true
-})
-
-const clearSearch = (() => {
-   hathiTrust.searchOpts.query = ""
-   getSubmissions()
 })
 
 const onPage = ((event) => {

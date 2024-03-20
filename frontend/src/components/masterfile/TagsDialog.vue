@@ -1,24 +1,25 @@
 <template>
    <DPGButton @click="show" class="p-button-secondary" label="Manage Tags"/>
    <Dialog v-model:visible="isOpen" :modal="true" header="Master File Tags" :style="{width: '450px'}">
-      <div class="toolbar">
-         <span class="p-input-icon-right">
-            <i class="pi pi-search" />
-            <InputText v-model="tagStore.query" placeholder="Tag Search" @input="tagStore.getTags()" autofocus/>
-         </span>
-         <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
-      </div>
-      <VirtualScroller :items="tagStore.tags" :itemSize="22" showLoader class="taglist" :loading="tagStore.loading" >
+      <IconField iconPosition="left">
+         <InputIcon class="pi pi-search" />
+         <InputText v-model="tagStore.query" placeholder="Search" @input="tagStore.getTags()" autofocus/>
+      </IconField>
+      <VirtualScroller :items="tagStore.tags" :itemSize="22" showLoader class="taglist" :showLoader="tagStore.loading" >
          <template v-slot:item="{ item }">
             <div v-if="isUsed(item)==false" class="tag-list-item" @click="addTag(item)">{{ truncateText(item.tag) }}</div>
          </template>
       </VirtualScroller>
       <div class="add">
          <InputText v-model="newTag" placeholder="New Tag"/>
-         <DPGButton label="Add New" class="p-button-secondary" @click="createTag()"/>
+         <DPGButton label="Add" class="p-button-secondary" @click="createTag()"/>
       </div>
       <div class="selected">
-         <Chip v-for="t in masterFiles.details.tags" :label="t.tag" removable :key="t.id" @remove="removeTag(t)"/>
+         <label>Current Tags:</label>
+         <div v-if=" masterFiles.details.tags.length == 0" class="none">None</div>
+         <div v-else class="cur-tags">
+            <Chip v-for="t in masterFiles.details.tags" :label="t.tag" removable :key="t.id" @remove="removeTag(t)"/>
+         </div>
       </div>
       <p class="error" v-if="tagStore.error">{{tagStore.error}}</p>
       <div class="acts">
@@ -33,6 +34,8 @@ import Dialog from 'primevue/dialog'
 import { useMasterFilesStore } from '@/stores/masterfiles'
 import { useTagsStore } from '@/stores/tags'
 import VirtualScroller from 'primevue/virtualscroller'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Chip from 'primevue/chip'
 
@@ -63,10 +66,6 @@ function removeTag( tag ) {
 }
 function addTag( tag ) {
    masterFiles.addTag(tag)
-}
-function clearSearch() {
-   tagStore.query = ""
-   tagStore.getTags()
 }
 function truncateText(t) {
    if (t.length < 50) return t
@@ -100,6 +99,7 @@ function show() {
    height: 150px;
    border: 1px solid var(--uvalib-grey-light);
    border-radius: 3px;
+   margin-top: 10px;
 
    .tag-list-item.disabled {
       color: var(--uvalib-grey-light);
@@ -119,39 +119,26 @@ function show() {
    input {
       flex-grow: 1;
       font-size: 0.8em;
-   }
-}
-
-
-.p-button  {
-   margin-left: 5px;
-}
-
-.toolbar {
-   padding: 10px 0;
-   text-align: right;
-   display: flex;
-   flex-flow: row nowrap;
-   .p-input-icon-right {
-      flex-grow: 1;
-      input {
-         width: 100%;
-         font-size: 0.8em;
-      }
+      margin-right: 5px;
    }
 }
 
 .selected {
-   display: flex;
-   flex-flow: row wrap;
-   justify-content: flex-start;
-   padding: 10px;
-   border: 1px solid var(--uvalib-grey-light);
-   border-radius: 3px;
-   margin-top: 15px;
-   .p-chip {
-      font-size: 0.8em;
-      margin: 2px 4px;
+   padding: 0;
+   margin: 10px 0 0 0;
+   .none {
+      margin: 10px 0 0 15px;
+   }
+   .cur-tags {
+      display: flex;
+      flex-flow: row wrap;
+      justify-content: flex-start;
+      margin-top: 10px;
+      .p-chip {
+         font-size: 0.8em;
+         margin: 2px;
+         background-color: #f1f5f9;
+      }
    }
 }
 p.error {

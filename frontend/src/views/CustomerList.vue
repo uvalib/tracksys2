@@ -16,11 +16,10 @@
             <DPGButton label="Add Customer" class="p-button-secondary create" @click="addCustomer()"/>
          </template>
          <template #paginatorend>
-            <span class="js-search p-input-icon-right">
-               <i class="pi pi-search" />
-               <InputText v-model="filter['global'].value" placeholder="Customer Search"/>
-            </span>
-            <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()"/>
+            <IconField iconPosition="left">
+               <InputIcon class="pi pi-search" />
+               <InputText v-model="filter['global'].value" placeholder="Search Customers" />
+            </IconField>
          </template>
          <Column :expander="true" headerStyle="width: 3rem" />
          <Column field="lastName" header="Last Name" :sortable="true"/>
@@ -95,10 +94,10 @@
                   </template>
                </TabPanel>
             </TabView>
-               <div class="form-controls">
-                  <FormKit type="button" label="Cancel" wrapper-class="cancel-button" @click="showEdit = false" />
-                  <FormKit type="submit" label="Save" wrapper-class="submit-button" />
-               </div>
+            <div class="form-controls">
+               <FormKit type="button" label="Cancel" wrapper-class="cancel-button" @click="showEdit = false" />
+               <FormKit type="submit" label="Save" wrapper-class="submit-button" />
+            </div>
          </FormKit>
       </Dialog>
    </div>
@@ -111,6 +110,8 @@ import { useSystemStore } from '@/stores/system'
 import { useUserStore } from '../stores/user'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
 import TabView from 'primevue/tabview'
@@ -186,10 +187,6 @@ const edit = ((data) => {
    customerDetails.value = {...data} // clone the data so edits dont change the store
    showEdit.value = true
 })
-
-const clearSearch = (() => {
-   filter.value['global'].value = ""
-})
 </script>
 
 <style scoped lang="scss">
@@ -197,18 +194,6 @@ const clearSearch = (() => {
    min-height: 600px;
    text-align: left;
    padding: 0 25px 25px 25px;
-   .js-search {
-      margin-right: 10px;
-   }
-   .filter-controls {
-      padding: 10px 0;
-      display: flex;
-      flex-flow: row wrap;
-      justify-content: flex-end;
-      button.p-button-secondary.p-button {
-         margin-left: 5px;
-      }
-   }
    :deep(.row-acts) {
       text-align: center;
    }
@@ -250,10 +235,6 @@ const clearSearch = (() => {
          @include base-button();
          width: auto;
          margin-right: 10px;
-      }
-      :deep(.submit-button button) {
-         @include primary-button();
-         width: auto;
       }
    }
 }

@@ -14,11 +14,10 @@
          <template #paginatorstart >
          </template>
          <template #paginatorend>
-            <span class="js-search p-input-icon-right">
-               <i class="pi pi-search" />
-               <InputText v-model="filter['global'].value" placeholder="Search reviews..."/>
-            </span>
-            <DPGButton label="Clear" class="p-button-secondary clear" @click="clearSearch()"/>
+            <IconField iconPosition="left">
+               <InputIcon class="pi pi-search" />
+               <InputText v-model="filter['global'].value" placeholder="Search Reviews"/>
+            </IconField>
          </template>
          <Column field="metadata.pid" header="PID"  class="nowrap" :sortable="true">
             <template #body="slotProps">
@@ -116,6 +115,8 @@
 import { onMounted, ref, computed, nextTick } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
 import Dialog from 'primevue/dialog'
@@ -306,10 +307,6 @@ const publishClicked = ( (item) => {
 
 const viewClicked = ( (item) => {
    window.open(`${archivesSpace.viewerBaseURL}/${item.metadata.pid}`, '_blank').focus()
-})
-
-const clearSearch = (() => {
-   filter.value['global'].value = ""
 })
 
 </script>

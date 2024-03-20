@@ -13,11 +13,10 @@
       >
          <template #paginatorstart></template>
          <template #paginatorend>
-            <span class="p-input-icon-right">
-               <i class="pi pi-search" />
-               <InputText v-model="apTrust.searchOpts.query" placeholder="Submission Search" @input="apTrust.getSubmissions()"/>
-            </span>
-            <DPGButton label="Clear" class="p-button-secondary pad" @click="clearSearch()"/>
+            <IconField iconPosition="left">
+               <InputIcon class="pi pi-search" />
+               <InputText v-model="apTrust.searchOpts.query" placeholder="Search Submissions" @input="apTrust.getSubmissions(false)"/>
+            </IconField>
          </template>
          <Column field="pid" header="PID" :sortable="true"  class="nowrap">
             <template #body="slotProps">
@@ -53,6 +52,8 @@
 import { onMounted, ref, computed } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import { useAPTrustStore } from '@/stores/aptrust'
 import { usePinnable } from '@/composables/pin'
@@ -81,11 +82,6 @@ const infoClicked = ((submission) => {
    tgtPID.value = submission.pid
    showDialog.value = true
    apTrust.getItemStatus( submission.metadataID )
-})
-
-const clearSearch = (() => {
-   apTrust.searchOpts.query = ""
-   apTrust.getSubmissions()
 })
 
 const onPage = ((event) => {

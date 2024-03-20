@@ -24,9 +24,9 @@ export const useHathiTrustStore = defineStore('hathitrust', {
       }
    },
    actions: {
-      getSubmissions() {
+      getSubmissions(showWorking = true) {
          const system = useSystemStore()
-         this.working = true
+         if ( showWorking == true ) this.working = true
          let so = this.searchOpts
          let url = `/api/hathitrust?start=${so.start}&limit=${so.limit}&by=${so.sortField}&order=${so.sortOrder}`
          if ( so.query != "") {
