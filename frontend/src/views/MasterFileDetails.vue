@@ -277,26 +277,6 @@ div.original {
    }
    .thumb {
       margin: 10px;
-      .sensitive {
-         max-width: 240px;
-         text-align: left;
-         .heading {
-            font-weight: bold;
-            text-align: center;
-            padding: 5px;
-            background: var(--uvalib-red-emergency);
-            color: white;
-         }
-         p {
-            padding: 10px;
-            margin: 0;
-            border: 1px solid var(--uvalib-red);
-            border-top: 0;
-            font-size: 0.9em;
-            background: var(--uvalib-red-lightest);
-            text-align: center;
-         }
-      }
    }
 }
 pre {

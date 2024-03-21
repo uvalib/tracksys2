@@ -71,7 +71,6 @@ type masterFile struct {
 	Filename          string           `json:"filename"`
 	Title             string           `json:"title"`
 	Description       string           `json:"description"`
-	Sensitive         bool             `json:"sensitive"`
 	Tags              []tag            `gorm:"many2many:master_file_tags" json:"tags"`
 	Filesize          int64            `json:"filesize"`
 	MD5               string           `gorm:"column:md5" json:"md5"`
