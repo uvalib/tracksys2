@@ -71,7 +71,7 @@ func (svc *serviceContext) getComponentTree(c *gin.Context) {
 
 	log.Printf("INFO: get all children for component %d", topComponent.ID)
 	var children []*component
-	err = svc.DB.Preload("ComponentType").Where("ancestry like ?", fmt.Sprintf("%d%%", topComponent.ID)).
+	err = svc.DB.Preload("ComponentType").Where("ancestry = ? or ancestry like ?", fmt.Sprintf("%d", topComponent.ID), fmt.Sprintf("%d/%%", topComponent.ID)).
 		Select("components.*", subQ).Order("id asc").Find(&children).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get children of %d: %s", topComponent.ID, err.Error())
@@ -126,6 +126,7 @@ func (svc *serviceContext) getComponentTree(c *gin.Context) {
 		MasterFiles: related,
 	}
 
+	log.Printf("INFO: component heirarchy successfully retrieved")
 	c.JSON(http.StatusOK, resp)
 }
 
