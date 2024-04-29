@@ -12,6 +12,7 @@ import (
 
 type archivesspaceReview struct {
 	ID              int64        `json:"id"`
+	UnitID          int64        `json:"unitID"`
 	MetadataID      int64        `gorm:"column:metadata_id" json:"metadataID"`
 	Metadata        *metadata    `gorm:"foreignKey:MetadataID" json:"metadata,omitempty"`
 	SubmitStaffID   int64        `gorm:"column:submit_staff_id" json:"-"`

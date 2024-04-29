@@ -4,8 +4,7 @@
       <DataTable :value="archivesSpace.reviews" ref="asReviewsTable" dataKey="id"
             stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm" :lazy="false"
             :resizableColumns="true" paginatorPosition="top"
-            :paginator="true" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
-            :sortField="archivesSpace.searchOpts.sortField" :sortOrder="sortOrder"
+            :paginator="true" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort sortField="submittedAt" :sortOrder="1"
             paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
             currentPageReportTemplate="{first} - {last} of {totalRecords}"
             v-model:filters="filter" filterDisplay="menu"
@@ -159,13 +158,6 @@ const statuses = ref( [
    {id: "rejected", name:  "Rejected"},
 ])
 
-const sortOrder = computed(() => {
-   if (archivesSpace.searchOpts.sortOrder == "desc") {
-      return -1
-   }
-   return 1
-})
-
 const canReview = ( (data) => {
    if (data.status == 'requested' ) {
       return user.ID != data.submitter.id
@@ -306,7 +298,7 @@ const publishClicked = ( (item) => {
 })
 
 const viewClicked = ( (item) => {
-   window.open(`${archivesSpace.viewerBaseURL}/${item.metadata.pid}`, '_blank').focus()
+   window.open(`${archivesSpace.viewerBaseURL}/${item.metadata.pid}?unit=${item.unitID}`, '_blank').focus()
 })
 
 </script>
