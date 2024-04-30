@@ -69,6 +69,13 @@ func (svc *serviceContext) publishArchivesSpace(c *gin.Context) {
 	}
 	log.Printf("INFO: user %s requests archivesspace publish for metadata %d to ", reqInfo.Staff.ComputingID, reqInfo.ReviewInfo.MetadataID)
 
+	_, err = svc.getASPublishUnitID(reqInfo.ReviewInfo.MetadataID)
+	if err != nil {
+		log.Printf("ERROR: get as publish unit for metadata %d failed: %s", reqInfo.ReviewInfo.MetadataID, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
 	pubPayload := struct {
 		UserID     int64 `json:"userID"`
 		MetadataID int64 `json:"metadataID"`
@@ -184,7 +191,14 @@ func (svc *serviceContext) requestArchivesSpaceReview(c *gin.Context) {
 		return
 	}
 
-	asReview := archivesspaceReview{SubmitStaffID: userID, MetadataID: mdID, SubmittedAt: time.Now(), Status: "requested"}
+	tgtUnitID, err := svc.getASPublishUnitID(mdRec.ID)
+	if err != nil {
+		log.Printf("ERROR: get as publish unit for metadata %d failed: %s", mdID, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	asReview := archivesspaceReview{SubmitStaffID: userID, MetadataID: mdID, UnitID: tgtUnitID, SubmittedAt: time.Now(), Status: "requested"}
 	err = svc.DB.Create(&asReview).Error
 	if err != nil {
 		log.Printf("ERROR: user %d unable to request archives spaces review for %d: %s", userID, mdID, err.Error())
@@ -194,6 +208,47 @@ func (svc *serviceContext) requestArchivesSpaceReview(c *gin.Context) {
 	asReview.Submitter = submitter
 
 	c.JSON(http.StatusOK, asReview)
+}
+
+func (svc *serviceContext) getASPublishUnitID(mdID int64) (int64, error) {
+	var tgtUnits []unit
+	var tgtUnitID int64
+	err := svc.DB.Where("metadata_id=?", mdID).Find(&tgtUnits).Error
+	if err != nil {
+		return 0, fmt.Errorf("find units for metadata %d failed: %s", mdID, err.Error())
+	}
+
+	// no units present, nothing can be published. fail.
+	if len(tgtUnits) == 0 {
+		return 0, fmt.Errorf("no units found")
+	}
+
+	// if there are multiple units present, only images from one can be chosen. In this case,
+	// consider intended use 110 (digital collection building) to take precedence over the others.
+	// if multiple units fall into this category, fail as the nest choice can't be automatically picked
+	if len(tgtUnits) > 1 {
+		candidateCnt := 0
+		candidateIntendedUse := int64(110)
+		for _, u := range tgtUnits {
+			if u.IntendedUseID != nil {
+				if *u.IntendedUseID == candidateIntendedUse {
+					candidateCnt++
+					tgtUnitID = u.ID
+				}
+			}
+		}
+		if candidateCnt == 0 {
+			return 0, fmt.Errorf("no suitable units found")
+		}
+		if candidateCnt > 1 {
+			return 0, fmt.Errorf("multiple candidate units found")
+		}
+	} else {
+		// If there is only 1 unit present assume this is known to be a good candidate
+		// for publication and accept it
+		tgtUnitID = tgtUnits[0].ID
+	}
+	return tgtUnitID, nil
 }
 
 func (svc *serviceContext) cancelArchivesSpaceSubmission(c *gin.Context) {
@@ -287,7 +342,7 @@ func (svc *serviceContext) validateASRequest(mdParam, userParam string) (*asRequ
 	var asR archivesspaceReview
 	err = svc.DB.Joins("Metadata").Where("metadata_id=?", mdID).First(&asR).Error
 	if err != nil {
-		return nil, fmt.Errorf("user %s is unable to get as reciew recird for metadata %d: %s", reqUser.ComputingID, mdID, err.Error())
+		return nil, fmt.Errorf("user %s is unable to get as review record for metadata %d: %s", reqUser.ComputingID, mdID, err.Error())
 	}
 
 	out := asRequest{Staff: reqUser, ReviewInfo: asR}
