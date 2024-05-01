@@ -67,7 +67,7 @@ func (svc *serviceContext) publishArchivesSpace(c *gin.Context) {
 	if err != nil {
 		log.Printf("ERROR: as publish request failed %s", err.Error())
 	}
-	log.Printf("INFO: user %s requests archivesspace publish for metadata %d to ", reqInfo.Staff.ComputingID, reqInfo.ReviewInfo.MetadataID)
+	log.Printf("INFO: user %s requests archivesspace publish for metadata %d", reqInfo.Staff.ComputingID, reqInfo.ReviewInfo.MetadataID)
 
 	_, err = svc.getASPublishUnitID(reqInfo.ReviewInfo.MetadataID)
 	if err != nil {
@@ -213,7 +213,10 @@ func (svc *serviceContext) requestArchivesSpaceReview(c *gin.Context) {
 func (svc *serviceContext) getASPublishUnitID(mdID int64) (int64, error) {
 	var tgtUnits []unit
 	var tgtUnitID int64
-	err := svc.DB.Where("metadata_id=?", mdID).Find(&tgtUnits).Error
+	log.Printf("INFO: find unit for archivesspace metadata %d", mdID)
+	err := svc.DB.Debug().Joins("inner join master_files m on m.unit_id = units.id").
+		Select("units.id", "units.metadata_id", "units.intended_use_id").
+		Where("m.metadata_id=?", mdID).Group("units.id").Find(&tgtUnits).Error
 	if err != nil {
 		return 0, fmt.Errorf("find units for metadata %d failed: %s", mdID, err.Error())
 	}
@@ -227,6 +230,7 @@ func (svc *serviceContext) getASPublishUnitID(mdID int64) (int64, error) {
 	// consider intended use 110 (digital collection building) to take precedence over the others.
 	// if multiple units fall into this category, fail as the nest choice can't be automatically picked
 	if len(tgtUnits) > 1 {
+		log.Printf("INFO: multiple units found for archivesspace metadata %d", mdID)
 		candidateCnt := 0
 		candidateIntendedUse := int64(110)
 		for _, u := range tgtUnits {
@@ -248,6 +252,7 @@ func (svc *serviceContext) getASPublishUnitID(mdID int64) (int64, error) {
 		// for publication and accept it
 		tgtUnitID = tgtUnits[0].ID
 	}
+	log.Printf("INFO: found unit %d for archivesspace metadata %d", tgtUnitID, mdID)
 	return tgtUnitID, nil
 }
 
