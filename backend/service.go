@@ -424,6 +424,12 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 			searchField{Field: "staff_notes", Label: "Staff notes"},
 			searchField{Field: "special_instructions", Label: "Special instructions"},
 		},
+		"units": {
+			searchField{Field: "all", Label: "All fields"},
+			searchField{Field: "id", Label: "Identifier"},
+			searchField{Field: "staff_notes", Label: "Staff notes"},
+			searchField{Field: "special_instructions", Label: "Special Instructions"},
+		},
 	}
 
 	c.JSON(http.StatusOK, resp)

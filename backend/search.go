@@ -72,6 +72,18 @@ func (orderHit) TableName() string {
 	return "orders"
 }
 
+type unitHit struct {
+	ID                          uint64       `json:"id"`
+	UnitStatus                  string       `json:"status"`
+	IntendedUseID               int64        `json:"-"`
+	IntendedUse                 *intendedUse `gorm:"foreignKey:IntendedUseID" json:"IntendedUse,omitempty"`
+	StaffNotes                  string       `json:"staffNotes"`
+	SpecialInstructions         string       `json:"specialInstructions"`
+	Reorder                     bool         `json:"reorder"`
+	DateDLDeliverablesReady     *time.Time   `gorm:"column:date_dl_deliverables_ready" json:"dateDLDeliverablesReady,omitempty"`
+	DatePatronDeliverablesReady *time.Time   `json:"datePatronDeliverablesReady,omitempty"`
+}
+
 type componentResp struct {
 	Total int64       `json:"total"`
 	Hits  []component `json:"hits"`
@@ -88,12 +100,17 @@ type orderResp struct {
 	Total int64      `json:"total"`
 	Hits  []orderHit `json:"hits"`
 }
+type unitResp struct {
+	Total int64     `json:"total"`
+	Hits  []unitHit `json:"hits"`
+}
 
 type searchResults struct {
 	Components  componentResp  `json:"components"`
 	MasterFiles masterFileResp `json:"masterFiles"`
 	Metadata    metadataResp   `json:"metadata"`
 	Orders      orderResp      `json:"orders"`
+	Units       unitResp       `json:"units"`
 }
 
 type filterData struct {
@@ -155,7 +172,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		sc.PageSize = 15
 	}
 
-	// when searcghing for items to be added to a collection, the request includes
+	// when searching for items to be added to a collection, the request includes
 	// a param collection=true. if this is the case, exclude items that are already part of a collection
 	// these items will have their parent_metadata_id set greater than zero
 	sc.Collection, _ = strconv.ParseBool(c.Query("collection"))
@@ -165,7 +182,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	if sc.Scope == "" {
 		sc.Scope = "all"
 	}
-	if sc.Scope != "all" && sc.Scope != "masterfiles" && sc.Scope != "metadata" && sc.Scope != "orders" && sc.Scope != "components" {
+	if sc.Scope != "all" && sc.Scope != "masterfiles" && sc.Scope != "metadata" && sc.Scope != "orders" && sc.Scope != "components" && sc.Scope != "units" {
 		log.Printf("ERROR: invalid search scope %s specified", sc.Scope)
 		c.String(http.StatusBadRequest, "invalid search scope")
 		return
@@ -189,13 +206,14 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 
 	// query each type of object individually: components, master files, metadata and orders
 	log.Printf("INFO: issue search requests...")
-	pendingCount := 4
+	pendingCount := 5
 	channel := make(chan searchChannel)
 	startTime := time.Now()
 	go svc.queryMasterFiles(&sc, channel)
 	go svc.queryComponents(&sc, channel)
 	go svc.queryMetadata(&sc, channel)
 	go svc.queryOrders(&sc, channel)
+	go svc.queryUnits(&sc, channel)
 
 	log.Printf("INFO: await all searchs responses...")
 	resp := searchResults{}
@@ -225,6 +243,12 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 			oResp, ok := searchResp.Results.(orderResp)
 			if ok {
 				resp.Orders = oResp
+			}
+		} else if searchResp.Type == "units" {
+			log.Printf("INFO: received units search response")
+			uResp, ok := searchResp.Results.(unitResp)
+			if ok {
+				resp.Units = uResp
 			}
 		}
 	}
@@ -397,6 +421,41 @@ func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan sear
 		log.Printf("INFO: masterfile search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
 	}
 	channel <- searchChannel{Type: "masterFiles", Results: resp}
+}
+
+func (svc *serviceContext) queryUnits(sc *searchContext, channel chan searchChannel) {
+	resp := unitResp{Hits: make([]unitHit, 0)}
+	if (sc.Scope == "all" || sc.Scope == "units") && sc.QueryType != "pid" {
+		log.Printf("INFO: searching units for [%s]...", sc.Query)
+		startTime := time.Now()
+		searchQ := svc.DB.Table("units")
+		if sc.Filter.Target == "units" {
+			searchQ = searchQ.Where(sc.Filter.Query)
+		}
+
+		var fieldQ *gorm.DB
+		if sc.Field == "all" {
+			fieldQ = svc.DB.Or("staff_notes like ?", sc.QueryAny).
+				Or("special_instructions like ?", sc.QueryAny).
+				Or("id=?", sc.IntQuery)
+		} else if sc.Field == "id" {
+			fieldQ = svc.DB.Where("id=?", sc.Query)
+		} else if sc.Field == "staff_notes" || sc.Field == "special_instructions" {
+			fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
+		}
+		searchQ.Where(fieldQ)
+
+		searchQ.Count(&resp.Total)
+		err := searchQ.Preload("IntendedUse").Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Hits).Error
+		if err != nil {
+			log.Printf("ERROR: unit search failed: %s", err.Error())
+		}
+		elapsedNanoSec := time.Since(startTime)
+		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+		log.Printf("INFO: unit search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+	}
+
+	channel <- searchChannel{Type: "units", Results: resp}
 }
 
 func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchChannel) {

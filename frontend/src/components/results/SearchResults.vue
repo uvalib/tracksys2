@@ -12,6 +12,9 @@
       <TabPanel :header="`Components`" v-if="searchStore.scope=='all' || searchStore.scope=='components'">
          <ComponentsResults />
       </TabPanel>
+      <TabPanel :header="`Units`" v-if="searchStore.scope=='all' || searchStore.scope=='units'">
+         <UnitsResults />
+      </TabPanel>
    </TabView>
 </template>
 
@@ -24,6 +27,7 @@ import MetadataResults from '@/components/results/MetadataResults.vue'
 import OrdersResults from '@/components/results/OrdersResults.vue'
 import MasterFilesResults from '@/components/results/MasterFilesResults.vue'
 import ComponentsResults from '@/components/results/ComponentsResults.vue'
+import UnitsResults from '@/components/results/UnitsResults.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted, watch } from 'vue'
 

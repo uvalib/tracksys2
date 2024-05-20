@@ -50,16 +50,12 @@
       <div class="search">
          <FormKit type="form" id="global-search" :actions="false" @submit="doSearch">
             <FormKit type="select" label="" v-model="selectedScope" outer-class="select-wrap" @change="scopeChanged"
-               :options="{ all: 'All items', orders: 'Orders', metadata: 'Metadata', masterfiles: 'Master Files', components: 'Components'}"
+               :options="{ all: 'All items', orders: 'Orders', metadata: 'Metadata', masterfiles: 'Master Files', units: 'Units', components: 'Components'}"
             />
             <FormKit type="select" label="" v-model="selectedField" :options="scopeFields" outer-class="select-wrap" :disabled="selectedScope == 'all'"/>
             <FormKit label="" type="search" placeholder="Find Tracksys items..." v-model="newQuery" outer-class="searchbar" />
             <FormKit type="submit" label="Search" wrapper-class="submit-button" />
             <FormKit type="button" v-if="searchStore.searched || searchStore.similarSearch == true"  label="Reset search" @click="resetSearch()" wrapper-class="reset-button"/>
-         </FormKit>
-         <FormKit type="form" id="unit-search" :actions="false" @submit="doUnitSearch" outer-class="select-wrap" >
-            <FormKit label="" type="search" placeholder="Find Unit by ID..." v-model="unitID" outer-class="searchbar" />
-            <FormKit type="submit" label="Find Unit" wrapper-class="submit-button" />
          </FormKit>
 
          <div class="image-search" v-if="userStore.isAdmin">
@@ -77,8 +73,10 @@
          </div>
 
          <p class="error" v-if="unitError">{{unitError}}</p>
-         <SearchResults v-if="searchStore.searched" />
-         <SimilarImages v-if="searchStore.similarSearch && systemStore.working == false" />
+         <template v-if="systemStore.working == false">
+            <SearchResults v-if="searchStore.searched" />
+            <SimilarImages v-if="searchStore.similarSearch" />
+         </template>
       </div>
    </div>
    <Dialog v-model:visible="showCreateAgency" :modal="true" header="Create Agency" @hide="createAgencyClosed" :style="{width: '450px'}">
@@ -248,18 +246,6 @@ const resetSearch = (() => {
 
 const scopeChanged = (() => {
    selectedField.value = "all"
-})
-
-const doUnitSearch = ( async () => {
-   resetSearch()
-   unitError.value = ""
-   await searchStore.unitExists(unitID.value)
-   if ( searchStore.unitValid == false) {
-      unitError.value = `${unitID.value} is not a valid unit ID, please try again.`
-      return
-   }
-
-   router.push(`/units/${unitID.value}`)
 })
 
 const doSearch = (() => {

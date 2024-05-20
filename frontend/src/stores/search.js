@@ -39,6 +39,13 @@ export const useSearchStore = defineStore('search', {
          hits: [],
          filters: []
       },
+      units: {
+         start: 0,
+         limit: 15,
+         total: 0,
+         hits: [],
+         filters: []
+      },
       searchPHash: 0,
       similarSearch: false,
       distance: 5,
@@ -51,7 +58,7 @@ export const useSearchStore = defineStore('search', {
 	getters: {
       hasResults: state => {
          return state.masterFiles.total > 0 || state.metadata.total > 0 ||
-            state.orders.total > 0 || state.components.total > 0
+            state.orders.total > 0 || state.components.total > 0 || state.units.total > 0
       },
       filtersAsQueryParam: state => {
          return (filterTarget) => {
@@ -64,7 +71,9 @@ export const useSearchStore = defineStore('search', {
                tgtFilters = state.metadata.filters
             } else if (filterTarget == "orders") {
                tgtFilters = state.orders.filters
-            } else {
+            } else if (filterTarget == "units") {
+               tgtFilters = state.units.filters
+            }else {
                return ""
             }
             if (tgtFilters != null && tgtFilters.length > 0) {
@@ -116,22 +125,15 @@ export const useSearchStore = defineStore('search', {
          this.orders.hits = []
          this.orders.filters = []
 
+         this.units.start = 0
+         this.units.limit = 15
+         this.units.total = 0
+         this.units.hits = []
+         this.units.filters = []
+
          this.activeResultsIndex = 0
          this.view = ""
          this.searched = false
-      },
-
-      async unitExists( unitID) {
-         const system = useSystemStore()
-         system.working = true
-         this.unitValid = false
-         return axios.get(`/api/units/${unitID}/exists`).then( () => {
-            this.unitValid = true
-            system.working = false
-         }).catch( () => {
-            system.working = false
-            this.unitValid = false
-         })
       },
 
       setFilter( filterQueryParm) {
@@ -149,6 +151,8 @@ export const useSearchStore = defineStore('search', {
             this.metadata.filters = parsedFilters
          } else if (filterObj.type == "orders") {
             this.orders.filters = parsedFilters
+         } else if (filterObj.type == "units") {
+            this.units.filters = parsedFilters
          }
       },
 
@@ -196,6 +200,8 @@ export const useSearchStore = defineStore('search', {
             url += `&start=${this.metadata.start}&limit=${this.metadata.limit}`
          } else if (tgtScope == "orders") {
             url += `&start=${this.orders.start}&limit=${this.orders.limit}`
+         } else if (tgtScope == "units") {
+            url += `&start=${this.units.start}&limit=${this.units.limit}`
          }
 
          // filter is always based on active view
@@ -222,6 +228,10 @@ export const useSearchStore = defineStore('search', {
                this.orders.hits = response.data.orders.hits
                this.orders.total = response.data.orders.total
             }
+            if (tgtScope == "units" || tgtScope == "all") {
+               this.units.hits = response.data.units.hits
+               this.units.total = response.data.units.total
+            }
             if ( this.scope == "all" ) {
                if ( this.orders.total > 0) {
                   this.activeResultsIndex = 0
@@ -235,6 +245,9 @@ export const useSearchStore = defineStore('search', {
                } else if  ( this.components.total > 0) {
                   this.activeResultsIndex = 3
                   this.view = "components"
+               } else if  ( this.units.total > 0) {
+                  this.activeResultsIndex = 4
+                  this.view = "units"
                }
             }
             system.working = false
@@ -255,6 +268,8 @@ export const useSearchStore = defineStore('search', {
                this.activeResultsIndex = 2
             } else  if (viewName == "components") {
                this.activeResultsIndex = 3
+            } else  if (viewName == "units") {
+               this.activeResultsIndex = 4
             }
          } else {
             this.activeResultsIndex = 0
