@@ -38,6 +38,9 @@ export const useUserStore = defineStore('user', {
       signedInUser: state => {
          return `${state.firstName} ${state.lastName} (${state.computeID})`
       },
+      isSignedIn: state => {
+         return state.jwt != "" && state.computeID != ""
+      }
    },
    actions: {
       signout() {
@@ -51,58 +54,58 @@ export const useUserStore = defineStore('user', {
          this.ID = 0
       },
       setJWT(jwt) {
-         if (jwt != this.jwt) {
-            this.jwt = jwt
-            localStorage.setItem("ts2_jwt", jwt)
+         if (jwt == this.jwt || jwt == "" || jwt == null || jwt == "null")  return
 
-            let parsed = parseJwt(jwt)
-            this.ID = parsed.userID
-            this.computeID = parsed.computeID
-            this.firstName = parsed.firstName
-            this.lastName = parsed.lastName
-            this.role = parsed.role
+         this.jwt = jwt
+         localStorage.setItem("ts2_jwt", jwt)
 
-            // add interceptor to put bearer token in header
-            const system = useSystemStore()
-            axios.interceptors.request.use(config => {
-               let url = config.url
-               if ( url.match(system.iiifManifestURL) || url.match(system.jobsURL) ) {
-                  console.log("SKIP AUTH HEADER")
-                  return config
-               }
-               console.log("ADD AUTH HEADER")
-               config.headers['Authorization'] = 'Bearer ' + jwt
+         let parsed = parseJwt(jwt)
+         this.ID = parsed.userID
+         this.computeID = parsed.computeID
+         this.firstName = parsed.firstName
+         this.lastName = parsed.lastName
+         this.role = parsed.role
+
+         // add interceptor to put bearer token in header
+         const system = useSystemStore()
+         axios.interceptors.request.use(config => {
+            let url = config.url
+            if ( url.match(system.iiifManifestURL) || url.match(system.jobsURL) ) {
+               console.log("SKIP AUTH HEADER")
                return config
-            }, error => {
-               return Promise.reject(error)
-            })
+            }
+            console.log("ADD AUTH HEADER")
+            config.headers['Authorization'] = 'Bearer ' + jwt
+            return config
+         }, error => {
+            return Promise.reject(error)
+         })
 
-            // Catch 401 errors and redirect to an expired auth page
-            axios.interceptors.response.use(
-               res => res,
-               err => {
-                  console.log("failed response for "+err.config.url)
-                  console.log(err)
-                  if (err.config.url.match(/\/authenticate/)) {
-                     this.router.push("/forbidden")
-                  } else {
-                     if (err.response && err.response.status == 401) {
-                        localStorage.removeItem("ts2_jwt")
-                        this.jwt = ""
-                        this.firstName = ""
-                        this.lastName = ""
-                        this.role = ""
-                        this.computeID = ""
-                        this.ID = 0
-                        system.working = false
-                        this.router.push("/signedout?expired=1")
-                        return new Promise(() => { })
-                     }
+         // Catch 401 errors and redirect to an expired auth page
+         axios.interceptors.response.use(
+            res => res,
+            err => {
+               console.log("failed response for "+err.config.url)
+               console.log(err)
+               if (err.config.url.match(/\/authenticate/)) {
+                  this.router.push("/forbidden")
+               } else {
+                  if (err.response && err.response.status == 401) {
+                     localStorage.removeItem("ts2_jwt")
+                     this.jwt = ""
+                     this.firstName = ""
+                     this.lastName = ""
+                     this.role = ""
+                     this.computeID = ""
+                     this.ID = 0
+                     system.working = false
+                     this.router.push("/signedout?expired=1")
+                     return new Promise(() => { })
                   }
-                  return Promise.reject(err)
                }
-            )
-         }
+               return Promise.reject(err)
+            }
+         )
       },
    }
 })

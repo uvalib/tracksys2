@@ -157,30 +157,43 @@ const router = createRouter({
    ]
 })
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach( (to) => {
+   console.log("BEFORE ROUTE "+to.path)
    const userStore = useUserStore()
+   const noAuthRoutes = ["not_found", "forbidden", "signedout"]
+
    if (to.path === '/granted') {
       let jwtStr = VueCookies.get("ts2_jwt")
       userStore.setJWT(jwtStr)
-      let priorURL = localStorage.getItem('tsPriorURL')
-      localStorage.removeItem("tsPriorURL")
-      if ( priorURL && priorURL != "/granted" && priorURL != "/") {
-         console.log("RESTORE "+priorURL)
-         next(priorURL)
-      } else {
-         next("/")
+      if ( userStore.isSignedIn  ) {
+         console.log(`GRANTED [${jwtStr}]`)
+         let priorURL = localStorage.getItem('tsPriorURL')
+         localStorage.removeItem("tsPriorURL")
+         if ( priorURL && priorURL != "/granted" && priorURL != "/") {
+            console.log("RESTORE "+priorURL)
+            return priorURL
+         }
+         return "/"
       }
-   } else if (to.name !== 'not_found' && to.name !== 'forbidden' && to.name !== "signedout") {
-      localStorage.setItem("tsPriorURL", to.fullPath)
-      let jwtStr = localStorage.getItem('ts2_jwt')
-      if (jwtStr) {
-         userStore.setJWT(jwtStr)
-         next()
-      } else {
-         window.location.href = "/authenticate"
-      }
+      return {name: "forbidden"}
+   }
+
+   // for all other routes, pull the existing jwt from storage from storage and set in the user store.
+   // depending upon the page resuested, this token may or may not be used.
+   const jwtStr = localStorage.getItem('ts2_jwt')
+   userStore.setJWT(jwtStr)
+
+   if ( noAuthRoutes.includes(to.name)) {
+      console.log("NOT A PROTECTED PAGE")
    } else {
-      next()
+      if (userStore.isSignedIn == false) {
+         console.log("AUTHENTICATE")
+         localStorage.setItem("tsPriorURL", to.fullPath)
+         window.location.href = "/authenticate"
+         return false   // cancel the original navigation
+      } else {
+         console.log(`REQUEST AUTHENTICATED PAGE WITH JWT`)
+      }
    }
 })
 
