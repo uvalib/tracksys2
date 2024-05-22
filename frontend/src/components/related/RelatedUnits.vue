@@ -10,6 +10,7 @@
       <template #paginatorstart>
          <HathiTrustUpdateDialog v-if="props.hathiTrust" />
          <AddUnitDialog v-if="props.canAdd"/>
+         <DPGButton label="Download Units CSV" class="p-button-secondary download" @click="downloadCSV" v-if="props.export" />
       </template>
       <Column field="id" header="ID" :sortable="true">
          <template #body="slotProps">
@@ -57,7 +58,7 @@
 </template>
 
 <script setup>
-import { ref,computed } from 'vue'
+import { ref, computed } from 'vue'
 import { FilterMatchMode } from 'primevue/api'
 import Dropdown from 'primevue/dropdown'
 import DataTable from 'primevue/datatable'
@@ -84,7 +85,17 @@ const props = defineProps({
    hathiTrust: {
       type: Boolean,
       default: false
+   },
+   export: {
+      type: Boolean,
+      default: false
    }
+})
+
+const relatedUnitsTable = ref()
+const filters = ref( {
+   'intendedUse.id': {value: null, matchMode: FilterMatchMode.EQUALS},
+   'reorder': {value: null, matchMode: FilterMatchMode.EQUALS},
 })
 
 
@@ -95,10 +106,10 @@ const yesNo = computed(() => {
    return out
 })
 
-const filters = ref( {
-   'intendedUse.id': {value: null, matchMode: FilterMatchMode.EQUALS},
-   'reorder': {value: null, matchMode: FilterMatchMode.EQUALS},
+const downloadCSV = (() => {
+   relatedUnitsTable.value.exportCSV()
 })
+
 </script>
 
 <stype scoped lang="scss">
@@ -110,5 +121,8 @@ h3 {
 }
 .empty {
    color: #ccc;
+}
+button.p-button.p-component.p-button-secondary.download {
+   margin-left: 10px;
 }
 </stype>
