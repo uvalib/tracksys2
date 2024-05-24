@@ -1,7 +1,7 @@
 <template>
    <h2>HathiTrust Submissions</h2>
    <div class="submissions">
-      <DataTable :value="hathiTrust.submissions" ref="hathiTrustTable" dataKey="id"
+      <DataTable :value="hathiTrust.submissions" ref="hathiTrustTable" dataKey="id" v-model:selection="selections"
          stripedRows showGridlines responsiveLayout="scroll"
          :sortField="hathiTrust.searchOpts.sortField" :sortOrder="sortOrder" @sort="onSort($event)"
          :lazy="true" :paginator="true" @page="onPage($event)"  paginatorPosition="top"
@@ -12,13 +12,16 @@
          :loading="hathiTrust.working"
          v-model:filters="columnFilters" filterDisplay="menu" @filter="getSubmissions()"
       >
-         <template #paginatorstart></template>
+         <template #paginatorstart>
+            <HathiTrustUpdateDialog :ids="selectedIDs"/>
+         </template>
          <template #paginatorend>
             <IconField iconPosition="left">
                <InputIcon class="pi pi-search" />
                <InputText v-model="hathiTrust.searchOpts.query" placeholder="Search Submissions" @input="hathiTrust.getSubmissions(false)"/>
             </IconField>
          </template>
+         <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
          <Column field="pid" header="PID" :sortable="true"  class="nowrap">
             <template #body="slotProps">
                <router-link :to="`/metadata/${slotProps.data.metadataID}`">{{slotProps.data.metadata.pid}}</router-link>
@@ -95,6 +98,7 @@ import Dropdown from 'primevue/dropdown'
 import { FilterMatchMode } from 'primevue/api'
 import { useHathiTrustStore } from '@/stores/hathitrust'
 import { usePinnable } from '@/composables/pin'
+import HathiTrustUpdateDialog from '@/components/HathiTrustUpdateDialog.vue'
 
 usePinnable("p-paginator-top")
 
@@ -102,6 +106,7 @@ const hathiTrust = useHathiTrustStore()
 
 const showNotes = ref(false)
 const tgtSubmission = ref()
+const selections = ref([])
 
 const columnFilters = ref( {
    'metadataStatus': {value: null, matchMode: FilterMatchMode.EQUALS},
@@ -113,6 +118,10 @@ const statuses = ref([
    {name: "Accepted", value: "accepted"},
    {name: "Failed", value: "failed"},
 ])
+
+const selectedIDs = computed(() =>{
+   return selections.value.map( s => s.id)
+})
 
 const sortOrder = computed(() => {
    if (hathiTrust.searchOpts.sortOrder == "desc") {

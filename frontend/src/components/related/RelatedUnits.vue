@@ -8,7 +8,7 @@
    >
       <template #empty><h3>No units found</h3></template>
       <template #paginatorstart>
-         <HathiTrustUpdateDialog v-if="props.hathiTrust" />
+         <HathiTrustUpdateDialog v-if="props.hathiTrust" :orderID="props.orderID" />
          <AddUnitDialog v-if="props.canAdd"/>
          <DPGButton label="Download Units CSV" class="p-button-secondary download" @click="downloadCSV" v-if="props.export" />
       </template>
@@ -64,12 +64,16 @@ import Dropdown from 'primevue/dropdown'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import AddUnitDialog from '@/components/order/AddUnitDialog.vue'
-import HathiTrustUpdateDialog from '@/components/order/HathiTrustUpdateDialog.vue'
+import HathiTrustUpdateDialog from '@/components/HathiTrustUpdateDialog.vue'
 import { usePinnable } from '@/composables/pin'
 
 usePinnable("p-paginator-top")
 
 const props = defineProps({
+   orderID: {
+      type: Number,
+      default: -1
+   },
    units: {
       type: Array,
       required: true

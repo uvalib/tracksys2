@@ -582,18 +582,6 @@ export const useOrdersStore = defineStore('orders', {
             system.setError(e)
          })
       },
-      batchUpdateHathiTrust(field, value) {
-         const system = useSystemStore()
-         let req = {field: field, value: value}
-         if ( field == "package_submitted_at" || field == "finished_at") {
-            req.value = dayjs(value).format("YYYY-MM-DD")
-         }
-         axios.post( `/api/orders/${this.detail.id}/hathitrust`, req ).then( () => {
-            system.toastMessage("Updated", `HathiTrust status records have been updated.`)
-         }).catch( e => {
-            system.setError(e)
-         })
-      },
       setTargetOwner( ownerID) {
          this.ownerID = ownerID
       },

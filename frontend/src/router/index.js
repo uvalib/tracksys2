@@ -161,6 +161,7 @@ router.beforeEach( (to) => {
    console.log("BEFORE ROUTE "+to.path)
    const userStore = useUserStore()
    const noAuthRoutes = ["not_found", "forbidden", "signedout"]
+   localStorage.setItem("tsPriorURL", to.fullPath)
 
    if (to.path === '/granted') {
       let jwtStr = VueCookies.get("ts2_jwt")
@@ -188,7 +189,6 @@ router.beforeEach( (to) => {
    } else {
       if (userStore.isSignedIn == false) {
          console.log("AUTHENTICATE")
-         localStorage.setItem("tsPriorURL", to.fullPath)
          window.location.href = "/authenticate"
          return false   // cancel the original navigation
       } else {

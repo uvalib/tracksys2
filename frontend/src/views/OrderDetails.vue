@@ -155,7 +155,7 @@
    </div>
    <div class="details" v-if="systemStore.working==false" >
       <Panel header="Units" class="units">
-         <RelatedUnits :units="ordersStore.units" :hathiTrust="canUpdateHathiTrust" :canAdd="detail.status != 'completed' && detail.status != 'canceled'" :export="true"/>
+         <RelatedUnits :orderID="detail.id" :units="ordersStore.units" :hathiTrust="canUpdateHathiTrust" :canAdd="canAddUnit" :export="true"/>
       </Panel>
    </div>
    <Dialog v-model:visible="showEmail" :modal="true" header="Customer Email" @hide="emailClosed()" :style="{width: '650px'}">
@@ -216,6 +216,10 @@ const customerInfo = computed(() => {
 
 const canDelete = computed(() => {
    return (user.isAdmin || user.isSupervisor) && ordersStore.detail.status=='requested' && ordersStore.units.length == 0
+})
+
+const canAddUnit = computed(() =>{
+   return detail.status != 'completed' && detail.status != 'canceled'
 })
 
 const hasMessages = computed(() => {

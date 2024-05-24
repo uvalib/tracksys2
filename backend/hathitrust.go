@@ -40,8 +40,10 @@ type hatiTrustUpdateRequest struct {
 }
 
 type hathiTrustBatchUpdateRequest struct {
-	Field string `json:"field"`
-	Value string `json:"value"`
+	OderID    int64   `json:"orderID"`
+	StatusIDs []int64 `json:"statusIDs"`
+	Field     string  `json:"field"`
+	Value     string  `json:"value"`
 }
 
 type hathiTrustSubmissionsResonse struct {
@@ -130,12 +132,10 @@ func (svc *serviceContext) getHathiTrustSubmissions(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
-
 }
 
-func (svc *serviceContext) updateOrderHathiTrustStatus(c *gin.Context) {
-	orderID := c.Param("id")
-	log.Printf("INFO: received batch hathitrust update request for order %s", orderID)
+func (svc *serviceContext) updateHathiTrustSubmissions(c *gin.Context) {
+	log.Printf("INFO: received batch hathitrust update request")
 
 	var req hathiTrustBatchUpdateRequest
 	err := c.BindJSON(&req)
@@ -145,17 +145,25 @@ func (svc *serviceContext) updateOrderHathiTrustStatus(c *gin.Context) {
 		return
 	}
 
-	log.Printf("INFO: batch update hathitrust %s=%s for order %s", req.Field, req.Value, orderID)
-	idQ := "select h.id from orders o inner join units u on u.order_id = o.id inner join metadata m on m.id = u.metadata_id "
-	idQ += "inner join hathitrust_statuses h on h.metadata_id = m.id where o.id=? and m.hathitrust = 1"
-	var statusIDs []int64
-	err = svc.DB.Raw(idQ, orderID).Scan(&statusIDs).Error
-	if err != nil {
-		log.Printf("ERROR: unable to get hathitrust status ids for update: %s", err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
+	if len(req.StatusIDs) == 0 && req.OderID == 0 {
+		log.Printf("INFO: batch update is missing required id list or order id")
+		c.String(http.StatusBadRequest, "either order id or and id list is required")
 		return
 	}
-	log.Printf("INFO: hathitrust statues %v will be updated with %s=%s", statusIDs, req.Field, req.Value)
+
+	statusIDs := req.StatusIDs
+	if req.OderID > 0 {
+		log.Printf("INFO: batch update hathitrust %s=%s for order %d", req.Field, req.Value, req.OderID)
+		idQ := "select h.id from orders o inner join units u on u.order_id = o.id inner join metadata m on m.id = u.metadata_id "
+		idQ += "inner join hathitrust_statuses h on h.metadata_id = m.id where o.id=? and m.hathitrust = 1"
+		err = svc.DB.Raw(idQ, req.OderID).Scan(&statusIDs).Error
+		if err != nil {
+			log.Printf("ERROR: unable to get hathitrust status ids for update: %s", err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
 	err = svc.DB.Exec(fmt.Sprintf("update hathitrust_statuses set %s=? where id in ?", req.Field), req.Value, statusIDs).Error
 	if err != nil {
 		log.Printf("ERROR: unable to update hathitrust status hathitrust %s=%s: %s", req.Field, req.Value, err.Error())
@@ -271,38 +279,6 @@ func (svc *serviceContext) flagMetadataForHathiTrust(mdID int64) error {
 	if err != nil {
 		return fmt.Errorf("unable to create hathitrust status for metadata %d: %s", mdID, err.Error())
 	}
-	return nil
-}
-
-func (svc *serviceContext) flagOrderForHathTrust(orderID int64) error {
-	var tgtUnits []unit
-	err := svc.DB.Where("order_id=? and unit_status != ?", orderID, "canceled").Find(&tgtUnits).Error
-	if err != nil {
-		return fmt.Errorf("unable to get units for order %d: %s", orderID, err.Error())
-	}
-
-	log.Printf("INFO: %d units in order %d are suitable to be flagged for hathitrust", len(tgtUnits), orderID)
-	flagCnt := 0
-	for _, tgtUnit := range tgtUnits {
-		var mfCnt int64
-		err = svc.DB.Table("master_files").Where("unit_id=?", tgtUnit.ID).Count(&mfCnt).Error
-		if err != nil {
-			log.Printf("ERROR: unable to get master file count for unit %d: %s", tgtUnit.ID, err.Error())
-			continue
-		}
-		if mfCnt == 0 {
-			log.Printf("INFO: unit %d has no master files and will be skipped", tgtUnit.ID)
-			continue
-		}
-		log.Printf("INFO: [%d] flag metadata %d from unit %d for inclusion in hathitrust", (flagCnt + 1), *tgtUnit.MetadataID, tgtUnit.ID)
-		err = svc.flagMetadataForHathiTrust(*tgtUnit.MetadataID)
-		if err != nil {
-			log.Printf("ERROR: %s", err.Error())
-			continue
-		}
-		flagCnt++
-	}
-	log.Printf("INFO: %d metadata records fro order %d flagged for hathitrust", flagCnt, orderID)
 	return nil
 }
 

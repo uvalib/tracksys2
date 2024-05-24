@@ -43,6 +43,32 @@ export const useHathiTrustStore = defineStore('hathitrust', {
          }).finally( () => {
            this.working= false
          })
-      }
+      },
+      batchUpdateOrder(orderID, field, value) {
+         const system = useSystemStore()
+         let req = {orderID: orderID, field: field, value: value}
+         if ( field == "metadata_submitted_at" || field == "package_submitted_at" || field == "finished_at") {
+            req.value = dayjs(value).format("YYYY-MM-DD")
+         }
+         axios.put( `/api/hathitrust`, req ).then( () => {
+            system.toastMessage("Updated", `HathiTrust status records have been updated.`)
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
+      batchUpdate(IDs, field, value) {
+         console.log("BATCH")
+         const system = useSystemStore()
+         let req = {statusIDs: IDs, field: field, value: value}
+         console.log(req)
+         if ( field == "metadata_submitted_at" || field == "package_submitted_at" || field == "finished_at") {
+            req.value = dayjs(value).format("YYYY-MM-DD")
+         }
+         axios.put( `/api/hathitrust`, req ).then( () => {
+            system.toastMessage("Updated", `HathiTrust status records have been updated.`)
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
    }
 })
