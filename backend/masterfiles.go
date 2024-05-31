@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -130,20 +128,15 @@ func (svc *serviceContext) getMasterFile(c *gin.Context) {
 	if mf.Metadata == nil {
 		out.ViewerURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
 	} else {
-		mfRegex := regexp.MustCompile(fmt.Sprintf(`^%09d_\w{4,}\.`, mf.UnitID))
-		pageNum := 0
-		if mfRegex.MatchString(mf.Filename) {
-			pagePart := strings.Split(mf.Filename, "_")[1]
-			pageNum, _ = strconv.Atoi(strings.Split(pagePart, ".")[0])
-		}
+		pageNum, _ := strconv.Atoi(mf.Title)
 		if mf.DateDlIngest != nil {
 			out.ViewerURL = fmt.Sprintf("%s/view/%s", svc.ExternalSystems.Curio, mf.Metadata.PID)
-			if pageNum > 0 {
+			if pageNum > 1 {
 				out.ViewerURL += fmt.Sprintf("?page=%d", pageNum)
 			}
 		} else {
 			out.ViewerURL = fmt.Sprintf("%s/view/%s?unit=%d", svc.ExternalSystems.Curio, mf.Metadata.PID, mf.UnitID)
-			if pageNum > 0 {
+			if pageNum > 1 {
 				out.ViewerURL += fmt.Sprintf("&page=%d", pageNum)
 			}
 		}

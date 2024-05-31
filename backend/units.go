@@ -327,7 +327,9 @@ func (svc *serviceContext) getUnitMasterfiles(c *gin.Context) {
 		return
 	}
 
-	for idx, mf := range masterFiles {
+	var currMFMetadataID int64
+	pageNum := 1
+	for _, mf := range masterFiles {
 		mfPID := mf.PID
 		if mf.OriginalMfID > 0 {
 			var originalMF masterFile
@@ -340,10 +342,19 @@ func (svc *serviceContext) getUnitMasterfiles(c *gin.Context) {
 
 		mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
 		if mf.MetadataID != nil {
-			mf.ViewerURL = fmt.Sprintf("%s/view/%s?unit=%s", svc.ExternalSystems.Curio, mf.Metadata.PID, unitID)
-			if idx > 0 {
-				mf.ViewerURL += fmt.Sprintf("&page=%d", (idx + 1))
+			if currMFMetadataID == 0 {
+				currMFMetadataID = mf.Metadata.ID
+			} else {
+				if currMFMetadataID != mf.Metadata.ID {
+					pageNum = 1
+					currMFMetadataID = mf.Metadata.ID
+				}
 			}
+			mf.ViewerURL = fmt.Sprintf("%s/view/%s?unit=%s", svc.ExternalSystems.Curio, mf.Metadata.PID, unitID)
+			if pageNum > 1 {
+				mf.ViewerURL += fmt.Sprintf("&page=%d", pageNum)
+			}
+			pageNum++
 		} else {
 			mf.ViewerURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
 		}
