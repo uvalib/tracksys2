@@ -274,7 +274,8 @@ export const useMetadataStore = defineStore('metadata', {
       },
       async publishToArchivesSpace( userID ) {
          const system = useSystemStore()
-         return axios.post(`/api/metadata/${this.detail.id}/archivesspace/publish?user=${userID}`).then( () => {
+         const payload = {user: userID, review: false}
+         return axios.post(`/api/metadata/${this.detail.id}/archivesspace/publish`, payload).then( () => {
             this.archivesSpace.publishedAt = new Date()
          }).catch( e => {
             system.setError(e)

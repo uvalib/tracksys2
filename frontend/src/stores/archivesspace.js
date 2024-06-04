@@ -31,7 +31,8 @@ export const useArchivesSpaceStore = defineStore('archivesspace', {
       async publish( userID, metadata ) {
          const system = useSystemStore()
          this.working = true
-         await axios.post(`/api/metadata/${metadata.id}/archivesspace/publish?user=${userID}`).then( () => {
+         const payload = {user: userID, review: true}
+         await axios.post(`/api/metadata/${metadata.id}/archivesspace/publish`, payload).then( () => {
             let idx = this.reviews.findIndex( r => r.metadataID == metadata.id )
             if ( idx > -1 )  {
                this.reviews.splice(idx,1)
@@ -100,7 +101,8 @@ export const useArchivesSpaceStore = defineStore('archivesspace', {
       async claimForReview( item, reviewerID ) {
          const system = useSystemStore()
          this.working = true
-         await axios.post(`/api/metadata/${item.id}/archivesspace/review?user=${reviewerID}`).then( (resp) => {
+         const payload = {user: reviewerID, review: true}
+         await axios.post(`/api/metadata/${item.id}/archivesspace/review`, payload).then( (resp) => {
             let tgtIdx = this.reviews.findIndex( r => r.metadataID == item.id)
             if ( tgtIdx > -1 ) {
                this.reviews[tgtIdx].reviewer = resp.data.reviewer
