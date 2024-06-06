@@ -216,7 +216,7 @@ const customerInfo = computed(() => {
 })
 
 const canFlagForHathiTrust = computed( () => {
-   return user.isAdmin && ordersStore.hasDigitalCollectionBuildingUnits && ordersStore.hathiTrustMetadataCount == 0
+   return user.isAdmin && ordersStore.hasHathiTrustCandidateUnits
 })
 
 const canDelete = computed(() => {

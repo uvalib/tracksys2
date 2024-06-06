@@ -58,12 +58,12 @@ export const useOrdersStore = defineStore('orders', {
          })
          return cnt
       },
-      hasDigitalCollectionBuildingUnits: state => {
+      hasHathiTrustCandidateUnits: state => {
          if ( state.detail.status == "canceled") return false
 
          let hasDCBUnits = false
          state.units.some( u => {
-            if ( u.intendedUse && u.intendedUse.id==110 && u.masterFilesCount > 0) {
+            if ( u.intendedUse && u.intendedUse.id==110 && u.masterFilesCount > 0 && u.metadata.hathiTrust == false) {
                hasDCBUnits = true
             }
             return hasDCBUnits==true
