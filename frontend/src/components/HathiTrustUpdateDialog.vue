@@ -16,7 +16,13 @@
             </div>
             <div>
                <label>Value</label>
-               <input v-if="hathiTrustField == 'metadata_status' || hathiTrustField == 'package_status'" type="text" v-model="hathiTrustValue" />
+               <select v-if="hathiTrustField == 'metadata_status' || hathiTrustField == 'package_status'" v-model="hathiTrustValue">
+                  <option value="" disabled selected>Select a status</option>
+                  <option value="pending">Pending</option>
+                  <option value="submitted">Submitted</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="failed">Failed</option>
+               </select>
                <Calendar v-else v-model="hathiTrustValue"  dateFormat="yy-mm-dd" showButtonBar/>
             </div>
          </div>
