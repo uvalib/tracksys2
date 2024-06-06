@@ -306,7 +306,7 @@ const flagForHathiTrust = (() => {
       icon: 'pi pi-exclamation-triangle',
       rejectClass: 'p-button-secondary',
       accept: () => {
-         ordersStore.flagForHathiTrust()
+         ordersStore.flagForHathiTrust( user.computeID )
       }
    })
 })
