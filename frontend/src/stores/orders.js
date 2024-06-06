@@ -184,7 +184,7 @@ export const useOrdersStore = defineStore('orders', {
          const system = useSystemStore()
          const req = {computeID: computeID, orderID: this.detail.id}
          axios.post(`${system.jobsURL}/hathitrust/init`, req).then(() => {
-            system.toastMessage('Success', 'Units in this order are being flagged for inclusion in HathiTrust. Check job status logs for more info.')
+            system.toastMessage('Success', 'Units in this order have been flagged for inclusion in HathiTrust. Check job status logs for more info.')
             this.working = false
          }).catch((error) => {
             system.toastError('Request Failed', `Flagging for HathiTrust failed: ${error}`)
