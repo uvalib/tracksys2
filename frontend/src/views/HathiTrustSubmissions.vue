@@ -114,6 +114,7 @@ const columnFilters = ref( {
 })
 
 const statuses = ref([
+   {name: "Pending", value: "pending"},
    {name: "Submitted", value: "submitted"},
    {name: "Accepted", value: "accepted"},
    {name: "Failed", value: "failed"},
