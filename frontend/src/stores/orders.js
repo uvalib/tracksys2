@@ -58,6 +58,18 @@ export const useOrdersStore = defineStore('orders', {
          })
          return cnt
       },
+      hasDigitalCollectionBuildingUnits: state => {
+         if ( state.detail.status == "canceled") return false
+
+         let hasDCBUnits = false
+         state.units.some( u => {
+            if ( u.intendedUse && u.intendedUse.id==110 && u.masterFilesCount > 0) {
+               hasDCBUnits = true
+            }
+            return hasDCBUnits==true
+         })
+         return hasDCBUnits
+      },
       isFeePaid: state => {
          if ( state.detail.invoice == null) return false
          return state.detail.invoice.dateFeePaid != null
@@ -167,6 +179,17 @@ export const useOrdersStore = defineStore('orders', {
          this.detail.dateCompleted = ""
          this.items = []
          this.units = []
+      },
+      flagForHathiTrust(computeID) {
+         const system = useSystemStore()
+         const req = {computeID: computeID, orderID: this.detail.id}
+         axios.post(`${system.jobsURL}/hathitrust/init`, req).then(() => {
+            system.toastMessage('Success', 'Units in this order are being flagged for inclusion in HathiTrust. Check job status logs for more info.')
+            this.working = false
+         }).catch((error) => {
+            system.toastError('Request Failed', `Flagging for HathiTrust failed: ${error}`)
+            this.working = false
+         })
       },
       async addUnit( metadataID, unitInfo, itemID=0) {
          const system = useSystemStore()

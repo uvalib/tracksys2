@@ -2,6 +2,7 @@
    <h2>
       <span>Order {{route.params.id}}</span>
       <div class="actions" v-if="(user.isAdmin || user.isSupervisor)" >
+         <DPGButton label="Flag for HathiTrust" class="edit" @click="flagForHathiTrust" v-if="canFlagForHathiTrust"/>
          <DPGButton label="Delete" class="edit" @click="deleteOrder()" v-if="canDelete"/>
          <DPGButton label="Edit" class="edit" @click="editOrder()"/>
       </div>
@@ -214,6 +215,10 @@ const customerInfo = computed(() => {
    return cust
 })
 
+const canFlagForHathiTrust = computed( () => {
+   return user.isAdmin && ordersStore.hasDigitalCollectionBuildingUnits && ordersStore.hathiTrustMetadataCount == 0
+})
+
 const canDelete = computed(() => {
    return (user.isAdmin || user.isSupervisor) && ordersStore.detail.status=='requested' && ordersStore.units.length == 0
 })
@@ -292,6 +297,18 @@ onBeforeMount( async () => {
    document.title = `Order #${orderID}`
    await ordersStore.getOrderDetails(orderID)
    await customerStore.getCustomers()
+})
+
+const flagForHathiTrust = (() => {
+   confirm.require({
+      message: 'Are you sure you want flag all digital collection building units in this order for inclusion in HathiTrust?',
+      header: 'Confirm HathiTrust Inclusion',
+      icon: 'pi pi-exclamation-triangle',
+      rejectClass: 'p-button-secondary',
+      accept: () => {
+         ordersStore.flagForHathiTrust()
+      }
+   })
 })
 
 const deleteOrder = (() => {
