@@ -2,6 +2,7 @@
    <h2>
       <span>Order {{route.params.id}}</span>
       <div class="actions" v-if="(user.isAdmin || user.isSupervisor)" >
+         <HathiTrustMetadataDialog @submit="submitHathiTrustMetadata" v-if="canSubmitHathiTrustMetadata"/>
          <DPGButton label="Flag for HathiTrust" class="edit" @click="flagForHathiTrust" v-if="canFlagForHathiTrust"/>
          <DPGButton label="Delete" class="edit" @click="deleteOrder()" v-if="canDelete"/>
          <DPGButton label="Edit" class="edit" @click="editOrder()"/>
@@ -187,6 +188,7 @@ import RelatedUnits from '../components/related/RelatedUnits.vue'
 import Divider from 'primevue/divider'
 import SendEmailDialog from '../components/order/SendEmailDialog.vue'
 import AddUnitDialog from '../components/order/AddUnitDialog.vue'
+import HathiTrustMetadataDialog from '../components/order/HathiTrustMetadataDialog.vue'
 import { useConfirm } from "primevue/useconfirm"
 import AssignModal from '../components/order/AssignModal.vue'
 
@@ -217,6 +219,9 @@ const customerInfo = computed(() => {
 
 const canFlagForHathiTrust = computed( () => {
    return user.isAdmin && ordersStore.hasHathiTrustCandidateUnits
+})
+const canSubmitHathiTrustMetadata = computed( () => {
+   return user.isAdmin && ordersStore.hasHathiTrustCandidateMetadata
 })
 
 const canDelete = computed(() => {
@@ -309,6 +314,9 @@ const flagForHathiTrust = (() => {
          ordersStore.flagForHathiTrust( user.computeID )
       }
    })
+})
+const submitHathiTrustMetadata = (( info ) => {
+   ordersStore.submitHathiTrustMetadata( user.computeID, info.mode, info.name )
 })
 
 const deleteOrder = (() => {

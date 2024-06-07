@@ -58,6 +58,21 @@ export const useOrdersStore = defineStore('orders', {
          })
          return cnt
       },
+      hasHathiTrustCandidateMetadata: state => {
+         if ( state.detail.status == "canceled") return false
+
+         let hasDCBMetadata = false
+         state.units.some( u => {
+            if ( u.metadata.hathiTrust == true) {
+               const htStatus = u.metadata.hathiTrustStatus
+               if ( htStatus.metadataStatus == 'pending' || htStatus.metadataStatus == 'failed') {
+                  hasDCBMetadata = true
+               }
+            }
+            return hasDCBMetadata==true
+         })
+         return hasDCBMetadata
+      },
       hasHathiTrustCandidateUnits: state => {
          if ( state.detail.status == "canceled") return false
 
@@ -180,14 +195,26 @@ export const useOrdersStore = defineStore('orders', {
          this.items = []
          this.units = []
       },
-      flagForHathiTrust(computeID) {
+      flagForHathiTrust(computeID, mode, submissionName) {
+         // https://dpg-jobs.lib.virginia.edu/hathitrust/metadata -H "Content-Type: application/json" --data '{"computeID": "lf6f", "mode": "prod", "orders": [11195], "name": "batch20240523"}'
+         const system = useSystemStore()
+         const req = {computeID: computeID, mode: mode, orders: [this.detail.id], name: submissionName}
+         axios.post(`${system.jobsURL}/hathitrust/metadata`, req).then(() => {
+            system.toastMessage('Success', 'HathiTrust metadata submission has begun. Check job status logs for more info.')
+            this.working = false
+         }).catch((error) => {
+            system.toastError('Request Failed', `Flagging for HathiTrust failed: ${error}`)
+            this.working = false
+         })
+      },
+      submitHathiTrustMetadata( computeID ) {
          const system = useSystemStore()
          const req = {computeID: computeID, orderID: this.detail.id}
          axios.post(`${system.jobsURL}/hathitrust/init`, req).then(() => {
             system.toastMessage('Success', 'Units in this order have been flagged for inclusion in HathiTrust. Check job status logs for more info.')
             this.working = false
          }).catch((error) => {
-            system.toastError('Request Failed', `Flagging for HathiTrust failed: ${error}`)
+            system.toastError('Request Failed', `HathiTrust metadata submission failed: ${error}`)
             this.working = false
          })
       },
