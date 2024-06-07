@@ -8,7 +8,7 @@
             <select v-model="submitMode">
                <option value="">Select a submission mode</option>
                <option value="dev">Development (no submission)</option>
-               <option value="test">Production</option>
+               <option value="prod">Production</option>
             </select>
             <p class="hint">Development mode will log the metadata to the job log</p>
          </div>
