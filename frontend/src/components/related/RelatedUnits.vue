@@ -23,6 +23,11 @@
             <span v-else class="empty">N/A</span>
          </template>
       </Column>
+      <Column field="status" header="Status" filterField="status" :showFilterMatchModes="false">
+         <template #filter="{filterModel}">
+            <Dropdown v-model="filterModel.value" :options="statusValues" optionLabel="label" optionValue="value" placeholder="Select a status" />
+         </template>
+      </Column>
       <Column field="metadata.callNumber" header="Call Number" v-if="showMetadata" class="nowrap" />
       <Column field="intendedUse.name" header="Intended Use" filterField="intendedUse.id" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
@@ -65,6 +70,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import AddUnitDialog from '@/components/order/AddUnitDialog.vue'
 import HathiTrustUpdateDialog from '@/components/HathiTrustUpdateDialog.vue'
+import { useSystemStore } from '@/stores/system'
 import { usePinnable } from '@/composables/pin'
 
 usePinnable("p-paginator-top")
@@ -96,12 +102,23 @@ const props = defineProps({
    }
 })
 
+const systemStore = useSystemStore()
 const relatedUnitsTable = ref()
 const filters = ref( {
+   'status': {value: null, matchMode: FilterMatchMode.EQUALS},
    'intendedUse.id': {value: null, matchMode: FilterMatchMode.EQUALS},
    'reorder': {value: null, matchMode: FilterMatchMode.EQUALS},
 })
 
+const statusValues = computed(() => {
+   let out = []
+   out.push( {label: "Approved", value: 'approved'} )
+   out.push( {label: "Canceled", value: 'canceled'} )
+   out.push( {label: "Done", value: 'done'} )
+   out.push( {label: "Error", value: 'error'} )
+   out.push( {label: "Unapproved", value: 'unapproved'} )
+   return out
+})
 
 const yesNo = computed(() => {
    let out = []
