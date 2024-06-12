@@ -2,7 +2,7 @@
    <h2>
       <span>Order {{route.params.id}}</span>
       <div class="actions" v-if="(user.isAdmin || user.isSupervisor)" >
-         <HathiTrustMetadataDialog @submit="submitHathiTrustMetadata" v-if="canSubmitHathiTrustMetadata"/>
+         <HathiTrustMetadataDialog @submit="submitHathiTrustMetadata" :order="detail.id" v-if="canSubmitHathiTrustMetadata"/>
          <DPGButton label="Flag for HathiTrust" class="edit" @click="flagForHathiTrust" v-if="canFlagForHathiTrust"/>
          <DPGButton label="Delete" class="edit" @click="deleteOrder()" v-if="canDelete"/>
          <DPGButton label="Edit" class="edit" @click="editOrder()"/>

@@ -30,10 +30,16 @@ import Dialog from 'primevue/dialog'
 import { ref, computed } from 'vue'
 
 const emit = defineEmits( ['submit' ])
+const props = defineProps({
+   order: {
+      type: String,
+      required: true
+   }
+})
 
 const showDialog = ref(false)
 const submitMode = ref("")
-const submitName = ref("")
+const submitName = ref(`order${props.order}`)
 
 const submitDisabled = computed( () => {
    return ( submitMode.value == "" || submitName.value == "")

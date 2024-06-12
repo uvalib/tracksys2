@@ -161,7 +161,6 @@ router.beforeEach( (to) => {
    console.log("BEFORE ROUTE "+to.path)
    const userStore = useUserStore()
    const noAuthRoutes = ["not_found", "forbidden", "signedout"]
-   localStorage.setItem("tsPriorURL", to.fullPath)
 
    if (to.path === '/granted') {
       let jwtStr = VueCookies.get("ts2_jwt")
@@ -180,7 +179,7 @@ router.beforeEach( (to) => {
    }
 
    // for all other routes, pull the existing jwt from storage from storage and set in the user store.
-   // depending upon the page resuested, this token may or may not be used.
+   // depending upon the page requested, this token may or may not be used.
    const jwtStr = localStorage.getItem('ts2_jwt')
    userStore.setJWT(jwtStr)
 
@@ -189,6 +188,7 @@ router.beforeEach( (to) => {
    } else {
       if (userStore.isSignedIn == false) {
          console.log("AUTHENTICATE")
+         localStorage.setItem("tsPriorURL", to.fullPath)
          window.location.href = "/authenticate"
          return false   // cancel the original navigation
       } else {
