@@ -32,7 +32,7 @@ import { ref, computed } from 'vue'
 const emit = defineEmits( ['submit' ])
 const props = defineProps({
    order: {
-      type: String,
+      type: Number,
       required: true
    }
 })
