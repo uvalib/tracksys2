@@ -496,6 +496,7 @@ export const useMetadataStore = defineStore('metadata', {
          units.forEach( r => {
             let u = {
                id: r.id,
+               status: r.status,
                reorder: r.reorder,
                inDL: r.includeInDL,
                dateArchived: r.dateArchived,
