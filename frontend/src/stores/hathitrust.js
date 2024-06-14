@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { useSystemStore } from './system'
 import axios from 'axios'
+import dayjs from 'dayjs'
 
 export const useHathiTrustStore = defineStore('hathitrust', {
    state: () => ({
