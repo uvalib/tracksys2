@@ -668,7 +668,15 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 
 	if md.Type == "SirsiMetadata" {
 		log.Printf("INFO: lookup sirsi metadata  details for %d", md.ID)
-		sirsiResp, err := svc.doSirsiLookup(*md.CatalogKey, *md.Barcode)
+		catKey := ""
+		if md.CatalogKey != nil {
+			catKey = *md.CatalogKey
+		}
+		barcode := ""
+		if md.Barcode != nil {
+			barcode = *md.Barcode
+		}
+		sirsiResp, err := svc.doSirsiLookup(catKey, barcode)
 		if err != nil {
 			log.Printf("ERROR: lookup sirsi details for %s failed: %s", md.PID, err.Error())
 			out.Error = err.Error()
