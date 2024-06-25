@@ -12,7 +12,7 @@ import (
 )
 
 // Version of the service
-const Version = "1.23.3"
+const Version = "1.24.0"
 
 func main() {
 	// Load cfg
@@ -113,6 +113,10 @@ func main() {
 		api.POST("/orders/:id/complete", svc.completeOrder)
 		api.POST("/orders/:id/processor", svc.setOrderProcessor)
 		api.POST("/invoices/:id/update", svc.updateInvoice)
+
+		api.GET("/published/dpla", svc.getPublishedDPLA)
+		api.GET("/published/virgo", svc.getPublishedVirgo)
+		api.GET("/published/archivesspace", svc.getPublishedArchivesSpace)
 
 		api.GET("/jobs", svc.getJobStatuses)
 		api.DELETE("/jobs", svc.deleteJobStatuses)

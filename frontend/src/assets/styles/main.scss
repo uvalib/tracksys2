@@ -18,6 +18,10 @@ body {
       padding: 0;
       background: white;
 
+      td.nowrap {
+         white-space: nowrap;
+      }
+
       a {
          color: var(--uvalib-brand-blue-light);
          font-weight: 600;

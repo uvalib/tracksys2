@@ -46,6 +46,11 @@ onMounted(() => {
          {label: "Home", route: "/"},
          {label: "Orders", route: "/orders"},
          {label: "Collections", route: "/collections"},
+         {label: "Published", items: [
+            {label: "Virgo", route: '/published/virgo'},
+            {label: "ArchivesSpace", route: '/published/archivesspace'},
+            {label: "DPLA", route: '/published/dpla'},
+         ]},
          {label: "Job Statuses", route: "/jobs"},
          {label: "Digitization", items: [
             {label: "Equipment", route: '/equipment'},

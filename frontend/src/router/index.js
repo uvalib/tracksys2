@@ -55,6 +55,11 @@ const router = createRouter({
          component: CollectionsList
       },
       {
+         path: '/published/:type',
+         name: 'published',
+         component: () => import('../views/PublishedList.vue')
+      },
+      {
          path: '/hathitrust',
          name: 'hathitrust',
          component: HathiTrustSubmissions
