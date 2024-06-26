@@ -9,6 +9,7 @@
             <InputIcon class="pi pi-search" />
             <InputText v-model="query" placeholder="Search" @keypress="searchKeyPressed($event)"/>
          </IconField>
+         <DPGButton label="Search" @click="queryMetadata()" :disabled="query.length == 0"/>
          <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="query.length == 0"/>
       </span>
    </div>
@@ -47,7 +48,6 @@
                <span v-else class="none">N/A</span>
             </template>
          </Column>
-         <Column field="masterFilesCount" header="Master Files" />
       </DataTable>
    </div>
 </template>

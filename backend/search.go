@@ -53,7 +53,6 @@ type metadataHit struct {
 	VirgoURL         string          `gorm:"-" json:"virgoURL"`
 	ExternalSystemID int64           `json:"-"`
 	ExternalSystem   *externalSystem `gorm:"foreignKey:ExternalSystemID" json:"externalSystem,omitempty"`
-	NumMasterFiles   uint            `json:"masterFilesCount"`
 }
 
 type orderHit struct {
@@ -134,7 +133,6 @@ type searchContext struct {
 	Filter     *searchFilter
 	StartIndex int
 	PageSize   int
-	Collection bool
 }
 
 type searchChannel struct {
@@ -171,11 +169,6 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	if sc.PageSize == 0 {
 		sc.PageSize = 15
 	}
-
-	// when searching for items to be added to a collection, the request includes
-	// a param collection=true. if this is the case, exclude items that are already part of a collection
-	// these items will have their parent_metadata_id set greater than zero
-	sc.Collection, _ = strconv.ParseBool(c.Query("collection"))
 
 	// limit search scope to an item type
 	sc.Scope = c.Query("scope")
@@ -469,36 +462,24 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 				searchQ = searchQ.Where(sc.Filter.Query)
 			}
 
-			if sc.Collection == true {
-				// this is a special case search for metadata records that are candatates for inclusion in
-				// a collection; XML, Sirsi, ArchivesSpace... and only search a few fields
-				log.Printf("INFO: this is a search for metadata records that are candidates for being part of a collection")
-				mfCnt := "(select count(*) from master_files m inner join units mu on mu.id = m.unit_id where mu.metadata_id=metadata.id and mu.intended_use_id=110) as num_master_files"
-				searchQ = searchQ.Joins("inner join units u on u.metadata_id = metadata.id").Where("u.intended_use_id=?", 110)
-				fieldQ := svc.DB.Or("title like ?", sc.QueryAny).Or("barcode like ?", sc.QueryStart).Or("catalog_key like ?", sc.QueryStart).
-					Or("call_number like ?", sc.QueryStart).Or("u.id=?", sc.IntQuery)
-				searchQ.Where("parent_metadata_id=?", 0).Where(fieldQ).Group("metadata.id").Select("metadata.*", mfCnt)
-
-			} else {
-				var fieldQ *gorm.DB
-				if sc.Field == "all" {
-					fieldQ = svc.DB.Or("title like ?", sc.QueryAny).
-						Or("barcode=?", sc.Query).Or("catalog_key=?", sc.Query).Or("call_number like ?", sc.QueryStart).Or("desc_metadata like ?", sc.QueryAny).
-						Or("creator_name like ?", sc.QueryStart).Or("collection_id like ?", sc.QueryStart).Or("collection_facet like ?", sc.QueryStart)
-					if sc.QueryType == "id" {
-						fieldQ = fieldQ.Or("metadata.id=?", sc.IntQuery)
-					}
-				} else {
-					if sc.Field == "title" || sc.Field == "creator_name" {
-						fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
-					} else if sc.Field == "call_number" {
-						fieldQ = svc.DB.Where("call_number like ?", sc.QueryStart)
-					} else {
-						fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", sc.Field), sc.Query)
-					}
+			var fieldQ *gorm.DB
+			if sc.Field == "all" {
+				fieldQ = svc.DB.Or("title like ?", sc.QueryAny).
+					Or("barcode=?", sc.Query).Or("catalog_key=?", sc.Query).Or("call_number like ?", sc.QueryStart).Or("desc_metadata like ?", sc.QueryAny).
+					Or("creator_name like ?", sc.QueryStart).Or("collection_id like ?", sc.QueryStart).Or("collection_facet like ?", sc.QueryStart)
+				if sc.QueryType == "id" {
+					fieldQ = fieldQ.Or("metadata.id=?", sc.IntQuery)
 				}
-				searchQ.Where(fieldQ)
+			} else {
+				if sc.Field == "title" || sc.Field == "creator_name" {
+					fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
+				} else if sc.Field == "call_number" {
+					fieldQ = svc.DB.Where("call_number like ?", sc.QueryStart)
+				} else {
+					fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", sc.Field), sc.Query)
+				}
 			}
+			searchQ.Where(fieldQ)
 		} else {
 			searchQ.Where("pid=?", sc.Query)
 		}
@@ -507,14 +488,7 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 		searchQ.Count(&resp.Total)
 
 		searchQ = searchQ.Preload("ExternalSystem")
-		if sc.Collection == false {
-			err = searchQ.Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Hits).Error
-		} else {
-			// this is a search foe metdata records to include in a collection. get them all as this query
-			// is targetd and reaults will be small
-			err = searchQ.Limit(500).Find(&resp.Hits).Error
-		}
-
+		err = searchQ.Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Hits).Error
 		if err != nil {
 			log.Printf("ERROR: metadata search failed: %s", err.Error())
 		}

@@ -12,6 +12,17 @@ import (
 	"gorm.io/gorm"
 )
 
+type collectionCandidate struct {
+	ID               uint64 `json:"id"`
+	PID              string `gorm:"column:pid" json:"pid"`
+	Type             string `json:"type"`
+	Title            string `json:"title"`
+	CallNumber       string `json:"callNumber"`
+	Barcode          string `json:"barcode"`
+	CatalogKey       string `json:"catalogKey"`
+	ExternalSystemID int64  `json:"externalSystemID"`
+}
+
 func (svc *serviceContext) getCollections(c *gin.Context) {
 	log.Printf("INFO: get all collections")
 	type collectionHit struct {
@@ -125,6 +136,32 @@ func (svc *serviceContext) getCollectionItems(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+func (svc *serviceContext) findCollectionCandidates(c *gin.Context) {
+	qStr := c.Query("q")
+	qAny := fmt.Sprintf("%%%s%%", qStr)
+	qStart := fmt.Sprintf("%s%%", qStr)
+	log.Printf("INFO: find collection candidates matching [%s]", qStr)
+
+	var out struct {
+		Total int64                 `json:"total"`
+		Hits  []collectionCandidate `json:"hits"`
+	}
+
+	searchQ := svc.DB.Debug().Table("metadata").Where("parent_metadata_id=?", 0)
+	fieldQ := svc.DB.Or("title like ?", qAny).Or("barcode=?", qStr).Or("catalog_key=?", qStr).Or("call_number like ?", qStart).Or("id=?", qStr)
+	searchQ.Where(fieldQ)
+
+	searchQ.Count(&out.Total)
+	err := searchQ.Limit(100).Find(&out.Hits).Error
+	if err != nil {
+		log.Printf("ERROR: collection candidate search failed: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, out)
 }
 
 func (svc *serviceContext) removeCollectionItem(c *gin.Context) {

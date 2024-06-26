@@ -123,15 +123,19 @@ export const useCollectionsStore = defineStore('collections', {
       },
       metadataSearch( query ) {
          const system = useSystemStore()
-         let url = `/api/search?scope=metadata&q=${encodeURIComponent(query)}&collection=1`
+         let url = `/api/collections/candidates?q=${encodeURIComponent(query)}`
          this.metadataHits = []
          this.searching = true
          axios.get(url).then(response => {
-            response.data.metadata.hits.forEach( mh => {
-               let hit = { id: mh.id, pid: mh.pid, title: mh.title, catalogKey: mh.catalogKey, type: mh.type,
-                  callNumber: mh.callNumber, barcode: mh.barcode, masterFilesCount: mh.masterFilesCount }
-               if ( mh.externalSystem) {
-                  hit.type = mh.externalSystem.name
+            response.data.hits.forEach( mh => {
+               let hit = {
+                  id: mh.id, pid: mh.pid, title: mh.title, catalogKey: mh.catalogKey, type: mh.type,
+                  callNumber: mh.callNumber, barcode: mh.barcode }
+               if ( mh.externalSystemID > 0) {
+                  const es = system.externalSystems.find( s => s.id == mh.externalSystemID)
+                  if (es) {
+                     hit.type = es.name
+                  }
                }
                this.metadataHits.push( hit )
             })
