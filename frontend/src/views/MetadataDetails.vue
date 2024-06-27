@@ -5,6 +5,7 @@
          <span>Metadata {{route.params.id}}</span>
       </div>
       <div class="actions">
+         <CollectionAddDialog v-if="!metadataStore.related.collection" :metadataID="metadataStore.detail.id" />
          <template  v-if="metadataStore.detail.type == 'XmlMetadata' && systemStore.working==false">
             <DPGButton label="Delete" class="edit" @click="deleteMetadata()" v-if="canDelete"/>
             <DPGButton label="Download XML"  @click="downloadXMLClicked()" />
@@ -245,6 +246,7 @@ import FileUpload from 'primevue/fileupload'
 import { useConfirm } from "primevue/useconfirm"
 import CollectionRecords from '@/components/related/CollectionRecords.vue'
 import HathiTrustDialog from '@/components/metadata/HathiTrustDialog.vue'
+import CollectionAddDialog from '@/components/metadata/CollectionAddDialog.vue'
 import LocationUnitsDialog from '@/components/metadata/LocationUnitsDialog.vue'
 import WaitSpinner from '@/components/WaitSpinner.vue'
 

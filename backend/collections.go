@@ -202,36 +202,44 @@ func (svc *serviceContext) removeCollectionItem(c *gin.Context) {
 	c.String(http.StatusOK, "removed")
 }
 
-func (svc *serviceContext) addCollectionItems(c *gin.Context) {
+func (svc *serviceContext) addCollectionItem(c *gin.Context) {
 	collectionID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	if collectionID == 0 {
-		log.Printf("ERROR: bad collection id %s in add collection items request", c.Param("id"))
+		log.Printf("INFO: bad collection id %s in add collection item request", c.Param("id"))
 		c.String(http.StatusBadRequest, fmt.Sprintf("invalid collection id %s", c.Param("id")))
 		return
 	}
-	var req struct {
-		Items []int64 `json:"items"`
-	}
-	err := c.BindJSON(&req)
-	if err != nil {
-		log.Printf("ERROR: invalid add collection %d items request: %s", collectionID, err.Error())
-		c.String(http.StatusBadRequest, err.Error())
+	mdID, _ := strconv.ParseInt(c.Query("rec"), 10, 64)
+	if mdID == 0 {
+		log.Printf("INFO: bad record id %s in add collection item request", c.Query("rec"))
+		c.String(http.StatusBadRequest, fmt.Sprintf("invalid rec param %s", c.Query("rec")))
 		return
 	}
 
-	// NOTE: the collection lookup logic excludes items that are already part of a collection
-	// so it is ok to add any ites that are included in the request
-	log.Printf("INFO: add items to collection %d: %+v", collectionID, req.Items)
-
-	// update parent_metadata_id of all metadata records in the request list to be collectionID
-	err = svc.DB.Table("metadata").Where("id in ?", req.Items).Updates(metadata{ParentMetadataID: collectionID}).Error
+	log.Printf("INFO: add metadata %d to collection %d", mdID, collectionID)
+	var md metadata
+	err := svc.DB.Find(&md, mdID).Error
 	if err != nil {
-		log.Printf("ERROR: unable to update collection %d items: %s", collectionID, err.Error())
+		log.Printf("ERROR: unable to get metadata %d to add to collection %d: %s", mdID, collectionID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.String(http.StatusOK, fmt.Sprintf("%d items added to collection %d", len(req.Items), collectionID))
+	if md.ParentMetadataID != 0 {
+		log.Printf("INFO: invalid request to add metadata %d to collection %d; it is already in collection %d", mdID, collectionID, md.ParentMetadataID)
+		c.String(http.StatusBadRequest, fmt.Sprintf("this record is already part of collection %d", md.ParentMetadataID))
+		return
+	}
+
+	md.ParentMetadataID = collectionID
+	err = svc.DB.Model(&md).Select("ParentMetadataID").Updates(md).Error
+	if err != nil {
+		log.Printf("ERROR: unable to update parent_metadata_id: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.String(http.StatusOK, fmt.Sprintf("metadata has been to collection %d", collectionID))
 }
 
 func (svc *serviceContext) addCollectionFacet(c *gin.Context) {

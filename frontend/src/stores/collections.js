@@ -63,15 +63,12 @@ export const useCollectionsStore = defineStore('collections', {
             system.setError(e)
          })
       },
-      addItems( items ) {
-         this.working = true
-         axios.post( `/api/collections/${this.collectionID}/items`, {items: items} ).then(() => {
-            this.working = false
-            this.getItems()
+      async addToCollection( collectionID, metadataID ) {
+         const system = useSystemStore()
+         return axios.post( `/api/collections/${collectionID}/item?rec=${metadataID}` ).then(() => {
+            system.toastMessage( "Collection Updated", "This metadata record has been added to the selected collection" )
          }).catch( e => {
-            const system = useSystemStore()
             system.setError(e)
-            this.working = false
          })
       },
       removeItem( item ) {

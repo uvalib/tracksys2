@@ -4,7 +4,6 @@ import HomeView from '../views/HomeView.vue'
 
 import APTrustSubmissions from '../views/APTrustSubmissions.vue'
 import ArchivesSpaceReviews from '../views/ArchivesSpaceReviews.vue'
-import CollectionsList from '../views/CollectionsList.vue'
 import HathiTrustSubmissions from '../views/HathiTrustSubmissions.vue'
 import JobStatusList from '../views/JobStatusList.vue'
 import JobStatusDetails from '../views/JobStatusDetails.vue'
@@ -52,7 +51,7 @@ const router = createRouter({
       {
          path: '/collections',
          name: 'collections',
-         component: CollectionsList
+         component: () => import('../views/CollectionsList.vue')
       },
       {
          path: '/published/:type',
