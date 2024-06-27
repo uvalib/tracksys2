@@ -29,8 +29,8 @@
             <Column field="pid" header="PID" class="nowrap"/>
             <Column field="type" header="Type">
                <template #body="slotProps">
-                  <span v-if="slotProps.data.externalSystem">{{ slotProps.data.externalSystem.name }}</span>
-                  <span v-else>{{slotProps.data.type }}</span>
+                  <span v-if="slotProps.data.type!='ExternalMetadata'">{{ slotProps.data.type }}</span>
+                  <span v-else>{{externalSystemName(slotProps.data.externalSystemID)}}</span>
                </template>
             </Column>
             <Column field="title" header="Title" :sortable="true"/>
@@ -78,6 +78,7 @@ import InputText from 'primevue/inputtext'
 import { useCollectionsStore } from '@/stores/collections'
 import { useConfirm } from "primevue/useconfirm"
 import { useUserStore } from '@/stores/user'
+import { useSystemStore } from '@/stores/system'
 import CollectionBulkAdd from './CollectionBulkAdd.vue'
 import { usePinnable } from '@/composables/pin'
 import { computed } from 'vue'
@@ -87,6 +88,7 @@ usePinnable("p-paginator-top")
 const userStore = useUserStore()
 const collectionStore = useCollectionsStore()
 const confirm = useConfirm()
+const system = useSystemStore()
 
 const props = defineProps({
    collectionID: {
@@ -100,6 +102,14 @@ const sortOrder = computed(() => {
       return -1
    }
    return 1
+})
+
+const externalSystemName = ( (id) => {
+   const sys = system.externalSystems.find( s => s.id == id)
+   if ( sys ) {
+      return sys.name
+   }
+   return "Unknown"
 })
 
 const onSort = ((event) => {

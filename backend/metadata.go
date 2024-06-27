@@ -80,7 +80,7 @@ type metadata struct {
 	AvailabilityPolicyID *int64              `json:"-"`
 	AvailabilityPolicy   *availabilityPolicy `gorm:"foreignKey:AvailabilityPolicyID" json:"availabilityPolicy"`
 	Locations            []location          `gorm:"foreignKey:MetadataID" json:"locations"`
-	ExternalSystemID     *int64              `json:"-"`
+	ExternalSystemID     *int64              `json:"externalSystemID"`
 	ExternalSystem       *externalSystem     `gorm:"foreignKey:ExternalSystemID" json:"externalSystem"`
 	ExternalURI          *string             `gorm:"column:external_uri" json:"externalURI"`
 	SupplementalSystemID *int64              `json:"-"`
