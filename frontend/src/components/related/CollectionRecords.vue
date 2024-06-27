@@ -27,6 +27,12 @@
                </template>
             </Column>
             <Column field="pid" header="PID" class="nowrap"/>
+            <Column field="type" header="Type">
+               <template #body="slotProps">
+                  <span v-if="slotProps.data.extrnalSystem">{{ slotProps.data.extrnalSystem.name }}</span>
+                  <span v-else>{{slotProps.data.type }}</span>
+               </template>
+            </Column>
             <Column field="title" header="Title" :sortable="true"/>
             <Column field="callNumber" header="Call Number" :sortable="true">
                <template #body="slotProps">

@@ -5,7 +5,7 @@
          <span>Metadata {{route.params.id}}</span>
       </div>
       <div class="actions">
-         <CollectionAddDialog v-if="!metadataStore.related.collection" :metadataID="metadataStore.detail.id" />
+         <CollectionAddDialog v-if="canAddToCollection" :metadataID="metadataStore.detail.id" />
          <template  v-if="metadataStore.detail.type == 'XmlMetadata' && systemStore.working==false">
             <DPGButton label="Delete" class="edit" @click="deleteMetadata()" v-if="canDelete"/>
             <DPGButton label="Download XML"  @click="downloadXMLClicked()" />
@@ -203,7 +203,7 @@
       <div class="details">
          <Panel header="Related Information">
             <TabView class="related" :lazy="true">
-               <TabPanel header="Collection" v-if="metadataStore.detail.isCollection">
+               <TabPanel header="Collection Members" v-if="metadataStore.detail.isCollection">
                   <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
                   <CollectionRecords v-else :collectionID="metadataStore.detail.id"/>
                </TabPanel>
@@ -263,6 +263,20 @@ const publishing = ref(false)
 const showHathiDialog = ref(false)
 const showLocUnitsDialog = ref(false)
 const targetFolder = ref("")
+
+const canAddToCollection = computed(() => {
+   if ( systemStore.working ) return false
+   if ( metadataStore.detail.isCollection ) return false
+   if ( metadataStore.related.collection != null ) return false
+   let hasDigitalCollectonUnit = false
+   metadataStore.related.units.some( u => {
+      if (u.intendedUse && u.intendedUse.id == 110) {
+         hasDigitalCollectonUnit = true
+         return hasDigitalCollectonUnit
+      }
+   })
+   return hasDigitalCollectonUnit
+})
 
 const sortedFolders = computed(() => {
    return metadataStore.detail.folders.sort( (a,b) => {
