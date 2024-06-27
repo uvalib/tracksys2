@@ -29,7 +29,7 @@
             <Column field="pid" header="PID" class="nowrap"/>
             <Column field="type" header="Type">
                <template #body="slotProps">
-                  <span v-if="slotProps.data.extrnalSystem">{{ slotProps.data.extrnalSystem.name }}</span>
+                  <span v-if="slotProps.data.externalSystem">{{ slotProps.data.externalSystem.name }}</span>
                   <span v-else>{{slotProps.data.type }}</span>
                </template>
             </Column>
