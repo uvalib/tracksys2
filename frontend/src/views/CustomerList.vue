@@ -28,7 +28,7 @@
          <Column field="academicStatus.name" header="Acedemic Status"/>
          <Column header="" class="row-acts">
             <template #body="slotProps">
-               <DPGButton label="Edit" class="p-button-text"  @click="edit(slotProps.data)" />
+               <DPGButton label="Edit" class="edit-btn" severity="secondary"  @click="edit(slotProps.data)" />
             </template>
          </Column>
          <template #expansion="slotProps">
@@ -194,8 +194,12 @@ const edit = ((data) => {
    min-height: 600px;
    text-align: left;
    padding: 0 25px 25px 25px;
-   :deep(.row-acts) {
+   :deep(td.row-acts) {
       text-align: center;
+      .edit-btn {
+         font-size: 0.85em;
+         padding: 2px 12px;
+      }
    }
    .address-data {
       padding: 10px 0 0px 3rem;
@@ -228,14 +232,10 @@ const edit = ((data) => {
       display: flex;
       flex-flow: row nowrap;
       justify-content: flex-end;
+      gap: 10px;
       margin-top: 5px;
       text-align: right;
       padding: 10px 0;
-      :deep(.cancel-button button) {
-         @include base-button();
-         width: auto;
-         margin-right: 10px;
-      }
    }
 }
 </style>

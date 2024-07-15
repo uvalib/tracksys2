@@ -28,7 +28,7 @@
          <Column field="active" header="Active?"></Column>
          <Column header="" class="row-acts">
             <template #body="slotProps">
-               <DPGButton label="Edit" class="p-button-text"  @click="edit(slotProps.data)" />
+               <DPGButton label="Edit" class="edit-btn" severity="secondary"  @click="edit(slotProps.data)" />
             </template>
          </Column>
       </DataTable>
@@ -154,19 +154,11 @@ onMounted(() => {
    .form-controls {
       display: flex;
       flex-flow: row nowrap;
+      gap: 10px;
       justify-content: flex-end;
       margin-top: 5px;
       text-align: right;
       padding: 10px 0;
-      :deep(.cancel-button button) {
-         @include base-button();
-         width: auto;
-         margin-right: 10px;
-      }
-      :deep(.submit-button button) {
-         @include primary-button();
-         width: auto;
-      }
    }
 }
 .notes {
@@ -192,9 +184,12 @@ onMounted(() => {
       margin-right: 10px;
    }
 
-
-   :deep(.row-acts) {
+   :deep(td.row-acts) {
       text-align: center;
+      .edit-btn {
+         font-size: 0.85em;
+         padding: 2px 12px;
+      }
    }
 }
 </style>

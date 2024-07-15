@@ -420,19 +420,23 @@ const createMetadataClosed = (() => {
       }
       .submit-button button {
          @include primary-button();
-         font-size: 0.95em;
-         padding: 6px 15px;
-         margin-left: 10px;
-         display: inline-block;
-         width: 125px;
+         & {
+            font-size: 0.95em;
+            padding: 6px 15px;
+            margin-left: 10px;
+            display: inline-block;
+            width: 125px;
+         }
       }
       .reset-button button {
          @include base-button();
-         font-size: 0.95em;
-         padding: 6px 15px;
-         margin-left: 10px;
-         display: inline-block;
-         width: 125px;
+         & {
+            font-size: 0.95em;
+            padding: 6px 15px;
+            margin-left: 10px;
+            display: inline-block;
+            width: 125px;
+         }
       }
       .formkit-outer.select-wrap {
          margin: 0 10px 0 0;
@@ -462,8 +466,8 @@ div.agency {
    }
 }
 .acts {
-   button.p-button {
-      margin-left: 10px;
-   }
+   display: flex;
+   flex-flow: row nowrap;
+   gap: 10px;
 }
 </style>

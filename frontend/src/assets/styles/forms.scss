@@ -34,7 +34,6 @@ button.dpg-form-input {
 }
 .submit-button button {
    @include primary-button();
-   width: auto;
 }
 .submit-button.disabled button, .submit-button button:disabled  {
    opacity: 0.3 !important;
