@@ -25,7 +25,7 @@
          <Column field="lastName" header="Last Name" :sortable="true"/>
          <Column field="firstName" header="First Name"/>
          <Column field="email" header="Email" :sortable="true"/>
-         <Column field="academicStatus.name" header="Acedemic Status"/>
+         <Column field="academicStatus.name" header="Academic Status"/>
          <Column header="" class="row-acts">
             <template #body="slotProps">
                <DPGButton label="Edit" class="edit-btn" severity="secondary"  @click="edit(slotProps.data)" />
@@ -50,7 +50,7 @@
                   <FormKit label="Last Name" type="text" v-model="customerDetails.lastName" validation="required" autofocus />
                   <FormKit label="First Name" type="text" v-model="customerDetails.firstName" validation="required" />
                   <FormKit label="Email" type="email" v-model="customerDetails.email" validation="required" />
-                  <FormKit label="Acedemic Status" type="select" v-model="customerDetails.academicStatus" :options="academicStatuses" required/>
+                  <FormKit label="Academic Status" type="select" v-model="customerDetails.academicStatus" :options="academicStatuses" required/>
                </TabPanel>
                <TabPanel header="Primary Address">
                   <div v-if="customerDetails.addresses.length == 0">
