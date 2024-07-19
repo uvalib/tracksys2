@@ -119,7 +119,7 @@ import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
 import Dialog from 'primevue/dialog'
-import { FilterMatchMode } from 'primevue/api'
+import { FilterMatchMode } from '@primevue/core/api'
 import { useConfirm } from "primevue/useconfirm"
 import { usePinnable } from '@/composables/pin'
 import { useArchivesSpaceStore } from '@/stores/archivesspace'
@@ -351,9 +351,10 @@ textarea {
    -moz-osx-font-smoothing: grayscale;
    color: var(--color-primary-text);
    padding: 5px 10px;
-   &:focus {
-      @include be-accessible();
-   }
+   // &:focus {
+   //    @include be-accessible();
+   // }
+   // FIXME
 }
 div.note-text {
    height: 250px;

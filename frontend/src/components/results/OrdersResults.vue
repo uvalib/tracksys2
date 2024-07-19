@@ -59,7 +59,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { FilterMatchMode } from 'primevue/api'
+import { FilterMatchMode } from '@primevue/core/api'
 import { useSearchStore } from '../../stores/search'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -151,32 +151,4 @@ function onPage(event) {
 </script>
 
 <stype scoped lang="scss">
-.results {
-   margin: 20px;
-   font-size: 0.9em;
-   button.download {
-      margin-right: 10px;
-   }
-   h3 {
-      text-align: center;
-   }
-   td.nowrap, th {
-      white-space: nowrap;
-   }
-   th, td {
-      font-size: 0.85em;
-   }
-   .results-toolbar {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: space-between;
-      .matches {
-         padding: 5px 0;
-         text-align: left;
-      }
-      button {
-         font-size: 0.8em;
-      }
-   }
-}
 </stype>

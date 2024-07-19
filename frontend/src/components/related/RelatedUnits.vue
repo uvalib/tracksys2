@@ -64,7 +64,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { FilterMatchMode } from 'primevue/api'
+import { FilterMatchMode } from '@primevue/core/api'
 import Dropdown from 'primevue/dropdown'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -134,16 +134,16 @@ const downloadCSV = (() => {
 </script>
 
 <stype scoped lang="scss">
-td.nowrap {
-   white-space: nowrap;
-}
-h3 {
-   text-align: center;
-}
-.empty {
-   color: #ccc;
-}
-button.p-button.p-component.p-button-secondary.download {
-   margin-left: 10px;
-}
+// td.nowrap {
+//    white-space: nowrap;
+// }
+// h3 {
+//    text-align: center;
+// }
+// .empty {
+//    color: #ccc;
+// }
+// button.p-button.p-component.p-button-secondary.download {
+//    margin-left: 10px;
+// }
 </stype>

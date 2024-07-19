@@ -92,7 +92,7 @@ import { useConfirm } from "primevue/useconfirm"
 import RenumberDialog from './RenumberDialog.vue'
 import LookupDialog from '@/components/LookupDialog.vue'
 import InputText from 'primevue/inputtext'
-import { FilterMatchMode } from 'primevue/api'
+import { FilterMatchMode } from '@primevue/core/api'
 import { usePinnable } from '@/composables/pin'
 
 usePinnable("p-paginator-top")

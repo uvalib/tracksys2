@@ -46,7 +46,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { FilterMatchMode } from 'primevue/api'
+import { FilterMatchMode } from '@primevue/core/api'
 import { useSearchStore } from '../../stores/search'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'

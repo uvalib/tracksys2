@@ -3,7 +3,7 @@
       <TabPanel :header="`Orders`" v-if="searchStore.scope=='all' || searchStore.scope=='orders'" >
          <OrdersResults />
       </TabPanel>
-      <TabPanel :header="`Metadata`" v-if="searchStore.scope=='all' || searchStore.scope=='metadata'">
+      <!-- <TabPanel :header="`Metadata`" v-if="searchStore.scope=='all' || searchStore.scope=='metadata'">
          <MetadataResults />
       </TabPanel>
       <TabPanel :header="`Master Files`" v-if="searchStore.scope=='all' || searchStore.scope=='masterfiles'">
@@ -14,7 +14,7 @@
       </TabPanel>
       <TabPanel :header="`Units`" v-if="searchStore.scope=='all' || searchStore.scope=='units'">
          <UnitsResults />
-      </TabPanel>
+      </TabPanel> -->
    </TabView>
 </template>
 
@@ -23,11 +23,11 @@ import { useSearchStore } from '@/stores/search'
 import { useSystemStore } from '@/stores/system'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
-import MetadataResults from '@/components/results/MetadataResults.vue'
+// import MetadataResults from '@/components/results/MetadataResults.vue'
 import OrdersResults from '@/components/results/OrdersResults.vue'
-import MasterFilesResults from '@/components/results/MasterFilesResults.vue'
-import ComponentsResults from '@/components/results/ComponentsResults.vue'
-import UnitsResults from '@/components/results/UnitsResults.vue'
+// import MasterFilesResults from '@/components/results/MasterFilesResults.vue'
+// import ComponentsResults from '@/components/results/ComponentsResults.vue'
+// import UnitsResults from '@/components/results/UnitsResults.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted, watch } from 'vue'
 
@@ -79,49 +79,4 @@ const tabChanged =(() => {
 </script>
 
 <stype scoped lang="scss">
-.summary {
-   text-align: left;
-   margin: 25px 20px 0 20px;
-   border: 1px solid #e9ecef;
-   .content {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: space-between;
-      .actions {
-         font-size: 0.9em;
-         padding: 15px;
-      }
-   }
-   .title {
-      padding: 5px 10px;
-      background: var(--uvalib-grey-lightest);
-      border-bottom: 1px solid #e9ecef;
-   }
-   table  {
-      font-size: 0.9em;
-      border-collapse: collapse;
-      margin: 15px;
-      td {
-         padding: 2px 5px;
-      }
-      td.label {
-         font-weight: bold;
-         text-align: right;
-      }
-   }
-}
-.results {
-   margin: 20px;
-   font-size: 0.9em;
-
-   td.nowrap,
-   th {
-      white-space: nowrap;
-   }
-
-   th,
-   td {
-      font-size: 0.85em;
-   }
-}
 </stype>

@@ -100,7 +100,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
-import {FilterMatchMode} from 'primevue/api'
+import { FilterMatchMode } from '@primevue/core/api'
 import { useRoute, useRouter } from 'vue-router'
 import { usePinnable } from '@/composables/pin'
 

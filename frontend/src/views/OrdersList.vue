@@ -87,11 +87,11 @@ import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
 import ToggleButton from 'primevue/togglebutton'
-import { FilterMatchMode } from 'primevue/api'
+import { FilterMatchMode } from '@primevue/core/api'
 import { useSystemStore } from '@/stores/system'
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const systemStore = useSystemStore()
 const route = useRoute()
@@ -227,7 +227,7 @@ const onSort = ((event) => {
 .orders {
    min-height: 600px;
    text-align: left;
-   padding: 0 25px;
+   padding: 0;
 
    .filters {
       display: flex;
@@ -242,37 +242,13 @@ const onSort = ((event) => {
       margin-right: 10px;
    }
 
-   .p-datatable {
-      font-size: 0.85em;
-      span.status {
-         width: 100%;
-      }
-      .dimmed {
-         display:inline-block;
-         color: #ccc;
-      }
-      span.dimmed {
-         margin-left: 3px;
-      }
-      span.fee-waived {
-         background: var(--uvalib-blue-alt);
-         padding: 3px 10px;
-         border-radius: 5px;
-         color: white;
-         font-weight: bold;
-      }
-      :deep(td), :deep(th) {
-         padding: 10px;
-      }
-      :deep(.row-acts) {
-         text-align: center;
-         padding: 0;
-         a {
-            display: inline-block;
-            margin: 0;
-            padding: 5px 10px;
-         };
-      }
+   span.fee-waived {
+      background: var(--uvalib-blue-alt);
+      padding: 3px 10px;
+      border-radius: 5px;
+      color: white;
+      font-weight: normal;
    }
+
 }
 </style>

@@ -116,7 +116,7 @@ import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
-import { FilterMatchMode } from 'primevue/api'
+import { FilterMatchMode } from '@primevue/core/api'
 import { usePinnable } from '@/composables/pin'
 
 usePinnable("p-paginator-top")

@@ -77,11 +77,11 @@ body {
       span.status, span.flag {
          border-radius: 5px;
          color: white;
-         padding: 2px 15px 4px 15px;
+         padding: 4px 15px 4px 15px;
          box-sizing: border-box;
          display:inline-block;
          text-align: center;
-         font-weight: bold;
+         font-weight: normal;
          background-color: var(--uvalib-grey);
       }
       span.flag.true {

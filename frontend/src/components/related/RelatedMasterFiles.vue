@@ -38,7 +38,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { ref } from 'vue'
 import InputText from 'primevue/inputtext'
-import { FilterMatchMode } from 'primevue/api'
+import { FilterMatchMode } from '@primevue/core/api'
 import { usePinnable } from '@/composables/pin'
 
 usePinnable("p-paginator-top")
@@ -57,18 +57,18 @@ const filters = ref( {
 </script>
 
 <stype scoped lang="scss">
-.results {
-   margin: 20px;
-   font-size: 0.9em;
-   td.nowrap, th {
-      white-space: nowrap;
-   }
-   th, td {
-      font-size: 0.85em;
-   }
-   :deep(td.thumb) {
-      width: 160px !important;
-      text-align: center !important;
-   }
-}
+// .results {
+//    margin: 20px;
+//    font-size: 0.9em;
+//    td.nowrap, th {
+//       white-space: nowrap;
+//    }
+//    th, td {
+//       font-size: 0.85em;
+//    }
+//    :deep(td.thumb) {
+//       width: 160px !important;
+//       text-align: center !important;
+//    }
+// }
 </stype>
