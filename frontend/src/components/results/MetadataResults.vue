@@ -190,29 +190,4 @@ function onFilter(event) {
 </script>
 
 <stype scoped lang="scss">
-.results {
-   margin: 20px;
-   font-size: 0.9em;
-   h3 {
-      text-align: center;
-   }
-   td.nowrap, th {
-      white-space: nowrap;
-   }
-   th, td {
-      font-size: 0.85em;
-   }
-   .results-toolbar {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: space-between;
-      .matches {
-         padding: 5px 0;
-         text-align: left;
-      }
-      button {
-         font-size: 0.8em;
-      }
-   }
-}
 </stype>

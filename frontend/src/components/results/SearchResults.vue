@@ -1,33 +1,58 @@
 <template>
-   <TabView class="results" @tabChange="tabChanged()" v-model:activeIndex="searchStore.activeResultsIndex" :lazy="true">
-      <TabPanel :header="`Orders`" v-if="searchStore.scope=='all' || searchStore.scope=='orders'" >
-         <OrdersResults />
-      </TabPanel>
-      <!-- <TabPanel :header="`Metadata`" v-if="searchStore.scope=='all' || searchStore.scope=='metadata'">
-         <MetadataResults />
-      </TabPanel>
-      <TabPanel :header="`Master Files`" v-if="searchStore.scope=='all' || searchStore.scope=='masterfiles'">
-         <MasterFilesResults />
-      </TabPanel>
-      <TabPanel :header="`Components`" v-if="searchStore.scope=='all' || searchStore.scope=='components'">
-         <ComponentsResults />
-      </TabPanel>
-      <TabPanel :header="`Units`" v-if="searchStore.scope=='all' || searchStore.scope=='units'">
-         <UnitsResults />
-      </TabPanel> -->
-   </TabView>
+   <div class="results">
+      <Tabs :value="searchStore.view" @update:value="tabChanged">
+         <TabList>
+            <Tab value="orders" :disabled="searchStore.orders.total==0">
+               Orders ({{ searchStore.orders.total }} hits)
+            </Tab>
+            <Tab value="metadata" :disabled="searchStore.metadata.total==0">
+               Metadata ({{ searchStore.metadata.total }} hits)
+            </Tab>
+            <Tab value="masterfiles" :disabled="searchStore.masterFiles.total==0">
+               Master Files ({{ searchStore.masterFiles.total }} hits)
+            </Tab>
+            <Tab value="components" :disabled="searchStore.components.total==0">
+               Components ({{ searchStore.components.total }} hits)
+            </Tab>
+            <Tab value="units" :disabled="searchStore.units.total==0">
+               Units ({{ searchStore.units.total }} hits)
+            </Tab>
+         </TabList>
+         <TabPanels>
+            <TabPanel value="orders">
+               <OrdersResults />
+            </TabPanel>
+            <TabPanel value="metadata">
+               <MetadataResults />
+            </TabPanel>
+            <TabPanel value="masterfiles">
+               <MasterFilesResults />
+            </TabPanel>
+            <TabPanel value="components">
+               <ComponentsResults />
+            </TabPanel>
+            <TabPanel value="units">
+               <UnitsResults />
+            </TabPanel>
+         </TabPanels>
+      </Tabs>
+   </div>
 </template>
 
 <script setup>
 import { useSearchStore } from '@/stores/search'
 import { useSystemStore } from '@/stores/system'
-import TabView from 'primevue/tabview'
-import TabPanel from 'primevue/tabpanel'
-// import MetadataResults from '@/components/results/MetadataResults.vue'
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
+import TabPanels from 'primevue/tabpanels';
+import TabPanel from 'primevue/tabpanel';
+
+import MetadataResults from '@/components/results/MetadataResults.vue'
 import OrdersResults from '@/components/results/OrdersResults.vue'
-// import MasterFilesResults from '@/components/results/MasterFilesResults.vue'
-// import ComponentsResults from '@/components/results/ComponentsResults.vue'
-// import UnitsResults from '@/components/results/UnitsResults.vue'
+import MasterFilesResults from '@/components/results/MasterFilesResults.vue'
+import ComponentsResults from '@/components/results/ComponentsResults.vue'
+import UnitsResults from '@/components/results/UnitsResults.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted, watch } from 'vue'
 
@@ -61,12 +86,11 @@ const showTargetView = (() => {
    }
 })
 
-const tabChanged =(() => {
+const tabChanged =(( newTab ) => {
+   searchStore.view = newTab
    if (searchStore.scope == "all") {
-      let tabs = ['orders', 'metadata', 'masterfiles', 'components']
       let query = Object.assign({}, route.query)
-      query.view = tabs[searchStore.activeResultsIndex]
-      searchStore.view = query.view
+      query.view = newTab
       let fp = searchStore.filtersAsQueryParam(query.view)
       if (fp != "") {
          query.filters = fp
@@ -79,4 +103,7 @@ const tabChanged =(() => {
 </script>
 
 <stype scoped lang="scss">
+   .results {
+      margin: 25px 0;
+   }
 </stype>

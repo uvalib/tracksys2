@@ -32,12 +32,15 @@ import UVA from './assets/theme/uva'
 import 'primeicons/primeicons.css'
 import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
-import Tooltip from 'primevue/tooltip';
+import Tooltip from 'primevue/tooltip'
+import Ripple from 'primevue/ripple'
 
+app.directive('ripple', Ripple)
 app.directive('tooltip', Tooltip)
 
 app.use(PrimeVue, {
    ripple: true,
+   Tooltip: true,
    theme: {
       preset: UVA,
       options: {
