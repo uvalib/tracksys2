@@ -50,11 +50,12 @@ body {
          display: flex;
          flex-flow: row nowrap;
          justify-content: space-between;
-         div.actions {
-            font-size: 14px;
-            button.p-button {
-               margin-right: 5px;
-            }
+         .actions {
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: flex-start;
+            align-items: flex-start;
+            gap: 5px;
          }
       }
 

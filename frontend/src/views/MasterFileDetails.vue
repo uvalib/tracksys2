@@ -227,19 +227,6 @@ const auditNow = (() => {
 </script>
 
 <style scoped lang="scss">
-div.original {
-   background-image: url('@/assets/spinner2.gif');
-   background-repeat: no-repeat;
-   background-position: center,center;
-   min-height: 600px;
-
-   img.original-image {
-      max-width: 100%;
-      max-height: 100%;
-      min-height: 600px;
-      background: white;
-   }
-}
 .clone {
    display: inline-block;
    margin-left: 10px;
@@ -265,15 +252,6 @@ div.original {
    :deep(div.p-panel) {
       margin: 10px;
       text-align: left;
-   }
-   .image-acts {
-      margin-top: 5px;
-      button.p-button {
-         width: 240px;
-         font-size: 0.85em;
-         display: block;
-         margin-bottom: 5px;
-      }
    }
    .thumb {
       margin: 10px;

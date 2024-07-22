@@ -447,13 +447,6 @@ const submitForASReview = ( async () => {
 </script>
 
 <style scoped lang="scss">
-:deep(.p-fileupload.p-fileupload-basic.p-component) {
-   margin-right: 5px;
-   display: inline-block;
-   .p-button-label {
-      font-size: 14px;
-   }
-}
 .collection-tag {
    display: inline-block;
    margin-right: 10px;

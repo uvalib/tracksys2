@@ -66,12 +66,12 @@
          </Column>
          <Column header="" class="row-acts">
             <template #body="slotProps">
-               <DPGButton label="View" class="p-button-secondary first" @click="viewClicked(slotProps.data)" />
-               <DPGButton label="Download Image" class="p-button-secondary" @click="downloadFile(slotProps.data)" v-if="unitsStore.canDownload"/>
-               <DPGButton label="Download PDF" class="p-button-secondary" @click="downloadPDF(slotProps.data)" v-if="unitsStore.canPDF"/>
+               <DPGButton label="View" class="p-button-secondary first" @click="viewClicked(slotProps.data)" size="small"/>
+               <DPGButton label="Download Image" class="p-button-secondary" @click="downloadFile(slotProps.data)" v-if="unitsStore.canDownload" size="small"/>
+               <DPGButton label="Download PDF" class="p-button-secondary" @click="downloadPDF(slotProps.data)" v-if="unitsStore.canPDF" size="small"/>
                <DPGButton v-if="slotProps.data.exemplar==false && (detail.intendedUse && detail.intendedUse.id == 110 || detail.includeInDL)"
-                  label="Set Exemplar" class="p-button-secondary" @click="exemplarClicked(slotProps.data)"/>
-               <DPGButton label="Republish IIIF" class="p-button-secondary" @click="republishIIIF(slotProps.data.id)" v-if="detail.reorder==false && userStore.isAdmin"/>
+                  label="Set Exemplar" class="p-button-secondary" @click="exemplarClicked(slotProps.data)" size="small"/>
+               <DPGButton label="Republish IIIF" class="p-button-secondary" @click="republishIIIF(slotProps.data.id)" v-if="detail.reorder==false && userStore.isAdmin" size="small"/>
             </template>
          </Column>
       </DataTable>
@@ -249,23 +249,14 @@ const clearSelections = (() => {
 </script>
 
 <style scoped lang="scss">
-:deep(div.p-panel-content) {
-   padding-top: 0;
-}
 div.masterfiles {
-   .p-datatable-sm {
-      font-size: 0.9em;
-   }
-
    .master-file-acts {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-start;
+      align-items: flex-start;
+      gap: 5px;
       font-size: 0.85em;
-      text-align: right;
-      button.p-button {
-         margin-left: 10px;
-      }
-      button.p-button:first-of-type {
-         margin-left: 0;
-      }
    }
    :deep(td.thumb) {
       width: 160px !important;
@@ -276,17 +267,11 @@ div.masterfiles {
    }
 }
 :deep(td.row-acts) {
-   vertical-align: top;
-
-   button.p-button.first {
-      margin: 0;
-   }
-   button.p-button {
-      font-size: 0.75em;
-      padding: 3px 6px;
-      display: block;
-      width: 100%;
-      margin-top: 5px;
+   display: flex;
+   flex-direction: column;
+   gap: 5px;
+   button {
+      font-size: 0.85em;
    }
 }
 </style>

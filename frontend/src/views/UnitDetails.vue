@@ -411,9 +411,7 @@ const displayStatus = (( id) => {
          display: flex;
          flex-flow: row wrap;
          justify-content: flex-start;
-         :deep(button.p-button) {
-            margin-right: 10px;
-         }
+         gap: 10px;
       }
    }
    .row-acts {
