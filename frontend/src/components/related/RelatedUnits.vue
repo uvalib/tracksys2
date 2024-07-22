@@ -8,9 +8,11 @@
    >
       <template #empty><h3>No units found</h3></template>
       <template #paginatorstart>
-         <HathiTrustUpdateDialog v-if="props.hathiTrust" :orderID="props.orderID" />
-         <AddUnitDialog v-if="props.canAdd"/>
-         <DPGButton label="Download Units CSV" class="p-button-secondary download" @click="downloadCSV" v-if="props.export" />
+         <div class="unit-acts">
+            <HathiTrustUpdateDialog v-if="props.hathiTrust" :orderID="props.orderID" />
+            <AddUnitDialog v-if="props.canAdd"/>
+            <DPGButton label="Download Units CSV" class="p-button-secondary download" @click="downloadCSV" v-if="props.export" />
+         </div>
       </template>
       <Column field="id" header="ID" :sortable="true">
          <template #body="slotProps">
@@ -134,16 +136,11 @@ const downloadCSV = (() => {
 </script>
 
 <stype scoped lang="scss">
-// td.nowrap {
-//    white-space: nowrap;
-// }
-// h3 {
-//    text-align: center;
-// }
-// .empty {
-//    color: #ccc;
-// }
-// button.p-button.p-component.p-button-secondary.download {
-//    margin-left: 10px;
-// }
+   .unit-acts{
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 10px;
+   }
 </stype>

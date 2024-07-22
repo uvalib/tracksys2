@@ -73,9 +73,4 @@ const collectionCreated = (() => {
 </script>
 
 <style scoped lang="scss">
-.collections {
-   min-height: 600px;
-   text-align: left;
-   padding: 5px 20px 20px 20px;
-}
 </style>

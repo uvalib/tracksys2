@@ -75,17 +75,4 @@ const filters = ref( {
 </script>
 
 <stype scoped lang="scss">
-// .results {
-//    margin: 20px;
-//    font-size: 0.9em;
-//    h3 {
-//       text-align: center;
-//    }
-//    td.nowrap, th {
-//       white-space: nowrap;
-//    }
-//    th, td {
-//       font-size: 0.85em;
-//    }
-// }
 </stype>

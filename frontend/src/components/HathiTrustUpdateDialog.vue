@@ -77,9 +77,6 @@ const updateHathiTrustStatuses = ( () => {
 </script>
 
 <style lang="scss" scoped>
-button.batch {
-   margin-right: 10px;
-}
 .hathi-panel {
    p {
       padding: 0;
@@ -107,11 +104,12 @@ button.batch {
       }
    }
    .buttons {
-      text-align: right;
-      margin-top: 15px;
-      button {
-         margin-left: 10px;
-      }
+      margin-top: 20px;
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-end;
+      align-items: center;
+      gap : 10px;
    }
 }
 </style>

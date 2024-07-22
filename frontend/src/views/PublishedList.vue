@@ -161,48 +161,4 @@ const onPage = ((event) => {
 </script>
 
 <style scoped lang="scss">
-.published {
-   min-height: 600px;
-   text-align: left;
-   padding: 0 25px;
-
-   .filters {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-end;
-      align-items: center;
-   }
-   .left-pad {
-      margin-left: 10px;
-   }
-   .right-pad {
-      margin-right: 10px;
-   }
-
-   .p-datatable {
-      font-size: 0.85em;
-      span.status {
-         width: 100%;
-      }
-      .dimmed {
-         display:inline-block;
-         color: #ccc;
-      }
-      span.dimmed {
-         margin-left: 3px;
-      }
-      :deep(td), :deep(th) {
-         padding: 10px;
-      }
-      :deep(.row-acts) {
-         text-align: center;
-         padding: 0;
-         a {
-            display: inline-block;
-            margin: 0;
-            padding: 5px 10px;
-         };
-      }
-   }
-}
 </style>
