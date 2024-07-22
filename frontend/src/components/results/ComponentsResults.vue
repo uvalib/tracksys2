@@ -54,7 +54,7 @@ import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const route = useRoute()
 const router = useRouter()

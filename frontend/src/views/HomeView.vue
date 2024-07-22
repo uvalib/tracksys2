@@ -155,8 +155,8 @@ const scopes = computed( () => {
       {label: "Orders", value: "orders"},
       {label: "Metadata", value: "metadata"},
       {label: "Master Files", value: "masterfiles"},
+      {label: "Components", value: "components"},
       {label: "Units", value: "units"},
-      {label: "Component", value: "components"},
    ]
 })
 const scopeFields = computed( () => {

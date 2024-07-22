@@ -73,7 +73,7 @@ import HathiTrustUpdateDialog from '@/components/HathiTrustUpdateDialog.vue'
 import { useSystemStore } from '@/stores/system'
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const props = defineProps({
    orderID: {

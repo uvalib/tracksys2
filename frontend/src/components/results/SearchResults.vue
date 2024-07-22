@@ -1,6 +1,6 @@
 <template>
    <div class="results">
-      <Tabs :value="searchStore.view" @update:value="tabChanged">
+      <Tabs :value="searchStore.view" @update:value="tabChanged" :lazy="true">
          <TabList>
             <Tab value="orders" :disabled="searchStore.orders.total==0">
                Orders ({{ searchStore.orders.total }} hits)

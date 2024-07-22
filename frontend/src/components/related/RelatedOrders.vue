@@ -54,7 +54,7 @@ import InputText from 'primevue/inputtext'
 import { useSystemStore } from '@/stores/system'
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const systemStore = useSystemStore()
 

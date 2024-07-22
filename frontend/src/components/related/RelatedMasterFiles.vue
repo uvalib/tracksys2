@@ -41,7 +41,7 @@ import InputText from 'primevue/inputtext'
 import { FilterMatchMode } from '@primevue/core/api'
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const props = defineProps({
    masterFiles: {

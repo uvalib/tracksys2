@@ -66,7 +66,7 @@ import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const staffStore = useStaffStore()
 const userStore = useUserStore()

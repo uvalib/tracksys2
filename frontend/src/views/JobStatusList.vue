@@ -61,7 +61,7 @@ import InputText from 'primevue/inputtext'
 import { useConfirm } from "primevue/useconfirm"
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const jobsStore = useJobsStore()
 const confirm = useConfirm()

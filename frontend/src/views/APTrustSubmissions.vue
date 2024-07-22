@@ -60,7 +60,7 @@ import { usePinnable } from '@/composables/pin'
 import APTrustPanel from '@/components/aptrust/APTrustPanel.vue'
 import Dialog from 'primevue/dialog'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const apTrust = useAPTrustStore()
 const showDialog = ref(false)

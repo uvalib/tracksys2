@@ -100,7 +100,7 @@ import { useHathiTrustStore } from '@/stores/hathitrust'
 import { usePinnable } from '@/composables/pin'
 import HathiTrustUpdateDialog from '@/components/HathiTrustUpdateDialog.vue'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const hathiTrust = useHathiTrustStore()
 

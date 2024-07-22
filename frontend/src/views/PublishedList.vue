@@ -81,7 +81,7 @@ import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router'
 import { FilterMatchMode } from '@primevue/core/api'
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const route = useRoute()
 const router = useRouter()

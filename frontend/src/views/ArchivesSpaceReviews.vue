@@ -126,7 +126,7 @@ import { useArchivesSpaceStore } from '@/stores/archivesspace'
 import { useUserStore } from '@/stores/user'
 import { useRoute } from 'vue-router'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const archivesSpace = useArchivesSpaceStore()
 const user = useUserStore()

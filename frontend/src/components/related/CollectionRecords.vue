@@ -83,7 +83,7 @@ import CollectionBulkAdd from './CollectionBulkAdd.vue'
 import { usePinnable } from '@/composables/pin'
 import { computed } from 'vue'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const userStore = useUserStore()
 const collectionStore = useCollectionsStore()
