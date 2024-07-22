@@ -17,7 +17,7 @@
          <template #paginatorend>
             <div class="filters">
                <label for="orders-filter">Filter:</label>
-               <Dropdown id="orders-filter" v-model="statusFilter" @change="getOrders()"
+               <Select id="orders-filter" v-model="statusFilter" @change="getOrders()"
                   :options="filters" optionLabel="name" optionValue="code" />
                <ToggleButton v-model="assignedToMe" class="left-pad right-pad" onIcon="" offIcon="" onLabel="Assigned to Me" offLabel="Assigned to Me" @change="ownerToggled()" />
                <IconField iconPosition="left">
@@ -59,7 +59,7 @@
          </Column>
          <Column field="agency.name" header="Agency" filterField="agency" :showFilterMatchModes="false" >
             <template #filter="{filterModel}">
-               <Dropdown v-model="filterModel.value" :options="systemStore.agencies" optionLabel="name" optionValue="id" placeholder="Select agency" />
+               <Select v-model="filterModel.value" :options="systemStore.agencies" optionLabel="name" optionValue="id" placeholder="Select agency" />
             </template>
          </Column>
          <Column field="processor" header="Processor" class="nowrap" filterField="processor" :showFilterMatchModes="false">
@@ -81,7 +81,7 @@ import { useOrdersStore } from '@/stores/orders'
 import { useUserStore } from '@/stores/user'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
@@ -234,6 +234,7 @@ const onSort = ((event) => {
       flex-flow: row nowrap;
       justify-content: flex-end;
       align-items: center;
+      gap: 10px;
    }
    .left-pad {
       margin-left: 10px;

@@ -171,7 +171,22 @@ const UVA = definePreset(Aura, {
             selectedBackground: 'var(--uvalib-blue-alt-light)',
             selectedColor: 'var(--uvalib-text)'
          }
-      }
+      },
+      togglebutton: {
+         colorScheme: {
+            light: {
+               root: {
+                  background: '#ffffff',
+                  checkedBackground: 'var(--uvalib-blue-alt-light)',
+                  hoverBackground: '{surface.100}',
+                  borderColor: 'var(--uvalib-grey-light)',
+                  color: 'var(--uvalib-text)',
+                  checkedColor: 'var(--uvalib-text)',
+                  checkedBorderColor: 'var(--uvalib-blue-alt-light)',
+               },
+            }
+         }
+      },
    },
    directives: {
       tooltip,
