@@ -23,7 +23,7 @@
                   <option value="accepted">Accepted</option>
                   <option value="failed">Failed</option>
                </select>
-               <Calendar v-else v-model="hathiTrustValue"  dateFormat="yy-mm-dd" showButtonBar/>
+               <DatePicker v-else v-model="hathiTrustValue"  dateFormat="yy-mm-dd" showButtonBar/>
             </div>
          </div>
          <div class="buttons">
@@ -36,7 +36,7 @@
 
 <script setup>
 import Dialog from 'primevue/dialog'
-import Calendar from 'primevue/calendar'
+import DatePicker from 'primevue/datepicker'
 import { ref,computed } from 'vue'
 import { useHathiTrustStore } from '@/stores/hathitrust'
 

@@ -67,6 +67,25 @@ const UVA = definePreset(Aura, {
       }
    },
    components: {
+      accordion: {
+         header: {
+            background: '#f8f9fa',
+            hoverBackground: '#f5f5ff',
+            activeBackground: '#f8f9fa',
+            activeHoverBackground: '#f8f9fa',
+            borderRadius: 0,
+         },
+         panel: {
+            borderWidth: '1px',
+            borderColor: 'var(--uvalib-grey-lightest)',
+            hoverBackground: 'var(--uvalib-grey-lightest)',
+        },
+        content: {
+            background: '#ffffff',
+            borderWidth: '1px 0 0 0',
+            padding: '1.125rem 1.125rem 1.125rem 1.125rem'
+        }
+      },
       button: {
          root: {
             paddingY: '.5em',
@@ -135,6 +154,7 @@ const UVA = definePreset(Aura, {
          },
          item: {
             focusBackground: 'var(--uvalib-blue-alt)',
+            activeBackground: 'var(--uvalib-blue-alt)',
          },
          submenuIcon: {
             color: '#ffffff',
@@ -144,7 +164,7 @@ const UVA = definePreset(Aura, {
         submenu: {
             background: 'var(--uvalib-blue-alt-dark)',
             borderColor: 'var(--uvalib-blue-alt-dark)',
-            borderRadius: '4px'
+            borderRadius: '4px',
         }
       },
       panel: {

@@ -42,12 +42,11 @@
 <script setup>
 import { useSearchStore } from '@/stores/search'
 import { useSystemStore } from '@/stores/system'
-import Tabs from 'primevue/tabs';
-import TabList from 'primevue/tablist';
-import Tab from 'primevue/tab';
-import TabPanels from 'primevue/tabpanels';
-import TabPanel from 'primevue/tabpanel';
-
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
+import TabPanel from 'primevue/tabpanel'
 import MetadataResults from '@/components/results/MetadataResults.vue'
 import OrdersResults from '@/components/results/OrdersResults.vue'
 import MasterFilesResults from '@/components/results/MasterFilesResults.vue'

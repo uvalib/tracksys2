@@ -45,55 +45,62 @@
       </DataTable>
        <Dialog v-model:visible="showEdit" :style="{width: '500px'}" header="Customer Details" :modal="true" position="top">
          <FormKit type="form" id="customer-detail" :actions="false" @submit="submitChanges">
-            <TabView>
-               <TabPanel header="Customer">
-                  <FormKit label="Last Name" type="text" v-model="customerDetails.lastName" validation="required" autofocus />
-                  <FormKit label="First Name" type="text" v-model="customerDetails.firstName" validation="required" />
-                  <FormKit label="Email" type="email" v-model="customerDetails.email" validation="required" />
-                  <FormKit label="Academic Status" type="select" v-model="customerDetails.academicStatus" :options="academicStatuses" required/>
-               </TabPanel>
-               <TabPanel header="Primary Address">
-                  <div v-if="customerDetails.addresses.length == 0">
-                     <p>No primary address is defined for this customer.</p>
-                     <DPGButton label="Add Primary Address" @click="addAddress('primary')"/>
-                  </div>
-                  <template v-else>
-                     <FormKit label="Addresss 1" type="text" v-model="customerDetails.addresses[0].address1" validation="required" />
-                     <FormKit label="Addresss 2" type="text" v-model="customerDetails.addresses[0].address2" />
-                     <FormKit label="City" type="text" v-model="customerDetails.addresses[0].city" validation="required" />
-                     <div class="two-col">
-                        <FormKit label="State" type="text" v-model="customerDetails.addresses[0].state" outer-class="state"/>
-                        <FormKit label="Zip" type="text" v-model="customerDetails.addresses[0].zip" />
-                     </div>
-                     <div class="two-col">
-                        <FormKit label="Country" type="text" v-model="customerDetails.addresses[0].country" validation="required" outer-class="state"/>
-                        <FormKit label="Phone" type="text" v-model="customerDetails.addresses[0].phone" />
-                     </div>
-                  </template>
-               </TabPanel>
-               <TabPanel header="Billing Address">
-                  <div v-if="customerDetails.addresses.length == 0">
-                     <p>No primary nor billing address is defined for this customer. Please add a primary address.</p>
-                  </div>
-                   <div v-else-if="customerDetails.addresses.length == 1">
-                     <p>No billing address is defined for this customer.</p>
-                     <DPGButton label="Add Billing Address" @click="addAddress('billable_address')"/>
-                  </div>
-                  <template v-else>
-                     <FormKit label="Addresss 1" type="text" v-model="customerDetails.addresses[1].address1" validation="required" />
-                     <FormKit label="Addresss 2" type="text" v-model="customerDetails.addresses[1].address2" />
-                     <FormKit label="City" type="text" v-model="customerDetails.addresses[1].city" validation="required" />
-                     <div class="two-col">
-                        <FormKit label="State" type="text" v-model="customerDetails.addresses[1].state" outer-class="state"/>
-                        <FormKit label="Zip" type="text" v-model="customerDetails.addresses[1].zip" />
-                     </div>
-                     <div class="two-col">
-                        <FormKit label="Country" type="text" v-model="customerDetails.addresses[1].country" validation="required" outer-class="state"/>
-                        <FormKit label="Phone" type="text" v-model="customerDetails.addresses[1].phone" />
-                     </div>
-                  </template>
-               </TabPanel>
-            </TabView>
+            <Tabs value="customer" :lazy="true">
+               <TabList>
+                  <Tab value="customer">Customer</Tab>
+                  <Tab value="address1">Primary Address</Tab>
+                  <Tab value="address2">Billing Address</Tab>
+               </TabList>
+               <TabPanels>
+                  <TabPanel value="customer">
+                     <FormKit label="Last Name" type="text" v-model="customerDetails.lastName" validation="required" autofocus />
+                     <FormKit label="First Name" type="text" v-model="customerDetails.firstName" validation="required" />
+                     <FormKit label="Email" type="email" v-model="customerDetails.email" validation="required" />
+                     <FormKit label="Academic Status" type="select" v-model="customerDetails.academicStatus" :options="academicStatuses" required/>
+                  </TabPanel>
+                  <TabPanel value="address1">
+                     <template v-if="customerDetails.addresses.length == 0">
+                        <p>No primary address is defined for this customer.</p>
+                        <DPGButton label="Add Primary Address" @click="addAddress('primary')"/>
+                     </template>
+                     <template v-else>
+                        <FormKit label="Addresss 1" type="text" v-model="customerDetails.addresses[0].address1" validation="required" />
+                        <FormKit label="Addresss 2" type="text" v-model="customerDetails.addresses[0].address2" />
+                        <FormKit label="City" type="text" v-model="customerDetails.addresses[0].city" validation="required" />
+                        <div class="two-col">
+                           <FormKit label="State" type="text" v-model="customerDetails.addresses[0].state" outer-class="state"/>
+                           <FormKit label="Zip" type="text" v-model="customerDetails.addresses[0].zip" />
+                        </div>
+                        <div class="two-col">
+                           <FormKit label="Country" type="text" v-model="customerDetails.addresses[0].country" validation="required" outer-class="state"/>
+                           <FormKit label="Phone" type="text" v-model="customerDetails.addresses[0].phone" />
+                        </div>
+                     </template>
+                  </TabPanel>
+                  <TabPanel value="address2">
+                     <template v-if="customerDetails.addresses.length == 0">
+                        <p>No primary nor billing address is defined for this customer. Please add a primary address.</p>
+                     </template>
+                     <template v-else-if="customerDetails.addresses.length == 1">
+                        <p>No billing address is defined for this customer.</p>
+                        <DPGButton label="Add Billing Address" @click="addAddress('billable_address')"/>
+                     </template>
+                     <template v-else>
+                        <FormKit label="Addresss 1" type="text" v-model="customerDetails.addresses[1].address1" validation="required" />
+                        <FormKit label="Addresss 2" type="text" v-model="customerDetails.addresses[1].address2" />
+                        <FormKit label="City" type="text" v-model="customerDetails.addresses[1].city" validation="required" />
+                        <div class="two-col">
+                           <FormKit label="State" type="text" v-model="customerDetails.addresses[1].state" outer-class="state"/>
+                           <FormKit label="Zip" type="text" v-model="customerDetails.addresses[1].zip" />
+                        </div>
+                        <div class="two-col">
+                           <FormKit label="Country" type="text" v-model="customerDetails.addresses[1].country" validation="required" outer-class="state"/>
+                           <FormKit label="Phone" type="text" v-model="customerDetails.addresses[1].phone" />
+                        </div>
+                     </template>
+                  </TabPanel>
+               </TabPanels>
+            </Tabs>
             <div class="form-controls">
                <FormKit type="button" label="Cancel" wrapper-class="cancel-button" @click="showEdit = false" />
                <FormKit type="submit" label="Save" wrapper-class="submit-button" />
@@ -114,7 +121,10 @@ import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
-import TabView from 'primevue/tabview'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
 import { FilterMatchMode } from '@primevue/core/api'
 import { usePinnable } from '@/composables/pin'
