@@ -193,7 +193,13 @@ const downloadPDF = (() => {
          message: `This master file has transcription or OCR text. Include it with the PDF?`,
          header: 'Include Text',
          icon: 'pi pi-question-circle',
-         rejectClass: 'p-button-secondary',
+         rejectProps: {
+            label: 'No',
+            severity: 'secondary'
+         },
+         acceptProps: {
+            label: 'Include'
+         },
          accept: () => {
             pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], true )
          },
@@ -210,7 +216,13 @@ const replaceMasterFile = (() => {
       message: `Replace this master file with ./finalization/unit_update/${unitDir}/${masterFiles.details.filename}?`,
       header: 'Confirm Replace Master File',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Replace'
+      },
       accept: async () => {
          masterFiles.replace()
       }

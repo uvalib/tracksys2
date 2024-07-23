@@ -264,7 +264,13 @@ const unitPDFClicked = (() => {
          message: `This unit has transcription or OCR text. Include it with the PDF?`,
          header: 'Include Text',
          icon: 'pi pi-question-circle',
-         rejectClass: 'p-button-secondary',
+         rejectProps: {
+            label: 'Exclude',
+            severity: 'secondary'
+         },
+         acceptProps: {
+            label: 'Include'
+         },
          accept: () => {
             pdfStore.requestPDF( unitsStore.detail.id, [], true )
          },
@@ -303,7 +309,13 @@ const deleteUnit = (() => {
       message: 'Are you sure you want delete the selected unit? This cannot be reversed.',
       header: 'Confirm Delete Unit',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete'
+      },
       accept: async () => {
          await unitsStore.deleteUnit(unitsStore.detail.id)
       }
@@ -324,7 +336,13 @@ const deleteAttachment = ((item) => {
       message: 'Are you sure you want delete the selected attachment? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Attachment',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete Attachment'
+      },
       accept: async () => {
          await unitsStore.deleteAttachment(item)
       }

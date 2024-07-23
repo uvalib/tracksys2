@@ -318,7 +318,13 @@ const flagForHathiTrust = (() => {
       message: 'Are you sure you want flag all digital collection building units in this order for inclusion in HathiTrust?',
       header: 'Confirm HathiTrust Inclusion',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Include'
+      },
       accept: () => {
          ordersStore.flagForHathiTrust( user.computeID )
       }
@@ -333,7 +339,13 @@ const deleteOrder = (() => {
       message: 'Are you sure you want delete this order? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Order',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete'
+      },
       accept: async () => {
          await ordersStore.deleteOrder()
          router.push("/orders")
@@ -405,7 +417,13 @@ const discardItem = ((item) => {
       message: 'Are you sure you want delete this item? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Item',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete'
+      },
       accept: async () => {
          await ordersStore.discardItem(item.id)
       }
@@ -417,7 +435,13 @@ const waiveFeeClicked = ( () => {
       message: 'Waive the fee for this order? This cannot be reversed.',
       header: 'Confirm Fee Waive',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Waive Fee'
+      },
       accept: async () => {
          await ordersStore.waiveFee( user.computeID )
       }
@@ -465,7 +489,13 @@ const claimOrder = (() => {
       message: 'Are you sure you want claim this order for processing?',
       header: 'Confirm Claim Order',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Claim'
+      },
       accept: async () => {
          ordersStore.setProcessor( user.ID )
       }

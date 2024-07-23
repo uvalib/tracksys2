@@ -141,7 +141,13 @@ const deleteItem = (( item ) => {
       message: `Remove "${item.pid} : ${item.title}" from this collection?`,
       header: 'Confirm Remove Item',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Remove'
+      },
       accept: () => {
          collectionStore.removeItem(item)
       }

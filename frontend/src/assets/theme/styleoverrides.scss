@@ -1,15 +1,4 @@
 #app {
-   .p-dialog-mask {
-      .p-dialog {
-         .p-dialog-header {
-            background: var(--uvalib-teal-lightest);
-            border-bottom: 1px solid var(--uvalib-teal-light);
-            border-radius: 4px 4px 0 0;
-            margin-bottom: 10px;
-         }
-      }
-   }
-
    button.p-button {
       white-space: nowrap;
    }
@@ -34,6 +23,17 @@
                }
             }
          }
+      }
+   }
+}
+
+.p-dialog-mask {
+   .p-dialog {
+      .p-dialog-header {
+         background: var(--uvalib-teal-lightest);
+         border-bottom: 1px solid var(--uvalib-teal-light);
+         border-radius: 4px 4px 0 0;
+         margin-bottom: 15px;
       }
    }
 }

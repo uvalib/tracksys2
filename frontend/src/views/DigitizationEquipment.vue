@@ -143,9 +143,15 @@ const retireWorkstation = (( wsID ) => {
    let ws = equipmentStore.workstations.find(ws => ws.id == wsID)
    confirm.require({
       message: `Retire workstation '${ws.name}'?`,
-      header: 'Confirm Clone',
+      header: 'Confirm Retire',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Retire'
+      },
       accept: () => {
          equipmentStore.retireWorkstation(wsID)
       }

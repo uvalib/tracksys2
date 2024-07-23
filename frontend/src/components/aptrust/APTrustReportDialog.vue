@@ -81,7 +81,13 @@ const resubmitClicked = (() => {
       message: msg,
       header: 'Confirm APTrust Resubmission',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Resubmit'
+      },
       accept: ( async () => {
          await apTrust.resubmitCollectionItems( metadataStore.detail.id, selectedErrors.value.map( s => s.id) )
       }),

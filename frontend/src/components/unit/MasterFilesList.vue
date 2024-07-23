@@ -150,7 +150,13 @@ const requestPDF = (( masterFileIDs ) => {
          message: `This unit has transcription or OCR text. Include it with the PDF?`,
          header: 'Include Text',
          icon: 'pi pi-question-circle',
-         rejectClass: 'p-button-secondary',
+         rejectProps: {
+            label: 'Cancel',
+            severity: 'secondary'
+         },
+         acceptProps: {
+            label: 'Include'
+         },
          accept: () => {
             pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs, true )
          },
@@ -170,7 +176,13 @@ const replaceClicked = (() => {
       message: `Replace master files with .tif files from ./finalization/unit_update/${unitDir}?`,
       header: 'Confirm Replace Master Files',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Replace'
+      },
       accept: async () => {
          unitsStore.replaceMasterFiles()
          clearSelections()
@@ -184,7 +196,13 @@ const addClicked = (() => {
       message: `Add all .tif files from ./finalization/unit_update/${unitDir} to this unit?`,
       header: 'Confirm Add Master Files',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Add'
+      },
       accept: async () => {
          unitsStore.addMasterFiles()
       }
@@ -196,7 +214,13 @@ const deleteClicked = (() => {
       message: 'Are you sure you want delete the selected master files? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Master Files',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete'
+      },
       accept: async () => {
          unitsStore.deleteMasterFiles(selectedFileNames.value)
          clearSelections()

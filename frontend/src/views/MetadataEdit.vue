@@ -341,7 +341,13 @@ const submitChanges = ( () => {
          message: "Updating the preservation tier for a collection will also update the preservation tier for all collection items. Are you sure?",
          header: 'Confirm Preservation Tier',
          icon: 'pi pi-question-circle',
-         rejectClass: 'p-button-secondary',
+         rejectProps: {
+            label: 'Cancel',
+            severity: 'secondary'
+         },
+         acceptProps: {
+            label: 'Update'
+         },
          accept: () => {
             doSubmit()
          },

@@ -100,7 +100,13 @@ const deleteJobLog = (() => {
       message: 'Are you sure you want delete this job log? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Job Log',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete'
+      },
       accept: async () => {
          await jobsStore.deleteJobs([ parseInt(route.params.id,10) ])
          router.push("/jobs")

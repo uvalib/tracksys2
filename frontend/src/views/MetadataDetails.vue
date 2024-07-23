@@ -390,7 +390,13 @@ const deleteMetadata = (() => {
       message: 'Are you sure you want delete this metadata? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Metadata',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete'
+      },
       accept: async () => {
          await metadataStore.deleteMetadata()
       }
@@ -429,7 +435,13 @@ const unpublishAS = ( async () => {
       message: 'Are you sure you want remove this item from ArchivesSpace? After this, the digitial content will no longer be publicly visible.',
       header: 'Confirm Unpublish',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Unpublish'
+      },
       accept: async () => {
          publishing.value = true
          await metadataStore.unpublishFromArchivesSpace()
