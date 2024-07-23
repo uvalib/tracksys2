@@ -159,7 +159,7 @@ const UVA = definePreset(Aura, {
          submenuIcon: {
             color: '#ffffff',
             focusColor: '#ffffff',
-            activeColor: '{navigation.submenu.icon.active.color}'
+            activeColor: '#ffffff'
         },
         submenu: {
             background: 'var(--uvalib-blue-alt-dark)',
