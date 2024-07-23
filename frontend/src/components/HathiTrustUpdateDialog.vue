@@ -23,7 +23,7 @@
                   <option value="accepted">Accepted</option>
                   <option value="failed">Failed</option>
                </select>
-               <Calendar v-else v-model="hathiTrustValue"  dateFormat="yy-mm-dd" showButtonBar/>
+               <DatePicker v-else v-model="hathiTrustValue"  dateFormat="yy-mm-dd" showButtonBar/>
             </div>
          </div>
          <div class="buttons">
@@ -36,7 +36,7 @@
 
 <script setup>
 import Dialog from 'primevue/dialog'
-import Calendar from 'primevue/calendar'
+import DatePicker from 'primevue/datepicker'
 import { ref,computed } from 'vue'
 import { useHathiTrustStore } from '@/stores/hathitrust'
 
@@ -77,9 +77,6 @@ const updateHathiTrustStatuses = ( () => {
 </script>
 
 <style lang="scss" scoped>
-button.batch {
-   margin-right: 10px;
-}
 .hathi-panel {
    p {
       padding: 0;
@@ -107,11 +104,12 @@ button.batch {
       }
    }
    .buttons {
-      text-align: right;
-      margin-top: 15px;
-      button {
-         margin-left: 10px;
-      }
+      margin-top: 20px;
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-end;
+      align-items: center;
+      gap : 10px;
    }
 }
 </style>

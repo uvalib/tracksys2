@@ -24,28 +24,34 @@
                   </div>
                </DataDisplay>
                <DataDisplay v-else label="Customer" value=""/>
-               <OverlayPanel ref="customer" id="customer-panel" :showCloseIcon="true">
-                  <TabView>
-                     <TabPanel header="Customer">
-                        <dl>
-                           <DataDisplay label="Last Name" :value="detail.customer.lastName"></DataDisplay>
-                           <DataDisplay label="First Name" :value="detail.customer.firstName"></DataDisplay>
-                           <DataDisplay label="Email" :value="detail.customer.email"></DataDisplay>
-                           <DataDisplay label="Academic Status" :value="detail.customer.academicStatus.name"></DataDisplay>
-                        </dl>
-                     </TabPanel>
-                     <TabPanel v-for="(a,idx) in detail.customer.addresses" :header="addressHeader(idx)" :key="`c${detail.customer}-addr${idx}`" >
-                        <dl>
-                           <DataDisplay label="Address 1" :value="a.address1"></DataDisplay>
-                           <DataDisplay v-if="a.address2" label="Address 2" :value="a.address2"></DataDisplay>
-                           <DataDisplay v-if="a.city" label="City" :value="a.city"></DataDisplay>
-                           <DataDisplay v-if="a.state" label="State" :value="a.state"></DataDisplay>
-                           <DataDisplay v-if="a.zip"  label="Zip" :value="a.zip"></DataDisplay>
-                           <DataDisplay v-if="a.phone" label="Phone" :value="a.phone"></DataDisplay>
-                        </dl>
-                     </TabPanel>
-                  </TabView>
-               </OverlayPanel>
+               <Popover ref="customer">
+                  <Tabs value="customer" :lazy="true">
+                     <TabList>
+                        <Tab value="customer">Customer</Tab>
+                        <Tab  v-for="(a,idx) in detail.customer.addresses" :value="`address${idx}`">{{ addressHeader(idx) }}</Tab>
+                     </TabList>
+                     <TabPanels>
+                        <TabPanel value="customer">
+                           <dl>
+                              <DataDisplay label="Last Name" :value="detail.customer.lastName"></DataDisplay>
+                              <DataDisplay label="First Name" :value="detail.customer.firstName"></DataDisplay>
+                              <DataDisplay label="Email" :value="detail.customer.email"></DataDisplay>
+                              <DataDisplay label="Academic Status" :value="detail.customer.academicStatus.name"></DataDisplay>
+                           </dl>
+                        </TabPanel>
+                        <TabPanel v-for="(a,idx) in detail.customer.addresses"  :value="`address${idx}`" >
+                           <dl>
+                              <DataDisplay label="Address 1" :value="a.address1"></DataDisplay>
+                              <DataDisplay v-if="a.address2" label="Address 2" :value="a.address2"></DataDisplay>
+                              <DataDisplay v-if="a.city" label="City" :value="a.city"></DataDisplay>
+                              <DataDisplay v-if="a.state" label="State" :value="a.state"></DataDisplay>
+                              <DataDisplay v-if="a.zip"  label="Zip" :value="a.zip"></DataDisplay>
+                              <DataDisplay v-if="a.phone" label="Phone" :value="a.phone"></DataDisplay>
+                           </dl>
+                        </TabPanel>
+                     </TabPanels>
+                  </Tabs>
+               </Popover>
 
                <DataDisplay v-if="detail.agency" label="Agency" :value="detail.agency.name"/>
                <DataDisplay v-else label="Agency" value=""/>
@@ -171,8 +177,11 @@
 
 <script setup>
 import Dialog from 'primevue/dialog'
-import OverlayPanel from 'primevue/overlaypanel'
-import TabView from 'primevue/tabview'
+import Popover from 'primevue/popover'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
 import { onBeforeMount, ref, computed } from 'vue'
 import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
@@ -309,7 +318,13 @@ const flagForHathiTrust = (() => {
       message: 'Are you sure you want flag all digital collection building units in this order for inclusion in HathiTrust?',
       header: 'Confirm HathiTrust Inclusion',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Include'
+      },
       accept: () => {
          ordersStore.flagForHathiTrust( user.computeID )
       }
@@ -324,7 +339,13 @@ const deleteOrder = (() => {
       message: 'Are you sure you want delete this order? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Order',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete'
+      },
       accept: async () => {
          await ordersStore.deleteOrder()
          router.push("/orders")
@@ -396,7 +417,13 @@ const discardItem = ((item) => {
       message: 'Are you sure you want delete this item? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Item',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete'
+      },
       accept: async () => {
          await ordersStore.discardItem(item.id)
       }
@@ -408,7 +435,13 @@ const waiveFeeClicked = ( () => {
       message: 'Waive the fee for this order? This cannot be reversed.',
       header: 'Confirm Fee Waive',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Waive Fee'
+      },
       accept: async () => {
          await ordersStore.waiveFee( user.computeID )
       }
@@ -456,7 +489,13 @@ const claimOrder = (() => {
       message: 'Are you sure you want claim this order for processing?',
       header: 'Confirm Claim Order',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Claim'
+      },
       accept: async () => {
          ordersStore.setProcessor( user.ID )
       }

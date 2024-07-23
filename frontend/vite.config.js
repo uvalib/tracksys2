@@ -52,15 +52,6 @@
           },
        }
     },
-    css: {
-      preprocessorOptions: {
-        scss: {
-           additionalData: `
-             @import "@/assets/styles/_mixins.scss";
-          `
-       },
-      },
-    },
  })
 
 

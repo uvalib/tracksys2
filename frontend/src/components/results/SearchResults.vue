@@ -1,27 +1,51 @@
 <template>
-   <TabView class="results" @tabChange="tabChanged()" v-model:activeIndex="searchStore.activeResultsIndex" :lazy="true">
-      <TabPanel :header="`Orders`" v-if="searchStore.scope=='all' || searchStore.scope=='orders'" >
-         <OrdersResults />
-      </TabPanel>
-      <TabPanel :header="`Metadata`" v-if="searchStore.scope=='all' || searchStore.scope=='metadata'">
-         <MetadataResults />
-      </TabPanel>
-      <TabPanel :header="`Master Files`" v-if="searchStore.scope=='all' || searchStore.scope=='masterfiles'">
-         <MasterFilesResults />
-      </TabPanel>
-      <TabPanel :header="`Components`" v-if="searchStore.scope=='all' || searchStore.scope=='components'">
-         <ComponentsResults />
-      </TabPanel>
-      <TabPanel :header="`Units`" v-if="searchStore.scope=='all' || searchStore.scope=='units'">
-         <UnitsResults />
-      </TabPanel>
-   </TabView>
+   <div class="results">
+      <Tabs :value="searchStore.view" @update:value="tabChanged" :lazy="true">
+         <TabList>
+            <Tab value="orders" :disabled="searchStore.orders.total==0">
+               Orders ({{ searchStore.orders.total }} hits)
+            </Tab>
+            <Tab value="metadata" :disabled="searchStore.metadata.total==0">
+               Metadata ({{ searchStore.metadata.total }} hits)
+            </Tab>
+            <Tab value="masterfiles" :disabled="searchStore.masterFiles.total==0">
+               Master Files ({{ searchStore.masterFiles.total }} hits)
+            </Tab>
+            <Tab value="components" :disabled="searchStore.components.total==0">
+               Components ({{ searchStore.components.total }} hits)
+            </Tab>
+            <Tab value="units" :disabled="searchStore.units.total==0">
+               Units ({{ searchStore.units.total }} hits)
+            </Tab>
+         </TabList>
+         <TabPanels>
+            <TabPanel value="orders">
+               <OrdersResults />
+            </TabPanel>
+            <TabPanel value="metadata">
+               <MetadataResults />
+            </TabPanel>
+            <TabPanel value="masterfiles">
+               <MasterFilesResults />
+            </TabPanel>
+            <TabPanel value="components">
+               <ComponentsResults />
+            </TabPanel>
+            <TabPanel value="units">
+               <UnitsResults />
+            </TabPanel>
+         </TabPanels>
+      </Tabs>
+   </div>
 </template>
 
 <script setup>
 import { useSearchStore } from '@/stores/search'
 import { useSystemStore } from '@/stores/system'
-import TabView from 'primevue/tabview'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
 import MetadataResults from '@/components/results/MetadataResults.vue'
 import OrdersResults from '@/components/results/OrdersResults.vue'
@@ -61,12 +85,11 @@ const showTargetView = (() => {
    }
 })
 
-const tabChanged =(() => {
+const tabChanged =(( newTab ) => {
+   searchStore.view = newTab
    if (searchStore.scope == "all") {
-      let tabs = ['orders', 'metadata', 'masterfiles', 'components']
       let query = Object.assign({}, route.query)
-      query.view = tabs[searchStore.activeResultsIndex]
-      searchStore.view = query.view
+      query.view = newTab
       let fp = searchStore.filtersAsQueryParam(query.view)
       if (fp != "") {
          query.filters = fp
@@ -79,49 +102,7 @@ const tabChanged =(() => {
 </script>
 
 <stype scoped lang="scss">
-.summary {
-   text-align: left;
-   margin: 25px 20px 0 20px;
-   border: 1px solid #e9ecef;
-   .content {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: space-between;
-      .actions {
-         font-size: 0.9em;
-         padding: 15px;
-      }
+   .results {
+      margin: 25px 0;
    }
-   .title {
-      padding: 5px 10px;
-      background: var(--uvalib-grey-lightest);
-      border-bottom: 1px solid #e9ecef;
-   }
-   table  {
-      font-size: 0.9em;
-      border-collapse: collapse;
-      margin: 15px;
-      td {
-         padding: 2px 5px;
-      }
-      td.label {
-         font-weight: bold;
-         text-align: right;
-      }
-   }
-}
-.results {
-   margin: 20px;
-   font-size: 0.9em;
-
-   td.nowrap,
-   th {
-      white-space: nowrap;
-   }
-
-   th,
-   td {
-      font-size: 0.85em;
-   }
-}
 </stype>

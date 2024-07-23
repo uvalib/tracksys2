@@ -100,11 +100,11 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
-import {FilterMatchMode} from 'primevue/api'
+import { FilterMatchMode } from '@primevue/core/api'
 import { useRoute, useRouter } from 'vue-router'
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const route = useRoute()
 const router = useRouter()
@@ -190,29 +190,4 @@ function onFilter(event) {
 </script>
 
 <stype scoped lang="scss">
-.results {
-   margin: 20px;
-   font-size: 0.9em;
-   h3 {
-      text-align: center;
-   }
-   td.nowrap, th {
-      white-space: nowrap;
-   }
-   th, td {
-      font-size: 0.85em;
-   }
-   .results-toolbar {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: space-between;
-      .matches {
-         padding: 5px 0;
-         text-align: left;
-      }
-      button {
-         font-size: 0.8em;
-      }
-   }
-}
 </stype>

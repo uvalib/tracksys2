@@ -99,7 +99,13 @@ const cloneClicked = (() => {
       message: 'Clone selected master files into this unit?',
       header: 'Confirm Clone',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Clone'
+      },
       accept: () => {
          cloneStore.cloneMasterFiles( unitsStore.detail.id, masterFiles.value[1])
       }

@@ -48,13 +48,13 @@
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { ref } from 'vue'
-import { FilterMatchMode } from 'primevue/api'
+import { FilterMatchMode } from '@primevue/core/api'
 import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
 import { useSystemStore } from '@/stores/system'
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const systemStore = useSystemStore()
 
@@ -75,17 +75,4 @@ const filters = ref( {
 </script>
 
 <stype scoped lang="scss">
-.results {
-   margin: 20px;
-   font-size: 0.9em;
-   h3 {
-      text-align: center;
-   }
-   td.nowrap, th {
-      white-space: nowrap;
-   }
-   th, td {
-      font-size: 0.85em;
-   }
-}
 </stype>

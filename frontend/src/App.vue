@@ -13,12 +13,6 @@
             <p class="version">v{{ systemStore.version }}</p>
          </div>
       </div>
-      <div class="user-banner" v-if="userStore.jwt">
-         <DPGButton id="signout" :label="userStore.signedInUser" text icon="pi pi-angle-down" iconPos="right" @click="toggleSignOut"/>
-         <OverlayPanel ref="signoutOverlay">
-            <DPGButton label="Sign Out" text @click="signOut()" autofocus/>
-        </OverlayPanel>
-      </div>
       <MenuBar v-if="userStore.jwt" />
    </div>
    <div class="content" v-if="configuring==false">
@@ -46,17 +40,13 @@ import { onBeforeMount, watch, ref } from 'vue'
 import Dialog from 'primevue/dialog'
 import Toast from 'primevue/toast'
 import { useToast } from "primevue/usetoast"
-import OverlayPanel from 'primevue/overlaypanel'
-import { useRouter } from 'vue-router'
 
 const systemStore = useSystemStore()
 const userStore = useUserStore()
 const searchStore = useSearchStore()
 const toast = useToast()
-const router = useRouter()
 
 const configuring = ref(true)
-const signoutOverlay = ref()
 
 watch(() => systemStore.toast.show, (newShow) => {
    if ( newShow == true) {
@@ -67,15 +57,6 @@ watch(() => systemStore.toast.show, (newShow) => {
       }
       systemStore.clearToastMessage()
    }
-})
-
-const toggleSignOut = ((event) => {
-   signoutOverlay.value.toggle(event)
-})
-
-const signOut = (() => {
-   userStore.signout()
-   router.push("/signedout")
 })
 
 const homeClicked = (() => {
@@ -113,18 +94,6 @@ div.header {
       padding: 1vw 20px 5px 10px;
       a {
          color: white !important;
-      }
-   }
-   .user-banner {
-      text-align: right;
-      padding: 0;
-      font-size: 0.9em;
-      margin: 10px 0;
-      padding: 10px 10px 0 10px;
-      background-color: var(--uvalib-blue-alt-darkest);
-      #signout {
-         color: white;
-         font-weight: bold;
       }
    }
 }

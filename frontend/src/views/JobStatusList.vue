@@ -61,7 +61,7 @@ import InputText from 'primevue/inputtext'
 import { useConfirm } from "primevue/useconfirm"
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const jobsStore = useJobsStore()
 const confirm = useConfirm()
@@ -78,7 +78,13 @@ const deletAllClicked = (() => {
       message: 'Are you sure you want delete the selected job status records? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete All',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete All'
+      },
       accept: () => {
          let payload = []
          selectedJobs.value.forEach( j => payload.push(j.id))
@@ -90,9 +96,15 @@ const deletAllClicked = (() => {
 const deleteJob = ((id) => {
    confirm.require({
       message: 'Are you sure you want delete this job status?',
-      header: 'Confirm Delete All',
+      header: 'Confirm Delete',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete'
+      },
       accept: () => {
          jobsStore.deleteJobs( [id] )
       }

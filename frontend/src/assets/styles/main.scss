@@ -4,6 +4,13 @@ body {
    padding: 0;
    background-color: white;
 
+   .sticky {
+      position: fixed;
+      z-index: 1000;
+      top: 0;
+      border-bottom: 1px solid red;
+   }
+
    .right-pad {
       margin-right: 10px !important;
    }
@@ -43,11 +50,12 @@ body {
          display: flex;
          flex-flow: row nowrap;
          justify-content: space-between;
-         div.actions {
-            font-size: 14px;
-            button.p-button {
-               margin-right: 5px;
-            }
+         .actions {
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: flex-start;
+            align-items: flex-start;
+            gap: 5px;
          }
       }
 
@@ -77,11 +85,11 @@ body {
       span.status, span.flag {
          border-radius: 5px;
          color: white;
-         padding: 2px 15px 4px 15px;
+         padding: 4px 15px 4px 15px;
          box-sizing: border-box;
          display:inline-block;
          text-align: center;
-         font-weight: bold;
+         font-weight: normal;
          background-color: var(--uvalib-grey);
       }
       span.flag.true {

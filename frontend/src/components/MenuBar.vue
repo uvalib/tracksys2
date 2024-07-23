@@ -23,6 +23,7 @@ import { ref, onMounted, computed } from 'vue'
 import Menubar from 'primevue/menubar'
 import { useSystemStore } from "@/stores/system"
 import { useSearchStore } from '@/stores/search'
+import { useUserStore } from "@/stores/user"
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
@@ -30,6 +31,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 const systemStore = useSystemStore()
 const searchStore = useSearchStore()
+const userStore = useUserStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -41,32 +43,38 @@ const showSearch = computed(() => {
 })
 
 onMounted(() => {
-   setTimeout( () => {
-      items.value = [
-         {label: "Home", route: "/"},
-         {label: "Orders", route: "/orders"},
-         {label: "Collections", route: "/collections"},
-         {label: "Published", items: [
-            {label: "Virgo", route: '/published/virgo'},
-            {label: "ArchivesSpace", route: '/published/archivesspace'},
-            {label: "DPLA", route: '/published/dpla'},
-         ]},
-         {label: "Job Statuses", route: "/jobs"},
-         {label: "Digitization", items: [
-            {label: "Equipment", route: '/equipment'},
-            {label: "Projects", url: systemStore.projectsURL, target: "_blank"},
-            {label: "Reports", url: `${systemStore.reportsURL}/reports`, target: "_blank"},
-            {label: "Statistics", url: systemStore.reportsURL, target: "_blank"},
-         ]},
-         {label: "Miscellaneous", items: [
-            {label: "APTrust Submissions", route: "/aptrust"},
-            {label: "ArchivesSpace Reviews", route: "/archivesspace"},
-            {label: "HathiTrust Submissions", route: "/hathitrust"},
-            {label: "Customers", route: "/customers"},
-            {label: "Staff Members", route: "/staff"},
-         ]}
-      ]
-   }, 500)
+   items.value = [
+      {label: "Home", route: "/"},
+      {label: "Orders", route: "/orders"},
+      {label: "Collections", route: "/collections"},
+      {label: "Published", items: [
+         {label: "Virgo", route: '/published/virgo'},
+         {label: "ArchivesSpace", route: '/published/archivesspace'},
+         {label: "DPLA", route: '/published/dpla'},
+      ]},
+      {label: "Job Statuses", route: "/jobs"},
+      {label: "Digitization", items: [
+         {label: "Equipment", route: '/equipment'},
+         {label: "Projects", url: systemStore.projectsURL, target: "_blank"},
+         {label: "Reports", url: `${systemStore.reportsURL}/reports`, target: "_blank"},
+         {label: "Statistics", url: systemStore.reportsURL, target: "_blank"},
+      ]},
+      {label: "Miscellaneous", items: [
+         {label: "APTrust Submissions", route: "/aptrust"},
+         {label: "ArchivesSpace Reviews", route: "/archivesspace"},
+         {label: "HathiTrust Submissions", route: "/hathitrust"},
+         {label: "Customers", route: "/customers"},
+         {label: "Staff Members", route: "/staff"},
+      ]},
+      {label: userStore.signedInUser, items: [
+         {label: "Sign Out", command: ()=>signOut() },
+      ]}
+   ]
+})
+
+const signOut = (() => {
+   userStore.signout()
+   router.push("/signedout")
 })
 
 const searchEntered = (() => {
@@ -81,25 +89,10 @@ const searchEntered = (() => {
 </script>
 
 <style scoped lang="scss">
-.p-menubar {
-   padding: 0;
-   border-radius: 0;
-   min-height: 48px;
-   li.p-menuitem {
-      div.p-menuitem-content a {
-         color: #495057 !important;
-         padding: 0.75rem 1rem !important;
-         display: block;
-         border-radius: 0;
-         white-space: nowrap;
-         &:hover {
-            text-decoration: none !important;
-         }
-      }
-   }
-}
 .global-search {
-   display: inline-block;
-   margin-right: 5px;
+   margin:0;
+   input[type=text] {
+      margin-bottom: 0 !important;
+   }
 }
 </style>

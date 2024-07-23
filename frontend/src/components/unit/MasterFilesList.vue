@@ -66,12 +66,12 @@
          </Column>
          <Column header="" class="row-acts">
             <template #body="slotProps">
-               <DPGButton label="View" class="p-button-secondary first" @click="viewClicked(slotProps.data)" />
-               <DPGButton label="Download Image" class="p-button-secondary" @click="downloadFile(slotProps.data)" v-if="unitsStore.canDownload"/>
-               <DPGButton label="Download PDF" class="p-button-secondary" @click="downloadPDF(slotProps.data)" v-if="unitsStore.canPDF"/>
+               <DPGButton label="View" class="p-button-secondary first" @click="viewClicked(slotProps.data)" size="small"/>
+               <DPGButton label="Download Image" class="p-button-secondary" @click="downloadFile(slotProps.data)" v-if="unitsStore.canDownload" size="small"/>
+               <DPGButton label="Download PDF" class="p-button-secondary" @click="downloadPDF(slotProps.data)" v-if="unitsStore.canPDF" size="small"/>
                <DPGButton v-if="slotProps.data.exemplar==false && (detail.intendedUse && detail.intendedUse.id == 110 || detail.includeInDL)"
-                  label="Set Exemplar" class="p-button-secondary" @click="exemplarClicked(slotProps.data)"/>
-               <DPGButton label="Republish IIIF" class="p-button-secondary" @click="republishIIIF(slotProps.data.id)" v-if="detail.reorder==false && userStore.isAdmin"/>
+                  label="Set Exemplar" class="p-button-secondary" @click="exemplarClicked(slotProps.data)" size="small"/>
+               <DPGButton label="Republish IIIF" class="p-button-secondary" @click="republishIIIF(slotProps.data.id)" v-if="detail.reorder==false && userStore.isAdmin" size="small"/>
             </template>
          </Column>
       </DataTable>
@@ -92,10 +92,10 @@ import { useConfirm } from "primevue/useconfirm"
 import RenumberDialog from './RenumberDialog.vue'
 import LookupDialog from '@/components/LookupDialog.vue'
 import InputText from 'primevue/inputtext'
-import { FilterMatchMode } from 'primevue/api'
+import { FilterMatchMode } from '@primevue/core/api'
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const confirm = useConfirm()
 const unitsStore = useUnitsStore()
@@ -150,7 +150,13 @@ const requestPDF = (( masterFileIDs ) => {
          message: `This unit has transcription or OCR text. Include it with the PDF?`,
          header: 'Include Text',
          icon: 'pi pi-question-circle',
-         rejectClass: 'p-button-secondary',
+         rejectProps: {
+            label: 'Cancel',
+            severity: 'secondary'
+         },
+         acceptProps: {
+            label: 'Include'
+         },
          accept: () => {
             pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs, true )
          },
@@ -170,7 +176,13 @@ const replaceClicked = (() => {
       message: `Replace master files with .tif files from ./finalization/unit_update/${unitDir}?`,
       header: 'Confirm Replace Master Files',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Replace'
+      },
       accept: async () => {
          unitsStore.replaceMasterFiles()
          clearSelections()
@@ -184,7 +196,13 @@ const addClicked = (() => {
       message: `Add all .tif files from ./finalization/unit_update/${unitDir} to this unit?`,
       header: 'Confirm Add Master Files',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Add'
+      },
       accept: async () => {
          unitsStore.addMasterFiles()
       }
@@ -196,7 +214,13 @@ const deleteClicked = (() => {
       message: 'Are you sure you want delete the selected master files? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Master Files',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete'
+      },
       accept: async () => {
          unitsStore.deleteMasterFiles(selectedFileNames.value)
          clearSelections()
@@ -249,23 +273,14 @@ const clearSelections = (() => {
 </script>
 
 <style scoped lang="scss">
-:deep(div.p-panel-content) {
-   padding-top: 0;
-}
 div.masterfiles {
-   .p-datatable-sm {
-      font-size: 0.9em;
-   }
-
    .master-file-acts {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-start;
+      align-items: flex-start;
+      gap: 5px;
       font-size: 0.85em;
-      text-align: right;
-      button.p-button {
-         margin-left: 10px;
-      }
-      button.p-button:first-of-type {
-         margin-left: 0;
-      }
    }
    :deep(td.thumb) {
       width: 160px !important;
@@ -276,17 +291,11 @@ div.masterfiles {
    }
 }
 :deep(td.row-acts) {
-   vertical-align: top;
-
-   button.p-button.first {
-      margin: 0;
-   }
-   button.p-button {
-      font-size: 0.75em;
-      padding: 3px 6px;
-      display: block;
-      width: 100%;
-      margin-top: 5px;
+   display: flex;
+   flex-direction: column;
+   gap: 5px;
+   button {
+      font-size: 0.85em;
    }
 }
 </style>

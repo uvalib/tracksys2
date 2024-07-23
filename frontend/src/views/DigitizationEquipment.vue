@@ -57,20 +57,28 @@
                <span class="ws"><b>Workstation</b>: {{selectedWSName}}</span>
             </div>
          </template>
-         <TabView class="results">
-            <TabPanel header="Camera Bodies">
-               <EquipmentPanel :equipment="equipmentStore.cameraBodies" />
-            </TabPanel>
-            <TabPanel header="Lenses">
-               <EquipmentPanel :equipment="equipmentStore.lenses" />
-            </TabPanel>
-            <TabPanel header="Digital Backs">
-               <EquipmentPanel :equipment="equipmentStore.digitalBacks" />
-            </TabPanel>
-            <TabPanel header="Scanners">
-               <EquipmentPanel :equipment="equipmentStore.scanners" />
-            </TabPanel>
-         </TabView>
+         <Tabs value="bodies" :lazy="true">
+            <TabList>
+               <Tab value="bodies">Camera Bodies</Tab>
+               <Tab value="lenses">Lenses</Tab>
+               <Tab value="backs">Digital Backs</Tab>
+               <Tab value="scanners">Scanners</Tab>
+            </TabList>
+            <TabPanels>
+               <TabPanel value="bodies">
+                  <EquipmentPanel :equipment="equipmentStore.cameraBodies" />
+               </TabPanel>
+               <TabPanel value="lenses">
+                  <EquipmentPanel :equipment="equipmentStore.lenses" />
+               </TabPanel>
+               <TabPanel value="backs">
+                  <EquipmentPanel :equipment="equipmentStore.digitalBacks" />
+               </TabPanel>
+               <TabPanel value="scanners">
+                  <EquipmentPanel :equipment="equipmentStore.scanners" />
+               </TabPanel>
+            </TabPanels>
+         </Tabs>
       </Panel>
    </div>
 </template>
@@ -82,7 +90,10 @@ import { useUserStore } from '../stores/user'
 import Panel from 'primevue/panel'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import TabView from 'primevue/tabview'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
 import EquipmentPanel from '../components/equipment/EquipmentPanel.vue'
 import { useConfirm } from "primevue/useconfirm"
@@ -132,9 +143,15 @@ const retireWorkstation = (( wsID ) => {
    let ws = equipmentStore.workstations.find(ws => ws.id == wsID)
    confirm.require({
       message: `Retire workstation '${ws.name}'?`,
-      header: 'Confirm Clone',
+      header: 'Confirm Retire',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Retire'
+      },
       accept: () => {
          equipmentStore.retireWorkstation(wsID)
       }

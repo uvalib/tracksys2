@@ -42,7 +42,7 @@ import Dialog from 'primevue/dialog'
 import NewMetadataPanel from '@/components/metadata/NewMetadataPanel.vue'
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const collectionStore = useCollectionsStore()
 const userStore = useUserStore()
@@ -73,9 +73,4 @@ const collectionCreated = (() => {
 </script>
 
 <style scoped lang="scss">
-.collections {
-   min-height: 600px;
-   text-align: left;
-   padding: 5px 20px 20px 20px;
-}
 </style>

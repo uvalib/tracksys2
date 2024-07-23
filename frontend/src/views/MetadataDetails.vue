@@ -194,29 +194,40 @@
    </div>
    <template v-if="systemStore.working==false">
       <div class="more-detail">
-         <Accordion v-if="metadataStore.detail.type=='XmlMetadata'">
-            <AccordionTab header="XML Metadata">
-               <pre class="xml">{{metadataStore.detail.xmlMetadata}}</pre>
-            </AccordionTab>
+         <Accordion value="none" v-if="metadataStore.detail.type=='XmlMetadata'">
+            <AccordionPanel value="xml">
+               <AccordionHeader>XML Metadata</AccordionHeader>
+               <AccordionContent>
+                  <pre class="xml">{{metadataStore.detail.xmlMetadata}}</pre>
+               </AccordionContent>
+            </AccordionPanel>
          </Accordion>
       </div>
       <div class="details">
          <Panel header="Related Information">
-            <TabView class="related" :lazy="true">
-               <TabPanel header="Collection Members" v-if="metadataStore.detail.isCollection">
-                  <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
-                  <CollectionRecords v-else :collectionID="metadataStore.detail.id"/>
-               </TabPanel>
-               <TabPanel header="Orders">
-                  <RelatedOrders :orders="metadataStore.related.orders" />
-               </TabPanel>
-               <TabPanel header="Units">
-                  <RelatedUnits :units="metadataStore.related.units" :showMetadata="false"/>
-               </TabPanel>
-               <TabPanel v-if="metadataStore.related.masterFiles.length > 0" header="Master Files">
-                  <RelatedMasterFiles :masterFiles="metadataStore.related.masterFiles" />
-               </TabPanel>
-            </TabView>
+            <Tabs value="units" :lazy="true">
+               <TabList>
+                  <Tab value="collection" v-if="metadataStore.detail.isCollection">Collection Members</Tab>
+                  <Tab value="orders">Orders</Tab>
+                  <Tab value="units">Units</Tab>
+                  <Tab value="masterfiles" v-if="metadataStore.related.masterFiles.length > 0">Master Files</Tab>
+               </TabList>
+               <TabPanels>
+                  <TabPanel value="collection" v-if="metadataStore.detail.isCollection">
+                     <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
+                     <CollectionRecords v-else :collectionID="metadataStore.detail.id"/>
+                  </TabPanel>
+                  <TabPanel value="orders">
+                     <RelatedOrders :orders="metadataStore.related.orders" />
+                  </TabPanel>
+                  <TabPanel value="units">
+                     <RelatedUnits :units="metadataStore.related.units" :showMetadata="false"/>
+                  </TabPanel>
+                  <TabPanel v-if="metadataStore.related.masterFiles.length > 0" value="masterfiles">
+                     <RelatedMasterFiles :masterFiles="metadataStore.related.masterFiles" />
+                  </TabPanel>
+               </TabPanels>
+            </Tabs>
          </Panel>
       </div>
    </template>
@@ -234,9 +245,14 @@ import { useCollectionsStore } from '@/stores/collections'
 import { useAPTrustStore } from '@/stores/aptrust'
 import Panel from 'primevue/panel'
 import Accordion from 'primevue/accordion';
-import AccordionTab from 'primevue/accordiontab'
+import AccordionPanel from 'primevue/accordionpanel'
+import AccordionHeader from 'primevue/accordionheader'
+import AccordionContent from 'primevue/accordioncontent'
 import DataDisplay from '../components/DataDisplay.vue'
-import TabView from 'primevue/tabview'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
 import APTrustPanel from '@/components/aptrust/APTrustPanel.vue'
 import RelatedOrders from '@/components/related/RelatedOrders.vue'
@@ -374,7 +390,13 @@ const deleteMetadata = (() => {
       message: 'Are you sure you want delete this metadata? All data will be lost. This cannot be reversed.',
       header: 'Confirm Delete Metadata',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete'
+      },
       accept: async () => {
          await metadataStore.deleteMetadata()
       }
@@ -413,7 +435,13 @@ const unpublishAS = ( async () => {
       message: 'Are you sure you want remove this item from ArchivesSpace? After this, the digitial content will no longer be publicly visible.',
       header: 'Confirm Unpublish',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Unpublish'
+      },
       accept: async () => {
          publishing.value = true
          await metadataStore.unpublishFromArchivesSpace()
@@ -447,13 +475,6 @@ const submitForASReview = ( async () => {
 </script>
 
 <style scoped lang="scss">
-:deep(.p-fileupload.p-fileupload-basic.p-component) {
-   margin-right: 5px;
-   display: inline-block;
-   .p-button-label {
-      font-size: 14px;
-   }
-}
 .collection-tag {
    display: inline-block;
    margin-right: 10px;
@@ -463,8 +484,7 @@ const submitForASReview = ( async () => {
    text-align: left;
    .xml {
       font-weight: normal;
-      font-size: 0.85em;
-      padding: 10px;
+      padding: 0;
       margin: 0;
       border-top: 0;
       white-space: pre-wrap;       /* Since CSS 2.1 */
@@ -486,9 +506,6 @@ const submitForASReview = ( async () => {
       flex-direction: column;
       justify-content: flex-start;
       flex: 1;
-   }
-   :deep(p-tabview) {
-      margin: 0 !important;
    }
 
    div.hathi {

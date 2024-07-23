@@ -96,7 +96,13 @@ const submitClicked = ( () => {
       message: `Add the selected metadata records to the collection?`,
       header: 'Confirm Add',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Add'
+      },
       accept: async () => {
          await collectionStore.addRecords( metadataIDs )
          selectedRecords.value = []

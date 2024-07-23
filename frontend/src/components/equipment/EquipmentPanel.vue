@@ -67,9 +67,15 @@ function retireEquipment( equipID ) {
    let tgtE = equipmentStore.equipment.find( e => e.id == equipID)
    confirm.require({
       message: `Retire equipment name: '${tgtE.name}, serial number: ${tgtE.serialNumber}'?`,
-      header: 'Confirm Clone',
+      header: 'Confirm Retire',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Retire'
+      },
       accept: () => {
          equipmentStore.updateEquipment( equipID, tgtE.name, tgtE.serialNumber, 2 )
       }

@@ -63,7 +63,7 @@ import ProgressBar from 'primevue/progressbar'
 import Dialog from 'primevue/dialog'
 import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const component = useComponentsStore()
 const userStore = useUserStore()

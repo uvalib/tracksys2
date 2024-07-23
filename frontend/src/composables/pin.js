@@ -12,9 +12,10 @@ export function usePinnable( pinClass ) {
          if ( toolbar.value.classList.contains("sticky") ) {
             toolbar.value.classList.remove("sticky")
             toolbar.value.style.width = `auto`
-            let dts = document.getElementsByClassName("p-datatable-wrapper")
+            let dts = document.getElementsByClassName("p-datatable-table-container")
             if ( dts ) {
                dts[0].style.top = `0px`
+               dts[0].style.position = 'static'
                let panel = dts[0].closest('.p-panel-content')
                if (panel) {
                   panel.style.height = `auto`
@@ -24,9 +25,10 @@ export function usePinnable( pinClass ) {
          pinned.value = false
       } else {
          if ( toolbar.value.classList.contains("sticky") == false ) {
-            let dts = document.getElementsByClassName("p-datatable-wrapper")
+            let dts = document.getElementsByClassName("p-datatable-table-container")
             if ( dts ) {
                dts[0].style.top = `${toolbarHeight.value}px`
+               dts[0].style.position = 'relative'
                let panel = dts[0].closest('.p-panel-content')
                if (panel) {
                   let h = panel.clientHeight

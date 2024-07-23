@@ -60,14 +60,11 @@ const rowStyle = (data) => {
 
 <stype scoped lang="scss">
 .similar {
-   margin: 20px;
-   font-size: 0.9em;
    h3 {
       text-align: left;
-      color: var(--uvalib-brand-blue-light);
       font-weight: 600;
-      border-bottom: 2px solid #dee2e6;
-      padding: 1rem;
+      border-bottom: 1px solid #dee2e6;
+      padding: 25px 10px 10px 10px;
       margin-bottom:0;
    }
    h4 {
@@ -77,24 +74,9 @@ const rowStyle = (data) => {
    .hits {
       padding: 1rem;
    }
-   td.nowrap, th {
-      white-space: nowrap;
-   }
-   th, td {
-      font-size: 0.85em;
-      max-width: 20%;
-   }
-   .results-toolbar {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: space-between;
-      .matches {
-         padding: 5px 0;
-         text-align: left;
-      }
-      button {
-         font-size: 0.8em;
-      }
+   .matches {
+      margin: 0px 0 20px 0;
+      text-align: left;
    }
 }
 </stype>

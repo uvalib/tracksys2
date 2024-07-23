@@ -72,14 +72,14 @@
          </Column>
          <Column  header="Acts" class="acts">
             <template #body="slotProps">
-               <ul class="acts">
-                  <li><DPGButton label="View Images" icon="pi pi-external-link" iconPos="right" severity="secondary" class="first" @click="viewClicked(slotProps.data)"/></li>
-                  <li v-if="canReview(slotProps.data)"><DPGButton label="Claim for Review" severity="secondary" @click="reviewClicked(slotProps.data)"/></li>
-                  <li v-if="canResubmit(slotProps.data)"><DPGButton label="Resubmit" severity="secondary" @click="resubmitClicked(slotProps.data)"/></li>
-                  <li v-if="canCancel(slotProps.data)"><DPGButton label="Cancel Submission" severity="danger" @click="cancelClicked(slotProps.data)"/></li>
-                  <li v-if="canPublish(slotProps.data)"><DPGButton label="Reject" severity="danger" @click="rejectClicked(slotProps.data)"/></li>
-                  <li v-if="canPublish(slotProps.data)"><DPGButton label="Publish Now" severity="primary" @click="publishClicked(slotProps.data.metadata)"/></li>
-               </ul>
+               <div class="acts">
+                  <DPGButton label="View Images" icon="pi pi-external-link" iconPos="right" severity="secondary" class="first" @click="viewClicked(slotProps.data)"/>
+                  <DPGButton v-if="canReview(slotProps.data)" label="Claim for Review" severity="secondary" @click="reviewClicked(slotProps.data)"/>
+                  <DPGButton v-if="canResubmit(slotProps.data)" label="Resubmit" severity="secondary" @click="resubmitClicked(slotProps.data)"/>
+                  <DPGButton v-if="canCancel(slotProps.data)" label="Cancel Submission" severity="danger" @click="cancelClicked(slotProps.data)"/>
+                  <DPGButton v-if="canPublish(slotProps.data)" label="Reject" severity="danger" @click="rejectClicked(slotProps.data)"/>
+                  <DPGButton v-if="canPublish(slotProps.data)" label="Publish Now" severity="primary" @click="publishClicked(slotProps.data.metadata)"/>
+               </div>
             </template>
          </Column>
       </DataTable>
@@ -119,14 +119,14 @@ import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
 import Dialog from 'primevue/dialog'
-import { FilterMatchMode } from 'primevue/api'
+import { FilterMatchMode } from '@primevue/core/api'
 import { useConfirm } from "primevue/useconfirm"
 import { usePinnable } from '@/composables/pin'
 import { useArchivesSpaceStore } from '@/stores/archivesspace'
 import { useUserStore } from '@/stores/user'
 import { useRoute } from 'vue-router'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const archivesSpace = useArchivesSpaceStore()
 const user = useUserStore()
@@ -230,7 +230,13 @@ const reviewClicked = ( (item) => {
       message: 'Are you sure you want claim this item for review?',
       header: 'Confirm Review',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Claim'
+      },
       accept: async () => {
          await archivesSpace.claimForReview( item.metadata, user.ID )
       }
@@ -242,7 +248,13 @@ const resubmitClicked = ( (item) => {
       message: 'Are you sure you want resubmit this item for review?',
       header: 'Confirm Resubmit',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Resubmit'
+      },
       accept: async () => {
          await archivesSpace.resubmit( item.metadata )
       }
@@ -254,7 +266,13 @@ const cancelClicked = ( (item) => {
       message: 'Are you sure you want cancel this submission? All review data will be lost.',
       header: 'Confirm Cancel',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Cancel Submission'
+      },
       accept: async () => {
          await archivesSpace.cancel( item )
       }
@@ -290,7 +308,13 @@ const publishClicked = ( (item) => {
       message: 'Are you sure you want publish this item to ArchivesSpace? After publication, the images will be visble to all ArchivesSpace users within a few minutes.',
       header: 'Confirm Publish',
       icon: 'pi pi-exclamation-triangle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Publish'
+      },
       accept: async () => {
          await archivesSpace.publish( user.ID, item )
       }
@@ -316,30 +340,16 @@ const viewClicked = ( (item) => {
       padding: 5px 10px;
    }
 }
-:deep(td.long-text) {
-   white-space: break-spaces;
-   max-width: 25%;
+:deep(.long-text) {
+   white-space: break-spaces !important;
 }
-:deep(td.acts) {
+:deep(div.acts) {
    width: 130px;
-
-   ul.acts {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      li {
-         width: max-content;
-         padding: 0;
-         button.p-button {
-            font-size: 0.75em;
-            width: 130px;
-            margin: 5px 0 0 0;
-            padding: 0.4em 1em;
-            .p-button-icon {
-               color: #bbb;
-            }
-         }
-      }
+   display: flex;
+   flex-direction: column;
+   gap: 5px;
+   button {
+      font-size: 0.85em;
    }
 }
 textarea {
@@ -351,9 +361,6 @@ textarea {
    -moz-osx-font-smoothing: grayscale;
    color: var(--color-primary-text);
    padding: 5px 10px;
-   &:focus {
-      @include be-accessible();
-   }
 }
 div.note-text {
    height: 250px;

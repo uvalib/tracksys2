@@ -90,7 +90,13 @@ const apTrustResubmitClicked = ( () => {
       message: "Resubmission will replace the current version with a newly created one. This cannot be reversed. Are you sure?",
       header: 'Confirm APTrust Resubmission',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Resubmit'
+      },
       accept: () => {
          doApTrustSubmission(true)
       },
@@ -103,7 +109,13 @@ const apTrustSubmitClicked = ( () => {
          message: "Submitting a collection record to APTrust will also submit all collection items. Are you sure?",
          header: 'Confirm APTrust Submission',
          icon: 'pi pi-question-circle',
-         rejectClass: 'p-button-secondary',
+         rejectProps: {
+            label: 'Cancel',
+            severity: 'secondary'
+         },
+         acceptProps: {
+            label: 'Submit'
+         },
          accept: () => {
             doApTrustSubmission(false)
          },

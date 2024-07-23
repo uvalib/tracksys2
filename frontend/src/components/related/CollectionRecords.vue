@@ -12,8 +12,10 @@
          >
             <template #empty><h3>No items found</h3></template>
             <template #paginatorstart>
-               <DPGButton label="Add Item(s)" class="p-button-secondary" @click="bulkAddClicked()" v-if="userStore.isAdmin"/>
-               <DPGButton label="Export" class="p-button-secondary pad-left" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
+               <div class="buttons">
+                  <DPGButton label="Add Item(s)" class="p-button-secondary" @click="bulkAddClicked()" v-if="userStore.isAdmin"/>
+                  <DPGButton label="Export" class="p-button-secondary pad-left" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
+               </div>
             </template>
             <template #paginatorend>
                <IconField iconPosition="left">
@@ -83,7 +85,7 @@ import CollectionBulkAdd from './CollectionBulkAdd.vue'
 import { usePinnable } from '@/composables/pin'
 import { computed } from 'vue'
 
-usePinnable("p-paginator-top")
+usePinnable("p-datatable-paginator-top")
 
 const userStore = useUserStore()
 const collectionStore = useCollectionsStore()
@@ -139,7 +141,13 @@ const deleteItem = (( item ) => {
       message: `Remove "${item.pid} : ${item.title}" from this collection?`,
       header: 'Confirm Remove Item',
       icon: 'pi pi-question-circle',
-      rejectClass: 'p-button-secondary',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Remove'
+      },
       accept: () => {
          collectionStore.removeItem(item)
       }
@@ -157,12 +165,12 @@ const exportCollection = (() => {
    h3  {
       text-align: center;
    }
-   .none {
-      color: var(--uvalib-grey-light);
-      font-style: italic;
-   }
-   td.nowrap, th {
-      white-space: nowrap;
+   .buttons {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-start;
+      align-items: flex-start;
+      gap: 10px;
    }
    td.apt-status {
       text-align: center;
@@ -177,15 +185,9 @@ const exportCollection = (() => {
          color: var(--uvalib-red-dark);
       }
    }
-   .none{
-      text-align: center;
-   }
    td.row-acts {
       text-align: center;
       width: 25px;
-   }
-   button.pad-left {
-      margin-left: 10px;
    }
 }
 </stype>

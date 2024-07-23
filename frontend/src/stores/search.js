@@ -10,7 +10,6 @@ export const useSearchStore = defineStore('search', {
       searched: false,
       unitValid: false,
       view: "",               // name of the view for below. used in client query params
-      activeResultsIndex: 0,  // results are presented in this order: Orders, Metadata, MasterFiles, Components
       components: {
          start: 0,
          limit: 15,
@@ -131,7 +130,6 @@ export const useSearchStore = defineStore('search', {
          this.units.hits = []
          this.units.filters = []
 
-         this.activeResultsIndex = 0
          this.view = ""
          this.searched = false
       },
@@ -234,21 +232,18 @@ export const useSearchStore = defineStore('search', {
             }
             if ( this.scope == "all" ) {
                if ( this.orders.total > 0) {
-                  this.activeResultsIndex = 0
                   this.view = "orders"
                } else if  ( this.metadata.total > 0) {
-                  this.activeResultsIndex = 1
                   this.view = "metadata"
                } else if  ( this.masterFiles.total > 0) {
-                  this.activeResultsIndex = 2
                   this.view = "masterfiles"
                } else if  ( this.components.total > 0) {
-                  this.activeResultsIndex = 3
                   this.view = "components"
                } else if  ( this.units.total > 0) {
-                  this.activeResultsIndex = 4
                   this.view = "units"
                }
+            } else {
+               this.view = tgtScope
             }
             system.working = false
             this.searched = true
@@ -259,21 +254,6 @@ export const useSearchStore = defineStore('search', {
 
       setActiveView( viewName ) {
          this.view = viewName
-         if (this.scope == "all") {
-            if (viewName == "orders") {
-               this.activeResultsIndex = 0
-            } else  if (viewName == "metadata") {
-               this.activeResultsIndex = 1
-            } else  if (viewName == "masterfiles") {
-               this.activeResultsIndex = 2
-            } else  if (viewName == "components") {
-               this.activeResultsIndex = 3
-            } else  if (viewName == "units") {
-               this.activeResultsIndex = 4
-            }
-         } else {
-            this.activeResultsIndex = 0
-         }
       }
 	},
 })

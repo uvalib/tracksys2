@@ -48,15 +48,17 @@
          </div>
       </div>
       <div class="search">
-         <FormKit type="form" id="global-search" :actions="false" @submit="doSearch">
-            <FormKit type="select" label="" v-model="selectedScope" outer-class="select-wrap" @change="scopeChanged"
-               :options="{ all: 'All items', orders: 'Orders', metadata: 'Metadata', masterfiles: 'Master Files', units: 'Units', components: 'Components'}"
-            />
-            <FormKit type="select" label="" v-model="selectedField" :options="scopeFields" outer-class="select-wrap" :disabled="selectedScope == 'all'"/>
-            <FormKit label="" type="search" placeholder="Find Tracksys items..." v-model="newQuery" outer-class="searchbar" />
-            <FormKit type="submit" label="Search" wrapper-class="submit-button" />
-            <FormKit type="button" v-if="searchStore.searched || searchStore.similarSearch == true"  label="Reset search" @click="resetSearch()" wrapper-class="reset-button"/>
-         </FormKit>
+         <div class="text-search">
+            <div class="search-ctl-group">
+               <Select v-model="selectedScope" :options="scopes" optionLabel="label" optionValue="value" @change="scopeChanged" />
+               <Select v-model="selectedField" :options="scopeFields" optionLabel="label" optionValue="value" :disabled="selectedScope == 'all'" />
+            </div>
+            <InputText placeholder="Find TrackSys items..." v-model="newQuery" class="searchbar"  @keyup.enter="doSearch" />
+            <div class="search-ctl-group">
+               <DPGButton label="Search" class="submit-button" @click="doSearch"/>
+               <DPGButton v-if="searchStore.searched || searchStore.similarSearch == true" label="Reset Search" severity="secondary" @click="resetSearch"/>
+            </div>
+         </div>
 
          <div class="image-search" v-if="userStore.isAdmin">
             <label>Search for similar images</label>
@@ -79,7 +81,7 @@
          </template>
       </div>
    </div>
-   <Dialog v-model:visible="showCreateAgency" :modal="true" header="Create Agency" @hide="createAgencyClosed" :style="{width: '450px'}">
+   <Dialog v-model:visible="showCreateAgency" :modal="true" header="Create Agency" :closable="false" @hide="createAgencyClosed" :style="{width: '450px'}">
       <div class="agency">
          <label>Name</label>
          <input type="text" v-model="newAgencyName" autofocus/>
@@ -93,10 +95,10 @@
          </div>
       </template>
    </Dialog>
-   <Dialog v-model:visible="showCreateMetadata" :modal="true" header="Create Metadata" @hide="createMetadataClosed" :style="{width: '750px'}">
+   <Dialog v-model:visible="showCreateMetadata" :modal="true" header="Create Metadata" @hide="createMetadataClosed" :style="{width: '750px'}" :closable="false" >
       <NewMetadataPanel @canceled="createMetadataClosed" @created="metadataCreated" />
    </Dialog>
-   <Dialog v-model:visible="showCreateCollection" :modal="true" header="Create Collection Facet" @hide="createCollectionClosed" :style="{width: '450px'}">
+   <Dialog v-model:visible="showCreateCollection" :modal="true" header="Create Collection Facet" @hide="createCollectionClosed" :style="{width: '450px'}" :closable="false" >
       <p>Enter the name of the new collection facet</p>
       <input type="text" v-model="newCollectionFacet" autofocus/>
       <template #footer>
@@ -122,6 +124,8 @@ import Dialog from 'primevue/dialog'
 import NewMetadataPanel from '@/components/metadata/NewMetadataPanel.vue'
 import FileUpload from 'primevue/fileupload'
 import Slider from 'primevue/slider'
+import Select from 'primevue/select'
+import InputText from 'primevue/inputtext'
 
 const searchStore = useSearchStore()
 const route = useRoute()
@@ -145,6 +149,16 @@ const selectedScope = ref("all")
 const selectedField = ref("all")
 const newQuery = ref("")
 
+const scopes = computed( () => {
+   return [
+      {label: "All items", value: "all"},
+      {label: "Orders", value: "orders"},
+      {label: "Metadata", value: "metadata"},
+      {label: "Master Files", value: "masterfiles"},
+      {label: "Components", value: "components"},
+      {label: "Units", value: "units"},
+   ]
+})
 const scopeFields = computed( () => {
    let scope = selectedScope.value
    let allFields = searchStore.searchFields
@@ -389,60 +403,29 @@ const createMetadataClosed = (() => {
       }
    }
 
-   :deep(#unit-search) {
-      width: 25% !important;
-      align-items: flex-end !important;
-      margin-top: 25px !important;
-      div.searchbar {
-         width: 40%;
-      }
-   }
    p.error {
       color: var(--uvalib-red-emergency);
    }
-   :deep(#global-search), :deep(#unit-search) {
+   div.text-search {
       display: flex;
       flex-flow: row nowrap;
       justify-content: center;
       align-items: center;
       width: 70%;
       margin: 0 auto;
-      span  {
-         font-weight: bold;
-         display: inline-block;
-      }
+      gap: 10px;
+
       .searchbar {
-         flex-grow: 1;
          margin: 0;
-         input {
-            margin: 0;
-         }
       }
-      .submit-button button {
-         @include primary-button();
-         & {
-            font-size: 0.95em;
-            padding: 6px 15px;
-            margin-left: 10px;
-            display: inline-block;
-            width: 125px;
-         }
+      select {
+         margin: 0;
+         width: max-content;
       }
-      .reset-button button {
-         @include base-button();
-         & {
-            font-size: 0.95em;
-            padding: 6px 15px;
-            margin-left: 10px;
-            display: inline-block;
-            width: 125px;
-         }
-      }
-      .formkit-outer.select-wrap {
-         margin: 0 10px 0 0;
-         select {
-            margin: 0;
-         }
+      .search-ctl-group {
+         display: flex;
+         flex-flow: row nowrap;
+         gap: 10px;
       }
    }
 }
@@ -460,9 +443,6 @@ div.agency {
       -moz-osx-font-smoothing: grayscale;
       color: var(--color-primary-text);
       padding: 5px 10px;
-      &:focus {
-         @include be-accessible();
-      }
    }
 }
 .acts {
