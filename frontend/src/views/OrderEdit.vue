@@ -17,12 +17,11 @@
          <div class="split">
             <div class="select-wrapper">
                <label class="dpg-form-label">Agency</label>
-               <Dropdown v-model="edited.agencyID" :options="agencies" optionLabel="label" optionValue="value" placeholder="Select an agency" :filter="true" />
+               <Select v-model="edited.agencyID" :options="agencies" optionLabel="label" optionValue="value" placeholder="Select an agency" :filter="true" />
             </div>
-            <div class="sep"></div>
             <div class="select-wrapper">
                <label class="dpg-form-label">Customer</label>
-               <Dropdown v-model="edited.customerID" :options="customers" optionLabel="label" optionValue="value" placeholder="Select a customer" :filter="true" />
+               <Select v-model="edited.customerID" :options="customers" optionLabel="label" optionValue="value" placeholder="Select a customer" :filter="true" />
             </div>
          </div>
          <p class="error" v-if="error">{{error}}</p>
@@ -41,7 +40,7 @@ import { useSystemStore } from '@/stores/system'
 import { useCustomersStore } from '@/stores/customers'
 import { onMounted, ref, computed } from 'vue'
 import dayjs from 'dayjs'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 
 const route = useRoute()
 const router = useRouter()
@@ -172,17 +171,30 @@ const submitChanges = ( async () => {
       display: flex;
       flex-flow: row nowrap;
       justify-content: space-between;
-      :deep(.formkit-outer), .select-wrapper {
+      gap: 20px;
+      .select-wrapper {
          flex-grow: 1;
+         display: flex;
+         flex-direction: column;
+         justify-content: flex-start;
+         align-items: flex-start;
+         gap: 5px;
+         .p-select {
+            width: 100%;
+            text-align: left;
+         }
       }
-      :deep(.p-dropdown) {
-         width: 100%;
-         text-align: left;
-      }
-      .sep {
-         display: inline-block;
-         width: 20px;
-      }
+      // :deep(.formkit-outer), .select-wrapper {
+      //    flex-grow: 1;
+      // }
+      // :deep(.p-dropdown) {
+      //    width: 100%;
+      //    text-align: left;
+      // }
+      // .sep {
+      //    display: inline-block;
+      //    width: 20px;
+      // }
    }
 }
 .acts {

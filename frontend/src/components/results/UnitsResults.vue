@@ -22,7 +22,7 @@
       </Column>
       <Column field="status" header="Status" class="nowrap" filterField="unit_status" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
-            <Dropdown v-model="filterModel.value" :options="unitStatuses" optionLabel="name" optionValue="code" placeholder="Select a status" />
+            <Select v-model="filterModel.value" :options="unitStatuses" optionLabel="name" optionValue="code" placeholder="Select a status" />
          </template>
          <template #body="slotProps">
             <span :class="`status ${slotProps.data.status}`">{{displayStatus(slotProps.data.status)}}</span>
@@ -68,7 +68,7 @@ import { useSearchStore } from '../../stores/search'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import { useRoute, useRouter } from 'vue-router'
 import { usePinnable } from '@/composables/pin'
 

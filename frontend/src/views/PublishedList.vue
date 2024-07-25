@@ -18,7 +18,7 @@
          <Column field="pid" header="PID" class="nowrap" />
          <Column v-if="route.params.type != 'archivesspace'" field="type" header="Type" filterField="type" :showFilterMatchModes="false" >
             <template #filter="{filterModel}">
-               <Dropdown v-model="filterModel.value" :options="mdTypes" optionLabel="name" optionValue="code" placeholder="Select a type" />
+               <Select v-model="filterModel.value" :options="mdTypes" optionLabel="name" optionValue="code" placeholder="Select a type" />
             </template>
             <template #body="slotProps">
                <div v-if="slotProps.data.type != 'ExternalMetadata'">{{slotProps.data.type}}</div>
@@ -76,7 +76,7 @@ import { usePublishedStore } from '@/stores/published'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router'
 import { FilterMatchMode } from '@primevue/core/api'
 import { usePinnable } from '@/composables/pin'

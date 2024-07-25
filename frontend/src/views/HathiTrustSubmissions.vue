@@ -44,7 +44,7 @@
          </Column>
          <Column field="metadataStatus" header="Metadata Status" class="nowrap" filterField="metadataStatus" :showFilterMatchModes="false" >
             <template #filter="{filterModel}">
-               <Dropdown v-model="filterModel.value" :options="statuses" optionLabel="name" optionValue="value" placeholder="Select status" />
+               <Select v-model="filterModel.value" :options="statuses" optionLabel="name" optionValue="value" placeholder="Select status" />
             </template>
          </Column>
 
@@ -62,7 +62,7 @@
          </Column>
          <Column field="packageStatus" header="Package Status" class="nowrap" filterField="packageStatus" :showFilterMatchModes="false" >
             <template #filter="{filterModel}">
-               <Dropdown v-model="filterModel.value" :options="statuses" optionLabel="name" optionValue="value" placeholder="Select status" />
+               <Select v-model="filterModel.value" :options="statuses" optionLabel="name" optionValue="value" placeholder="Select status" />
             </template>
          </Column>
 
@@ -94,7 +94,7 @@ import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import { FilterMatchMode } from '@primevue/core/api'
 import { useHathiTrustStore } from '@/stores/hathitrust'
 import { usePinnable } from '@/composables/pin'

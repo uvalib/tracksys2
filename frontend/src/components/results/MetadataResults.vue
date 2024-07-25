@@ -28,7 +28,7 @@
       </Column>
       <Column field="type" header="Type" filterField="type" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
-            <Dropdown v-model="filterModel.value" :options="mdTypes" optionLabel="name" optionValue="code" placeholder="Select a type" />
+            <Select v-model="filterModel.value" :options="mdTypes" optionLabel="name" optionValue="code" placeholder="Select a type" />
          </template>
          <template #body="slotProps">
             <div v-if="slotProps.data.type != 'ExternalMetadata'">{{slotProps.data.type}}</div>
@@ -66,7 +66,7 @@
       </Column>
       <Column field="virgo" header="Virgo" class="nowrap" filterField="virgo" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
-            <Dropdown v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
+            <Select v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
          </template>
          <template #body="slotProps">
             <span v-if="slotProps.data.virgo">Yes</span>
@@ -75,7 +75,7 @@
       </Column>
       <Column field="dpla" header="DPLA" class="nowrap" filterField="dpla" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
-            <Dropdown v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
+            <Select v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
          </template>
          <template #body="slotProps">
             <span v-if="slotProps.data.dpla">Yes</span>
@@ -84,7 +84,7 @@
       </Column>
       <Column field="hathitrust" header="HathiTrust" class="nowrap" filterField="hathitrust" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
-            <Dropdown v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
+            <Select v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
          </template>
          <template #body="slotProps">
             <span v-if="slotProps.data.hathitrust">Yes</span>
@@ -100,7 +100,7 @@ import { useSearchStore } from '../../stores/search'
 import { useSystemStore } from '../../stores/system'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
 import { FilterMatchMode } from '@primevue/core/api'
 import { useRoute, useRouter } from 'vue-router'

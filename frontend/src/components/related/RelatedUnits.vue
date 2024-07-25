@@ -27,13 +27,13 @@
       </Column>
       <Column field="status" header="Status" filterField="status" :showFilterMatchModes="false">
          <template #filter="{filterModel}">
-            <Dropdown v-model="filterModel.value" :options="statusValues" optionLabel="label" optionValue="value" placeholder="Select a status" />
+            <Select v-model="filterModel.value" :options="statusValues" optionLabel="label" optionValue="value" placeholder="Select a status" />
          </template>
       </Column>
       <Column field="metadata.callNumber" header="Call Number" v-if="showMetadata" class="nowrap" />
       <Column field="intendedUse.name" header="Intended Use" filterField="intendedUse.id" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
-            <Dropdown v-model="filterModel.value" :options="systemStore.intendedUses" optionLabel="name" optionValue="id" placeholder="Select an intended use" />
+            <Select v-model="filterModel.value" :options="systemStore.intendedUses" optionLabel="name" optionValue="id" placeholder="Select an intended use" />
          </template>
       </Column>
       <Column field="datePatronDeliverablesReady"  header="Date Patron Deliverables Ready" :sortable="true">
@@ -54,7 +54,7 @@
       </Column>
       <Column field="reorder" header="Reorder?" filterField="reorder" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
-            <Dropdown v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a reorder status" />
+            <Select v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a reorder status" />
          </template>
          <template #body="slotProps">
             {{$formatBool(slotProps.data.reorder)}}
@@ -67,7 +67,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import AddUnitDialog from '@/components/order/AddUnitDialog.vue'

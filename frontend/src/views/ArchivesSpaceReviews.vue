@@ -41,7 +41,7 @@
          </Column>
          <Column field="status" header="Status" filterField="status" :showFilterMatchModes="false" >
             <template #filter="{filterModel}">
-               <Dropdown v-model="filterModel.value" :options="statuses" optionLabel="name" optionValue="id" placeholder="Select status" />
+               <Select v-model="filterModel.value" :options="statuses" optionLabel="name" optionValue="id" placeholder="Select status" />
             </template>
             <template #body="slotProps">
                <span class="as-status">{{ `${slotProps.data.status[0].toUpperCase()}${slotProps.data.status.slice(1)}` }}</span>
@@ -117,7 +117,7 @@ import Column from 'primevue/column'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import Dialog from 'primevue/dialog'
 import { FilterMatchMode } from '@primevue/core/api'
 import { useConfirm } from "primevue/useconfirm"

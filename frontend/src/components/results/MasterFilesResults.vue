@@ -31,7 +31,7 @@
       </Column>
       <Column field="originalID" header="Clone" class="nowrap" filterField="clone" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
-            <Dropdown v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
+            <Select v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
          </template>
          <template #body="slotProps">
             <span v-if="slotProps.data.originalID > 0">Yes</span>
@@ -74,7 +74,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { FilterMatchMode } from '@primevue/core/api'
 import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import { useRoute, useRouter } from 'vue-router'
 import { usePinnable } from '@/composables/pin'
 
