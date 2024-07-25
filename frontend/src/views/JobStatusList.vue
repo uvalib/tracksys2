@@ -11,7 +11,7 @@
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
          <template #paginatorstart>
-            <DPGButton label="Delete selected" :disabled="selectedJobs.length == 0"  class="p-button-secondary" @click="deletAllClicked"/>
+            <DPGButton label="Delete selected" :disabled="selectedJobs.length == 0"  severity="secondary" @click="deletAllClicked"/>
          </template>
          <template #paginatorend>
             <IconField iconPosition="left">

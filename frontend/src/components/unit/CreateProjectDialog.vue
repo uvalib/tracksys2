@@ -1,6 +1,6 @@
 <template>
-   <DPGButton @click="show" class="p-button-secondary" label="Create Digitization Project" :disabled="createDisabled"/>
-   <Dialog v-model:visible="isOpen" :modal="true" header="Create Digitization Project" :style="{width: '400px'}">
+   <DPGButton @click="show" severity="secondary" label="Create Digitization Project" :disabled="createDisabled"/>
+   <Dialog v-model:visible="isOpen" :modal="true" header="Create Digitization Project" :style="{width: '400px'}" :closable="false">
       <FormKit type="form" id="create-project" :actions="false" @submit="createProject">
          <FormKit label="Workflow" type="select" v-model="project.workflowID" :options="workflows" required outer-class="first" />
          <FormKit v-if="project.workflowID==6" label="Container Type" type="select" v-model="project.containerTypeID" :options="containerTypes" required placeholder="Select a container type"/>
@@ -8,8 +8,7 @@
          <FormKit label="Condition" type="select" v-model="project.condition" :options="conditions" required/>
          <FormKit label="" type="textarea" rows="4" v-model="project.notes"/>
          <div class="acts">
-            <DPGButton @click="hide" label="Cancel" class="p-button-secondary"/>
-            <span class="spacer"></span>
+            <DPGButton @click="hide" label="Cancel" severity="secondary"/>
             <FormKit type="submit" label="Create Project" wrapper-class="submit-button" />
          </div>
       </FormKit>
@@ -86,18 +85,12 @@ function show() {
 </script>
 
 <style lang="scss" scoped>
-.spacer {
-   display: inline-block;
-   margin: 0 5px;
-}
 .acts {
    display: flex;
    flex-flow: row nowrap;
    justify-content: flex-end;
    padding: 15px 0 10px 0;
    margin: 0;
-   button {
-      margin-right: 10px;
-   }
+   gap: 10px;
 }
 </style>

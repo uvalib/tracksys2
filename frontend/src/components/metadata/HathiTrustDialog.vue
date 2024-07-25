@@ -27,7 +27,7 @@
          <FormKit label="Notes" type="textarea" v-model="status.notes" />
          <p class="error" v-if="metadataStore.error ">{{ metadataStore.error }}</p>
          <div class="acts">
-            <DPGButton @click="closeDialog" label="Cancel" class="p-button-secondary"/>
+            <DPGButton @click="closeDialog" label="Cancel" severity="secondary"/>
             <FormKit type="submit" label="Update" :wrapper-class="submitClass" />
          </div>
       </FormKit>
@@ -134,8 +134,6 @@ p.error {
    flex-flow: row nowrap;
    justify-content: flex-end;
    padding: 20px 0 10px 0;
-   button {
-      margin-right: 10px;
-   }
+   gap: 10px;
 }
 </style>

@@ -39,7 +39,7 @@
          </template>
       </PickList>
       <div class="acts">
-         <DPGButton label="Cancel" class="p-button-secondary" @click="cancelClicked()" />
+         <DPGButton label="Cancel" severity="secondary" @click="cancelClicked()" />
          <DPGButton label="Clone Master Files" @click="cloneClicked()" :disabled="masterFiles[1].length == 0 || cloneStore.inProgress" />
       </div>
    </div>

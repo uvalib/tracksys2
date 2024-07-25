@@ -1,7 +1,6 @@
 <template>
-   <DPGButton label="Get APTrust Status Report"
-      class="p-button-secondary apt-submit" @click="apTrustStatusClicked" :loading="apTrust.loadingReport" />
-   <Dialog v-model:visible="showReport" header="APTrust Collection Status Report" :modal="true" position="top" style="width: 80%;" >
+   <DPGButton label="Get APTrust Status Report" severity="secondary" @click="apTrustStatusClicked" :loading="apTrust.loadingReport" />
+   <Dialog v-model:visible="showReport" header="APTrust Collection Status Report" :modal="true" position="top" style="width: 80%;" :closable="false">
       <div class="error" v-if="apTrust.collectionStatus.errorMessage">
          {{ apTrust.collectionStatus.errorMessage }}
       </div>
@@ -40,10 +39,10 @@
             All items successfully submitted to APTrust
          </div>
       </div>
-      <div class="acts">
-         <DPGButton @click="resubmitClicked" label="Resubmit Selected" class="p-button-secondary" :disabled="selectedErrors.length == 0"/>
-         <DPGButton @click="closeDialog" label="Close" class="p-button-secondary"/>
-      </div>
+      <template #footer>
+         <DPGButton @click="resubmitClicked" label="Resubmit Selected" severity="secondary" :disabled="selectedErrors.length == 0"/>
+         <DPGButton @click="closeDialog" label="Close" severity="secondary"/>
+      </template>
    </Dialog>
 </template>
 
@@ -131,14 +130,5 @@ const resubmitClicked = (() => {
    text-align: center;
    margin-top: 10px;
    color: var(--uvalib-red-darker);
-}
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   padding: 10px 0 10px 0;
-   button {
-      margin-left: 10px;
-   }
 }
 </style>

@@ -1,12 +1,11 @@
 <template>
-   <DPGButton @click="show" class="p-button-secondary" label="Add Attachment"/>
-   <Dialog v-model:visible="isOpen" :modal="true" header="Add Attachment" :style="{width: '400px'}">
+   <DPGButton @click="show" severity="secondary" label="Add Attachment"/>
+   <Dialog v-model:visible="isOpen" :modal="true" header="Add Attachment" :style="{width: '400px'}" :closable="false">
       <FormKit type="form" id="add-attachment" :actions="false" @submit="addAttachment">
          <FormKit label="" type="file" v-model="info.attachment" required outer-class="first" />
          <FormKit label="Brief Description" type="textarea" rows="4" v-model="info.description"/>
          <div class="acts">
-            <DPGButton @click="hide" label="Cancel" class="p-button-secondary"/>
-            <span class="spacer"></span>
+            <DPGButton @click="hide" label="Cancel" severity="secondary"/>
             <FormKit type="submit" label="Attach File" wrapper-class="submit-button" />
          </div>
       </FormKit>
@@ -42,19 +41,12 @@ function show() {
 </script>
 
 <style lang="scss" scoped>
-.spacer {
-   display: inline-block;
-   margin: 0 5px;
-}
-
 .acts {
    display: flex;
    flex-flow: row nowrap;
    justify-content: flex-end;
    padding: 15px 0 10px 0;
    margin: 0;
-   button {
-      margin-right: 10px;
-   }
+   gap: 10px;
 }
 </style>

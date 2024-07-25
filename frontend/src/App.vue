@@ -1,6 +1,6 @@
 <template>
    <Toast position="top-center" />
-   <ConfirmDialog position="top"/>
+   <ConfirmDialog position="top" :closable="false"/>
    <div class="header" role="banner" id="uva-header">
       <div class="main-header">
          <div class="library-link">
@@ -21,7 +21,7 @@
    <Dialog v-model:visible="systemStore.showError" :modal="true" header="System Error" @hide="errorClosed()" class="error">
       {{systemStore.error}}
       <template #footer>
-         <DPGButton label="OK" autofocus class="p-button-secondary" @click="errorClosed()"/>
+         <DPGButton label="OK" autofocus severity="secondary" @click="errorClosed()"/>
       </template>
    </Dialog>
    <WaitSpinner v-if="systemStore.working" :overlay="true" message="Please wait..." />

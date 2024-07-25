@@ -9,7 +9,7 @@
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
          <template #paginatorstart>
-            <DPGButton v-if="userStore.isAdmin" label="Create Collection" class="p-button-secondary create" @click="createCollection()"/>
+            <DPGButton v-if="userStore.isAdmin" label="Create Collection" severity="secondary" @click="createCollection()"/>
          </template>
          <Column field="id" header="ID">
             <template #body="slotProps">

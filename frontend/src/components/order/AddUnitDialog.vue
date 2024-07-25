@@ -1,12 +1,12 @@
 <template>
-   <DPGButton @click="show" :label="props.label" class="p-button-secondary add"  :class="{ small: size=='small'}"/>
-   <Dialog v-model:visible="isOpen" :modal="true" :header="title" :style="{width: '750px'}" position="top">
+   <DPGButton @click="show" :label="props.label" severity="secondary" />
+   <Dialog v-model:visible="isOpen" :modal="true" :header="title" :style="{width: '750px'}" position="top" :closable="false">
       <FormKit v-if="mode=='unit'" type="form" id="customer-detail" :actions="false" @submit="createUnit">
          <Panel header="Unit Metadata" class="margin-bottom">
             <div class="lookup">
                <input type="text" v-model="metadataSearch"  @keydown.stop.prevent.enter="lookupMetadata"/>
-               <DPGButton @click="lookupMetadata" label="Lookup" class="p-button-secondary"/>
-               <DPGButton @click="createMetadata" label="Create" class="p-button-secondary"/>
+               <DPGButton @click="lookupMetadata" label="Lookup" severity="secondary"/>
+               <DPGButton @click="createMetadata" label="Create" severity="secondary"/>
             </div>
             <template v-if="searched">
                <div class="hits">
@@ -51,8 +51,7 @@
          </Panel>
          <p class="error">{{error}}</p>
          <div class="acts">
-            <DPGButton @click="hide" label="Cancel" class="p-button-secondary"/>
-            <span class="spacer"></span>
+            <DPGButton @click="hide" label="Cancel" severity="secondary"/>
             <FormKit type="submit" label="Add Unit" wrapper-class="submit-button" />
          </div>
       </FormKit>
@@ -75,10 +74,6 @@ const props = defineProps({
    label: {
       type: String,
       default: "Add Unit",
-   },
-   size: {
-      type: String,
-      default: "normal",
    },
    item: {
       type: Object,
@@ -201,25 +196,15 @@ function show() {
 </script>
 
 <style lang="scss" scoped>
-button.p-button.add.small {
-   font-size: 0.7em;
-   padding: 5px 10px;
-}
 div.p-panel {
    font-size: 0.85em;
    div.lookup {
       display: flex;
       flex-flow: row nowrap;
       justify-content: flex-start;
-      align-items: flex-start;
-
-      button {
-         font-size: 0.9em;
-         display: inline-block;
-         margin-left: 5px;
-         padding: 0.5em 1em;
-         width: 75px;
-      }
+      align-items: stretch;
+      gap: 10px;
+      margin-top: 25px;
    }
    div.hint {
       margin-top: 15px;
@@ -255,9 +240,7 @@ div.opts {
    flex-flow: row nowrap;
    justify-content: flex-end;
    padding: 20px 0 10px 0;
-   button {
-      margin-right: 10px;
-   }
+   gap: 10px;
 }
 
 .error {

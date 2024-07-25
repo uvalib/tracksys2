@@ -103,7 +103,7 @@
       <input type="text" v-model="newCollectionFacet" autofocus/>
       <template #footer>
          <div class="acts">
-            <DPGButton @click="createCollectionClosed" label="Cancel" class="p-button-secondary"/>
+            <DPGButton @click="createCollectionClosed" label="Cancel" severity="secondary"/>
             <DPGButton @click="createCollection()" label="Create" :disabled="newCollectionFacet.length == 0"/>
          </div>
       </template>

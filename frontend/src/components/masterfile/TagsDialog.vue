@@ -1,5 +1,5 @@
 <template>
-   <DPGButton @click="show" class="p-button-secondary" label="Manage Tags"/>
+   <DPGButton @click="show" severity="secondary" label="Manage Tags"/>
    <Dialog v-model:visible="isOpen" :modal="true" header="Master File Tags" :style="{width: '450px'}">
       <IconField iconPosition="left">
          <InputIcon class="pi pi-search" />
@@ -12,7 +12,7 @@
       </VirtualScroller>
       <div class="add">
          <InputText v-model="newTag" placeholder="New Tag"/>
-         <DPGButton label="Add" class="p-button-secondary" @click="createTag()"/>
+         <DPGButton label="Add" severity="secondary" @click="createTag()"/>
       </div>
       <div class="selected">
          <label>Current Tags:</label>

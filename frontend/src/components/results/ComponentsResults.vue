@@ -10,8 +10,10 @@
    >
       <template #empty><h3>No matching components found</h3></template>
       <template #paginatorstart>
-         <DPGButton label="Download Results CSV" class="p-button-secondary download" @click="downloadCSV" v-if="searchStore.components.total>0" />
-         <DPGButton v-if="hasFilter" label="Clear All Filters" class="p-button-secondary" @click="clearFilters"/>
+         <div class="acts">
+            <DPGButton label="Download Results CSV" severity="secondary" @click="downloadCSV" v-if="searchStore.components.total>0" />
+            <DPGButton v-if="hasFilter" label="Clear All Filters" severity="secondary" @click="clearFilters"/>
+         </div>
       </template>
       <Column field="id" header="ID">
          <template #body="slotProps">
@@ -118,4 +120,11 @@ function onPage(event) {
 </script>
 
 <stype scoped lang="scss">
+.acts{
+   display: flex;
+   flex-flow: row nowrap;
+   justify-content: flex-start;
+   align-items: center;
+   gap: 10px;
+}
 </stype>

@@ -93,40 +93,39 @@
          </dl>
          <div class="acts-wrap" v-if="user.isAdmin || user.isSupervisor">
             <div class="actions" v-if="detail.status != 'completed'">
-               <DPGButton label="Claim for Processing" class="p-button-secondary" @click="claimOrder()" :disabled="isProcessor"/>
+               <DPGButton label="Claim for Processing" severity="secondary" @click="claimOrder()" :disabled="isProcessor"/>
                <AssignModal />
             </div>
             <div class="actions" v-if="detail.status == 'await_fee'">
                <SendEmailDialog mode="fee" />
-               <DPGButton label="Customer Declines Fee" class="p-button-secondary" @click="declineFeeClicked()"/>
-               <DPGButton label="Customer Paid Fee" class="p-button-secondary" :disabled="isPaidDisabled"  @click="payFeeClicked()"/>
+               <DPGButton label="Customer Declines Fee" severity="secondary" @click="declineFeeClicked()"/>
+               <DPGButton label="Customer Paid Fee" severity="secondary" :disabled="isPaidDisabled"  @click="payFeeClicked()"/>
             </div>
             <template v-else>
                <div class="actions" v-if="detail.status != 'completed' && detail.status != 'canceled'">
-                  <DPGButton v-if="canWaiveFee" label="Waive Fee" class="p-button-secondary right-pad"
-                     @click="waiveFeeClicked()"/>
-                  <DPGButton v-if="isExternalCustomer && detail.feeWaived == false" label="Send Fee Estimate" class="p-button-secondary right-pad"
+                  <DPGButton v-if="canWaiveFee" label="Waive Fee" severity="secondary" @click="waiveFeeClicked()"/>
+                  <DPGButton v-if="isExternalCustomer && detail.feeWaived == false" label="Send Fee Estimate" severity="secondary"
                      :disabled="isSendFeeDisabled" @click="sendFeeEstimateCllicked()"/>
-                  <DPGButton v-if="detail.status == 'deferred'" label="Resume Order" class="p-button-secondary" @click="resumeOrderClicked()"/>
-                  <DPGButton v-else label="Defer Order" class="p-button-secondary" @click="deferOrderClicked()"/>
-                  <DPGButton label="Approve Order" class="p-button-secondary" :disabled="isApproveDisabled" @click="approveOrderClicked()"/>
-                  <DPGButton label="Cancel Order" class="p-button-secondary" @click="cancelOrderClicked()"/>
-                  <DPGButton label="Complete Order" class="p-button-secondary" :disabled="isCompleteOrderDisabled" @click="completeOrderClicked()"/>
+                  <DPGButton v-if="detail.status == 'deferred'" label="Resume Order" severity="secondary" @click="resumeOrderClicked()"/>
+                  <DPGButton v-else label="Defer Order" severity="secondary" @click="deferOrderClicked()"/>
+                  <DPGButton label="Approve Order" severity="secondary" :disabled="isApproveDisabled" @click="approveOrderClicked()"/>
+                  <DPGButton label="Cancel Order" severity="secondary" @click="cancelOrderClicked()"/>
+                  <DPGButton label="Complete Order" severity="secondary" :disabled="isCompleteOrderDisabled" @click="completeOrderClicked()"/>
                </div>
             </template>
             <div class="actions" v-if="(detail.status == 'approved' || detail.status == 'completed') && ordersStore.hasPatronDeliverables && detail.email" >
-               <DPGButton label="View Customer Email" class="p-button-secondary" @click="viewEmailClicked()" :style="{marginLeft:0}"/>
-               <DPGButton label="Recreate Email" class="p-button-secondary" @click="recreateEmailClicked()" />
+               <DPGButton label="View Customer Email" severity="secondary" @click="viewEmailClicked()" :style="{marginLeft:0}"/>
+               <DPGButton label="Recreate Email" severity="secondary" @click="recreateEmailClicked()" />
                <SendEmailDialog mode="order" />
             </div>
             <div class="actions" v-if="ordersStore.hasPatronDeliverables && (detail.status == 'approved' || detail.status == 'completed')">
-               <DPGButton v-if="!detail.email" label="Check Order Completeness" class="p-button-secondary" @click="checkOrderComplete()" />
-               <DPGButton v-if="detail.email" label="View Order Summary" class="p-button-secondary" @click="viewSummaryClicked()" />
-               <DPGButton v-if="detail.email" label="Recreate Order Summary" class="p-button-secondary" @click="recreateSummaryClicked()" />
+               <DPGButton v-if="!detail.email" label="Check Order Completeness" severity="secondary" @click="checkOrderComplete()" />
+               <DPGButton v-if="detail.email" label="View Order Summary" severity="secondary" @click="viewSummaryClicked()" />
+               <DPGButton v-if="detail.email" label="Recreate Order Summary" severity="secondary" @click="recreateSummaryClicked()" />
             </div>
             <div class="actions" v-if="(detail.invoice || detail.fee) && !detail.feeWaived">
-               <DPGButton v-if="detail.invoice" label="View Invoice" class="p-button-secondary" @click="viewInvoiceClicked()"/>
-               <DPGButton v-else-if="detail.fee" label="Create Invoice" class="p-button-secondary" @click="createInvoiceClicked()"/>
+               <DPGButton v-if="detail.invoice" label="View Invoice" severity="secondary" @click="viewInvoiceClicked()"/>
+               <DPGButton v-else-if="detail.fee" label="Create Invoice" severity="secondary" @click="createInvoiceClicked()"/>
             </div>
          </div>
       </Panel>
@@ -154,7 +153,7 @@
                   <DataDisplay v-if="item.description" label="Description" :value="item.description"/>
                </dl>
                <div class="item-acts">
-                  <DPGButton label="Discard" autofocus class="p-button-secondary right-pad" @click="discardItem(item)"/>
+                  <DPGButton label="Discard" autofocus severity="secondary" @click="discardItem(item)"/>
                   <AddUnitDialog label="Create Unit" :item="item" />
                </div>
             </div>
@@ -163,13 +162,13 @@
    </div>
    <div class="details" v-if="systemStore.working==false" >
       <Panel header="Units" class="units">
-         <RelatedUnits :orderID="detail.id" :units="ordersStore.units" :hathiTrust="canUpdateHathiTrust" :canAdd="canAddUnit" :export="true"/>
+         <RelatedUnits :orderID="detail.id" :units="ordersStore.units" :hathiTrust="canUpdateHathiTrust" :canAdd="canAddUnit"/>
       </Panel>
    </div>
    <Dialog v-model:visible="showEmail" :modal="true" header="Customer Email" @hide="emailClosed()" :style="{width: '650px'}">
       <div v-html="detail.email" class="email"></div>
       <template #footer>
-         <DPGButton label="OK" autofocus class="p-button-secondary" @click="emailClosed()"/>
+         <DPGButton label="OK" autofocus severity="secondary" @click="emailClosed()"/>
       </template>
    </Dialog>
    <InvoiceDialog />
@@ -531,10 +530,11 @@ div.item {
    .item-acts {
       font-size: 0.8em;
       margin: 10px;
-      text-align: right;
-      button.p-button {
-         margin-left: 10px;
-      }
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-end;
+      align-items: flex-start;
+      gap: 10px;
    }
 }
 .details {
@@ -599,9 +599,7 @@ div.item {
          display: flex;
          flex-flow: row wrap;
          justify-content: flex-start;
-         :deep(button.p-button) {
-            margin-right: 10px;
-         }
+         gap: 5px;
       }
    }
 }

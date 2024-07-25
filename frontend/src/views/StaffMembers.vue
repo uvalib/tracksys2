@@ -11,7 +11,7 @@
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
          <template #paginatorstart  v-if="(userStore.isAdmin || userStore.isSupervisor)" >
-            <DPGButton label="Add Staff" class="p-button-secondary create" @click="addStaff()"/>
+            <DPGButton label="Add Staff" severity="secondary" @click="addStaff()"/>
          </template>
          <template #paginatorend>
             <IconField iconPosition="left">
@@ -32,7 +32,7 @@
             </template>
          </Column>
       </DataTable>
-      <Dialog v-model:visible="showEdit" :style="{width: '450px'}" header="Staff Member Details" :modal="true" position="top">
+      <Dialog v-model:visible="showEdit" :style="{width: '450px'}" header="Staff Member Details" :modal="true" position="top" :closable="false">
          <FormKit type="form" id="staff-detail" :actions="false" @submit="submitChanges">
             <FormKit label="Last Name" type="text" v-model="staffDetails.lastName" validation="required" autofocus />
             <FormKit label="First Name" type="text" v-model="staffDetails.firstName" validation="required" />

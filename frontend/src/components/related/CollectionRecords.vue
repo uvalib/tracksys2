@@ -13,8 +13,8 @@
             <template #empty><h3>No items found</h3></template>
             <template #paginatorstart>
                <div class="buttons">
-                  <DPGButton label="Add Item(s)" class="p-button-secondary" @click="bulkAddClicked()" v-if="userStore.isAdmin"/>
-                  <DPGButton label="Export" class="p-button-secondary pad-left" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
+                  <DPGButton label="Add Item(s)" severity="secondary" @click="bulkAddClicked()" v-if="userStore.isAdmin"/>
+                  <DPGButton label="Export" severity="secondary" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
                </div>
             </template>
             <template #paginatorend>
@@ -62,7 +62,7 @@
             </Column>
             <Column header="" class="row-acts nowrap" v-if="userStore.isAdmin">
                <template #body="slotProps">
-                  <DPGButton icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary" @click="deleteItem(slotProps.data)"/>
+                  <DPGButton icon="pi pi-times" severity="secondary" text rounded @click="deleteItem(slotProps.data)" aria-label="remove from collection"/>
                </template>
             </Column>
          </DataTable>

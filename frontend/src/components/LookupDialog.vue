@@ -1,10 +1,10 @@
 <template>
-   <DPGButton @click="show" class="p-button-secondary lookup-button" :label="props.label" :disabled="props.disabled" :class="props.class" />
-   <Dialog v-model:visible="isOpen" :modal="true" :header="dialogTitle" style="width: 80%;z-index: 9999" position="top" :maximizable="true">
+   <DPGButton @click="show" severity="secondary" :label="props.label" :disabled="props.disabled" :class="props.class" />
+   <Dialog v-model:visible="isOpen" :modal="true" :header="dialogTitle" style="width: 80%;z-index: 9999" position="top" :maximizable="true" :closable="false">
       <div class="lookup" v-if="mode=='lookup'">
          <input type="text" v-model="query"  @keydown.stop.prevent.enter="lookupRecords" autofocus :placeholder="searchPlaceholder"/>
-         <DPGButton @click="lookupRecords" label="Lookup" class="p-button-secondary"/>
-         <DPGButton @click="createMetadata" label="Create" class="p-button-secondary" v-if="props.create"/>
+         <DPGButton @click="lookupRecords" label="Lookup" severity="secondary"/>
+         <DPGButton @click="createMetadata" label="Create" severity="secondary" v-if="props.create"/>
       </div>
       <NewMetadataPanel v-else @canceled="metadataCreateCanceled" @created="metadataCreated" />
       <template v-if="searched && mode=='lookup'">
@@ -65,12 +65,9 @@
             </div>
          </div>
       </template>
-      <template #footer>
-         <div class="acts" v-if="mode=='lookup'">
-            <DPGButton @click="hide" label="Cancel" class="p-button-secondary"/>
-            <span class="spacer"></span>
-            <DPGButton @click="okClicked" label="Select" :disabled="!selectedHit" />
-         </div>
+      <template #footer  v-if="mode=='lookup'">
+         <DPGButton @click="hide" label="Cancel" severity="secondary"/>
+         <DPGButton @click="okClicked" label="Select" :disabled="!selectedHit" />
       </template>
    </Dialog>
 </template>
@@ -189,24 +186,12 @@ function show() {
 </script>
 
 <style lang="scss" scoped>
-button.lookup-button {
-   margin-left: 5px;
-}
 div.lookup {
    display: flex;
    flex-flow: row nowrap;
    justify-content: flex-start;
    align-items: stretch;
-   input[type=text] {
-      flex-grow: 1;
-      margin: 0;
-   }
-   button.p-button-secondary {
-      font-size: 0.8em;
-      display: inline-block;
-      margin-left: 5px;
-      overflow: unset;
-   }
+   gap: 10px;
 }
 div.no-results {
    margin: 15px 0 0 0;
@@ -218,19 +203,6 @@ div.hits {
    margin-top: 15px;
    :deep(table.p-datatable-table) {
       font-size: 0.75em !important;
-   }
-   // .scroller {
-   //    max-height: 250px;
-   //    overflow-y: scroll;
-   // }
-}
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   padding: 0 0 10px 0;
-   button {
-      margin-right: 10px;
    }
 }
 </style>

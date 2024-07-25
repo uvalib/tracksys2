@@ -12,7 +12,7 @@
          v-model:filters="columnFilters" filterDisplay="menu" @filter="getOrders()"
       >
          <template #paginatorstart>
-            <DPGButton v-if="(userStore.isAdmin || userStore.isSupervisor)" class="p-button-secondary" label="Create Order" @click="createOrder()"/>
+            <DPGButton v-if="(userStore.isAdmin || userStore.isSupervisor)" severity="secondary" label="Create Order" @click="createOrder()"/>
          </template>
          <template #paginatorend>
             <div class="filters">

@@ -24,9 +24,9 @@
                <Column field="projectCount" header="Projects"/>
                <Column header="Actions" class="row-acts">
                   <template #body="slotProps">
-                     <DPGButton v-if="slotProps.data.status==0" label="Deactivate"  class="p-button-secondary first" @click="deactivateWorkstation(slotProps.data.id)"/>
-                     <DPGButton v-else label="Activate"  class="p-button-secondary first" @click="activateWorkstation(slotProps.data.id)"/>
-                     <DPGButton label="Retire"  class="p-button-secondary" @click="retireWorkstation(slotProps.data.id)" :disabled="slotProps.data.projectCount > 0"/>
+                     <DPGButton v-if="slotProps.data.status==0" label="Deactivate"  severity="secondary" @click="deactivateWorkstation(slotProps.data.id)"/>
+                     <DPGButton v-else label="Activate" severity="secondary" @click="activateWorkstation(slotProps.data.id)"/>
+                     <DPGButton label="Retire"  severity="secondary" @click="retireWorkstation(slotProps.data.id)" :disabled="slotProps.data.projectCount > 0"/>
                   </template>
                </Column>
             </DataTable>
@@ -43,8 +43,8 @@
 
                </DataTable>
                <div class="setup-acts">
-                  <DPGButton label="Clear Setup" class="p-button-secondary" @click="clearSetup" :disabled="clearAllDisabled"/>
-                  <DPGButton label="Save Setup Changes" class="p-button-secondary" @click="saveSetup"
+                  <DPGButton label="Clear Setup" severity="secondary" @click="clearSetup" :disabled="clearAllDisabled"/>
+                  <DPGButton label="Save Setup Changes" severity="secondary" @click="saveSetup"
                      :disabled="!(equipmentStore.pendingEquipment.changed==true && equipmentStore.pendingEquipment.equipment.length > 0)"/>
                </div>
             </template>
@@ -200,20 +200,14 @@ const statusClass = ((statusID) => {
          font-weight: 600;
       }
    }
-
    .setup-acts {
       padding: 15px 0 0 0;
-      text-align: right;
-      button.p-button {
-         margin-left: 10px;
-         font-size: 0.85em;
-      }
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-end;
+      align-items: flex-start;
+      gap: 10px;
    }
-
-   .p-component.p-datatable {
-      font-size: 0.85em;
-   }
-
    :deep(.wide) {
       width: 100%;
    }
@@ -226,18 +220,7 @@ const statusClass = ((statusID) => {
       vertical-align: top;
       display: flex;
       flex-flow: row nowrap;
-      width: 175px;
-
-      button.p-button.first {
-         margin-right: 10px;
-      }
-
-      button.p-button {
-         font-size: 0.85em;
-         padding: 3px 6px;
-         display: block;
-         width: 100%;
-      }
+      gap: 5px;
    }
 
    .columns {
@@ -263,11 +246,6 @@ const statusClass = ((statusID) => {
 
    span.ws-status.inactive {
       background: var(--uvalib-grey-light);
-   }
-   .results {
-      .p-datatable {
-         font-size: 1em;
-      }
    }
 }
 </style>

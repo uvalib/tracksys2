@@ -31,8 +31,8 @@
       <div>Preservation has been requested but the item has not been submitted</div>
    </div>
    <div class="apt-acts"  v-if="apTrust.working == false && props.readonly==false">
-      <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" class="p-button-secondary apt-submit" @click="apTrustSubmitClicked" :loading="apTrust.working" />
-      <DPGButton v-else-if="canReubmitAPTrust" label="Resubmit to APTrust" class="p-button-secondary apt-submit" @click="apTrustResubmitClicked" :loading="apTrust.working" />
+      <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" severity="secondary" @click="apTrustSubmitClicked" :loading="apTrust.working" />
+      <DPGButton v-else-if="canReubmitAPTrust" label="Resubmit to APTrust" severity="secondary" @click="apTrustResubmitClicked" :loading="apTrust.working" />
       <APTrustReportDialog v-if="canGetAPTrustReport"/>
    </div>
 </template>

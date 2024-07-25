@@ -25,13 +25,13 @@
                      <FormKit label="Notes" type="textarea" :rows="3" v-model="edited.notes" />
                   </template>
                   <template v-else>
-                     <DPGButton label="Add Location" class="p-button-secondary" @click="edited.updateLocation = true"/>
+                     <DPGButton label="Add Location" severity="secondary" @click="edited.updateLocation = true"/>
                   </template>
                </Panel>
             </div>
          </div>
          <div class="acts">
-            <DPGButton label="Cancel" class="p-button-secondary" @click="cancelEdit()"/>
+            <DPGButton label="Cancel" severity="secondary" @click="cancelEdit()"/>
             <FormKit type="submit" label="Save" wrapper-class="submit-button" />
          </div>
       </FormKit>

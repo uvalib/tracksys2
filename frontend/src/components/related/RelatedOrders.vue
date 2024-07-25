@@ -23,7 +23,7 @@
       </Column>
       <Column field="agency.name" header="Agency" class="nowrap" :sortable="true" filterField="agency.id" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
-            <Dropdown v-model="filterModel.value" :options="systemStore.agencies" optionLabel="name" optionValue="id" placeholder="Select agency" />
+            <Select v-model="filterModel.value" :options="systemStore.agencies" optionLabel="name" optionValue="id" placeholder="Select agency" />
          </template>
       </Column>
       <Column field="title" header="Order Title" filterField="title" :showFilterMatchModes="false" >
@@ -49,7 +49,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { ref } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
 import { useSystemStore } from '@/stores/system'
 import { usePinnable } from '@/composables/pin'

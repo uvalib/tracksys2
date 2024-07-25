@@ -1,8 +1,8 @@
 <template>
    <div class="bulk-toolbar">
       <span class="acts">
-         <DPGButton label="Add Selected" class="p-button-secondary" @click="submitClicked()" :disabled="selectedRecords.length == 0" />
-         <DPGButton label="Cancel" class="p-button-secondary" @click="cancelClicked()" />
+         <DPGButton label="Add Selected" severity="secondary" @click="submitClicked()" :disabled="selectedRecords.length == 0" />
+         <DPGButton label="Cancel" severity="secondary" @click="cancelClicked()" />
       </span>
       <span class="collection-search">
          <IconField iconPosition="left">
@@ -10,7 +10,7 @@
             <InputText v-model="query" placeholder="Search" @keypress="searchKeyPressed($event)"/>
          </IconField>
          <DPGButton label="Search" @click="queryMetadata()" :disabled="query.length == 0"/>
-         <DPGButton label="Clear" class="p-button-secondary" @click="clearSearch()" :disabled="query.length == 0"/>
+         <DPGButton label="Clear" severity="secondary" @click="clearSearch()" :disabled="query.length == 0"/>
       </span>
    </div>
    <div class="metadata-hits">

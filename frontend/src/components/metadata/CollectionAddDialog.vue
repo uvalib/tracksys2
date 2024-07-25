@@ -1,5 +1,5 @@
 <template>
-   <DPGButton @click="show" class="p-button-secondary" label="Add to Collection"/>
+   <DPGButton @click="show" severity="secondary" label="Add to Collection"/>
    <Dialog v-model:visible="isOpen" :modal="true" header="Add to Collection" :style="{width: '780px'}">
       <VirtualScroller :items="collectionStore.collections" :itemSize="30" showLoader class="collections" :showLoader="system.working" >
          <template v-slot:item="{ item }">

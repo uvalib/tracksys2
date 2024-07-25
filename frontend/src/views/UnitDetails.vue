@@ -62,14 +62,14 @@
             </div>
             <div class="acts">
                <DPGButton v-if="detail.reorder && !detail.datePatronDeliverablesReady" @click="generateDeliverablesClicked"
-                  class="p-button-secondary" label="Generate Deliverables" />
+                  severity="secondary" label="Generate Deliverables" />
                <DPGButton v-if="detail.intendedUseID != 110 && detail.datePatronDeliverablesReady" @click="generateDeliverablesClicked"
-                  class="p-button-secondary" label="Regenerate Deliverables" />
-               <DPGButton v-if="unitsStore.canDownload" @click="downloadClicked" class="p-button-secondary" label="Download from Archive" />
-               <DPGButton label="OCR Master Files" class="p-button-secondary"  @click="unitOCRClicked()" v-if="unitsStore.canOCR && (userStore.isAdmin || userStore.isSupervisor)" />
-               <DPGButton label="Download PDF" class="p-button-secondary" @click="unitPDFClicked()" v-if="unitsStore.canPDF" />
+                  severity="secondary" label="Regenerate Deliverables" />
+               <DPGButton v-if="unitsStore.canDownload" @click="downloadClicked" severity="secondary" label="Download from Archive" />
+               <DPGButton label="OCR Master Files" severity="secondary"  @click="unitOCRClicked()" v-if="unitsStore.canOCR && (userStore.isAdmin || userStore.isSupervisor)" />
+               <DPGButton label="Download PDF" severity="secondary" @click="unitPDFClicked()" v-if="unitsStore.canPDF" />
 
-               <DPGButton v-if="unitsStore.canComplete" @click="completeClicked" class="p-button-secondary" label="Complete Unit" />
+               <DPGButton v-if="unitsStore.canComplete" @click="completeClicked" severity="secondary" label="Complete Unit" />
             </div>
          </div>
 
@@ -128,8 +128,8 @@
                <Column field="description" header="Description" />
                <Column header="" class="row-acts">
                   <template #body="slotProps">
-                     <DPGButton label="Download" class="p-button-secondary" @click="downloadAttachment(slotProps.data)"/>
-                     <DPGButton label="Delete" class="p-button-secondary" @click="deleteAttachment(slotProps.data)"/>
+                     <DPGButton label="Download" severity="secondary" @click="downloadAttachment(slotProps.data)"/>
+                     <DPGButton label="Delete" severity="secondary" @click="deleteAttachment(slotProps.data)"/>
                   </template>
                </Column>
             </DataTable>
@@ -150,7 +150,7 @@
       <Panel header="Master Files" v-else>
          <template v-if="cloneStore.uiVisible == false">
             <p>No master files are associated with this unit.</p>
-            <DPGButton label="Clone Existing Master Files" class="p-button-secondary" @click="cloneClicked()" />
+            <DPGButton label="Clone Existing Master Files" severity="secondary" @click="cloneClicked()" />
          </template>
          <CloneMasterFiles v-else @canceled="cloneCanceled()" @cloned="cloneCompleted()" />
       </Panel>

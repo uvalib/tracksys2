@@ -187,7 +187,7 @@
                </template>
             </dl>
             <div v-if="metadataStore.canPublishToVirgo" class="publish">
-               <DPGButton label="Publish to Virgo" autofocus class="p-button-secondary" @click="publishVirgoClicked()" :loading="publishing"/>
+               <DPGButton label="Publish to Virgo" autofocus severity="secondary" @click="publishVirgoClicked()" :loading="publishing"/>
             </div>
          </Panel>
       </div>

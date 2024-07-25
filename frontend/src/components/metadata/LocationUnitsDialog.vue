@@ -8,7 +8,7 @@
             >
                <Column field="id" header="">
                   <template #body="slotProps">
-                     <DPGButton @click="viewUnitClicked(slotProps.data.id)" label="View" class="p-button-secondary"/>
+                     <DPGButton @click="viewUnitClicked(slotProps.data.id)" label="View" severity="secondary"/>
                   </template>
                </Column>
                <Column field="orderID" header="Order ID" class="nowrap" />

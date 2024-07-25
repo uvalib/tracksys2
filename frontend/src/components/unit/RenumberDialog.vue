@@ -1,11 +1,10 @@
 <template>
-   <DPGButton @click="show" class="p-button-secondary renumber" label="Renumber" :disabled="props.disabled"/>
-   <Dialog v-model:visible="isOpen" :modal="true" header="Renumber Master Files" :style="{width: '400px'}">
+   <DPGButton @click="show" severity="secondary" label="Renumber" :disabled="props.disabled"/>
+   <Dialog v-model:visible="isOpen" :modal="true" header="Renumber Master Files" :style="{width: '400px'}" :closable="false">
       <FormKit type="form" id="renumber" :actions="false" @submit="renumberPages">
          <FormKit label="New starting page number" type="text" v-model="startPage" required autofocus/>
          <div class="acts">
-            <DPGButton @click="hide" label="Cancel" class="p-button-secondary"/>
-            <span class="spacer"></span>
+            <DPGButton @click="hide" label="Cancel" severity="secondary"/>
             <FormKit type="submit" label="Renumber" wrapper-class="submit-button" />
          </div>
       </FormKit>
@@ -48,21 +47,12 @@ function show() {
 </script>
 
 <style lang="scss" scoped>
-button.p-button-secondary.renumber {
-   margin-left: 5px;
-}
-.spacer {
-   display: inline-block;
-   margin: 0 5px;
-}
 .acts {
    display: flex;
    flex-flow: row nowrap;
    justify-content: flex-end;
    padding: 15px 0 10px 0;
    margin: 0;
-   button {
-      margin-right: 10px;
-   }
+   gap: 10px;
 }
 </style>

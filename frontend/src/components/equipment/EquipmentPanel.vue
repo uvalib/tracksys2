@@ -25,16 +25,18 @@
             <span class="workstation">{{workstation(slotProps.data.id)}}</span>
          </template>
       </Column>
-      <Column header="Actions" class="row-acts">
+      <Column header="Actions">
          <template #body="slotProps">
-            <template v-if="editingRows.length == 1 && editingRows[0].id == slotProps.data.id">
-               <DPGButton label="Cancel"  class="p-button-secondary first" @click="cancelEdit"/>
-               <DPGButton label="Save"  class="p-button-secondary" @click="saveChanges" :disabled="workstation(slotProps.data.id) != 'N/A'"/>
-            </template>
-            <template v-else>
-               <DPGButton label="Edit"  class="p-button-secondary first" @click="editEquipment(slotProps.data)" :disabled="editingRows.length > 0"/>
-               <DPGButton label="Retire"  class="p-button-secondary" @click="retireEquipment(slotProps.data.id)" :disabled="editingRows.length > 0 || workstation(slotProps.data.id) != 'N/A'"/>
-            </template>
+            <div class="row-acts">
+               <template v-if="editingRows.length == 1 && editingRows[0].id == slotProps.data.id">
+                  <DPGButton label="Cancel"  severity="secondary" @click="cancelEdit"/>
+                  <DPGButton label="Save"  severity="secondary" @click="saveChanges" :disabled="workstation(slotProps.data.id) != 'N/A'"/>
+               </template>
+               <template v-else>
+                  <DPGButton label="Edit"  severity="secondary" @click="editEquipment(slotProps.data)" :disabled="editingRows.length > 0"/>
+                  <DPGButton label="Retire"  severity="secondary" @click="retireEquipment(slotProps.data.id)" :disabled="editingRows.length > 0 || workstation(slotProps.data.id) != 'N/A'"/>
+               </template>
+            </div>
          </template>
       </Column>
    </DataTable>
@@ -130,31 +132,5 @@ function workstation( equipID ) {
 <stype scoped lang="scss">
 .e-wide {
    width: 30%;
-}
-.p-inputtext  {
-   width: 100%;
-}
-:deep(.status-col) {
-   width: 25px;
-   text-align: center;
-   padding: 0;
-}
-:deep(.row-acts) {
-   vertical-align: top;
-   display: flex;
-   flex-flow: row nowrap;
-   width: 175px;
-
-   button.p-button.first {
-      margin-right: 10px;
-   }
-
-   button.p-button {
-      font-size: 0.85em;
-      padding: 3px 6px;
-      display: block;
-      width: 100%;
-      margin-top: 5px;
-   }
 }
 </stype>

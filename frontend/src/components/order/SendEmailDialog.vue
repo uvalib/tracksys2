@@ -1,5 +1,5 @@
 <template>
-   <DPGButton @click="show" :label="buttonLabel" class="p-button-secondary"/>
+   <DPGButton @click="show" :label="buttonLabel" severity="secondary"/>
    <Dialog v-model:visible="isOpen" :modal="true" :header="buttonLabel">
       <div class="choice border">
         <input type="checkbox" v-model="sendToCustomer"/>
@@ -11,7 +11,7 @@
       </div>
       <p class="error">{{error}}</p>
       <template #footer>
-         <DPGButton @click="hide" label="Cancel" class="p-button-secondary"/>
+         <DPGButton @click="hide" label="Cancel" severity="secondary"/>
          <span class="spacer"></span>
          <DPGButton autofocus @click="sendClicked" label="Send"/>
       </template>

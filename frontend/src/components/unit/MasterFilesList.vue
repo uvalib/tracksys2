@@ -12,18 +12,18 @@
          <template #paginatorstart>
             <div class="master-file-acts">
                <template v-if="detail.reorder==false && userStore.isAdmin">
-                  <DPGButton label="Add" @click="addClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
-                  <DPGButton label="Replace" @click="replaceClicked()" class="p-button-secondary" :loading="unitsStore.updateInProgress" />
+                  <DPGButton label="Add" @click="addClicked()" severity="secondary" :loading="unitsStore.updateInProgress" />
+                  <DPGButton label="Replace" @click="replaceClicked()" severity="secondary" :loading="unitsStore.updateInProgress" />
                </template>
                <template v-if="userStore.isAdmin && (detail.dateArchived==null || detail.reorder || detail.dateDLDeliverablesReady == null)">
-                  <DPGButton label="Delete" @click="deleteClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+                  <DPGButton label="Delete" @click="deleteClicked()" severity="secondary" :disabled="!filesSelected" />
                </template>
                <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
                <template v-if="unitsStore.canDownload">
-                  <DPGButton label="Download" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+                  <DPGButton label="Download" @click="downloadClicked()" severity="secondary" :disabled="!filesSelected" />
                </template>
                <template v-if="unitsStore.canPDF">
-                  <DPGButton label="PDF" @click="pdfClicked()" class="p-button-secondary" :disabled="filesSelected == false" />
+                  <DPGButton label="PDF" @click="pdfClicked()" severity="secondary" :disabled="filesSelected == false" />
                </template>
                <template  v-if="userStore.isAdmin || userStore.isSupervisor">
                   <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
@@ -64,14 +64,14 @@
                </a>
             </template>
          </Column>
-         <Column header="" class="row-acts">
+         <Column header="Actions" class="row-acts">
             <template #body="slotProps">
-               <DPGButton label="View" class="p-button-secondary first" @click="viewClicked(slotProps.data)" size="small"/>
-               <DPGButton label="Download Image" class="p-button-secondary" @click="downloadFile(slotProps.data)" v-if="unitsStore.canDownload" size="small"/>
-               <DPGButton label="Download PDF" class="p-button-secondary" @click="downloadPDF(slotProps.data)" v-if="unitsStore.canPDF" size="small"/>
+               <DPGButton label="View" severity="secondary" @click="viewClicked(slotProps.data)" size="small"/>
+               <DPGButton label="Download Image" severity="secondary" @click="downloadFile(slotProps.data)" v-if="unitsStore.canDownload" size="small"/>
+               <DPGButton label="Download PDF" severity="secondary" @click="downloadPDF(slotProps.data)" v-if="unitsStore.canPDF" size="small"/>
                <DPGButton v-if="slotProps.data.exemplar==false && (detail.intendedUse && detail.intendedUse.id == 110 || detail.includeInDL)"
-                  label="Set Exemplar" class="p-button-secondary" @click="exemplarClicked(slotProps.data)" size="small"/>
-               <DPGButton label="Republish IIIF" class="p-button-secondary" @click="republishIIIF(slotProps.data.id)" v-if="detail.reorder==false && userStore.isAdmin" size="small"/>
+                  label="Set Exemplar" severity="secondary" @click="exemplarClicked(slotProps.data)" size="small"/>
+               <DPGButton label="Republish IIIF" severity="secondary" @click="republishIIIF(slotProps.data.id)" v-if="detail.reorder==false && userStore.isAdmin" size="small"/>
             </template>
          </Column>
       </DataTable>

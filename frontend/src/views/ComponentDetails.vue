@@ -6,7 +6,7 @@
             <div class="cmp-header">
                <span class="title">Component Hierarchy</span>
                <span class="hint">Scroll down to view related master files</span>
-               <DPGButton label="Export JSON" class="p-button-secondary" @click="exportJSON()"/>
+               <DPGButton label="Export JSON" severity="secondary" @click="exportJSON()"/>
             </div>
          </template>
          <Tree :value="componentsStore.nodes" :expandedKeys="expandedKeys"

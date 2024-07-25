@@ -9,7 +9,7 @@
                   <span class="sep"/>
                   <FormKit label="Barcode" type="text" v-model="edited.barcode"/>
                   <span class="sep"/>
-                  <DPGButton @click="sirsiLookup" label="Lookup" class="p-button-secondary" :loading="metadataStore.sirsiMatch.searching"/>
+                  <DPGButton @click="sirsiLookup" label="Lookup" severity="secondary" :loading="metadataStore.sirsiMatch.searching"/>
                </div>
                <p v-if="metadataStore.sirsiMatch.error" class="error">{{metadataStore.sirsiMatch.error}}</p>
                <dl>
@@ -28,7 +28,7 @@
                <div class="split">
                   <FormKit label="External URI" type="text" v-model="edited.externalURI" required @input="uriChanged"/>
                   <span class="sep"/>
-                  <DPGButton @click="validateASMetadata" label="Validate" class="p-button-secondary" :loading="metadataStore.asMatch.searching"/>
+                  <DPGButton @click="validateASMetadata" label="Validate" severity="secondary" :loading="metadataStore.asMatch.searching"/>
                </div>
                <p class="error" v-if="metadataStore.asMatch.error">Validation Failed: {{metadataStore.asMatch.error}}</p>
                <dl>
@@ -75,7 +75,7 @@
             </div>
          </Panel>
          <div class="acts">
-            <DPGButton label="Cancel" class="p-button-secondary" @click="cancelEdit()"/>
+            <DPGButton label="Cancel" severity="secondary" @click="cancelEdit()"/>
             <FormKit type="submit" label="Save" :disabled="!validated" :wrapper-class="submitClass"/>
          </div>
       </FormKit>

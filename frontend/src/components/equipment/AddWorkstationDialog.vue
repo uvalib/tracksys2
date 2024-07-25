@@ -1,11 +1,10 @@
 <template>
    <DPGButton @click="show" label="Add Workstation"/>
-   <Dialog v-model:visible="isOpen" :modal="true" header="Add Workstation" :style="{width: '400px'}">
+   <Dialog v-model:visible="isOpen" :modal="true" header="Add Workstation" :style="{width: '400px'}" :closable="false">
       <FormKit type="form" id="add-workstation" :actions="false" @submit="addWorkstation">
          <FormKit label="Name" type="text" v-model="workstationName" outer-class="first" required autofocus/>
          <div class="acts">
-            <DPGButton @click="hide" label="Cancel" class="p-button-secondary"/>
-            <span class="spacer"></span>
+            <DPGButton @click="hide" label="Cancel" severity="secondary"/>
             <FormKit type="submit" label="Add" wrapper-class="submit-button" />
          </div>
       </FormKit>
@@ -49,8 +48,6 @@ const show = (() => {
    justify-content: flex-end;
    padding: 15px 0 10px 0;
    margin: 0;
-   button {
-      margin-right: 10px;
-   }
+   gap: 10px;
 }
 </style>

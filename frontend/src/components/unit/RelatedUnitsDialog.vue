@@ -1,5 +1,5 @@
 <template>
-   <DPGButton @click="show" class="p-button-secondary" label="More"/>
+   <DPGButton @click="show" severity="secondary" label="More"/>
    <Dialog v-model:visible="isOpen" :modal="true" :header="`Units for Order ${props.orderID}`" :style="{width: '90%'}">
       <div class="related-unit-ids">
          <template v-for="(uid,idx) in props.units" :key="`related-${uid}`">

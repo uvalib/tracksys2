@@ -1,5 +1,6 @@
 <template>
-   <Dialog v-model:visible="ordersStore.showInvoice" :modal="true" header="Invoice" @show="invoiceOpened()" @hide="invoiceClosed()" :style="{width: '650px'}">
+   <Dialog v-model:visible="ordersStore.showInvoice" :modal="true" header="Invoice" @show="invoiceOpened()"
+      @hide="invoiceClosed()" :style="{width: '650px'}" :closable="false">
       <div v-if="ordersStore.editInvoice == false">
          <Panel header="Date Information" :style="{marginBottom: '20px'}">
             <dl>
@@ -29,13 +30,13 @@
          </div>
          <FormKit label="Notes" type="textarea" rows="5" v-model="edit.notes"/>
          <div class="acts">
-            <DPGButton label="Cancel" class="p-button-secondary right-pad" @click="invoiceClosed()"/>
+            <DPGButton label="Cancel" severity="secondary" @click="invoiceClosed()"/>
             <FormKit type="submit" label="Save" wrapper-class="submit-button" />
          </div>
       </FormKit>
       <template #footer v-if="ordersStore.editInvoice == false">
-         <DPGButton label="Edit" autofocus class="p-button-secondary right-pad" @click="editInvoice()"/>
-         <DPGButton label="OK" autofocus class="p-button-secondary" @click="invoiceClosed()"/>
+         <DPGButton label="Edit" autofocus severity="secondary" @click="editInvoice()"/>
+         <DPGButton label="OK" autofocus severity="secondary" @click="invoiceClosed()"/>
       </template>
    </Dialog>
 </template>
@@ -134,6 +135,7 @@ function invoiceClosed() {
    flex-flow: row nowrap;
    justify-content: flex-end;
    padding: 15px 0 5px 5px;
+   gap: 10px;
 }
 
 :deep(dl) {

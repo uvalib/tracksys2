@@ -11,8 +11,8 @@
          <template #empty><p class="none">No master files are associated with this component</p></template>
          <template #paginatorstart>
             <div class="master-file-acts">
-               <DPGButton label="PDF" @click="pdfClicked()" class="p-button-secondary" :disabled="!filesSelected" />
-               <DPGButton label="Download" @click="downloadClicked()" class="p-button-secondary" :disabled="!filesSelected" />
+               <DPGButton label="PDF" @click="pdfClicked()" severity="secondary" :disabled="!filesSelected" />
+               <DPGButton label="Download" @click="downloadClicked()" severity="secondary" :disabled="!filesSelected" />
                <template  v-if="userStore.isAdmin || userStore.isSupervisor">
                   <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
                </template>

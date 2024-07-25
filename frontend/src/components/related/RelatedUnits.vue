@@ -11,7 +11,7 @@
          <div class="unit-acts">
             <HathiTrustUpdateDialog v-if="props.hathiTrust" :orderID="props.orderID" />
             <AddUnitDialog v-if="props.canAdd"/>
-            <DPGButton label="Download Units CSV" class="p-button-secondary download" @click="downloadCSV" v-if="props.export" />
+            <DPGButton label="Download Units CSV" severity="secondary" @click="downloadCSV" />
          </div>
       </template>
       <Column field="id" header="ID" :sortable="true">
@@ -98,10 +98,6 @@ const props = defineProps({
       type: Boolean,
       default: false
    },
-   export: {
-      type: Boolean,
-      default: false
-   }
 })
 
 const systemStore = useSystemStore()

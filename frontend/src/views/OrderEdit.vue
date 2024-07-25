@@ -27,7 +27,7 @@
          </div>
          <p class="error" v-if="error">{{error}}</p>
          <div class="acts">
-            <DPGButton label="Cancel" class="p-button-secondary" @click="cancelEdit()"/>
+            <DPGButton label="Cancel" severity="secondary" @click="cancelEdit()"/>
             <FormKit type="submit" label="Save" wrapper-class="submit-button" />
          </div>
       </FormKit>

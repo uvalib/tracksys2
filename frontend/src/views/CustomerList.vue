@@ -13,7 +13,7 @@
          currentPageReportTemplate="{first} - {last} of {totalRecords}"
       >
          <template #paginatorstart  v-if="(userStore.isAdmin || userStore.isSupervisor)" >
-            <DPGButton label="Add Customer" class="p-button-secondary create" @click="addCustomer()"/>
+            <DPGButton label="Add Customer" severity="secondary" @click="addCustomer()"/>
          </template>
          <template #paginatorend>
             <IconField iconPosition="left">
@@ -43,7 +43,7 @@
             </div>
          </template>
       </DataTable>
-       <Dialog v-model:visible="showEdit" :style="{width: '500px'}" header="Customer Details" :modal="true" position="top">
+       <Dialog v-model:visible="showEdit" :style="{width: '500px'}" header="Customer Details" :modal="true" position="top" :closable="false">
          <FormKit type="form" id="customer-detail" :actions="false" @submit="submitChanges">
             <Tabs value="customer" :lazy="true">
                <TabList>

@@ -112,7 +112,7 @@
                <DataDisplay label="IIIF Exists" :value="$formatBool(masterFiles.details.audit.iiifExists)" />
             </dl>
             <div class="audit-toolbar">
-               <DPGButton @click="auditNow" class="p-button-secondary" label="Audit Now"/>
+               <DPGButton @click="auditNow" severity="secondary" label="Audit Now"/>
             </div>
          </Panel>
       </div>
