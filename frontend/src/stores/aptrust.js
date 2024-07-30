@@ -76,6 +76,14 @@ export const useAPTrustStore = defineStore('aptrust', {
          this.clearItemStatus()
          axios.get(`/api/metadata/${metadaID}/aptrust`).then((response) => {
             this.itemStatus = response.data
+            if ( this.itemStatus.finishedAt ) {
+               // update processedAt and success in the submissions list for this item
+               let idx = this.submissions.findIndex( s => s.id == response.data.id)
+               if (idx > -1 ) {
+                  this.submissions[idx].processedAt = this.response.data.finishedAt
+                  this.submissions[idx].status = (this.response.data.status == "Success")
+               }
+            }
          }).catch((error) => {
             this.itemStatus.errorMessage = error
          }).finally( () =>{
