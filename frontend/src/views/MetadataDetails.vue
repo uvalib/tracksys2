@@ -205,7 +205,7 @@
       </div>
       <div class="details">
          <Panel header="Related Information">
-            <Tabs value="units" :lazy="true">
+            <Tabs :value="startTab" :lazy="true">
                <TabList>
                   <Tab value="collection" v-if="metadataStore.detail.isCollection">Collection Members</Tab>
                   <Tab value="orders">Orders</Tab>
@@ -279,6 +279,12 @@ const publishing = ref(false)
 const showHathiDialog = ref(false)
 const showLocUnitsDialog = ref(false)
 const targetFolder = ref("")
+
+const startTab = computed( () => {
+   if ( metadataStore.detail.isCollection ) return "collection"
+   if ( metadataStore.related.units.length > 0  ) return "units"
+   return "orders"
+})
 
 const canAddToCollection = computed(() => {
    if ( systemStore.working ) return false

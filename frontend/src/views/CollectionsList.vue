@@ -22,6 +22,7 @@
          <Column field="barcode" header="Barcode" />
          <Column field="callNumber" header="Call Number" />
          <Column field="catalogKey" header="Catalog Key" />
+         <Column field="collectionID" header="Collection ID" />
          <Column field="recordCount" header="Items" />
       </DataTable>
    </div>

@@ -26,15 +26,16 @@ type collectionCandidate struct {
 func (svc *serviceContext) getCollections(c *gin.Context) {
 	log.Printf("INFO: get all collections")
 	type collectionHit struct {
-		ID          uint64 `json:"id"`
-		PID         string `gorm:"column:pid" json:"pid"`
-		Type        string `json:"type"`
-		Title       string `json:"title"`
-		CallNumber  string `json:"callNumber"`
-		Barcode     string `json:"barcode"`
-		CatalogKey  string `json:"catalogKey"`
-		CreatorName string `json:"creatorName"`
-		RecordCount int64  `json:"recordCount"`
+		ID           uint64 `json:"id"`
+		PID          string `gorm:"column:pid" json:"pid"`
+		Type         string `json:"type"`
+		Title        string `json:"title"`
+		CallNumber   string `json:"callNumber"`
+		Barcode      string `json:"barcode"`
+		CatalogKey   string `json:"catalogKey"`
+		CreatorName  string `json:"creatorName"`
+		CollectionID string `gorm:"column:collection_id" json:"collectionID"`
+		RecordCount  int64  `json:"recordCount"`
 	}
 	var resp struct {
 		Total       int64           `json:"total"`

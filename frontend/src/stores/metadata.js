@@ -429,8 +429,6 @@ export const useMetadataStore = defineStore('metadata', {
          this.setRelatedItems(details.units, details.masterFiles, details.collectionRecord)
       },
       async getDetails( metadataID ) {
-         if (this.detail.id == metadataID) return
-
          const system = useSystemStore()
          system.working = true
          return axios.get( `/api/metadata/${metadataID}` ).then(response => {
