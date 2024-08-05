@@ -85,15 +85,17 @@ function editInvoice() {
 }
 
 function updateEditData() {
-   if (ordersStore.detail.invoice.dateFeePaid) {
-      edit.value.dateFeePaid = dayjs(ordersStore.detail.invoice.dateFeePaid).format("YYYY-MM-DD")
+   if ( ordersStore.detail.invoice ) {
+      if (ordersStore.detail.invoice.dateFeePaid) {
+         edit.value.dateFeePaid = dayjs(ordersStore.detail.invoice.dateFeePaid).format("YYYY-MM-DD")
+      }
+      if (ordersStore.detail.invoice.dateFeeDeclined) {
+         edit.value.dateFeeDeclined = dayjs(ordersStore.detail.invoice.dateFeeDeclined).format("YYYY-MM-DD")
+      }
+      edit.value.feeAmountPaid = ordersStore.detail.invoice.feeAmountPaid
+      edit.value.transmittalNumber = ordersStore.detail.invoice.transmittalNumber
+      edit.value.notes = ordersStore.detail.invoice.notes
    }
-   if (ordersStore.detail.invoice.dateFeeDeclined) {
-      edit.value.dateFeeDeclined = dayjs(ordersStore.detail.invoice.dateFeeDeclined).format("YYYY-MM-DD")
-   }
-   edit.value.feeAmountPaid = ordersStore.detail.invoice.feeAmountPaid
-   edit.value.transmittalNumber = ordersStore.detail.invoice.transmittalNumber
-   edit.value.notes = ordersStore.detail.invoice.notes
 }
 
 function invoiceClosed() {
