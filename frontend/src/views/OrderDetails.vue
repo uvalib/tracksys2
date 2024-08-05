@@ -288,10 +288,9 @@ const canWaiveFee = computed(() => {
 
 const isSendFeeDisabled = computed(() => {
    // Only enable send estimate when estimate is populated, fee has not been
-   // sent or paid and status is not deferred/approved
+   // sent or paid and status is not deferred/canceled
    let feeDisabled = ordersStore.detail.fee == null || ordersStore.detail.dateFeeEstimateSent != null  ||
-      ordersStore.detail.status == 'deferred' || ordersStore.detail.status == 'approved'
-                       // order.fee_paid?
+      ordersStore.detail.status == 'deferred' || ordersStore.detail.status == 'canceled'
    return feeDisabled
 })
 
