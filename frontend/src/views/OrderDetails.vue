@@ -125,7 +125,6 @@
             </div>
             <div class="actions" v-if="(detail.invoice || detail.fee) && !detail.feeWaived">
                <DPGButton v-if="detail.invoice" label="View Invoice" severity="secondary" @click="viewInvoiceClicked()"/>
-               <DPGButton v-else-if="detail.fee" label="Create Invoice" severity="secondary" @click="createInvoiceClicked()"/>
             </div>
          </div>
       </Panel>
@@ -254,7 +253,7 @@ const isProcessor = computed(() => {
 })
 
 const isPaidDisabled = computed(() =>{
-   return ordersStore.isFeePaid == false || ordersStore.hasUnitsBeingPrepared
+   return ordersStore.isFeePaid == false
 })
 
 const isCompleteOrderDisabled = computed(() =>{
@@ -288,9 +287,9 @@ const canWaiveFee = computed(() => {
 
 const isSendFeeDisabled = computed(() => {
    // Only enable send estimate when estimate is populated, fee has not been
-   // sent or paid and status is not deferred/canceled
+   // sent or paid and status is not deferred/canceled/approved
    let feeDisabled = ordersStore.detail.fee == null || ordersStore.detail.dateFeeEstimateSent != null  ||
-      ordersStore.detail.status == 'deferred' || ordersStore.detail.status == 'canceled'
+      ordersStore.detail.status == 'deferred' || ordersStore.detail.status == 'canceled' || ordersStore.detail.status == 'approved'
    return feeDisabled
 })
 
@@ -402,11 +401,6 @@ const emailClosed = (() => {
 
 const viewInvoiceClicked = (() => {
     ordersStore.editInvoice = false
-    ordersStore.showInvoice = true
-})
-
-const createInvoiceClicked = (() => {
-    ordersStore.editInvoice = true
     ordersStore.showInvoice = true
 })
 
