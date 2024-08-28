@@ -45,33 +45,37 @@ const showSearch = computed(() => {
 onMounted(() => {
    setTimeout( () => {
       items.value = [
-         {label: "Home", route: "/"},
-         {label: "Orders", route: "/orders"},
-         {label: "Collections", route: "/collections"},
+         {label: "Home", command: ()=>menuLinkClicked("/")},
+         {label: "Orders", command: ()=>menuLinkClicked("/orders")},
+         {label: "Collections", command: ()=>menuLinkClicked("/collections")},
          {label: "Published", items: [
-            {label: "Virgo", route: '/published/virgo'},
-            {label: "ArchivesSpace", route: '/published/archivesspace'},
-            {label: "DPLA", route: '/published/dpla'},
+            {label: "Virgo", command: ()=>menuLinkClicked("/published/virgo")},
+            {label: "ArchivesSpace", command: ()=>menuLinkClicked("/published/archivesspace")},
+            {label: "DPLA", command: ()=>menuLinkClicked("/published/dpla")},
          ]},
-         {label: "Job Statuses", route: "/jobs"},
+         {label: "Job Statuses", command: ()=>menuLinkClicked("/jobs")},
          {label: "Digitization", items: [
-            {label: "Equipment", route: '/equipment'},
+            {label: "Equipment", command: ()=>menuLinkClicked("/equipment")},
             {label: "Projects", url: systemStore.projectsURL, target: "_blank"},
             {label: "Reports", url: `${systemStore.reportsURL}/reports`, target: "_blank"},
             {label: "Statistics", url: systemStore.reportsURL, target: "_blank"},
          ]},
          {label: "Miscellaneous", items: [
-            {label: "APTrust Submissions", route: "/aptrust"},
-            {label: "ArchivesSpace Reviews", route: "/archivesspace"},
-            {label: "HathiTrust Submissions", route: "/hathitrust"},
-            {label: "Customers", route: "/customers"},
-            {label: "Staff Members", route: "/staff"},
+            {label: "APTrust Submissions", command: ()=>menuLinkClicked("/aptrust")},
+            {label: "ArchivesSpace Reviews", command: ()=>menuLinkClicked("/archivesspace")},
+            {label: "HathiTrust Submissions", command: ()=>menuLinkClicked("/hathitrust")},
+            {label: "Customers", command: ()=>menuLinkClicked("/customers")},
+            {label: "Staff Members", command: ()=>menuLinkClicked("/staff")},
          ]},
          {label: userStore.signedInUser, items: [
             {label: "Sign Out", command: ()=>signOut() },
          ]}
       ]
    }, 500)
+})
+
+const menuLinkClicked = ( (tgtRoute) => {
+   router.push(tgtRoute)
 })
 
 const signOut = (() => {

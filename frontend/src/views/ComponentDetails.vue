@@ -102,7 +102,7 @@ const expandSelectedComponent = (( cID ) => {
    nextTick( () =>{
       let eleID = `node-${cID}`
       let componentEle = document.getElementById(eleID)
-      var w = document.getElementsByClassName("p-tree-wrapper")[0]
+      var w = document.getElementsByClassName("p-tree")[0]
       var elementPosition = componentEle.offsetTop - w.offsetTop - 40
 
       w.scrollBy({

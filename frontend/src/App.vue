@@ -97,14 +97,14 @@ div.header {
       }
    }
 }
-a {
-   color: var(--uvalib-blue-alt-dark);
-   font-weight: 500;
-   text-decoration: none;
-   &:hover {
-      text-decoration: underline;
-   }
-}
+// a {
+//    color: var(--uvalib-blue-alt-dark);
+//    font-weight: 500;
+//    text-decoration: none;
+//    &:hover {
+//       text-decoration: underline;
+//    }
+// }
 p.version {
    margin: 5px 0 0 0;
    font-size: 0.5em;
