@@ -21,7 +21,7 @@ type invoice struct {
 	DateInvoice       time.Time  `json:"invoiceDate"`
 	DateFeePaid       *time.Time `json:"dateFeePaid,omitempty"`
 	DateFeeDeclined   *time.Time `json:"dateFeeDeclined,omitempty"`
-	FeeAmountPaid     *int64     `json:"feeAmountPaid"`
+	FeeAmountPaid     *float64   `json:"feeAmountPaid"`
 	TransmittalNumber string     `json:"transmittalNumber"`
 	Notes             string     `json:"notes"`
 	CreatedAt         time.Time  `json:"createdAt"`
@@ -717,7 +717,7 @@ func (svc *serviceContext) updateInvoice(c *gin.Context) {
 		inv.DateFeeDeclined = nil
 	}
 	if updateRequest.FeeAmountPaid != "" {
-		fee, _ := strconv.ParseInt(updateRequest.FeeAmountPaid, 10, 64)
+		fee, _ := strconv.ParseFloat(updateRequest.FeeAmountPaid, 64)
 		inv.FeeAmountPaid = &fee
 	} else {
 		inv.FeeAmountPaid = nil
