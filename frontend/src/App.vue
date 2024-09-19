@@ -25,12 +25,11 @@
       </template>
    </Dialog>
    <WaitSpinner v-if="systemStore.working" :overlay="true" message="Please wait..." />
-   <ScrollToTop />
+   <ScrollTop />
 </template>
 
 <script setup>
 import UvaLibraryLogo from "@/components/UvaLibraryLogo.vue"
-import ScrollToTop from "@/components/ScrollToTop.vue"
 import MenuBar from "@/components/MenuBar.vue"
 import WaitSpinner from "@/components/WaitSpinner.vue"
 import { useSystemStore } from "@/stores/system"
@@ -40,6 +39,7 @@ import { onBeforeMount, watch, ref } from 'vue'
 import Dialog from 'primevue/dialog'
 import Toast from 'primevue/toast'
 import { useToast } from "primevue/usetoast"
+import ScrollTop from 'primevue/scrolltop'
 
 const systemStore = useSystemStore()
 const userStore = useUserStore()

@@ -112,7 +112,10 @@ const UVA = definePreset(Aura, {
          },
          bodyCell: {
             borderColor: 'var(--uvalib-grey-lightest)',
-        },
+         },
+         row: {
+            selectedBackground: 'var(--uvalib-blue-alt-light)',
+         },
          colorScheme: {
             light: {
                root: {

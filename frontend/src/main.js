@@ -22,7 +22,6 @@ app.use(pinia)
 app.use(router)
 
 // Styles
-import '@fortawesome/fontawesome-free/css/all.css'
 import './assets/styles/forms.scss'
 import './assets/styles/main.scss'
 
@@ -69,8 +68,6 @@ const dc = defaultConfig({
          messages: '$reset dpg-form-invalid',
          help: '$reset dpg-form-help',
       },
-      incompleteMessage: false,
-      validationVisibility: 'submit'
    }
 })
 app.use(plugin, dc)
@@ -106,7 +103,7 @@ function addRequiredNotePlugin(node) {
 function addErrorAlertIconPlugin(node) {
    node.on('created', () => {
       const schemaFn = node.props.definition.schema
-      node.context.warningIcon = '<i class="fas fa-exclamation-triangle"></i>'
+      node.context.warningIcon = '<i class="pi pi-exclamation-triangle"></i>'
       node.props.definition.schema = (extensions) => {
          if (!extensions.message) {
             extensions.message = {

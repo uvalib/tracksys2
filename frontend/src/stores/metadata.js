@@ -236,11 +236,14 @@ export const useMetadataStore = defineStore('metadata', {
          if ( collectionID) {
             url += "&collection=true"
          }
+         this.working = true
          return axios.get(url).then(response => {
             this.searchHits = response.data.metadata.hits
             this.totalSearchHits = response.data.metadata.total
+            this.working = false
          }).catch( e => {
             system.setError(e)
+            this.working = false
          })
       },
       async publish( ) {

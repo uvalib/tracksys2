@@ -1,20 +1,21 @@
 <template>
    <DPGButton @click="show" :label="props.label" severity="secondary" />
-   <Dialog v-model:visible="isOpen" :modal="true" :header="title" :style="{width: '750px'}" position="top" :closable="false">
-      <FormKit v-if="mode=='unit'" type="form" id="customer-detail" :actions="false" @submit="createUnit">
+   <Dialog v-model:visible="isOpen" :modal="true" :header="title" :style="{width: '750px'}" position="top" >
+      <FormKit v-if="mode=='unit'" type="form" id="add-unit" :actions="false" @submit="createUnit">
          <Panel header="Unit Metadata" class="margin-bottom">
             <div class="lookup">
                <input type="text" v-model="metadataSearch"  @keydown.stop.prevent.enter="lookupMetadata"/>
-               <DPGButton @click="lookupMetadata" label="Lookup" severity="secondary"/>
+               <DPGButton @click="lookupMetadata" label="Lookup" severity="secondary" :loading="metadataStore.working" loadingIcon="pi pi-spin pi-spinner"/>
                <DPGButton @click="createMetadata" label="Create" severity="secondary"/>
             </div>
             <template v-if="searched">
                <div class="hits">
                   <div class="scroller">
                      <DataTable :value="metadataStore.searchHits" ref="metadataHitsTable" dataKey="id"
-                        stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+                        stripedRows showGridlines size="small"
                         v-model:selection="selectedMetadata" selectionMode="single"
-                        :lazy="false" :paginator="false" :rows="30" removableSort>
+                        :lazy="false" :paginator="false" :rows="30" removableSort
+                     >
                         <template #empty>No matching metadata records</template>
                         <Column field="pid" header="PID" :sortable="true"/>
                         <Column field="type" header="Type" :sortable="true"/>
@@ -217,9 +218,6 @@ div.p-panel {
    }
    :deep(div.hits) {
       margin-top: 15px;
-      table.p-datatable-table {
-         font-size: 0.75em !important;
-      }
       .scroller {
          max-height: 250px;
          overflow-y: scroll;
