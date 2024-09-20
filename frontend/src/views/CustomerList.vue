@@ -53,10 +53,10 @@
                </TabList>
                <TabPanels>
                   <TabPanel value="customer">
-                     <FormKit label="Last Name" type="text" v-model="customerDetails.lastName" validation="required" autofocus />
-                     <FormKit label="First Name" type="text" v-model="customerDetails.firstName" validation="required" />
-                     <FormKit label="Email" type="email" v-model="customerDetails.email" validation="required" />
-                     <FormKit label="Academic Status" type="select" v-model="customerDetails.academicStatus" :options="academicStatuses" required/>
+                     <FormKit label="Last Name" type="text" name="lastName" v-model="customerDetails.lastName" validation="required" autofocus />
+                     <FormKit label="First Name" type="text"name="firstName"  v-model="customerDetails.firstName" validation="required" />
+                     <FormKit label="Email" type="email" name="email" v-model="customerDetails.email" validation="required" />
+                     <FormKit label="Academic Status" type="select" name="academicStatus" v-model="customerDetails.academicStatus" :options="academicStatuses" required/>
                   </TabPanel>
                   <TabPanel value="address1">
                      <template v-if="customerDetails.addresses.length == 0">
@@ -64,16 +64,16 @@
                         <DPGButton label="Add Primary Address" @click="addAddress('primary')"/>
                      </template>
                      <template v-else>
-                        <FormKit label="Addresss 1" type="text" v-model="customerDetails.addresses[0].address1" validation="required" />
-                        <FormKit label="Addresss 2" type="text" v-model="customerDetails.addresses[0].address2" />
-                        <FormKit label="City" type="text" v-model="customerDetails.addresses[0].city" validation="required" />
+                        <FormKit label="Addresss 1" type="text" name="address1" v-model="customerDetails.addresses[0].address1" validation="required" />
+                        <FormKit label="Addresss 2" type="text" name="address2" v-model="customerDetails.addresses[0].address2" />
+                        <FormKit label="City" type="text" name="city" v-model="customerDetails.addresses[0].city" validation="required" />
                         <div class="two-col">
-                           <FormKit label="State" type="text" v-model="customerDetails.addresses[0].state" outer-class="state"/>
-                           <FormKit label="Zip" type="text" v-model="customerDetails.addresses[0].zip" />
+                           <FormKit label="State" type="text" name="state" v-model="customerDetails.addresses[0].state" outer-class="state"/>
+                           <FormKit label="Zip" type="text" name="zip" v-model="customerDetails.addresses[0].zip" />
                         </div>
                         <div class="two-col">
-                           <FormKit label="Country" type="text" v-model="customerDetails.addresses[0].country" validation="required" outer-class="state"/>
-                           <FormKit label="Phone" type="text" v-model="customerDetails.addresses[0].phone" />
+                           <FormKit label="Country" type="text" name="country" v-model="customerDetails.addresses[0].country" validation="required" outer-class="state"/>
+                           <FormKit label="Phone" type="text" name="phone" v-model="customerDetails.addresses[0].phone" />
                         </div>
                      </template>
                   </TabPanel>
