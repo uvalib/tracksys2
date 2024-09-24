@@ -152,7 +152,7 @@ function onPage(event) {
 
 </script>
 
-<stype scoped lang="scss">
+<style scoped lang="scss">
 .acts{
    display: flex;
    flex-flow: row nowrap;
@@ -160,4 +160,4 @@ function onPage(event) {
    align-items: center;
    gap: 10px;
 }
-</stype>
+</style>

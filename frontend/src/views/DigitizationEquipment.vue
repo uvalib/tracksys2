@@ -86,7 +86,7 @@
 <script setup>
 import { onBeforeMount, ref, computed } from 'vue'
 import { useEquipmentStore } from '@/stores/equipment'
-import { useUserStore } from '../stores/user'
+import { useUserStore } from '@/stores/user'
 import Panel from 'primevue/panel'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -95,10 +95,10 @@ import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
 import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
-import EquipmentPanel from '../components/equipment/EquipmentPanel.vue'
+import EquipmentPanel from '@/components/equipment/EquipmentPanel.vue'
 import { useConfirm } from "primevue/useconfirm"
-import AddWorkstationDialog from '../components/equipment/AddWorkstationDialog.vue'
-import AddEquipmentDialog from '../components/equipment/AddEquipmentDialog.vue'
+import AddWorkstationDialog from '@/components/equipment/AddWorkstationDialog.vue'
+import AddEquipmentDialog from '@/components/equipment/AddEquipmentDialog.vue'
 
 const confirm = useConfirm()
 const equipmentStore = useEquipmentStore()

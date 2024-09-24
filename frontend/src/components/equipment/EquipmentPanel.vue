@@ -129,8 +129,8 @@ function workstation( equipID ) {
 
 </script>
 
-<stype scoped lang="scss">
+<style lang="scss" scoped>
 .e-wide {
    width: 30%;
 }
-</stype>
+</style>

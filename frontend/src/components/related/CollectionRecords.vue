@@ -159,7 +159,7 @@ const exportCollection = (() => {
 
 </script>
 
-<stype scoped lang="scss">
+<style scoped lang="scss">
 .collection  {
    margin: 0;
    h3  {
@@ -190,4 +190,4 @@ const exportCollection = (() => {
       width: 25px;
    }
 }
-</stype>
+</style>

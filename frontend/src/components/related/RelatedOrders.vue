@@ -74,5 +74,5 @@ const filters = ref( {
 })
 </script>
 
-<stype scoped lang="scss">
-</stype>
+<style scoped lang="scss">
+</style>

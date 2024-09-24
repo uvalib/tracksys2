@@ -58,7 +58,7 @@ const rowStyle = (data) => {
 }
 </script>
 
-<stype scoped lang="scss">
+<style scoped lang="scss">
 .similar {
    h3 {
       text-align: left;
@@ -79,4 +79,4 @@ const rowStyle = (data) => {
       text-align: left;
    }
 }
-</stype>
+</style>

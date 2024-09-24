@@ -129,7 +129,7 @@ const onSelectAllChange = ((event) => {
 
 </script>
 
-<stype scoped lang="scss">
+<style scoped lang="scss">
 .bulk-toolbar {
    padding: 0 0 10px 0;
    display: flex;
@@ -158,4 +158,4 @@ p.help {
    font-size: 1.2em;
    text-align: center;
 }
-</stype>
+</style>

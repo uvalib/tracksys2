@@ -131,7 +131,7 @@ const downloadCSV = (() => {
 
 </script>
 
-<stype scoped lang="scss">
+<style scoped lang="scss">
    .unit-acts{
       display: flex;
       flex-flow: row nowrap;
@@ -139,4 +139,4 @@ const downloadCSV = (() => {
       align-items: center;
       gap: 10px;
    }
-</stype>
+</style>

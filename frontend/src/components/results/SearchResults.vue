@@ -101,8 +101,8 @@ const tabChanged =(( newTab ) => {
 })
 </script>
 
-<stype scoped lang="scss">
+<style scoped lang="scss">
    .results {
       margin: 25px 0;
    }
-</stype>
+</style>
