@@ -4,8 +4,6 @@ import { fileURLToPath, URL } from 'url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-const hash = Math.floor(Math.random() * 90000) + 10000
-
 export default defineConfig({
    define: {
       // enable hydration mismatch details in production build
@@ -15,15 +13,6 @@ export default defineConfig({
    resolve: {
       alias: {
          '@': fileURLToPath(new URL('./src', import.meta.url))
-      }
-   },
-   build: {
-      rollupOptions: {
-         output: {
-            entryFileNames: `[name]` + hash + `.js`,
-            chunkFileNames: `[name]` + hash + `.js`,
-            assetFileNames: `[name]` + hash + `.[ext]`
-         }
       }
    },
    server: { // this is used in dev mode only
