@@ -8,7 +8,7 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
   },
   "dependencies": {
-    "@formkit/vue": "^0.16.4",
+    "@formkit/vue": "^1.6.7",
     "@primevue/themes": "^4.0.0",
     "axios": "^1.7.2",
     "dayjs": "^1.11.4",
