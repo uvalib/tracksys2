@@ -15,6 +15,9 @@ export default defineConfig({
          '@': fileURLToPath(new URL('./src', import.meta.url))
       }
    },
+   build: {
+      chunkSizeWarningLimit: 750,
+   },
    server: { // this is used in dev mode only
       port: 8080,
       proxy: {

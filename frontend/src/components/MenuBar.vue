@@ -1,14 +1,5 @@
 <template>
    <Menubar :model="items">
-      <template #item="{ label, item, props }">
-         <router-link v-if="item.route" :to="item.route">
-            {{ label }}
-         </router-link>
-         <a v-else :href="item.url" :target="item.target" v-bind="props.action">
-            <span v-bind="props.label">{{ label }}</span>
-            <span v-if="item.items" class="pi pi-fw pi-angle-down" v-bind="props.submenuicon" />
-         </a>
-      </template>
       <template #end>
          <IconField iconPosition="left" v-if="showSearch" class="global-search">
             <InputIcon class="pi pi-search"> </InputIcon>

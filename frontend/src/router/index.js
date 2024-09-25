@@ -1,32 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import HomeView from '../views/HomeView.vue'
-
-import APTrustSubmissions from '../views/APTrustSubmissions.vue'
-import ArchivesSpaceReviews from '../views/ArchivesSpaceReviews.vue'
-import HathiTrustSubmissions from '../views/HathiTrustSubmissions.vue'
-import JobStatusList from '../views/JobStatusList.vue'
-import JobStatusDetails from '../views/JobStatusDetails.vue'
-import MasterFileDetails from '../views/MasterFileDetails.vue'
-import MasterFileEdit from '../views/MasterFileEdit.vue'
-import MetadataDetails from '../views/MetadataDetails.vue'
-import MetadataEdit from '../views/MetadataEdit.vue'
-import OrdersList from '../views/OrdersList.vue'
-import OrderDetails from '../views/OrderDetails.vue'
-import OrderEdit from '../views/OrderEdit.vue'
-import UnitDetails from '../views/UnitDetails.vue'
-import UnitEdit from '../views/UnitEdit.vue'
-
-import ComponentDetails from '../views/ComponentDetails.vue'
-import DigitizationEquipment from '../views/DigitizationEquipment.vue'
-
-import StaffMembers from '../views/StaffMembers.vue'
-import CustomerList from '../views/CustomerList.vue'
-
-import SignedOut from '../views/SignedOut.vue'
-import ForbiddenView from '../views/ForbiddenView.vue'
-import NotFound from '../views/NotFound.vue'
-
 import VueCookies from 'vue-cookies'
 import { useUserStore } from '@/stores/user'
 
@@ -36,17 +9,17 @@ const router = createRouter({
       {
          path: '/',
          name: 'home',
-         component: HomeView
+         component: () => import('../views/HomeView.vue')
       },
       {
          path: '/aptrust',
          name: 'aptrust',
-         component: APTrustSubmissions
+         component: () => import('../views/APTrustSubmissions.vue')
       },
       {
          path: '/archivesspace',
          name: 'archivesspace',
-         component: ArchivesSpaceReviews
+         component: () => import('../views/ArchivesSpaceReviews.vue')
       },
       {
          path: '/collections',
@@ -61,107 +34,107 @@ const router = createRouter({
       {
          path: '/hathitrust',
          name: 'hathitrust',
-         component: HathiTrustSubmissions
+         component: () => import('../views/HathiTrustSubmissions.vue')
       },
       {
          path: '/jobs',
          name: 'jobs',
-         component: JobStatusList
+         component: () => import('../views/JobStatusList.vue')
       },
       {
          path: '/jobs/:id',
          name: 'jobdetail',
-         component: JobStatusDetails
+         component: () => import('../views/JobStatusDetails.vue')
       },
       {
          path: '/masterfiles/:id',
          name: 'masterfile',
-         component: MasterFileDetails
+         component: () => import('../views/MasterFileDetails.vue')
       },
       {
          path: '/masterfiles/:id/edit',
          name: 'masterfileedit',
-         component: MasterFileEdit
+         component: () => import('../views/MasterFileEdit.vue')
       },
       {
          path: '/metadata/:id',
          name: 'metadata',
-         component: MetadataDetails
+         component: () => import('../views/MetadataDetails.vue')
       },
       {
          path: '/metadata/:id/edit',
          name: 'metadataedit',
-         component: MetadataEdit
+         component: () => import('../views/MetadataEdit.vue')
       },
       {
          path: '/orders',
          name: 'order',
-         component: OrdersList
+         component: () => import('../views/OrdersList.vue')
       },
       {
          path: '/orders/new',
          name: 'neworder',
-         component: OrderEdit
+         component: () => import('../views/OrderEdit.vue')
       },
       {
          path: '/orders/:id',
          name: 'orderdetails',
-         component: OrderDetails
+         component: () => import('../views/OrderDetails.vue')
       },
       {
          path: '/orders/:id/edit',
          name: 'orderedit',
-         component: OrderEdit
+         component: () => import('../views/OrderEdit.vue')
       },
       {
          path: '/units/:id',
          name: 'unit',
-         component: UnitDetails
+         component: () => import('../views/UnitDetails.vue')
       },
       {
          path: '/units/:id/edit',
          name: 'unitedit',
-         component: UnitEdit
+         component: () => import('../views/UnitEdit.vue')
       },
       {
          path: '/components/:id',
          name: 'component',
-         component: ComponentDetails
+         component: () => import('../views/ComponentDetails.vue')
       },
       {
          path: '/equipment',
          name: 'equipment',
-         component: DigitizationEquipment
+         component: () => import('../views/DigitizationEquipment.vue')
       },
       {
          path: '/staff',
          name: 'staff',
-         component: StaffMembers
+         component: () => import('../views/StaffMembers.vue')
       },
       {
          path: '/customers',
          name: 'customers',
-         component: CustomerList
+         component: () => import('../views/CustomerList.vue')
       },
       {
          path: '/signedout',
          name: 'signedout',
-         component: SignedOut
+         component: () => import('../views/SignedOut.vue')
       },
       {
          path: '/forbidden',
          name: 'forbidden',
-         component: ForbiddenView
+         component: () => import('../views/ForbiddenView.vue')
       },
       {
          path: '/:pathMatch(.*)*',
          name: "not_found",
-         component: NotFound
+         component: () => import('../views/NotFound.vue')
       }
    ]
 })
 
-router.beforeEach( (to) => {
+router.beforeEach( async (to) => {
    console.log("BEFORE ROUTE "+to.path)
    const userStore = useUserStore()
    const noAuthRoutes = ["not_found", "forbidden", "signedout"]
