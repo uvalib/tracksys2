@@ -14,7 +14,8 @@
             <template #paginatorstart>
                <div class="buttons">
                   <DPGButton label="Add Item(s)" severity="secondary" @click="bulkAddClicked()" v-if="userStore.isAdmin"/>
-                  <DPGButton label="Export" severity="secondary" @click="exportCollection" :disabled="collectionStore.totalRecords == 0"/>
+                  <DPGButton label="Export CSV" severity="secondary" @click="exportCollectionCSV" :disabled="collectionStore.totalRecords == 0"/>
+                  <DPGButton label="Export Collection" severity="secondary" @click="exportCollection" :disabled="collectionStore.totalRecords == 0" v-if="userStore.isAdmin"/>
                </div>
             </template>
             <template #paginatorend>
@@ -153,8 +154,26 @@ const deleteItem = (( item ) => {
       }
    })
 })
-const exportCollection = (() => {
+const exportCollectionCSV = (() => {
    collectionStore.exportCSV()
+})
+
+const exportCollection = (() => {
+   confirm.require({
+      message: `Export all metadata and image files for this collection?`,
+      header: 'Export Collection',
+      icon: 'pi pi-question-circle',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Export'
+      },
+      accept: (() => {
+         collectionStore.exportAll()
+      })
+   })
 })
 
 </script>

@@ -55,6 +55,10 @@ export const useSystemStore = defineStore('system', {
          this.toast.show = false
          this.toast.error = false
       },
+      clearError() {
+         this.error = ""
+         this.showError = false
+      },
       setError( e ) {
          this.error = e
          if (e.response && e.response.data) {

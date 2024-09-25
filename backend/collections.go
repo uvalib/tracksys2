@@ -274,7 +274,7 @@ func (svc *serviceContext) addCollectionFacet(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
-func (svc *serviceContext) exportCollectionItems(c *gin.Context) {
+func (svc *serviceContext) exportCollectionCSV(c *gin.Context) {
 	collectionID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	if collectionID == 0 {
 		log.Printf("ERROR: bad collection id %s in add collection items request", c.Param("id"))

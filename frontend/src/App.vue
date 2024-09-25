@@ -20,9 +20,6 @@
    </div>
    <Dialog v-model:visible="systemStore.showError" :modal="true" header="System Error" @hide="errorClosed()" class="error">
       {{systemStore.error}}
-      <template #footer>
-         <DPGButton label="OK" autofocus severity="secondary" @click="errorClosed()"/>
-      </template>
    </Dialog>
    <WaitSpinner v-if="systemStore.working" :overlay="true" message="Please wait..." />
    <ScrollTop />
@@ -64,8 +61,7 @@ const homeClicked = (() => {
 })
 
 const errorClosed = (() => {
-   systemStore.setError("")
-   systemStore.showError = false
+   systemStore.clearError()
 })
 
 onBeforeMount( async () => {

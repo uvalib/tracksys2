@@ -101,8 +101,17 @@ export const useCollectionsStore = defineStore('collections', {
             this.working = false
          })
       },
+      exportAll() {
+         const system = useSystemStore()
+         axios.post(`${system.jobsURL}/collections/${this.collectionID}/export`).then(()=> {
+            system.toastMessage('Export Started', 'The export process for this collection has begin. Check the job status page for progress.')
+         }).catch( e => {
+            system.toastError('Export Failed', 'Export failed: '+e)
+         })
+      },
       exportCSV() {
-         axios.get(`/api/collections/${this.collectionID}/export`, null, {responseType: "blob"}).then((response) => {
+         const system = useSystemStore()
+         axios.get(`/api/collections/${this.collectionID}/csv`, null, {responseType: "blob"}).then((response) => {
             const fileURL = window.URL.createObjectURL(new Blob([response.data], { type: 'application/vnd.ms-excel' }))
             const fileLink = document.createElement('a')
             fileLink.href =  fileURL
