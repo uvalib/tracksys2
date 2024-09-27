@@ -1,11 +1,10 @@
-import dayjs from 'dayjs'
+import { useDateFormat } from '@vueuse/core'
 
 export default {
    install: (app) => {
-      app.config.globalProperties.$formatDateTime = (dateStr) => {
-         if (dateStr) {
-            let d = dayjs(dateStr)
-            return d.format("YYYY-MM-DD HH:mm A")
+      app.config.globalProperties.$formatDateTime = (date) => {
+         if (date) {
+            return useDateFormat(date, "YYYY-MM-DD HH:mm A").value
          }
          return ""
       }

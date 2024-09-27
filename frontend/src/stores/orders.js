@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { useSystemStore } from './system'
 import axios from 'axios'
-import dayjs from 'dayjs'
+import { useDateFormat } from '@vueuse/core'
 
 export const useOrdersStore = defineStore('orders', {
 	state: () => ({
@@ -438,7 +438,7 @@ export const useOrdersStore = defineStore('orders', {
          axios.post( url ).then( () => {
             system.toastMessage("A fee estimate email has been sent to the customer")
             this.detail.status = "await_fee"
-            this.detail.dateFeeEstimateSent = dayjs(new Date()).format("YYYY-MM-DD")
+            this.detail.dateFeeEstimateSent = useDateFormat(new Date(), "YYYY-MM-DD").value
             let tgtO = this.orders.find( o => o.id == this.detail.id)
             if (tgtO ) {
                tgtO.status = "await_fee"

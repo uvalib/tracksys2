@@ -39,8 +39,8 @@ import { useOrdersStore } from '@/stores/orders'
 import { useSystemStore } from '@/stores/system'
 import { useCustomersStore } from '@/stores/customers'
 import { onMounted, ref, computed } from 'vue'
-import dayjs from 'dayjs'
 import Select from 'primevue/select'
+import { useDateFormat } from '@vueuse/core'
 
 const route = useRoute()
 const router = useRouter()
@@ -107,7 +107,7 @@ onMounted( async () =>{
    await customersStore.getCustomers()
 
    edited.value.status = ordersStore.detail.status
-   edited.value.dateDue = dayjs(ordersStore.detail.dateDue).format("YYYY-MM-DD")
+   edited.value.dateDue = useDateFormat(ordersStore.detail.dateDue, "YYYY-MM-DD").value
    edited.value.title = ordersStore.detail.title
    edited.value.specialInstructions = ordersStore.detail.specialInstructions
    edited.value.staffNotes = ordersStore.detail.staffNotes

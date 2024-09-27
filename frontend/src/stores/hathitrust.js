@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { useSystemStore } from './system'
 import axios from 'axios'
-import dayjs from 'dayjs'
+import { useDateFormat } from '@vueuse/core'
 
 export const useHathiTrustStore = defineStore('hathitrust', {
    state: () => ({
@@ -49,7 +49,7 @@ export const useHathiTrustStore = defineStore('hathitrust', {
          const system = useSystemStore()
          let req = {orderID: orderID, field: field, value: value}
          if ( field == "metadata_submitted_at" || field == "package_submitted_at" || field == "finished_at") {
-            req.value = dayjs(value).format("YYYY-MM-DD")
+            req.value = useDateFormat(value, "YYYY-MM-DD").value
          }
          axios.put( `/api/hathitrust`, req ).then( () => {
             system.toastMessage("Updated", `HathiTrust status records have been updated.`)
@@ -63,7 +63,7 @@ export const useHathiTrustStore = defineStore('hathitrust', {
          let req = {statusIDs: IDs, field: field, value: value}
          console.log(req)
          if ( field == "metadata_submitted_at" || field == "package_submitted_at" || field == "finished_at") {
-            req.value = dayjs(value).format("YYYY-MM-DD")
+            req.value = useDateFormat(value, "YYYY-MM-DD").value
          }
          axios.put( `/api/hathitrust`, req ).then( () => {
             system.toastMessage("Updated", `HathiTrust status records have been updated.`)

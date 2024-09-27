@@ -46,7 +46,7 @@ import Dialog from 'primevue/dialog'
 import { useOrdersStore } from '@/stores/orders'
 import DataDisplay from '@/components/DataDisplay.vue'
 import Panel from 'primevue/panel'
-import dayjs from 'dayjs'
+import { useDateFormat } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 
@@ -87,10 +87,10 @@ function editInvoice() {
 function updateEditData() {
    if ( ordersStore.detail.invoice ) {
       if (ordersStore.detail.invoice.dateFeePaid) {
-         edit.value.dateFeePaid = dayjs(ordersStore.detail.invoice.dateFeePaid).format("YYYY-MM-DD")
+         edit.value.dateFeePaid = useDateFormat(ordersStore.detail.invoice.dateFeePaid, "YYYY-MM-DD").value
       }
       if (ordersStore.detail.invoice.dateFeeDeclined) {
-         edit.value.dateFeeDeclined = dayjs(ordersStore.detail.invoice.dateFeeDeclined).format("YYYY-MM-DD")
+         edit.value.dateFeeDeclined = useDateFormat(ordersStore.detail.invoice.dateFeeDeclined, "YYYY-MM-DD").value
       }
       edit.value.feeAmountPaid = ordersStore.detail.invoice.feeAmountPaid
       edit.value.transmittalNumber = ordersStore.detail.invoice.transmittalNumber

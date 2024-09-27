@@ -40,7 +40,7 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { useJobsStore } from '@/stores/jobs'
 import { useRoute, useRouter } from 'vue-router'
 import { useConfirm } from "primevue/useconfirm"
-import dayjs from 'dayjs'
+import { useDateFormat } from '@vueuse/core'
 
 const route = useRoute()
 const router = useRouter()
@@ -62,7 +62,7 @@ onBeforeUnmount(() => {
 })
 
 const formatTimeStamp = ( (ts) => {
-   return dayjs(ts).format("YYYY-MM-DD HH:mm:ss")
+   return useDateFormat(ts, "YYYY-MM-DD HH:mm:ss").value
 })
 
 const getAssociatedObjectLink = (( objName ) => {
