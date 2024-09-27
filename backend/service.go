@@ -145,7 +145,7 @@ func initializeService(version string, cfg *configData) *serviceContext {
 }
 
 func parseDateString(dateStr string) (time.Time, error) {
-	loc, err := time.LoadLocation("Local")
+	loc, err := time.LoadLocation("America/New_York")
 	if err != nil {
 		return time.Time{}, err
 	}
