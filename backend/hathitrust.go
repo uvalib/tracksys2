@@ -206,7 +206,7 @@ func (svc *serviceContext) updateHathiTrustStatus(c *gin.Context) {
 	updates := []string{"MetadataStatus", "PackageStatus", "Notes"}
 
 	if req.PackageCreatedAt != "" {
-		pCreateDate, err := time.Parse("2006-01-02", req.PackageCreatedAt)
+		pCreateDate, err := parseDateString(req.PackageCreatedAt)
 		if err != nil {
 			log.Printf("ERROR: %s is not a valid package create date", req.PackageCreatedAt)
 			c.String(http.StatusBadRequest, fmt.Sprintf("%s is not a valid package create date", req.PackageCreatedAt))
@@ -217,7 +217,7 @@ func (svc *serviceContext) updateHathiTrustStatus(c *gin.Context) {
 	}
 
 	if req.PackageSubmittedAt != "" {
-		pSubmitDate, err := time.Parse("2006-01-02", req.PackageSubmittedAt)
+		pSubmitDate, err := parseDateString(req.PackageSubmittedAt)
 		if err != nil {
 			log.Printf("ERROR: %s is not a valid package submit date", req.PackageSubmittedAt)
 			c.String(http.StatusBadRequest, fmt.Sprintf("%s is not a valid package submit date", req.PackageSubmittedAt))
@@ -228,7 +228,7 @@ func (svc *serviceContext) updateHathiTrustStatus(c *gin.Context) {
 	}
 
 	if req.FinishedAt != "" {
-		finishDate, err := time.Parse("2006-01-02", req.FinishedAt)
+		finishDate, err := parseDateString(req.FinishedAt)
 		if err != nil {
 			log.Printf("ERROR: %s is not a valid finish date", req.FinishedAt)
 			c.String(http.StatusBadRequest, fmt.Sprintf("%s is not a valid finish date", req.FinishedAt))
@@ -239,7 +239,7 @@ func (svc *serviceContext) updateHathiTrustStatus(c *gin.Context) {
 	}
 
 	if req.MetadataSubmittedAt != "" {
-		mSubmitDate, err := time.Parse("2006-01-02", req.MetadataSubmittedAt)
+		mSubmitDate, err := parseDateString(req.MetadataSubmittedAt)
 		if err != nil {
 			log.Printf("ERROR: %s is not a valid metadata submit date", req.MetadataSubmittedAt)
 			c.String(http.StatusBadRequest, fmt.Sprintf("%s is not a valid metadata submit date", req.MetadataSubmittedAt))
