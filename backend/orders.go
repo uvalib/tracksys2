@@ -166,6 +166,13 @@ func (svc *serviceContext) loadOrder(orderID string) (*order, error) {
 		return &oDetail, nil
 	}
 
+	// Due date is stored as a date rather than datetime, it has no timezone info in the field. When it is
+	// pulled from the DB into a time.Time variable, the zone defaults to UTC.  When is converted on the client, the time
+	// difference in UTC vs EST/EDT bumps the date back one day. To fix, fomat the date as a string without time info (scrap the UTC)
+	// then parse that date onto a datetime in the local timezone.
+	dueStr := oDetail.DateDue.Format("2006-01-02")
+	oDetail.DateDue, _ = parseDateString(dueStr)
+
 	log.Printf("INFO: lookup invoice for order %d", oDetail.ID)
 	var invDetail invoice
 	err = svc.DB.Where("order_id=?", orderID).Order("created_at desc").First(&invDetail).Error
@@ -868,9 +875,16 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
+	log.Printf("INFO: submitted due date [%s]", updateRequest.DateDue)
 
 	oDetail.OrderStatus = updateRequest.Status
-	oDetail.DateDue, _ = time.Parse("2006-01-02", updateRequest.DateDue)
+	oDetail.DateDue, err = parseDateString(updateRequest.DateDue)
+	if err != nil {
+		log.Printf("ERROR: unable to parse due date %s: %s", updateRequest.DateDue, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	log.Printf("INFO: parsed due date [%v]", oDetail.DateDue)
 	oDetail.OrderTitle = updateRequest.Title
 	oDetail.SpecialInstructions = updateRequest.SpecialInstructions
 	oDetail.StaffNotes = updateRequest.StaffNotes
@@ -904,6 +918,6 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 	} else {
 		log.Printf("INFO: order %d updated", oDetail.ID)
 	}
-	svc.DB.Preload("Agency").Preload("Customer").Find(&oDetail, orderID)
-	c.JSON(http.StatusOK, oDetail)
+	updated, _ := svc.loadOrder(orderID)
+	c.JSON(http.StatusOK, updated)
 }
