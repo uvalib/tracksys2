@@ -144,6 +144,18 @@ func initializeService(version string, cfg *configData) *serviceContext {
 	return &ctx
 }
 
+func parseDateString(dateStr string) (time.Time, error) {
+	loc, err := time.LoadLocation("Local")
+	if err != nil {
+		return time.Time{}, err
+	}
+	parsed, err := time.ParseInLocation("2006-01-02", dateStr, loc)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return parsed, err
+}
+
 func (svc *serviceContext) cleanupExpiredData(c *gin.Context) {
 	log.Printf("INFO: cleanup job logs and deleted messages older than 2 months")
 	lastMonth := time.Now().AddDate(0, -2, 0)

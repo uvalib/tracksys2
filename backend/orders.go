@@ -127,7 +127,7 @@ func (svc *serviceContext) createOrder(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	dueDate, _ := time.Parse("2006-01-02", req.DateDue)
+	dueDate, _ := parseDateString(req.DateDue)
 	newOrder := order{OrderStatus: "requested", DateDue: dueDate, OrderTitle: req.Title,
 		SpecialInstructions: req.SpecialInstructions, StaffNotes: req.StaffNotes,
 		CustomerID: &req.CustomerID, DateRequestSubmitted: time.Now()}
@@ -705,13 +705,13 @@ func (svc *serviceContext) updateInvoice(c *gin.Context) {
 	}
 
 	if updateRequest.DateFeePaid != "" {
-		paid, _ := time.Parse("2006-01-02", updateRequest.DateFeePaid)
+		paid, _ := parseDateString(updateRequest.DateFeePaid)
 		inv.DateFeePaid = &paid
 	} else {
 		inv.DateFeePaid = nil
 	}
 	if updateRequest.DateFeeDeclined != "" {
-		paid, _ := time.Parse("2006-01-02", updateRequest.DateFeeDeclined)
+		paid, _ := parseDateString(updateRequest.DateFeeDeclined)
 		inv.DateFeeDeclined = &paid
 	} else {
 		inv.DateFeeDeclined = nil

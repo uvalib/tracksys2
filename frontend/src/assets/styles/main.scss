@@ -3,6 +3,10 @@ body {
    margin: 0;
    padding: 0;
    background-color: white;
+   font-family: "franklin-gothic-urw", arial, sans-serif;
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+   color: var(--color-primary-text);
 
    .sticky {
       position: fixed;
@@ -24,11 +28,7 @@ body {
    }
 
    #app {
-      font-family: "franklin-gothic-urw", arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
       text-align: center;
-      color: var(--color-primary-text);
       margin: 0;
       padding: 0;
       background: white;
