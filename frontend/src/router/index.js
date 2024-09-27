@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import VueCookies from 'vue-cookies'
+import { useCookies } from '@vueuse/integrations/useCookies'
 import { useUserStore } from '@/stores/user'
 
 const router = createRouter({
@@ -137,10 +137,11 @@ const router = createRouter({
 router.beforeEach( async (to) => {
    console.log("BEFORE ROUTE "+to.path)
    const userStore = useUserStore()
+   const cookies = useCookies()
    const noAuthRoutes = ["not_found", "forbidden", "signedout"]
 
    if (to.path === '/granted') {
-      let jwtStr = VueCookies.get("ts2_jwt")
+      const jwtStr = cookies.get("ts2_jwt")
       userStore.setJWT(jwtStr)
       if ( userStore.isSignedIn  ) {
          console.log(`GRANTED [${jwtStr}]`)
