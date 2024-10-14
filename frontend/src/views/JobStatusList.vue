@@ -37,7 +37,10 @@
             <template #body="slotProps">{{ $formatDateTime(slotProps.data.startedAt) }}</template>
          </Column>
          <Column field="finishedAt" header="Finished">
-            <template #body="slotProps">{{ $formatDateTime(slotProps.data.finishedAt) }}</template>
+            <template #body="slotProps">
+               <span v-if="slotProps.data.finishedAt">{{ $formatDateTime(slotProps.data.finishedAt) }}</span>
+               <span v-else class="none">N/A</span>
+            </template>
          </Column>
          <Column header="" class="row-acts">
             <template #body="slotProps">
@@ -176,6 +179,10 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+.none {
+   font-style: italic;
+   color: var(--uvalib-grey-light);
+}
 .job-search {
    display: flex;
    flex-flow: row nowrap;
