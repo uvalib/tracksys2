@@ -81,7 +81,7 @@
          </template>
       </div>
    </div>
-   <Dialog v-model:visible="showCreateAgency" :modal="true" header="Create Agency" :closable="false" @hide="createAgencyClosed" :style="{width: '450px'}">
+   <Dialog v-model:visible="showCreateAgency" :modal="true" header="Create Agency"@hide="createAgencyClosed" :style="{width: '450px'}">
       <div class="agency">
          <label>Name</label>
          <input type="text" v-model="newAgencyName" autofocus/>
@@ -95,10 +95,10 @@
          </div>
       </template>
    </Dialog>
-   <Dialog v-model:visible="showCreateMetadata" :modal="true" header="Create Metadata" @hide="createMetadataClosed" :style="{width: '750px'}" :closable="false" >
+   <Dialog v-model:visible="showCreateMetadata" :modal="true" header="Create Metadata" @hide="createMetadataClosed" :style="{width: '750px'}">
       <NewMetadataPanel @canceled="createMetadataClosed" @created="metadataCreated" />
    </Dialog>
-   <Dialog v-model:visible="showCreateCollection" :modal="true" header="Create Collection Facet" @hide="createCollectionClosed" :style="{width: '450px'}" :closable="false" >
+   <Dialog v-model:visible="showCreateCollection" :modal="true" header="Create Collection Facet" @hide="createCollectionClosed" :style="{width: '450px'}">
       <p>Enter the name of the new collection facet</p>
       <input type="text" v-model="newCollectionFacet" autofocus/>
       <template #footer>
