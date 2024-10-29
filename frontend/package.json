@@ -8,21 +8,21 @@
   },
   "dependencies": {
     "@formkit/vue": "^1.6.7",
-    "@primevue/themes": "^4.1.0",
+    "@primevue/themes": "^4.1.1",
     "@vueuse/core": "^11.1.0",
     "@vueuse/integrations": "^11.1.0",
     "axios": "^1.7.7",
     "jwt-decode": "^4.0.0",
-    "pinia": "^2.2.4",
+    "pinia": "^2.2.5",
     "primeicons": "^7.0.0",
-    "primevue": "^4.1.0",
+    "primevue": "^4.1.1",
     "universal-cookie": "^7.2.1",
     "vue": "^3.5.12",
     "vue-router": "^4.4.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.1.4",
-    "sass-embedded": "^1.79.5",
-    "vite": "^5.4.9"
+    "sass-embedded": "^1.80.4",
+    "vite": "^5.4.10"
   }
 }

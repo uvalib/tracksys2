@@ -31,10 +31,6 @@ export const useJobsStore = defineStore('jobs', {
                if (!js.originatorType) {
                   obj = "None"
                }
-               let finished = "N/A"
-               if (js.finishedAt ) {
-                  finished = js.finishedAt
-               }
                this.jobs.push({
                   id: js.id,
                   name: js.name,
@@ -43,7 +39,7 @@ export const useJobsStore = defineStore('jobs', {
                   warnings: js.failures,
                   error: js.error,
                   startedAt: js.startedAt,
-                  finishedAt: finished,
+                  finishedAt: js.finishedAt,
                })
             })
             this.totalJobs = response.data.total

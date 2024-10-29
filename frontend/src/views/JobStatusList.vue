@@ -39,7 +39,7 @@
          <Column field="finishedAt" header="Finished">
             <template #body="slotProps">
                <span v-if="slotProps.data.finishedAt">{{ $formatDateTime(slotProps.data.finishedAt) }}</span>
-               <span v-else class="none">N/A</span>
+               <span v-else>N/A</span>
             </template>
          </Column>
          <Column header="" class="row-acts">
