@@ -42,6 +42,7 @@
             </dl>
          </template>
          <div class="split">
+            <FormKit label="Collection" type="select" :options="yesNo" v-model="info.isCollection"/>
             <FormKit label="Personal Item" type="select" :options="yesNo" v-model="info.personalItem"/>
             <FormKit label="Manuscript" type="select" :options="yesNo" v-model="info.manuscript"/>
          </div>
