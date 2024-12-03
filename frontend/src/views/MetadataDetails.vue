@@ -54,7 +54,7 @@
                   <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
                      <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
                         {{metadataStore.detail.externalURI}}
-                        <i class="icon fas fa-external-link"></i>
+                        <i class="icon pi pi-external-link"></i>
                      </a>
                   </DataDisplay>
                   <DataDisplay label="Repository" :value="metadataStore.archivesSpace.repo"/>
@@ -79,21 +79,19 @@
 
                <template v-if="externalSystem == 'JSTOR Forum'">
                   <DataDisplay label="Type" :value="externalSystem"/>
-                  <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
+                  <DataDisplay label="Legacy URL" :value="metadataStore.detail.externalURI">
                      <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
                         {{metadataStore.detail.externalURI}}
-                        <i class="icon fas fa-external-link"></i>
+                        <i class="icon pi pi-external-link"></i>
                      </a>
                   </DataDisplay>
-                  <DataDisplay label="Collection" :value="metadataStore.jstor.collection"/>
-                  <DataDisplay label="Title" :value="metadataStore.jstor.title"/>
-                  <DataDisplay label="Description" :value="metadataStore.jstor.desc"/>
-                  <DataDisplay label="Creator" :value="metadataStore.jstor.creator"/>
-                  <DataDisplay label="Date" :value="metadataStore.jstor.date"/>
-                  <DataDisplay label="Width" :value="metadataStore.jstor.width"/>
-                  <DataDisplay label="Height" :value="metadataStore.jstor.height"/>
-                  <DataDisplay label="Artstor ID" :value="metadataStore.jstor.id"/>
-                  <DataDisplay label="Forum ID" :value="metadataStore.jstor.ssid"/>
+                  <DataDisplay label="Search Link" :value="metadataStore.jstor.searchURL">
+                     <a class="supplemental" :href="`${metadataStore.jstor.searchURL}`" target="_blank">
+                        JSTORForum search
+                        <i class="icon pi pi-external-link"></i>
+                     </a>
+                  </DataDisplay>
+                  <DataDisplay label="Title" :value="metadataStore.detail.title"/>
                </template>
 
                <template v-if="externalSystem == 'Apollo'">
@@ -101,13 +99,13 @@
                   <DataDisplay label="URL" :value="metadataStore.apollo.itemURL">
                      <a class="supplemental" :href="metadataStore.apollo.itemURL" target="_blank">
                         {{metadataStore.apollo.itemURL}}
-                        <i class="icon fas fa-external-link"></i>
+                        <i class="icon pi pi-external-link"></i>
                      </a>
                   </DataDisplay>
                   <DataDisplay label="Collection PID" :value="metadataStore.apollo.collectionPID">
                      <a class="supplemental" :href="metadataStore.apollo.collectionURL" target="_blank">
                         {{metadataStore.apollo.collectionPID}}
-                        <i class="icon fas fa-external-link"></i>
+                        <i class="icon pi pi-external-link"></i>
                      </a>
                   </DataDisplay>
                   <DataDisplay label="Collection Title" :value="metadataStore.apollo.collectionTitle"/>
@@ -152,7 +150,7 @@
             <dl>
                <DataDisplay label="PID" :value="metadataStore.detail.pid"/>
                <DataDisplay label="Virgo" :value="$formatBool(metadataStore.detail.inDL)">
-                  <a v-if="metadataStore.detail.inDL" class="virgo no-pad" :href="metadataStore.detail.virgoURL" target="_blank">Yes<i class="icon fas fa-external-link"></i></a>
+                  <a v-if="metadataStore.detail.inDL" class="virgo no-pad" :href="metadataStore.detail.virgoURL" target="_blank">Yes<i class="icon pi pi-external-link"></i></a>
                   <span v-else>No</span>
                </DataDisplay>
                <DataDisplay label="DPLA" :value="$formatBool(metadataStore.detail.inDPLA)"/>
@@ -166,7 +164,7 @@
                <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
                   <DataDisplay label="Use Right" :value="metadataStore.detail.useRightName">
                      <a :href="metadataStore.detail.useRightURI" target="_blank" class="supplemental">
-                        {{metadataStore.detail.useRightName}}<i class="icon fas fa-external-link"></i>
+                        {{metadataStore.detail.useRightName}}<i class="icon pi pi-external-link"></i>
                      </a>
                   </DataDisplay>
                   <DataDisplay label="Use Right Statement" :value="metadataStore.detail.useRightStatement"/>
@@ -177,7 +175,7 @@
                <DataDisplay label="Collection Facet" :value="metadataStore.detail.collectionFacet"/>
                <DataDisplay v-if="metadataStore.detail.supplementalURL" label="Supplemental System" :value="metadataStore.detail.supplementalURL">
                   <a :href="metadataStore.detail.supplementalURL" target="_blank" class="supplemental">
-                     {{metadataStore.detail.supplementalSystem}}<i class="icon fas fa-external-link"></i>
+                     {{metadataStore.detail.supplementalSystem}}<i class="icon pi pi-external-link"></i>
                   </a>
                </DataDisplay>
                <template v-if="metadataStore.canPublishToVirgo && metadataStore.detail.dateDLIngest">

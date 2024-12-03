@@ -132,16 +132,7 @@ type asMetadata struct {
 }
 
 type jstorMetadata struct {
-	ID           string `json:"id"`
-	SSID         string `json:"ssid"`
-	Title        string `json:"title"`
-	Description  string `json:"desc"`
-	Creator      string `json:"creator"`
-	Date         string `json:"date"`
-	CollectionID string `json:"collectionID"`
-	Collection   string `json:"collection"`
-	Width        int    `json:"width"`
-	Height       int    `json:"height"`
+	SearchURL string `json:"searchURL"`
 }
 
 type apolloMetadata struct {
@@ -724,7 +715,7 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 			}
 
 		} else if md.ExternalSystem.Name == "JSTOR Forum" {
-			log.Printf("INFO: get external JSTOR Forum metadata for %s", md.PID)
+			log.Printf("INFO: %s is JSTORForum metadata; just return a search link", md.PID)
 			var mfInfo struct {
 				Filename string
 			}
@@ -733,18 +724,7 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 				log.Printf("ERROR: unable to get master file associated with jstor metadata %s: %s", md.PID, err.Error())
 			} else {
 				tgtFilename := strings.TrimSuffix(mfInfo.Filename, filepath.Ext(mfInfo.Filename))
-				raw, getErr := svc.getRequest(fmt.Sprintf("%s/jstor/lookup?filename=%s", svc.ExternalSystems.Jobs, tgtFilename))
-				if getErr != nil {
-					log.Printf("ERROR: unable to get jstor metadata for %s: %s", md.PID, getErr.Message)
-				} else {
-					var jsData jstorMetadata
-					err := json.Unmarshal(raw, &jsData)
-					if err != nil {
-						log.Printf("ERROR: unable to parse jstor response for %s: %s", md.PID, err.Error())
-					} else {
-						out.JSTOR = &jsData
-					}
-				}
+				out.JSTOR = &jstorMetadata{SearchURL: fmt.Sprintf("https://www.jstor.org/action/doBasicSearch?Query=%s&image_search_referrer=global", tgtFilename)}
 			}
 		} else if md.ExternalSystem.Name == "Apollo" {
 			log.Printf("INFO: get external apollo metadata for %s", md.PID)

@@ -73,15 +73,7 @@ export const useMetadataStore = defineStore('metadata', {
       },
       archivesSpaceReview: null,
       jstor: {
-         id: "",
-         ssid: "",
-         desc: "",
-         creator: "",
-         date: "",
-         collectionID: "",
-         collection: "",
-         width: 0,
-         height: 0,
+         searchURL: ""
       },
       apollo: {
          pid: "",
