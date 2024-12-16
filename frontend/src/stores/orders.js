@@ -392,21 +392,6 @@ export const useOrdersStore = defineStore('orders', {
          })
       },
 
-      async resendFeeEstimate( staffID,  toCustomer, toAlt = false, altAddress = "") {
-         const system = useSystemStore()
-         system.working = true
-         let url = `${system.jobsURL}/orders/${this.detail.id}/fees?staff=${staffID}&resend=1`
-         if (toCustomer) {
-            await axios.post( url )
-         }
-         if ( toAlt ) {
-            url = `${url}&alt=${altAddress}`
-            await axios.post( url  )
-         }
-         system.toastMessage("Email Sent", "Fee estimate email has been resent to the selected recipients")
-         system.working = false
-      },
-
       waiveFee( staffID ) {
          const system = useSystemStore()
          system.working = true
