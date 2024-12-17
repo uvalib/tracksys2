@@ -588,7 +588,7 @@ func (svc *serviceContext) sendUseRightToSirsi(md *metadata, useRightID int64) {
 	ilsReq.Name = ur.Name
 	ilsReq.URI = ur.URI
 
-	url := fmt.Sprintf("%s/v4/metadata/%s/update_rights", svc.ExternalSystems.ILS, *md.CatalogKey)
+	url := fmt.Sprintf("%s/metadata/%s/update_rights", svc.ExternalSystems.ILS, *md.CatalogKey)
 	ilsResp, ilsErr := svc.postJSON(url, ilsReq)
 	if ilsErr != nil {
 		log.Printf("ERROR: ils connector rights request failed %d: %s", ilsErr.StatusCode, ilsErr.Message)
