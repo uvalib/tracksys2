@@ -307,7 +307,7 @@ func (svc *serviceContext) getAPTrustCollectionStatus(c *gin.Context) {
 func (svc *serviceContext) requestAPTStatus(mdID int64) (*APTrustResult, error) {
 	raw, getErr := svc.getRequest(fmt.Sprintf("%s/metadata/%d/aptrust", svc.ExternalSystems.Jobs, mdID))
 	if getErr != nil {
-		return nil, fmt.Errorf(getErr.Message)
+		return nil, fmt.Errorf("%d: %s", getErr.StatusCode, getErr.Message)
 	}
 
 	var parsedStatus APTrustResult
