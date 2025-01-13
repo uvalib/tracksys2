@@ -53,7 +53,11 @@ function sendClicked() {
       error.value = "An alternate email address is required."
       return
    }
-   ordersStore.sendEmail(user.computeID, sendToCustomer.value, sendToAlt.value, altEmail.value)
+   if (props.mode == "order") {
+      ordersStore.sendEmail(user.computeID, sendToCustomer.value, sendToAlt.value, altEmail.value)
+   } else {
+      ordersStore.resendFeeEstimate( user.computeID, sendToCustomer.value, sendToAlt.value, altEmail.value)
+   }
    hide()
 }
 
