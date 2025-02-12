@@ -9,11 +9,11 @@
   "dependencies": {
     "@formkit/vue": "^1.6.9",
     "@primevue/themes": "^4.2.5",
-    "@vueuse/core": "^12.4.0",
-    "@vueuse/integrations": "^12.4.0",
+    "@vueuse/core": "^12.5.0",
+    "@vueuse/integrations": "^12.5.0",
     "axios": "^1.7.9",
     "jwt-decode": "^4.0.0",
-    "pinia": "^2.3.0",
+    "pinia": "^3.0.1",
     "primeicons": "^7.0.0",
     "primevue": "^4.2.5",
     "universal-cookie": "^7.2.2",
@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",
-    "sass-embedded": "^1.83.1",
-    "vite": "^6.0.7"
+    "sass-embedded": "^1.83.4",
+    "vite": "^6.1.0"
   }
 }

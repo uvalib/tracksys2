@@ -287,6 +287,12 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 		}
 	}
 
+	updateMasterFileMetadata := false
+	if unitDetail.MetadataID != &req.MetadataID {
+		log.Printf("INFO: unit %d update changes metadata from %d to %d; master files must be updated", unitDetail.ID, *unitDetail.MetadataID, req.MetadataID)
+		updateMasterFileMetadata = true
+	}
+
 	log.Printf("INFO: update unit %d with %+v", unitDetail.ID, req)
 	unitDetail.UnitStatus = req.Status
 	unitDetail.PatronSourceURL = req.PatronSourceURL
@@ -310,6 +316,17 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	if updateMasterFileMetadata {
+		log.Printf("INFO: update masterfiles metadata to %d", req.MetadataID)
+		mfErr := svc.DB.Debug().Exec("update master_files set metadata_id=? where unit_id=?", req.MetadataID, unitDetail.ID).Error
+		if mfErr != nil {
+			log.Printf("ERROR: unable to update unit %d masterfiles with new metadata: %s", unitDetail.ID, mfErr.Error())
+			c.String(http.StatusInternalServerError, mfErr.Error())
+			return
+		}
+	}
+
 	svc.DB.Preload("IntendedUse").Preload("Attachments").Preload("Order").Preload("Metadata").Preload("Metadata.OCRHint").Find(&unitDetail, unitID)
 	svc.DB.Table("units").Where("order_id=?", unitDetail.OrderID).Select("id").Find(&unitDetail.RelatedUnitIDs)
 	c.JSON(http.StatusOK, unitDetail)

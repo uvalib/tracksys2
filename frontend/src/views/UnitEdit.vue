@@ -79,7 +79,9 @@ import { useUnitsStore } from '@/stores/units'
 import { useSystemStore } from '@/stores/system'
 import Panel from 'primevue/panel'
 import LookupDialog from '@/components/LookupDialog.vue'
+import { useConfirm } from "primevue/useconfirm"
 
+const confirm = useConfirm()
 const route = useRoute()
 const router = useRouter()
 const unitsStore = useUnitsStore()
@@ -173,9 +175,30 @@ const cancelEdit = (() => {
 })
 
 const submitChanges = ( async () => {
-   await unitsStore.submitEdit( edited.value )
-   if (systemStore.showError == false) {
-      router.push(`/units/${unitsStore.detail.id}`)
+   if (edited.value.metadataID != unitsStore.detail.metadataID) {
+      confirm.require({
+         message: "You have changed the metadata record for this unit. All master files will also be updated to use this metadata. Are you sure?",
+         header: 'Confirm Metadata Change',
+         icon: 'pi pi-question-circle',
+         rejectProps: {
+            label: 'Cancel',
+            severity: 'secondary'
+         },
+         acceptProps: {
+            label: 'Update'
+         },
+         accept: async () => {
+            await unitsStore.submitEdit( edited.value )
+            if (systemStore.showError == false) {
+               router.push(`/units/${unitsStore.detail.id}`)
+            }
+         },
+      })
+   } else {
+      await unitsStore.submitEdit( edited.value )
+      if (systemStore.showError == false) {
+         router.push(`/units/${unitsStore.detail.id}`)
+      }
    }
 })
 </script>
