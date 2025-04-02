@@ -303,18 +303,3 @@ func (svc *serviceContext) getAPTrustCollectionStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, parsedStatusList)
 }
-
-func (svc *serviceContext) requestAPTStatus(mdID int64) (*APTrustResult, error) {
-	raw, getErr := svc.getRequest(fmt.Sprintf("%s/metadata/%d/aptrust", svc.ExternalSystems.Jobs, mdID))
-	if getErr != nil {
-		return nil, fmt.Errorf("%d: %s", getErr.StatusCode, getErr.Message)
-	}
-
-	var parsedStatus APTrustResult
-	err := json.Unmarshal(raw, &parsedStatus)
-	if err != nil {
-		return nil, err
-	}
-
-	return &parsedStatus, nil
-}

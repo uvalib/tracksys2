@@ -8,7 +8,7 @@ export const useUnitsStore = defineStore('units', {
 
       masterFiles: [],
       loadingMasterFiles: false,
-
+      exportingCSV: false,
       updateInProgress: false,
 
       pdf: {
@@ -378,6 +378,24 @@ export const useUnitsStore = defineStore('units', {
          })
       },
 
+      async exportCSV() {
+         this.exportingCSV = true
+          await axios.get( `/api/units/${this.detail.id}/csv`, null, {responseType: "blob"}).then((response) => {
+            const fileURL = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }))
+            const fileLink = document.createElement('a')
+            fileLink.href =  fileURL
+            fileLink.setAttribute('download', `unit-${this.detail.id}.csv`)
+            document.body.appendChild(fileLink)
+            fileLink.click()
+            window.URL.revokeObjectURL(fileURL)
+            this.exportingCSV = false
+          }).catch( e => {
+            const system = useSystemStore()
+            system.setError(e)
+            this.exportingCSV = false
+         })
+      },
+
       downloadPDF() {
          if ( !state.detail.metadata ) return
 
@@ -395,6 +413,7 @@ export const useUnitsStore = defineStore('units', {
             window.URL.revokeObjectURL(fileURL)
             this.pdf.downloading = false
          }).catch( e => {
+            const system = useSystemStore()
             system.setError(e)
          })
       }

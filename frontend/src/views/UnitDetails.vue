@@ -2,6 +2,9 @@
    <h2>
       <span>{{pageTitle}}</span>
       <div class="actions" >
+         <DPGButton v-if="detail.reorder == false && unitsStore.hasMasterFiles && (userStore.isAdmin || userStore.isSupervisor)"
+            label="Export CSV" @click="exportUnitCSV()" :loading="unitsStore.exportingCSV"
+         />
          <DPGButton label="Audit Master Files" @click="auditUnit()" v-if="detail.reorder == false && unitsStore.hasMasterFiles && (userStore.isAdmin || userStore.isSupervisor)"/>
          <DPGButton label="Edit" @click="editUnit()"/>
          <DPGButton label="Delete" @click="deleteUnit()" v-if="canDelete"/>
@@ -302,6 +305,10 @@ const generateDeliverablesClicked = (() => {
 
 const auditUnit = (() => {
    unitsStore.audit()
+})
+
+const exportUnitCSV = (() => {
+   unitsStore.exportCSV()
 })
 
 const deleteUnit = (() => {

@@ -496,9 +496,6 @@ func (svc *serviceContext) getRequest(url string) ([]byte, *RequestError) {
 func (svc *serviceContext) putRequest(url string) ([]byte, *RequestError) {
 	return svc.sendRequest("PUT", url, nil)
 }
-func (svc *serviceContext) postFormRequest(url string, payload *url.Values) ([]byte, *RequestError) {
-	return svc.sendRequest("POST", url, payload)
-}
 
 func (svc *serviceContext) postJSON(url string, jsonPayload interface{}) ([]byte, *RequestError) {
 	log.Printf("INFO: POST json request: %s", url)

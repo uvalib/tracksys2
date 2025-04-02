@@ -12,7 +12,7 @@ import (
 )
 
 // Version of the service
-const Version = "1.29.0"
+const Version = "1.30.0"
 
 func main() {
 	// Load cfg
@@ -133,6 +133,7 @@ func main() {
 		api.GET("/units/:id/masterfiles", svc.getUnitMasterfiles)
 		api.GET("/units/:id/clone-sources", svc.getUnitCloneSources)
 		api.POST("/units/:id/update", svc.updateUnit)
+		api.GET("/units/:id/csv", svc.exportUnitCSV)
 
 		api.GET("/search", svc.searchRequest)
 		api.GET("/search/images", svc.imageSearchRequest)

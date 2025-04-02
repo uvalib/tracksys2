@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"log"
@@ -440,6 +441,41 @@ func (svc *serviceContext) getUnitCloneSources(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, units)
+}
+
+func (svc *serviceContext) exportUnitCSV(c *gin.Context) {
+	uID := c.Param("id")
+	log.Printf("INFO: export csv for unit %s", uID)
+	var mfs []masterFile
+	err := svc.DB.Where("unit_id=?", uID).Preload("Locations").Preload("Locations.ContainerType").Find(&mfs).Error
+	if err != nil {
+		log.Printf("ERROR: unable to get master files for unit %s csv export: %s", uID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.Header("Content-Type", "text/csv")
+	cw := csv.NewWriter(c.Writer)
+	csvHead := []string{"pid", "title", "description", "location", "iiif"}
+	cw.Write(csvHead)
+	for _, mf := range mfs {
+		line := make([]string, 0)
+		line = append(line, mf.PID)
+		line = append(line, mf.Title)
+		line = append(line, mf.Description)
+		if len(mf.Locations) > 0 {
+			loc := mf.Locations[0]
+			locStr := fmt.Sprintf("%s %s, Folder %s", loc.ContainerType.Name, loc.ContainerID, loc.FolderID)
+			line = append(line, locStr)
+		} else {
+			line = append(line, "")
+		}
+		iifURL := fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mf.PID)
+		line = append(line, iifURL)
+		cw.Write(line)
+	}
+
+	cw.Flush()
 }
 
 func (svc *serviceContext) validateIncludeInDL(metadataID int64, tgtUnitID int64) error {

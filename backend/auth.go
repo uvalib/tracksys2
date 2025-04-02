@@ -124,18 +124,6 @@ func (svc *serviceContext) authMiddleware(c *gin.Context) {
 	c.Next()
 }
 
-func getJWTClaims(c *gin.Context) *jwtClaims {
-	claims, signedIn := c.Get("claims")
-	if signedIn == false {
-		return nil
-	}
-	jwtClaims, ok := claims.(*jwtClaims)
-	if !ok {
-		return nil
-	}
-	return jwtClaims
-}
-
 // getBearerToken is a helper to extract the token from headers
 func getBearerToken(authorization string) (string, error) {
 	components := strings.Split(strings.Join(strings.Fields(authorization), " "), " ")
