@@ -1,0 +1,1 @@
+ALTER table projects ADD COLUMN image_count int DEFAULT 0;
