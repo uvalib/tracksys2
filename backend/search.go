@@ -355,32 +355,55 @@ func (svc *serviceContext) initFilter(filterStr string) (*searchFilter, error) {
 	return &out, nil
 }
 
+func getCallNumRegexp(query string) string {
+	cleanQ := strings.TrimSpace(strings.ToUpper(query))
+	parts := make([]string, 0)
+	if strings.Contains(cleanQ, " ") == false && strings.Index(cleanQ, "MSS") == 0 {
+		// sometimes manuscrips are searched without the space. add it
+		parts = append(parts, "(MSS)")
+		parts = append(parts, fmt.Sprintf("(%s)", cleanQ[3:]))
+	} else {
+		for _, bit := range strings.Split(cleanQ, " ") {
+			if strings.Contains(bit, ".") {
+				// sometimes cutter lines are prefaced by a space, sometimes not. add regex that supports both
+				bit = strings.ReplaceAll(bit, ".", fmt.Sprintf("[ ]*(.)"))
+			}
+			// make a regex group out of each space separated part
+			parts = append(parts, fmt.Sprintf("(%s)", bit))
+
+		}
+	}
+	// join all parts, separating them by 0 or more spaces
+	return fmt.Sprintf("^%s", strings.Join(parts, "[ ]*"))
+}
+
 func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan searchChannel) {
 	resp := masterFileResp{Hits: make([]*masterFileHit, 0)}
 	if sc.Scope == "all" || sc.Scope == "masterfiles" {
 		log.Printf("INFO: searching masterfiles for [%s]...", sc.Query)
 		startTime := time.Now()
 		origQ := "(select mo.pid from master_files mo where mo.id = master_files.original_mf_id) as original_pid"
-		searchQ := svc.DB.Debug().Table("master_files").Joins("left outer join metadata md on md.id=metadata_id").Select("master_files.*", origQ)
+		searchQ := svc.DB.Table("master_files").Joins("left outer join metadata md on md.id=metadata_id").Select("master_files.*", origQ)
 
 		if sc.QueryType != "pid" {
 			if sc.Filter.Target == "masterfiles" {
 				searchQ = searchQ.Where(sc.Filter.Query)
 			}
 
+			callNumQ := getCallNumRegexp(sc.Query)
 			var fieldQ *gorm.DB
 			if sc.Field == "all" {
 				if sc.QueryType == "id" {
 					fieldQ = svc.DB.Or("master_files.id=?", sc.IntQuery).Or("unit_id=?", sc.IntQuery)
 				} else {
-					fieldQ = svc.DB.Or("md.call_number like ?", sc.QueryStart).
+					fieldQ = svc.DB.Or("md.call_number != ? AND md.call_number REGEXP ?", "", callNumQ).
 						Or("master_files.title like ?", sc.QueryAny).
 						Or("description like ?", sc.QueryAny)
 				}
 			} else if sc.Field == "unit_id" {
 				fieldQ = svc.DB.Where("unit_id=?", sc.IntQuery)
 			} else if sc.Field == "call_number" {
-				fieldQ = svc.DB.Where("call_number like ?", sc.QueryStart)
+				fieldQ = svc.DB.Where("call_number != ? AND call_number REGEXP ?", "", callNumQ)
 			} else if sc.Field == "title" || sc.Field == "description" {
 				fieldQ = svc.DB.Where(fmt.Sprintf("master_files.%s like ?", sc.Field), sc.QueryAny)
 			} else if sc.Field == "filename" {
@@ -462,11 +485,12 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 				searchQ = searchQ.Where(sc.Filter.Query)
 			}
 
+			callNumQ := getCallNumRegexp(sc.Query)
 			var fieldQ *gorm.DB
 			if sc.Field == "all" {
 				fieldQ = svc.DB.Or("title like ?", sc.QueryAny).
-					Or("barcode=?", sc.Query).Or("catalog_key=?", sc.Query).Or("call_number like ?", sc.QueryStart).Or("desc_metadata like ?", sc.QueryAny).
-					Or("creator_name like ?", sc.QueryStart).Or("collection_id like ?", sc.QueryStart).Or("collection_facet like ?", sc.QueryStart)
+					Or("barcode=?", sc.Query).Or("catalog_key=?", sc.Query).Or("call_number != ? AND call_number REGEXP ?", "", callNumQ).Or("desc_metadata like ?", sc.QueryAny).
+					Or("creator_name like ?", sc.QueryStart).Or("collection_id like ?", sc.QueryStart).Or("collection_facet=?", sc.QueryAny)
 				if sc.QueryType == "id" {
 					fieldQ = fieldQ.Or("metadata.id=?", sc.IntQuery)
 				}
@@ -474,7 +498,7 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 				if sc.Field == "title" || sc.Field == "creator_name" {
 					fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
 				} else if sc.Field == "call_number" {
-					fieldQ = svc.DB.Where("call_number like ?", sc.QueryStart)
+					fieldQ = svc.DB.Where("call_number != ? AND call_number REGEXP ?", "", callNumQ)
 				} else {
 					fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", sc.Field), sc.Query)
 				}
@@ -635,7 +659,7 @@ func (svc *serviceContext) imageSearchRequest(c *gin.Context) {
 	resp := similarResult{Hits: make([]*similarImageHit, 0)}
 	startTime := time.Now()
 	distQ := "WHERE BIT_COUNT(phash ^ ?) <= ?"
-	err := svc.DB.Debug().Raw(fmt.Sprintf("SELECT count(id) FROM master_files %s", distQ), pHashQ, distance).Scan(&resp.Total).Error
+	err := svc.DB.Raw(fmt.Sprintf("SELECT count(id) FROM master_files %s", distQ), pHashQ, distance).Scan(&resp.Total).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get image search hit count: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -645,7 +669,7 @@ func (svc *serviceContext) imageSearchRequest(c *gin.Context) {
 	imgFields := "m.id as id, m.pid as pid, m.filename as filename, m.title as title, m.description as description, BIT_COUNT(phash ^ ?) as distance"
 	mdFields := "m.unit_id as unit_id, m2.id as md_id, m2.title as md_title, m2.pid as md_pid"
 	orderClause := "order by distance asc limit 0,50"
-	err = svc.DB.Debug().Raw(fmt.Sprintf("SELECT %s, %s FROM master_files m left join metadata m2 on m2.id=metadata_id %s %s",
+	err = svc.DB.Raw(fmt.Sprintf("SELECT %s, %s FROM master_files m left join metadata m2 on m2.id=metadata_id %s %s",
 		imgFields, mdFields, distQ, orderClause), pHashQ, pHashQ, distance).Scan(&resp.Hits).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get image search hits: %s", err.Error())
