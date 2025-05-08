@@ -28,30 +28,27 @@
             <span :class="`status ${slotProps.data.status}`">{{displayStatus(slotProps.data.status)}}</span>
          </template>
       </Column>
-      <Column header="Customer" class="nowrap" filterField="last_name" :showFilterMatchModes="false">
-         <template #body="slotProps">
-            {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
-         </template>
+      <Column field="customer" header="Customer" class="nowrap" filterField="last_name" :showFilterMatchModes="false">
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Last name"/>
          </template>
       </Column>
-      <Column field="agency.name" header="Agency" class="nowrap"  filterField="agencies.name" :showFilterMatchModes="false" >
+      <Column field="agency" header="Agency" class="nowrap"  filterField="agencies.name" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Agency name"/>
          </template>
       </Column>
-      <Column field="title" header="Order Title" filterField="order_title" :showFilterMatchModes="false" >
+      <Column field="title" header="Order Title" filterField="title" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
          </template>
       </Column>
-      <Column field="notes" header="Staff Notes" filterField="orders.staff_notes" :showFilterMatchModes="false" >
+      <Column field="staff_notes" header="Staff Notes" filterField="orders.staff_notes" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Notes"/>
          </template>
       </Column>
-      <Column field="specialInstructions" header="Special Instructions" filterField="orders.special_instructions" :showFilterMatchModes="false" >
+      <Column field="special_instructions" header="Special Instructions" filterField="orders.special_instructions" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
          </template>

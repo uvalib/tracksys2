@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"image"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/corona10/goimagehash"
 	"github.com/gin-gonic/gin"
+	manticore "github.com/manticoresoftware/manticoresearch-go"
 	"golang.org/x/image/tiff"
 	"gorm.io/gorm"
 )
@@ -56,19 +58,13 @@ type metadataHit struct {
 }
 
 type orderHit struct {
-	ID                  uint64   `json:"id"`
-	OrderStatus         string   `json:"status"`
-	OrderTitle          string   `json:"title"`
-	StaffNotes          string   `json:"notes"`
-	SpecialInstructions string   `json:"specialInstructions"`
-	CustomerID          uint     `json:"-"`
-	Customer            customer `gorm:"foreignKey:CustomerID" json:"customer"`
-	AgencyID            *uint    `json:"-"`
-	Agency              *agency  `gorm:"foreignKey:AgencyID" json:"agency"`
-}
-
-func (orderHit) TableName() string {
-	return "orders"
+	ID                  uint64 `json:"id"`
+	Status              string `json:"status"`
+	Title               string `json:"title"`
+	StaffNotes          string `json:"staff_notes"`
+	SpecialInstructions string `json:"special_instructions"`
+	CustomerName        string `json:"customer"`
+	Agency              string `json:"agency"`
 }
 
 type unitHit struct {
@@ -137,7 +133,17 @@ type searchContext struct {
 
 type searchChannel struct {
 	Type    string
-	Results interface{}
+	Results any
+}
+
+func newQuery(table, query string, offset, limit int32) *manticore.SearchRequest {
+	searchRequest := manticore.NewSearchRequest(table)
+	searchRequest.SetLimit(limit)
+	searchRequest.SetOffset(offset)
+	searchQuery := manticore.NewSearchQuery()
+	searchQuery.QueryString = query
+	searchRequest.Query = searchQuery
+	return searchRequest
 }
 
 func (svc *serviceContext) searchRequest(c *gin.Context) {
@@ -538,46 +544,71 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 
 func (svc *serviceContext) queryOrders(sc *searchContext, channel chan searchChannel) {
 	resp := orderResp{Hits: make([]orderHit, 0)}
-	if (sc.Scope == "all" || sc.Scope == "orders") && sc.QueryType != "pid" {
-		log.Printf("INFO: searching orders for [%s]...", sc.Query)
-		startTime := time.Now()
-		searchQ := svc.DB.Table("orders").
-			Joins("inner join customers on customer_id = customers.id").
-			Joins("left outer join agencies on agency_id = agencies.id")
-		if sc.Filter.Target == "orders" {
-			searchQ = searchQ.Where(sc.Filter.Query)
-		}
+	// if (sc.Scope == "all" || sc.Scope == "orders") && sc.QueryType != "pid" {
+	// 	log.Printf("INFO: searching orders for [%s]...", sc.Query)
+	// 	startTime := time.Now()
+	// 	searchQ := svc.DB.Table("orders").
+	// 		Joins("inner join customers on customer_id = customers.id").
+	// 		Joins("left outer join agencies on agency_id = agencies.id")
+	// 	if sc.Filter.Target == "orders" {
+	// 		searchQ = searchQ.Where(sc.Filter.Query)
+	// 	}
 
-		var fieldQ *gorm.DB
-		if sc.Field == "all" {
-			if sc.QueryType == "id" {
-				fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
-			} else {
-				fieldQ = svc.DB.Or("customers.last_name like ?", sc.QueryStart).Or("agencies.name like ?", sc.QueryStart).
-					Or("orders.staff_notes like ?", sc.QueryAny).Or("orders.special_instructions like ?", sc.QueryAny)
-			}
-		} else if sc.Field == "id" {
-			fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
-		} else if sc.Field == "last_name" {
-			fieldQ = svc.DB.Where("customers.last_name like ?", sc.QueryStart)
-		} else if sc.Field == "agency" {
-			fieldQ = svc.DB.Where("agencies.name like ?", sc.QueryAny)
-		} else {
-			fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
-		}
-		searchQ.Where(fieldQ)
+	// 	var fieldQ *gorm.DB
+	// 	if sc.Field == "all" {
+	// 		if sc.QueryType == "id" {
+	// 			fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
+	// 		} else {
+	// 			fieldQ = svc.DB.Or("customers.last_name like ?", sc.QueryStart).Or("agencies.name like ?", sc.QueryStart).
+	// 				Or("orders.staff_notes like ?", sc.QueryAny).Or("orders.special_instructions like ?", sc.QueryAny)
+	// 		}
+	// 	} else if sc.Field == "id" {
+	// 		fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
+	// 	} else if sc.Field == "last_name" {
+	// 		fieldQ = svc.DB.Where("customers.last_name like ?", sc.QueryStart)
+	// 	} else if sc.Field == "agency" {
+	// 		fieldQ = svc.DB.Where("agencies.name like ?", sc.QueryAny)
+	// 	} else {
+	// 		fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
+	// 	}
+	// 	searchQ.Where(fieldQ)
 
-		searchQ.Count(&resp.Total)
-		err := searchQ.Preload("Customer").Preload("Agency").
-			Offset(sc.StartIndex).Limit(sc.PageSize).
-			Find(&resp.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: order search failed: %s", err.Error())
-		}
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: orders search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+	// 	searchQ.Count(&resp.Total)
+	// 	err := searchQ.Preload("Customer").Preload("Agency").
+	// 		Offset(sc.StartIndex).Limit(sc.PageSize).
+	// 		Find(&resp.Hits).Error
+	// 	if err != nil {
+	// 		log.Printf("ERROR: order search failed: %s", err.Error())
+	// 	}
+	// 	elapsedNanoSec := time.Since(startTime)
+	// 	elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+	// 	log.Printf("INFO: orders search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+	// }
+
+	qStr := sc.Query
+	if sc.Field != "all" {
+		qStr = fmt.Sprintf("@%s %s", sc.Field, sc.Query)
 	}
+	newQ := newQuery("orders", qStr, int32(sc.StartIndex), int32(sc.PageSize))
+	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
+	if err != nil {
+		log.Printf("ERROR: orders search failed: %s", err.Error())
+		channel <- searchChannel{Type: "orders", Results: resp}
+		return
+	}
+	resp.Total = int64(mResp.Hits.GetTotal())
+
+	for _, h := range mResp.Hits.GetHits() {
+		b, _ := json.Marshal(h.GetSource())
+		var hitObj orderHit
+		uErr := json.Unmarshal(b, &hitObj)
+		if uErr != nil {
+			log.Printf("ERROR: %s", uErr)
+		}
+		hitObj.ID = uint64(h.GetId())
+		resp.Hits = append(resp.Hits, hitObj)
+	}
+
 	channel <- searchChannel{Type: "orders", Results: resp}
 }
 

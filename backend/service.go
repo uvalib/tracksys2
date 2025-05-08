@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	manticore "github.com/manticoresoftware/manticoresearch-go"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
@@ -43,6 +45,7 @@ type serviceContext struct {
 	Version         string
 	HTTPClient      *http.Client
 	DB              *gorm.DB
+	Index           *manticore.SearchAPIService
 	JWTKey          string
 	ExternalSystems externalSystems
 	DevAuthUser     string
@@ -121,6 +124,12 @@ func initializeService(version string, cfg *configData) *serviceContext {
 	sqlDB.SetMaxOpenConns(10)
 	ctx.DB = gdb
 	log.Printf("INFO: DB Connection established")
+
+	log.Printf("INFO: connect to search index...")
+	mc := manticore.NewConfiguration()
+	mc.Servers[0].URL = "http://localhost:9308"
+	apiClient := manticore.NewAPIClient(mc)
+	ctx.Index = apiClient.SearchAPI
 
 	log.Printf("INFO: create HTTP client...")
 	defaultTransport := &http.Transport{
@@ -430,7 +439,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		},
 		"orders": {
 			searchField{Field: "all", Label: "All fields"},
-			searchField{Field: "order_title", Label: "Title"},
+			searchField{Field: "title", Label: "Title"},
 			searchField{Field: "last_name", Label: "Customer last name"},
 			searchField{Field: "agency", Label: "Agency"},
 			searchField{Field: "staff_notes", Label: "Staff notes"},
