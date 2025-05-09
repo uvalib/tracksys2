@@ -26,13 +26,9 @@
             <div v-if="slotProps.data.virgoURL && slotProps.data.type=='XmlMetadata'"><a :href="slotProps.data.virgoURL" target="_blank">VIRGO</a></div>
          </template>
       </Column>
-      <Column field="type" header="Type" filterField="type" :showFilterMatchModes="false" >
+      <Column field="system_name" header="Type" filterField="type" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <Select v-model="filterModel.value" :options="mdTypes" optionLabel="name" optionValue="code" placeholder="Select a type" />
-         </template>
-         <template #body="slotProps">
-            <div v-if="slotProps.data.type != 'ExternalMetadata'">{{slotProps.data.type}}</div>
-            <div v-else>{{slotProps.data.externalSystem.name}}</div>
          </template>
       </Column>
       <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
@@ -40,7 +36,7 @@
             <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
          </template>
       </Column>
-      <Column field="creatorName" header="Creator Name" filterField="creator_name" :showFilterMatchModes="false" >
+      <Column field="creator_name" header="Creator Name" filterField="creator_name" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Creator name"/>
          </template>
@@ -50,18 +46,18 @@
             <InputText type="text" v-model="filterModel.value" placeholder="Barcode"/>
          </template>
       </Column>
-      <Column field="callNumber" header="Call Number" class="nowrap" filterField="call_number" :showFilterMatchModes="false" >
+      <Column field="call_number" header="Call Number" class="nowrap" filterField="call_number" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Call number"/>
          </template>
       </Column>
-      <Column field="catalogKey" header="Catalog Key" class="nowrap" filterField="catalog_key" :showFilterMatchModes="false" >
+      <Column field="catalog_key" header="Catalog Key" class="nowrap" filterField="catalog_key" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Catalog key"/>
          </template>
          <template #body="slotProps">
-            <div>{{slotProps.data.catalogKey}}</div>
-            <div v-if="slotProps.data.virgoURL && slotProps.data.catalogKey"><a :href="slotProps.data.virgoURL" target="_blank">VIRGO</a></div>
+            <div>{{slotProps.data.catalog_key}}</div>
+            <div v-if="slotProps.data.virgo_url && slotProps.data.catalog_key"><a :href="slotProps.data.virgo_url" target="_blank">VIRGO</a></div>
          </template>
       </Column>
       <Column field="virgo" header="Virgo" class="nowrap" filterField="virgo" :showFilterMatchModes="false" >

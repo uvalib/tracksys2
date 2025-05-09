@@ -40,21 +40,18 @@ type masterFileHit struct {
 }
 
 type metadataHit struct {
-	ID               uint64          `json:"id"`
-	PID              string          `gorm:"column:pid" json:"pid"`
-	Type             string          `json:"type"`
-	Title            string          `json:"title"`
-	CallNumber       string          `json:"callNumber"`
-	Barcode          string          `json:"barcode"`
-	CatalogKey       string          `json:"catalogKey"`
-	CreatorName      string          `json:"creatorName"`
-	DateDlIngest     *time.Time      `gorm:"column:date_dl_ingest" json:"-"`
-	Virgo            bool            `gorm:"-" json:"virgo"`
-	DPLA             bool            `json:"dpla"`
-	HathiTrust       bool            `gorm:"column:hathitrust" json:"hathitrust"`
-	VirgoURL         string          `gorm:"-" json:"virgoURL"`
-	ExternalSystemID int64           `json:"-"`
-	ExternalSystem   *externalSystem `gorm:"foreignKey:ExternalSystemID" json:"externalSystem,omitempty"`
+	ID          uint64 `json:"id"`
+	PID         string `json:"pid"`
+	SystemName  string `json:"system_name"`
+	Title       string `json:"title"`
+	CallNumber  string `json:"call_number"`
+	Barcode     string `json:"barcode"`
+	CatalogKey  string `json:"catalog_key"`
+	CreatorName string `json:"creator_name"`
+	Virgo       bool   `json:"virgo"`
+	DPLA        bool   `json:"dpla"`
+	HathiTrust  bool   `json:"hathitrust"`
+	VirgoURL    string `json:"virgo_url"`
 }
 
 type orderHit struct {
@@ -84,8 +81,8 @@ type componentResp struct {
 	Hits  []component `json:"hits"`
 }
 type metadataResp struct {
-	Total int64          `json:"total"`
-	Hits  []*metadataHit `json:"hits"`
+	Total int64         `json:"total"`
+	Hits  []metadataHit `json:"hits"`
 }
 type masterFileResp struct {
 	Total int64            `json:"total"`
@@ -481,110 +478,51 @@ func (svc *serviceContext) queryUnits(sc *searchContext, channel chan searchChan
 }
 
 func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchChannel) {
-	resp := metadataResp{Hits: make([]*metadataHit, 0)}
-	if sc.Scope == "all" || sc.Scope == "metadata" {
-		log.Printf("INFO: searching metadata for [%s]...", sc.Query)
-		startTime := time.Now()
-		searchQ := svc.DB.Table("metadata")
-		if sc.QueryType != "pid" {
-			if sc.Filter.Target == "metadata" {
-				searchQ = searchQ.Where(sc.Filter.Query)
-			}
+	resp := metadataResp{Hits: make([]metadataHit, 0)}
 
-			callNumQ := getCallNumRegexp(sc.Query)
-			var fieldQ *gorm.DB
-			if sc.Field == "all" {
-				fieldQ = svc.DB.Or("title like ?", sc.QueryAny).
-					Or("barcode=?", sc.Query).Or("catalog_key=?", sc.Query).Or("call_number != ? AND call_number REGEXP ?", "", callNumQ).Or("desc_metadata like ?", sc.QueryAny).
-					Or("creator_name like ?", sc.QueryStart).Or("collection_id like ?", sc.QueryStart).Or("collection_facet=?", sc.QueryAny)
-				if sc.QueryType == "id" {
-					fieldQ = fieldQ.Or("metadata.id=?", sc.IntQuery)
-				}
-			} else {
-				if sc.Field == "title" || sc.Field == "creator_name" {
-					fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
-				} else if sc.Field == "call_number" {
-					fieldQ = svc.DB.Where("call_number != ? AND call_number REGEXP ?", "", callNumQ)
-				} else {
-					fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", sc.Field), sc.Query)
-				}
-			}
-			searchQ.Where(fieldQ)
-		} else {
-			searchQ.Where("pid=?", sc.Query)
+	// TODO support multiple column filters. Syntax:
+	// ( initialQueryString AND @field1 f1Query AND @field2 f2Query )
+
+	var mResp *manticore.SearchResponse
+	qStr := sc.Query
+	if sc.QueryType == "pid" {
+		// use exact match operator for PID searches
+		qStr = fmt.Sprintf("=%s", sc.Query)
+	} else if sc.Field != "all" {
+		qStr = fmt.Sprintf("@%s %s", sc.Field, sc.Query)
+	}
+	newQ := newQuery("metadata", qStr, int32(sc.StartIndex), int32(sc.PageSize))
+	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
+	if err != nil {
+		log.Printf("ERROR: metadata search failed: %s", err.Error())
+		channel <- searchChannel{Type: "orders", Results: resp}
+		return
+	}
+	resp.Total = int64(mResp.Hits.GetTotal())
+
+	for _, h := range mResp.Hits.GetHits() {
+		b, _ := json.Marshal(h.GetSource())
+		log.Printf("%s", b)
+		var hitObj metadataHit
+		uErr := json.Unmarshal(b, &hitObj)
+		if uErr != nil {
+			log.Printf("ERROR: %s", uErr)
 		}
-
-		var err error
-		searchQ.Count(&resp.Total)
-
-		searchQ = searchQ.Preload("ExternalSystem")
-		err = searchQ.Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: metadata search failed: %s", err.Error())
-		}
-
-		for _, md := range resp.Hits {
-			if md.DateDlIngest != nil {
-				if md.Type == "SirsiMetadata" {
-					md.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, md.CatalogKey)
-					md.Virgo = true
-				} else if md.Type == "XmlMetadata" {
-					md.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
-					md.Virgo = true
-				}
+		hitObj.ID = uint64(h.GetId())
+		if hitObj.Virgo {
+			if hitObj.SystemName == "SirsiMetadata" {
+				hitObj.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, hitObj.CatalogKey)
+			} else if hitObj.SystemName == "XmlMetadata" {
+				hitObj.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, hitObj.PID)
 			}
 		}
-
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: metadata search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+		resp.Hits = append(resp.Hits, hitObj)
 	}
 	channel <- searchChannel{Type: "metadata", Results: resp}
 }
 
 func (svc *serviceContext) queryOrders(sc *searchContext, channel chan searchChannel) {
 	resp := orderResp{Hits: make([]orderHit, 0)}
-	// if (sc.Scope == "all" || sc.Scope == "orders") && sc.QueryType != "pid" {
-	// 	log.Printf("INFO: searching orders for [%s]...", sc.Query)
-	// 	startTime := time.Now()
-	// 	searchQ := svc.DB.Table("orders").
-	// 		Joins("inner join customers on customer_id = customers.id").
-	// 		Joins("left outer join agencies on agency_id = agencies.id")
-	// 	if sc.Filter.Target == "orders" {
-	// 		searchQ = searchQ.Where(sc.Filter.Query)
-	// 	}
-
-	// 	var fieldQ *gorm.DB
-	// 	if sc.Field == "all" {
-	// 		if sc.QueryType == "id" {
-	// 			fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
-	// 		} else {
-	// 			fieldQ = svc.DB.Or("customers.last_name like ?", sc.QueryStart).Or("agencies.name like ?", sc.QueryStart).
-	// 				Or("orders.staff_notes like ?", sc.QueryAny).Or("orders.special_instructions like ?", sc.QueryAny)
-	// 		}
-	// 	} else if sc.Field == "id" {
-	// 		fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
-	// 	} else if sc.Field == "last_name" {
-	// 		fieldQ = svc.DB.Where("customers.last_name like ?", sc.QueryStart)
-	// 	} else if sc.Field == "agency" {
-	// 		fieldQ = svc.DB.Where("agencies.name like ?", sc.QueryAny)
-	// 	} else {
-	// 		fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
-	// 	}
-	// 	searchQ.Where(fieldQ)
-
-	// 	searchQ.Count(&resp.Total)
-	// 	err := searchQ.Preload("Customer").Preload("Agency").
-	// 		Offset(sc.StartIndex).Limit(sc.PageSize).
-	// 		Find(&resp.Hits).Error
-	// 	if err != nil {
-	// 		log.Printf("ERROR: order search failed: %s", err.Error())
-	// 	}
-	// 	elapsedNanoSec := time.Since(startTime)
-	// 	elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-	// 	log.Printf("INFO: orders search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
-	// }
-
 	qStr := sc.Query
 	if sc.Field != "all" {
 		qStr = fmt.Sprintf("@%s %s", sc.Field, sc.Query)

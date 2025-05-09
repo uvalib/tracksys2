@@ -130,6 +130,7 @@ func initializeService(version string, cfg *configData) *serviceContext {
 	mc.Servers[0].URL = "http://localhost:9308"
 	apiClient := manticore.NewAPIClient(mc)
 	ctx.Index = apiClient.SearchAPI
+	log.Printf("INFO: search index connected")
 
 	log.Printf("INFO: create HTTP client...")
 	defaultTransport := &http.Transport{
