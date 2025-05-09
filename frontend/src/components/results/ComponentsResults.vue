@@ -41,8 +41,8 @@
             <InputText type="text" v-model="filterModel.value" placeholder="Date"/>
          </template>
       </Column>
-      <Column field="eadID" header="EAD ID" />
-      <Column field="masterFileCount" header="Master Files"/>
+      <Column field="finding_aid" header="EAD ID" />
+      <Column field="mf_cnt" header="Master Files"/>
    </DataTable>
 </template>
 

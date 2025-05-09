@@ -72,9 +72,20 @@ type unitHit struct {
 	DatePatronDeliverablesReady string `json:"date_patron_deliverables_ready,omitempty"`
 }
 
+type componentHit struct {
+	ID              uint64 `json:"id"`
+	PID             string `json:"pid"`
+	Title           string `json:"title"`
+	Label           string `json:"label"`
+	Description     string `json:"description"`
+	Date            string `json:"date"`
+	FindingAid      string `json:"finding_aid"`
+	MasterFileCount uint   `json:"mf_cnt"`
+}
+
 type componentResp struct {
-	Total int64       `json:"total"`
-	Hits  []component `json:"hits"`
+	Total int64          `json:"total"`
+	Hits  []componentHit `json:"hits"`
 }
 type metadataResp struct {
 	Total int64         `json:"total"`
@@ -519,43 +530,35 @@ func (svc *serviceContext) queryOrders(sc *searchContext, channel chan searchCha
 }
 
 func (svc *serviceContext) queryComponents(sc *searchContext, channel chan searchChannel) {
-	resp := componentResp{Hits: make([]component, 0)}
-	if sc.Scope == "all" || sc.Scope == "components" {
-		log.Printf("INFO: searching components for [%s]...", sc.Query)
-		startTime := time.Now()
-		searchQ := svc.DB.Table("components")
-		if sc.QueryType != "pid" {
-			if sc.Filter.Target == "components" {
-				searchQ = searchQ.Where(sc.Filter.Query)
-			}
-
-			var fieldQ *gorm.DB
-			if sc.Field == "all" {
-				fieldQ = svc.DB.Or("title like ?", sc.QueryAny).Or("label like ?", sc.QueryAny).
-					Or("content_desc like ?", sc.QueryAny).Or("date like ?", sc.QueryAny).Or("ead_id_att=?", sc.Query)
-				if sc.QueryType == "id" {
-					fieldQ = fieldQ.Or("components.id=?", sc.IntQuery)
-				}
-			} else if sc.Field == "ead_id_att" {
-				fieldQ = svc.DB.Where("ead_id_att=?", sc.Query)
-			} else {
-				fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
-			}
-			searchQ.Where(fieldQ)
-		} else {
-			searchQ.Where("pid=?", sc.Query)
-		}
-
-		searchQ.Count(&resp.Total)
-		subQ := "(select count(*) from master_files m where component_id=components.id) as mf_cnt"
-		err := searchQ.Offset(sc.StartIndex).Limit(sc.PageSize).Select("components.*", subQ).Find(&resp.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: component search failed: %s", err.Error())
-		}
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: component search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+	resp := componentResp{Hits: make([]componentHit, 0)}
+	qStr := sc.Query
+	if sc.QueryType == "pid" {
+		// use exact match operator for PID searches
+		qStr = fmt.Sprintf("=%s", sc.Query)
+	} else if sc.Field != "all" {
+		qStr = fmt.Sprintf("@%s %s", sc.Field, sc.Query)
 	}
+	newQ := newQuery("components", qStr, int32(sc.StartIndex), int32(sc.PageSize))
+	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
+	if err != nil {
+		log.Printf("ERROR: components search failed: %s", err.Error())
+		channel <- searchChannel{Type: "components", Results: resp}
+		return
+	}
+	resp.Total = int64(mResp.Hits.GetTotal())
+
+	for _, h := range mResp.Hits.GetHits() {
+		b, _ := json.Marshal(h.GetSource())
+		var hitObj componentHit
+		uErr := json.Unmarshal(b, &hitObj)
+		if uErr != nil {
+			log.Printf("ERROR: unable to unmarshall component hit; %s", uErr)
+		} else {
+			hitObj.ID = uint64(h.GetId())
+			resp.Hits = append(resp.Hits, hitObj)
+		}
+	}
+
 	channel <- searchChannel{Type: "components", Results: resp}
 }
 
