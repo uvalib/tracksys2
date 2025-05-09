@@ -25,18 +25,17 @@ import (
 )
 
 type masterFileHit struct {
-	ID           uint64   `json:"id"`
-	PID          string   `gorm:"column:pid" json:"pid"`
-	UnitID       uint64   `json:"unitID"`
-	Filename     string   `json:"filename"`
-	Title        string   `json:"title"`
-	Description  string   `json:"description"`
-	ThumbnailURL string   `gorm:"-" json:"thumbnailURL"`
-	ImageURL     string   `gorm:"-" json:"imageURL"`
-	MetadataID   int64    `json:"-"`
-	Metadata     metadata `gorm:"foreignKey:MetadataID" json:"metadata"`
-	OriginalID   int64    `gorm:"column:original_mf_id" json:"originalID"`
-	OriginalPID  string   `gorm:"column:original_pid" json:"originalPID"`
+	ID           uint64 `json:"id"`
+	PID          string `json:"pid"`
+	UnitID       uint64 `json:"unit_id"`
+	Filename     string `json:"filename"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	ThumbnailURL string `json:"thumbnail_url"`
+	ImageURL     string `json:"image_url"`
+	CallNumber   string `json:"call_number"`
+	MetadataID   int64  `json:"metadata_id"`
+	IsClone      bool   `json:"clone"`
 }
 
 type metadataHit struct {
@@ -85,8 +84,8 @@ type metadataResp struct {
 	Hits  []metadataHit `json:"hits"`
 }
 type masterFileResp struct {
-	Total int64            `json:"total"`
-	Hits  []*masterFileHit `json:"hits"`
+	Total int64           `json:"total"`
+	Hits  []masterFileHit `json:"hits"`
 }
 type orderResp struct {
 	Total int64      `json:"total"`
@@ -211,7 +210,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	go svc.queryOrders(&sc, channel)
 	go svc.queryUnits(&sc, channel)
 
-	log.Printf("INFO: await all searchs responses...")
+	log.Printf("INFO: await all search responses...")
 	resp := searchResults{}
 	for pendingCount > 0 {
 		searchResp := <-channel
@@ -358,87 +357,62 @@ func (svc *serviceContext) initFilter(filterStr string) (*searchFilter, error) {
 	return &out, nil
 }
 
-func getCallNumRegexp(query string) string {
-	cleanQ := strings.TrimSpace(strings.ToUpper(query))
-	parts := make([]string, 0)
-	if strings.Contains(cleanQ, " ") == false && strings.Index(cleanQ, "MSS") == 0 {
-		// sometimes manuscrips are searched without the space. add it
-		parts = append(parts, "(MSS)")
-		parts = append(parts, fmt.Sprintf("(%s)", cleanQ[3:]))
-	} else {
-		for _, bit := range strings.Split(cleanQ, " ") {
-			if strings.Contains(bit, ".") {
-				// sometimes cutter lines are prefaced by a space, sometimes not. add regex that supports both
-				bit = strings.ReplaceAll(bit, ".", fmt.Sprintf("[ ]*(.)"))
-			}
-			// make a regex group out of each space separated part
-			parts = append(parts, fmt.Sprintf("(%s)", bit))
+// func getCallNumRegexp(query string) string {
+// 	cleanQ := strings.TrimSpace(strings.ToUpper(query))
+// 	parts := make([]string, 0)
+// 	if strings.Contains(cleanQ, " ") == false && strings.Index(cleanQ, "MSS") == 0 {
+// 		// sometimes manuscrips are searched without the space. add it
+// 		parts = append(parts, "(MSS)")
+// 		parts = append(parts, fmt.Sprintf("(%s)", cleanQ[3:]))
+// 	} else {
+// 		for _, bit := range strings.Split(cleanQ, " ") {
+// 			if strings.Contains(bit, ".") {
+// 				// sometimes cutter lines are prefaced by a space, sometimes not. add regex that supports both
+// 				bit = strings.ReplaceAll(bit, ".", fmt.Sprintf("[ ]*(.)"))
+// 			}
+// 			// make a regex group out of each space separated part
+// 			parts = append(parts, fmt.Sprintf("(%s)", bit))
 
-		}
-	}
-	// join all parts, separating them by 0 or more spaces
-	return fmt.Sprintf("^%s", strings.Join(parts, "[ ]*"))
-}
+// 		}
+// 	}
+// 	// join all parts, separating them by 0 or more spaces
+// 	return fmt.Sprintf("^%s", strings.Join(parts, "[ ]*"))
+// }
 
 func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan searchChannel) {
-	resp := masterFileResp{Hits: make([]*masterFileHit, 0)}
-	if sc.Scope == "all" || sc.Scope == "masterfiles" {
-		log.Printf("INFO: searching masterfiles for [%s]...", sc.Query)
-		startTime := time.Now()
-		origQ := "(select mo.pid from master_files mo where mo.id = master_files.original_mf_id) as original_pid"
-		searchQ := svc.DB.Table("master_files").Joins("left outer join metadata md on md.id=metadata_id").Select("master_files.*", origQ)
+	resp := masterFileResp{Hits: make([]masterFileHit, 0)}
 
-		if sc.QueryType != "pid" {
-			if sc.Filter.Target == "masterfiles" {
-				searchQ = searchQ.Where(sc.Filter.Query)
-			}
-
-			callNumQ := getCallNumRegexp(sc.Query)
-			var fieldQ *gorm.DB
-			if sc.Field == "all" {
-				if sc.QueryType == "id" {
-					fieldQ = svc.DB.Or("master_files.id=?", sc.IntQuery).Or("unit_id=?", sc.IntQuery)
-				} else {
-					fieldQ = svc.DB.Or("md.call_number != ? AND md.call_number REGEXP ?", "", callNumQ).
-						Or("master_files.title like ?", sc.QueryAny).
-						Or("description like ?", sc.QueryAny)
-				}
-			} else if sc.Field == "unit_id" {
-				fieldQ = svc.DB.Where("unit_id=?", sc.IntQuery)
-			} else if sc.Field == "call_number" {
-				fieldQ = svc.DB.Where("call_number != ? AND call_number REGEXP ?", "", callNumQ)
-			} else if sc.Field == "title" || sc.Field == "description" {
-				fieldQ = svc.DB.Where(fmt.Sprintf("master_files.%s like ?", sc.Field), sc.QueryAny)
-			} else if sc.Field == "filename" {
-				fieldQ = svc.DB.Where(fmt.Sprintf("master_files.%s like ?", sc.Field), sc.QueryStart)
-			} else if sc.Field == "tag" {
-				searchQ = searchQ.
-					Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
-					Joins("left outer join tags t on mt.tag_id = t.id")
-				fieldQ = svc.DB.Where("t.tag like ?", sc.QueryAny)
-			}
-			searchQ.Where(fieldQ)
-		} else {
-			searchQ.Where("master_files.pid=?", sc.Query)
-		}
-
-		searchQ.Count(&resp.Total)
-		err := searchQ.Preload("Metadata").Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: masterfile search failed: %s", err.Error())
-		}
-		for _, mf := range resp.Hits {
-			imgPID := mf.PID
-			if mf.OriginalPID != "" {
-				imgPID = mf.OriginalPID
-			}
-			mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, imgPID)
-			mf.ImageURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, imgPID)
-		}
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: masterfile search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+	qStr := sc.Query
+	if sc.QueryType == "pid" {
+		// use exact match operator for PID searches
+		qStr = fmt.Sprintf("=%s", sc.Query)
+	} else if sc.Field != "all" {
+		qStr = fmt.Sprintf("@%s %s", sc.Field, sc.Query)
 	}
+	newQ := newQuery("masterfiles", qStr, int32(sc.StartIndex), int32(sc.PageSize))
+	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
+	if err != nil {
+		log.Printf("ERROR: masterfiles search failed: %s", err.Error())
+		channel <- searchChannel{Type: "masterFiles", Results: resp}
+		return
+	}
+	resp.Total = int64(mResp.Hits.GetTotal())
+
+	for _, h := range mResp.Hits.GetHits() {
+		b, _ := json.Marshal(h.GetSource())
+
+		var hitObj masterFileHit
+		uErr := json.Unmarshal(b, &hitObj)
+		if uErr != nil {
+			log.Printf("ERROR: unable to unmarshal response; %s", uErr)
+		} else {
+			hitObj.ID = uint64(h.GetId())
+			hitObj.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, hitObj.PID)
+			hitObj.ImageURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, hitObj.PID)
+			resp.Hits = append(resp.Hits, hitObj)
+		}
+	}
+
 	channel <- searchChannel{Type: "masterFiles", Results: resp}
 }
 
@@ -483,7 +457,6 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 	// TODO support multiple column filters. Syntax:
 	// ( initialQueryString AND @field1 f1Query AND @field2 f2Query )
 
-	var mResp *manticore.SearchResponse
 	qStr := sc.Query
 	if sc.QueryType == "pid" {
 		// use exact match operator for PID searches
@@ -495,28 +468,28 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
 	if err != nil {
 		log.Printf("ERROR: metadata search failed: %s", err.Error())
-		channel <- searchChannel{Type: "orders", Results: resp}
+		channel <- searchChannel{Type: "metadata", Results: resp}
 		return
 	}
 	resp.Total = int64(mResp.Hits.GetTotal())
 
 	for _, h := range mResp.Hits.GetHits() {
 		b, _ := json.Marshal(h.GetSource())
-		log.Printf("%s", b)
 		var hitObj metadataHit
 		uErr := json.Unmarshal(b, &hitObj)
 		if uErr != nil {
-			log.Printf("ERROR: %s", uErr)
-		}
-		hitObj.ID = uint64(h.GetId())
-		if hitObj.Virgo {
-			if hitObj.SystemName == "SirsiMetadata" {
-				hitObj.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, hitObj.CatalogKey)
-			} else if hitObj.SystemName == "XmlMetadata" {
-				hitObj.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, hitObj.PID)
+			log.Printf("ERROR: unable to unmarshall metadata hit; %s", uErr)
+		} else {
+			hitObj.ID = uint64(h.GetId())
+			if hitObj.Virgo {
+				if hitObj.SystemName == "SirsiMetadata" {
+					hitObj.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, hitObj.CatalogKey)
+				} else if hitObj.SystemName == "XmlMetadata" {
+					hitObj.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, hitObj.PID)
+				}
 			}
+			resp.Hits = append(resp.Hits, hitObj)
 		}
-		resp.Hits = append(resp.Hits, hitObj)
 	}
 	channel <- searchChannel{Type: "metadata", Results: resp}
 }
@@ -541,10 +514,11 @@ func (svc *serviceContext) queryOrders(sc *searchContext, channel chan searchCha
 		var hitObj orderHit
 		uErr := json.Unmarshal(b, &hitObj)
 		if uErr != nil {
-			log.Printf("ERROR: %s", uErr)
+			log.Printf("ERROR: unable to unmarshall order hit; %s", uErr)
+		} else {
+			hitObj.ID = uint64(h.GetId())
+			resp.Hits = append(resp.Hits, hitObj)
 		}
-		hitObj.ID = uint64(h.GetId())
-		resp.Hits = append(resp.Hits, hitObj)
 	}
 
 	channel <- searchChannel{Type: "orders", Results: resp}

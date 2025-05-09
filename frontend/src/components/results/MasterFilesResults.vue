@@ -21,29 +21,26 @@
          </template>
       </Column>
       <Column field="pid" header="PID" class="nowrap" />
-      <Column field="unitID" header="Unit ID" class="nowrap" filterField="unit_id" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Unit ID"/>
-         </template>
+      <Column field="unit_id" header="Unit" class="nowrap" >
          <template #body="slotProps">
-            <router-link :to="`/units/${slotProps.data.unitID}`">{{slotProps.data.unitID}}</router-link>
+            <router-link :to="`/units/${slotProps.data.unit_id}`">{{slotProps.data.unit_id}}</router-link>
          </template>
       </Column>
-      <Column field="originalID" header="Clone" class="nowrap" filterField="clone" :showFilterMatchModes="false" >
+      <Column field="clone" header="Clone" class="nowrap" filterField="clone" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <Select v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
          </template>
          <template #body="slotProps">
-            <span v-if="slotProps.data.originalID > 0">Yes</span>
+            <span v-if="slotProps.data.clone > 0">Yes</span>
             <span v-else>No</span>
          </template>
       </Column>
-      <Column field="metadata.callNumber" header="Call Number" class="nowrap" filterField="call_number" :showFilterMatchModes="false">
+     <Column field="call_number" header="Call Number" class="nowrap" filterField="call_number" :showFilterMatchModes="false">
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Call Number"/>
          </template>
          <template #body="slotProps">
-            <router-link :to="`/metadata/${slotProps.data.metadata.id}`">{{slotProps.data.metadata.callNumber}}</router-link>
+            <router-link :to="`/metadata/${slotProps.data.metadata_id}`">{{slotProps.data.call_number}}</router-link>
          </template>
       </Column>
       <Column field="filename" header="Filename"/>
@@ -57,10 +54,10 @@
             <InputText type="text" v-model="filterModel.value" placeholder="Description"/>
          </template>
       </Column>
-      <Column field="thumbnailURL" header="Thumb">
+      <Column field="thumbnail_url" header="Thumb">
          <template #body="slotProps">
-            <a :href="slotProps.data.imageURL" target="_blank">
-               <img :src="slotProps.data.thumbnailURL" />
+            <a :href="slotProps.data.image_url" target="_blank">
+               <img :src="slotProps.data.thumbnail_url" />
             </a>
          </template>
       </Column>
@@ -88,7 +85,6 @@ const masterFileHitsTable = ref()
 
 const filters = ref( {
    'clone': {value: null, matchMode: FilterMatchMode.EQUALS},
-   'unit_id': {value: null, matchMode: FilterMatchMode.EQUALS},
    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'description': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'call_number': {value: null, matchMode: FilterMatchMode.CONTAINS},
