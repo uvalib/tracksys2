@@ -28,33 +28,33 @@
             <span :class="`status ${slotProps.data.status}`">{{displayStatus(slotProps.data.status)}}</span>
          </template>
       </Column>
-      <Column field="staffNotes" header="Staff Notes" filterField="staff_notes" :showFilterMatchModes="false" >
+      <Column field="staff_notes" header="Staff Notes" filterField="staff_notes" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Notes"/>
          </template>
          <template #body="slotProps">
-            <span v-if="slotProps.data.staffNotes">{{ slotProps.data.staffNotes }}</span>
+            <span v-if="slotProps.data.staff_notes">{{ slotProps.data.staff_notes }}</span>
             <span v-else class="none">N/A</span>
          </template>
       </Column>
-      <Column field="specialInstructions" header="Special Instructions" filterField="special_instructions" :showFilterMatchModes="false" >
+      <Column field="special_instructions" header="Special Instructions" filterField="special_instructions" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Instructions"/>
          </template>
          <template #body="slotProps">
-            <span v-if="slotProps.data.specialInstructions">{{ slotProps.data.specialInstructions }}</span>
+            <span v-if="slotProps.data.special_instructions">{{ slotProps.data.special_instructions }}</span>
             <span v-else class="none">N/A</span>
          </template>
       </Column>
-      <Column field="dateDLDeliverablesReady" header="DL Deliverable Date" class="nowrap">
+      <Column field="date_dl_deliverables_ready" header="DL Deliverable Date" class="nowrap">
          <template #body="slotProps">
-            <span v-if="slotProps.data.dateDLDeliverablesReady">{{ $formatDate(slotProps.data.dateDLDeliverablesReady) }}</span>
+            <span v-if="slotProps.data.date_dl_deliverables_ready">{{ $formatDate(slotProps.data.date_dl_deliverables_ready) }}</span>
             <span v-else class="none">N/A</span>
          </template>
       </Column>
-      <Column field="datePatronDeliverablesReady" header="Patron Deliverable Date" class="nowrap">
+      <Column field="date_patron_deliverables_ready" header="Patron Deliverable Date" class="nowrap">
          <template #body="slotProps">
-            <span v-if="slotProps.data.datePatronDeliverablesReady">{{ $formatDate(slotProps.data.datePatronDeliverablesReady) }}</span>
+            <span v-if="slotProps.data.date_patron_deliverables_ready">{{ $formatDate(slotProps.data.date_patron_deliverables_ready) }}</span>
             <span v-else class="none">N/A</span>
          </template>
       </Column>

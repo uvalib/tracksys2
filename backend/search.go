@@ -64,15 +64,12 @@ type orderHit struct {
 }
 
 type unitHit struct {
-	ID                          uint64       `json:"id"`
-	UnitStatus                  string       `json:"status"`
-	IntendedUseID               int64        `json:"-"`
-	IntendedUse                 *intendedUse `gorm:"foreignKey:IntendedUseID" json:"IntendedUse,omitempty"`
-	StaffNotes                  string       `json:"staffNotes"`
-	SpecialInstructions         string       `json:"specialInstructions"`
-	Reorder                     bool         `json:"reorder"`
-	DateDLDeliverablesReady     *time.Time   `gorm:"column:date_dl_deliverables_ready" json:"dateDLDeliverablesReady,omitempty"`
-	DatePatronDeliverablesReady *time.Time   `json:"datePatronDeliverablesReady,omitempty"`
+	ID                          uint64 `json:"id"`
+	Status                      string `json:"status"`
+	StaffNotes                  string `json:"staff_notes"`
+	SpecialInstructions         string `json:"special_instructions"`
+	DateDLDeliverablesReady     string `json:"date_dl_deliverables_ready,omitempty"`
+	DatePatronDeliverablesReady string `json:"date_patron_deliverables_ready,omitempty"`
 }
 
 type componentResp struct {
@@ -418,34 +415,31 @@ func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan sear
 
 func (svc *serviceContext) queryUnits(sc *searchContext, channel chan searchChannel) {
 	resp := unitResp{Hits: make([]unitHit, 0)}
-	if (sc.Scope == "all" || sc.Scope == "units") && sc.QueryType != "pid" {
-		log.Printf("INFO: searching units for [%s]...", sc.Query)
-		startTime := time.Now()
-		searchQ := svc.DB.Table("units")
-		if sc.Filter.Target == "units" {
-			searchQ = searchQ.Where(sc.Filter.Query)
-		}
 
-		var fieldQ *gorm.DB
-		if sc.Field == "all" {
-			fieldQ = svc.DB.Or("staff_notes like ?", sc.QueryAny).
-				Or("special_instructions like ?", sc.QueryAny).
-				Or("id=?", sc.IntQuery)
-		} else if sc.Field == "id" {
-			fieldQ = svc.DB.Where("id=?", sc.Query)
-		} else if sc.Field == "staff_notes" || sc.Field == "special_instructions" {
-			fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
-		}
-		searchQ.Where(fieldQ)
+	qStr := sc.Query
+	if sc.Field != "all" {
+		qStr = fmt.Sprintf("@%s %s", sc.Field, sc.Query)
+	}
+	newQ := newQuery("units", qStr, int32(sc.StartIndex), int32(sc.PageSize))
+	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
+	if err != nil {
+		log.Printf("ERROR: units search failed: %s", err.Error())
+		channel <- searchChannel{Type: "units", Results: resp}
+		return
+	}
+	resp.Total = int64(mResp.Hits.GetTotal())
 
-		searchQ.Count(&resp.Total)
-		err := searchQ.Preload("IntendedUse").Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: unit search failed: %s", err.Error())
+	for _, h := range mResp.Hits.GetHits() {
+		b, _ := json.Marshal(h.GetSource())
+
+		var hitObj unitHit
+		uErr := json.Unmarshal(b, &hitObj)
+		if uErr != nil {
+			log.Printf("ERROR: unable to unmarshal unit response; %s", uErr)
+		} else {
+			hitObj.ID = uint64(h.GetId())
+			resp.Hits = append(resp.Hits, hitObj)
 		}
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: unit search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
 	}
 
 	channel <- searchChannel{Type: "units", Results: resp}
