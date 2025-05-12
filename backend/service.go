@@ -127,7 +127,7 @@ func initializeService(version string, cfg *configData) *serviceContext {
 
 	log.Printf("INFO: connect to search index...")
 	mc := manticore.NewConfiguration()
-	mc.Servers[0].URL = "http://localhost:9308"
+	mc.Servers[0].URL = cfg.index
 	apiClient := manticore.NewAPIClient(mc)
 	ctx.Index = apiClient.SearchAPI
 	log.Printf("INFO: search index connected")
