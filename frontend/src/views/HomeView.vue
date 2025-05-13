@@ -50,8 +50,7 @@
       <div class="search">
          <div class="text-search">
             <div class="search-ctl-group">
-               <Select v-model="selectedScope" :options="scopes" optionLabel="label" optionValue="value" @change="scopeChanged" />
-               <Select v-model="selectedField" :options="scopeFields" optionLabel="label" optionValue="value" :disabled="selectedScope == 'all'" />
+               <Select v-model="selectedScope" :options="scopes" optionLabel="label" optionValue="value" />
             </div>
             <InputText placeholder="Find TrackSys items..." v-model="newQuery" class="searchbar"  @keyup.enter="doSearch" />
             <div class="search-ctl-group">
@@ -146,7 +145,6 @@ const newAgencyName = ref("")
 const newAgencyDesc = ref("")
 
 const selectedScope = ref("all")
-const selectedField = ref("all")
 const newQuery = ref("")
 
 const scopes = computed( () => {
@@ -159,15 +157,6 @@ const scopes = computed( () => {
       {label: "Units", value: "units"},
    ]
 })
-const scopeFields = computed( () => {
-   let scope = selectedScope.value
-   let allFields = searchStore.searchFields
-   let fields = allFields[scope]
-   if (fields) {
-      return fields
-   }
-   return [{label: 'All fields', value: "all"}]
-})
 
 onBeforeMount( () => {
    document.title = `Tracksys`
@@ -176,7 +165,6 @@ onBeforeMount( () => {
    let paramsChanged = false
 
    newQuery.value = ""
-   selectedField.value = "all"
    selectedScope.value = "all"
 
    // detect and set scope first as it affects all other aspects of the search
@@ -213,14 +201,6 @@ onBeforeMount( () => {
       newQuery.value = ""
    }
 
-   if ( route.query.field ) {
-      selectedField.value = route.query.field
-      if ( searchStore.field != route.query.field ) {
-         searchStore.field = route.query.field
-         paramsChanged = true
-      }
-   }
-
    if ( route.query.filters ) {
       searchStore.setFilter(route.query.filters)
    }
@@ -247,7 +227,6 @@ const imageUploaded = ((e) => {
 const resetSearch = (() => {
    searchStore.resetSearch()
    selectedScope.value = "all"
-   selectedField.value = "all"
    newQuery.value = ""
    let query = Object.assign({}, route.query)
    delete query.q
@@ -256,10 +235,6 @@ const resetSearch = (() => {
    delete query.filters
    delete query.view
    router.push({query})
-})
-
-const scopeChanged = (() => {
-   selectedField.value = "all"
 })
 
 const doSearch = (() => {
@@ -272,7 +247,6 @@ const doSearch = (() => {
       // promote local changes to the store. these will be used in the search. This promotion is necessary
       // because the UI would change before search is clicked otherwise.
       searchStore.scope = selectedScope.value
-      searchStore.field = selectedField.value
       searchStore.query = newQuery.value
       if ( searchStore.scope != "all") {
          // if the scope is narrowed to a single type, the view must be too.

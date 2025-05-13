@@ -26,7 +26,7 @@
             <div v-if="slotProps.data.virgoURL && slotProps.data.type=='XmlMetadata'"><a :href="slotProps.data.virgoURL" target="_blank">VIRGO</a></div>
          </template>
       </Column>
-      <Column field="system_name" header="Type" filterField="type" :showFilterMatchModes="false" >
+      <Column field="system_name" header="Type" filterField="system_name" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <Select v-model="filterModel.value" :options="mdTypes" optionLabel="name" optionValue="code" placeholder="Select a type" />
          </template>
@@ -112,7 +112,7 @@ const system = useSystemStore()
 const metadataTable = ref()
 
 const filters = ref( {
-    'type': {value: null, matchMode: FilterMatchMode.EQUALS},
+    'system_name': {value: null, matchMode: FilterMatchMode.EQUALS},
     'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
     'creator_name': {value: null, matchMode: FilterMatchMode.CONTAINS},
     'barcode': {value: null, matchMode: FilterMatchMode.STARTS_WITH},

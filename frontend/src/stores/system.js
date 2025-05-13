@@ -1,7 +1,5 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
-import { useSearchStore } from './search'
-
 
 export const useSystemStore = defineStore('system', {
 	state: () => ({
@@ -89,8 +87,6 @@ export const useSystemStore = defineStore('system', {
             this.preservationTiers = response.data.controlledVocabularies.preservationTiers
             this.useRights = response.data.controlledVocabularies.useRights
             this.workflows = response.data.controlledVocabularies.workflows
-            const searchStore = useSearchStore()
-            searchStore.setGlobalSearchFields(response.data.searchFields)
             this.working = false
          }).catch( err => {
             if (err.response && err.response.status == 401) {

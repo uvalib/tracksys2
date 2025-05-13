@@ -132,6 +132,20 @@ func initializeService(version string, cfg *configData) *serviceContext {
 	ctx.Index = apiClient.SearchAPI
 	log.Printf("INFO: search index connected")
 
+	// searchRequest := manticore.NewSearchRequest("metadata")
+	// searchQuery := manticore.NewSearchQuery()
+
+	// searchQuery.SetQueryString("squids")
+	// // filter := map[string]string{"system_name": "XmlMetadata"}
+	// // searchQuery.SetIn(filter)
+
+	// mResp, _, err := ctx.Index.Search(context.Background()).SearchRequest(*searchRequest).Execute()
+	// if err != nil {
+	// 	log.Fatal(mResp)
+	// }
+	// log.Printf("%d hits", mResp.Hits.GetTotal())
+	// log.Fatal("EDE")
+
 	log.Printf("INFO: create HTTP client...")
 	defaultTransport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -279,7 +293,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 			UseRights            []useRight           `json:"useRights"`
 			Workflows            []workflow           `json:"workflows"`
 		} `json:"controlledVocabularies"`
-		SearchFields map[string][]searchField `json:"searchFields"`
 	}
 
 	vMap := svc.lookupVersion()
@@ -405,53 +418,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		log.Printf("ERROR: unable to get workflows: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
-	}
-
-	log.Printf("INFO: define global search fields")
-	resp.SearchFields = map[string][]searchField{
-		"all": {
-			searchField{Field: "all", Label: "All fields"},
-		},
-		"components": {
-			searchField{Field: "all", Label: "All fields"},
-			searchField{Field: "title", Label: "Title"},
-			searchField{Field: "label", Label: "Label"},
-			searchField{Field: "content_desc", Label: "Description"},
-			searchField{Field: "date", Label: "Date"},
-			searchField{Field: "barcode", Label: "Barcode"},
-			searchField{Field: "ead_id_att", Label: "Finding Aid"},
-		},
-		"masterfiles": {
-			searchField{Field: "all", Label: "All fields"},
-			searchField{Field: "unit_id", Label: "Unit ID"},
-			searchField{Field: "title", Label: "Title"},
-			searchField{Field: "description", Label: "Description"},
-			searchField{Field: "call_number", Label: "Call number"},
-			searchField{Field: "filename", Label: "Filename"},
-			searchField{Field: "tag", Label: "Tag"},
-		},
-		"metadata": {
-			searchField{Field: "all", Label: "All fields"},
-			searchField{Field: "title", Label: "Title"},
-			searchField{Field: "barcode", Label: "Barcode"},
-			searchField{Field: "call_number", Label: "Call number"},
-			searchField{Field: "catalog_key", Label: "Catalog key"},
-			searchField{Field: "creator_name", Label: "Creator name"},
-		},
-		"orders": {
-			searchField{Field: "all", Label: "All fields"},
-			searchField{Field: "title", Label: "Title"},
-			searchField{Field: "last_name", Label: "Customer last name"},
-			searchField{Field: "agency", Label: "Agency"},
-			searchField{Field: "staff_notes", Label: "Staff notes"},
-			searchField{Field: "special_instructions", Label: "Special instructions"},
-		},
-		"units": {
-			searchField{Field: "all", Label: "All fields"},
-			searchField{Field: "id", Label: "Identifier"},
-			searchField{Field: "staff_notes", Label: "Staff notes"},
-			searchField{Field: "special_instructions", Label: "Special Instructions"},
-		},
 	}
 
 	c.JSON(http.StatusOK, resp)
