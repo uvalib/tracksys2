@@ -49,9 +49,9 @@
       </div>
       <div class="search">
          <div class="text-search">
-            <div class="search-ctl-group">
+            <!-- <div class="search-ctl-group">
                <Select v-model="selectedScope" :options="scopes" optionLabel="label" optionValue="value" />
-            </div>
+            </div> -->
             <InputText placeholder="Find TrackSys items..." v-model="newQuery" class="searchbar"  @keyup.enter="doSearch" />
             <div class="search-ctl-group">
                <DPGButton label="Search" class="submit-button" @click="doSearch"/>
