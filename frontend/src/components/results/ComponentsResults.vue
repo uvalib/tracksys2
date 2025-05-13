@@ -31,7 +31,7 @@
             <InputText type="text" v-model="filterModel.value" placeholder="Label"/>
          </template>
       </Column>
-      <Column field="description" header="Content Description" filterField="content_desc" :showFilterMatchModes="false" >
+      <Column field="description" header="Content Description" filterField="description" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Description"/>
          </template>
@@ -67,7 +67,7 @@ const componentHitsTable = ref()
 const filters = ref( {
    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'label': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'content_desc': {value: null, matchMode: FilterMatchMode.CONTAINS},
+   'description': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'date': {value: null, matchMode: FilterMatchMode.CONTAINS},
 })
 

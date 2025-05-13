@@ -33,7 +33,7 @@ type masterFileHit struct {
 	ImageURL     string `json:"image_url"`
 	CallNumber   string `json:"call_number"`
 	MetadataID   int64  `json:"metadata_id"`
-	IsClone      bool   `json:"clone"`
+	IsClone      bool   `json:"is_clone"`
 }
 
 type metadataHit struct {

@@ -26,12 +26,12 @@
             <router-link :to="`/units/${slotProps.data.unit_id}`">{{slotProps.data.unit_id}}</router-link>
          </template>
       </Column>
-      <Column field="clone" header="Clone" class="nowrap" filterField="clone" :showFilterMatchModes="false" >
+      <Column field="is_clone" header="Clone" class="nowrap" filterField="is_clone" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <Select v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
          </template>
          <template #body="slotProps">
-            <span v-if="slotProps.data.clone > 0">Yes</span>
+            <span v-if="slotProps.data.is_clone > 0">Yes</span>
             <span v-else>No</span>
          </template>
       </Column>
@@ -84,7 +84,7 @@ const searchStore = useSearchStore()
 const masterFileHitsTable = ref()
 
 const filters = ref( {
-   'clone': {value: null, matchMode: FilterMatchMode.EQUALS},
+   'is_clone': {value: null, matchMode: FilterMatchMode.EQUALS},
    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'description': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'call_number': {value: null, matchMode: FilterMatchMode.CONTAINS},

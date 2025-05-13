@@ -20,7 +20,7 @@
             <router-link :to="`/units/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
          </template>
       </Column>
-      <Column field="status" header="Status" class="nowrap" filterField="unit_status" :showFilterMatchModes="false" >
+      <Column field="status" header="Status" class="nowrap" filterField="status" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <Select v-model="filterModel.value" :options="unitStatuses" optionLabel="name" optionValue="code" placeholder="Select a status" />
          </template>
@@ -81,7 +81,7 @@ const searchStore = useSearchStore()
 const unittHitsTable = ref()
 
 const filters = ref( {
-   'unit_status': {value: null, matchMode: FilterMatchMode.EQUALS},
+   'status': {value: null, matchMode: FilterMatchMode.EQUALS},
    'staff_notes': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'special_instructions': {value: null, matchMode: FilterMatchMode.CONTAINS},
 })

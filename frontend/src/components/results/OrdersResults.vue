@@ -76,10 +76,10 @@ const searchStore = useSearchStore()
 const orderHitsTable = ref()
 
 const filters = ref( {
-   'order_status': {value: null, matchMode: FilterMatchMode.EQUALS},
+   'status': {value: null, matchMode: FilterMatchMode.EQUALS},
    'customer': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'agency': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'order_title': {value: null, matchMode: FilterMatchMode.CONTAINS},
+   'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'staff_notes': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'special_instructions': {value: null, matchMode: FilterMatchMode.CONTAINS},
 })
