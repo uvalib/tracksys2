@@ -1,6 +1,6 @@
 <template>
    <DataTable :value="searchStore.masterFiles.hits" ref="masterFileHitsTable" dataKey="id"
-      stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm" :rowStyle="rowStyle"
+      stripedRows showGridlines size="small" :rowStyle="rowStyle"
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
       :lazy="true" :paginator="true" @page="onPage($event)" paginatorPosition="top"
       :rows="searchStore.masterFiles.limit" :totalRecords="searchStore.masterFiles.total"

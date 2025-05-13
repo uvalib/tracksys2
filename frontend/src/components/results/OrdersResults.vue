@@ -1,7 +1,6 @@
 <template>
    <DataTable :value="searchStore.orders.hits" ref="orderHitsTable" dataKey="id"
-      stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-      v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
+      stripedRows showGridlines size="small" v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
       :lazy="true" :paginator="true" @page="onPage($event)"
       :rows="searchStore.orders.limit" :totalRecords="searchStore.orders.total"
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"

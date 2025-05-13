@@ -128,7 +128,6 @@ type searchFilter struct {
 
 type searchContext struct {
 	Query      string
-	QueryType  string // general, id or pid
 	Filter     *searchFilter
 	StartIndex int
 	PageSize   int
@@ -140,28 +139,9 @@ type searchChannel struct {
 }
 
 func (svc *serviceContext) searchRequest(c *gin.Context) {
-	// setup the search context, starting with the query param
+	// setup the search context, which will be passed to each search function
 	q := strings.TrimSpace(c.Query("q"))
-	sc := searchContext{QueryType: "general", Query: q}
-	if strings.Index(q, "tsm:") == 0 || strings.Index(q, "tsb:") == 0 || strings.Index(q, "uva-lib:") == 0 {
-		log.Printf("INFO: query %s appears to be a pid; just search on pid columns", q)
-		sc.QueryType = "pid"
-	} else if strings.Index(q, "uva-lib-") == 0 {
-		log.Printf("INFO: query %s appears to be a uva-lib pid formatted with a dash; update format and search on pid columns", q)
-		sc.Query = strings.ReplaceAll(q, "uva-lib-", "uva-lib:")
-		sc.QueryType = "pid"
-	} else if strings.Index(q, "tsb-") == 0 {
-		log.Printf("INFO: query %s appears to be a tsb pid formatted with a dash; update format and search on pid columns", q)
-		sc.Query = strings.ReplaceAll(q, "tsb-", "tsb:")
-		sc.QueryType = "pid"
-	}
-
-	// setup pagination
-	sc.StartIndex, _ = strconv.Atoi(c.Query("start"))
-	sc.PageSize, _ = strconv.Atoi(c.Query("limit"))
-	if sc.PageSize == 0 {
-		sc.PageSize = 15
-	}
+	sc := searchContext{Query: q}
 
 	tgtScope := c.Query("scope")
 	if tgtScope != "all" && tgtScope != "masterfiles" && tgtScope != "metadata" && tgtScope != "orders" && tgtScope != "components" && tgtScope != "units" {
@@ -170,17 +150,26 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		return
 	}
 
-	log.Printf("INFO: search %s for [%s] starting from %d limit %d", tgtScope, sc.Query, sc.StartIndex, sc.PageSize)
-
-	var err error
-	sc.Filter, err = svc.initFilter(c.Query("filters"))
-	if err != nil {
-		log.Printf("ERROR: %s", err.Error())
-		c.String(http.StatusBadRequest, err.Error())
-		return
+	sc.StartIndex, _ = strconv.Atoi(c.Query("start"))
+	sc.PageSize, _ = strconv.Atoi(c.Query("limit"))
+	if sc.PageSize == 0 {
+		sc.PageSize = 15
 	}
 
-	// query each type of object individually: components, master files, metadata and orders
+	sc.Filter = svc.initFilter(c.Query("filters"))
+
+	// cleanup format of PID values which may be pasted from other sources
+	if strings.Index(q, "uva-lib-") == 0 {
+		log.Printf("INFO: query %s appears to be a uva-lib pid formatted with a dash; update format and search on pid columns", q)
+		sc.Query = strings.ReplaceAll(q, "uva-lib-", "uva-lib:")
+	} else if strings.Index(q, "tsb-") == 0 {
+		log.Printf("INFO: query %s appears to be a tsb pid formatted with a dash; update format and search on pid columns", q)
+		sc.Query = strings.ReplaceAll(q, "tsb-", "tsb:")
+	}
+
+	log.Printf("INFO: search %s for [%s] starting from %d limit %d", tgtScope, sc.Query, sc.StartIndex, sc.PageSize)
+
+	// query each type of object individually and await for all responses
 	log.Printf("INFO: issue search requests...")
 	pendingCount := 0
 	channel := make(chan searchChannel)
@@ -250,15 +239,17 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func (svc *serviceContext) initFilter(filterStr string) (*searchFilter, error) {
+func (svc *serviceContext) initFilter(filterStr string) *searchFilter {
 	log.Printf("INFO: raw filters [%s]", filterStr)
-	out := searchFilter{Target: "None"}
+	out := searchFilter{Target: "none", Params: make([]filterParam, 0)}
+
 	if filterStr != "" {
-		//  Format: filters={"type":"TABLE_NAME","params":["FIELD_NAME|contains|sing","agency|contains|commercial"]}'
+		//  Format: filters={"type":"TABLE_NAME","params":["FIELD_NAME|contains|sing","FIELD2|equals|true"]}'
 		var reqFilter filterRequest
 		err := json.Unmarshal([]byte(filterStr), &reqFilter)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse filter %s: %s", filterStr, err.Error())
+			log.Printf("ERROR: invalid format for filter %s: %s", filterStr, err.Error())
+			return &out
 		}
 		out.Target = reqFilter.Type
 		for _, f := range reqFilter.Params {
@@ -273,30 +264,8 @@ func (svc *serviceContext) initFilter(filterStr string) (*searchFilter, error) {
 		}
 	}
 
-	return &out, nil
+	return &out
 }
-
-// func getCallNumRegexp(query string) string {
-// 	cleanQ := strings.TrimSpace(strings.ToUpper(query))
-// 	parts := make([]string, 0)
-// 	if strings.Contains(cleanQ, " ") == false && strings.Index(cleanQ, "MSS") == 0 {
-// 		// sometimes manuscrips are searched without the space. add it
-// 		parts = append(parts, "(MSS)")
-// 		parts = append(parts, fmt.Sprintf("(%s)", cleanQ[3:]))
-// 	} else {
-// 		for _, bit := range strings.Split(cleanQ, " ") {
-// 			if strings.Contains(bit, ".") {
-// 				// sometimes cutter lines are prefaced by a space, sometimes not. add regex that supports both
-// 				bit = strings.ReplaceAll(bit, ".", fmt.Sprintf("[ ]*(.)"))
-// 			}
-// 			// make a regex group out of each space separated part
-// 			parts = append(parts, fmt.Sprintf("(%s)", bit))
-
-// 		}
-// 	}
-// 	// join all parts, separating them by 0 or more spaces
-// 	return fmt.Sprintf("^%s", strings.Join(parts, "[ ]*"))
-// }
 
 func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan searchChannel) {
 	resp := masterFileResp{Hits: make([]masterFileHit, 0)}
@@ -363,19 +332,13 @@ func newQuery(table string, sc *searchContext, offset, limit int32) *manticore.S
 
 	searchQuery := manticore.NewSearchQuery()
 
-	query := sc.Query
-	if sc.QueryType == "pid" {
-		// use exact match operator for PID searches
-		query = fmt.Sprintf("=%s", sc.Query)
-	}
-
 	// Docs on search filter setup: https://manual.manticoresearch.com/Searching/Filters
 	// search will be comprised of a list of queryFilters. The first filter is a
 	// query_string with the text entered in the main query field on the UI. This
 	// is a full-text search
 	mustFiters := make([]manticore.QueryFilter, 0)
 	qf := manticore.NewQueryFilter()
-	qf.SetQueryString(query)
+	qf.SetQueryString(sc.Query)
 	mustFiters = append(mustFiters, *qf)
 
 	if sc.Filter.Target == table {
@@ -403,7 +366,7 @@ func newQuery(table string, sc *searchContext, offset, limit int32) *manticore.S
 
 	searchRequest.Query = searchQuery
 	b, _ := searchRequest.MarshalJSON()
-	log.Printf("QUERY: %s", b)
+	log.Printf("INFO: %s query details %s", table, b)
 	return searchRequest
 }
 

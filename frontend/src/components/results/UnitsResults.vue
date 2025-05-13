@@ -1,6 +1,6 @@
 <template>
    <DataTable :value="searchStore.units.hits" ref="unittHitsTable" dataKey="id"
-      stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+      stripedRows showGridlines size="small"
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
       :lazy="true" :paginator="true" @page="onPage($event)" paginatorPosition="top"
       :rows="searchStore.units.limit" :totalRecords="searchStore.units.total"

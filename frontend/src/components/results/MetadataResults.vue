@@ -1,8 +1,7 @@
 <template>
    <DataTable :value="searchStore.metadata.hits" ref="metadataTable" dataKey="id"
-      stripedRows showGridlines responsiveLayout="scroll"
-      v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="true" @page="onMetadataPage($event)"
+      stripedRows showGridlines v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
+      :lazy="true" :paginator="true" @page="onMetadataPage($event)" size="small"
       :rows="searchStore.metadata.limit" :totalRecords="searchStore.metadata.total"
       paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
       :rowsPerPageOptions="[15,30,100]" :first="searchStore.metadata.start"

@@ -1,6 +1,6 @@
 <template>
    <DataTable :value="searchStore.components.hits" ref="componentHitsTable" dataKey="id"
-      stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+      stripedRows showGridlines size="small"
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
       :lazy="true" :paginator="true" @page="onPage($event)" paginatorPosition="top"
       :rows="searchStore.components.limit" :totalRecords="searchStore.components.total"
