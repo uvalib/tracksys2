@@ -132,20 +132,6 @@ func initializeService(version string, cfg *configData) *serviceContext {
 	ctx.Index = apiClient.SearchAPI
 	log.Printf("INFO: search index connected")
 
-	// searchRequest := manticore.NewSearchRequest("metadata")
-	// searchQuery := manticore.NewSearchQuery()
-
-	// searchQuery.SetQueryString("squids")
-	// // filter := map[string]string{"system_name": "XmlMetadata"}
-	// // searchQuery.SetIn(filter)
-
-	// mResp, _, err := ctx.Index.Search(context.Background()).SearchRequest(*searchRequest).Execute()
-	// if err != nil {
-	// 	log.Fatal(mResp)
-	// }
-	// log.Printf("%d hits", mResp.Hits.GetTotal())
-	// log.Fatal("EDE")
-
 	log.Printf("INFO: create HTTP client...")
 	defaultTransport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
