@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"image"
@@ -9,7 +10,6 @@ import (
 	"image/png"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"path"
 	"strconv"
@@ -18,82 +18,80 @@ import (
 
 	"github.com/corona10/goimagehash"
 	"github.com/gin-gonic/gin"
+	manticore "github.com/manticoresoftware/manticoresearch-go"
 	"golang.org/x/image/tiff"
-	"gorm.io/gorm"
 )
 
 type masterFileHit struct {
-	ID           uint64   `json:"id"`
-	PID          string   `gorm:"column:pid" json:"pid"`
-	UnitID       uint64   `json:"unitID"`
-	Filename     string   `json:"filename"`
-	Title        string   `json:"title"`
-	Description  string   `json:"description"`
-	ThumbnailURL string   `gorm:"-" json:"thumbnailURL"`
-	ImageURL     string   `gorm:"-" json:"imageURL"`
-	MetadataID   int64    `json:"-"`
-	Metadata     metadata `gorm:"foreignKey:MetadataID" json:"metadata"`
-	OriginalID   int64    `gorm:"column:original_mf_id" json:"originalID"`
-	OriginalPID  string   `gorm:"column:original_pid" json:"originalPID"`
+	ID           uint64 `json:"id"`
+	PID          string `json:"pid"`
+	UnitID       uint64 `json:"unit_id"`
+	Filename     string `json:"filename"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	ThumbnailURL string `json:"thumbnail_url"`
+	ImageURL     string `json:"image_url"`
+	CallNumber   string `json:"call_number"`
+	MetadataID   int64  `json:"metadata_id"`
+	IsClone      bool   `json:"is_clone"`
 }
 
 type metadataHit struct {
-	ID               uint64          `json:"id"`
-	PID              string          `gorm:"column:pid" json:"pid"`
-	Type             string          `json:"type"`
-	Title            string          `json:"title"`
-	CallNumber       string          `json:"callNumber"`
-	Barcode          string          `json:"barcode"`
-	CatalogKey       string          `json:"catalogKey"`
-	CreatorName      string          `json:"creatorName"`
-	DateDlIngest     *time.Time      `gorm:"column:date_dl_ingest" json:"-"`
-	Virgo            bool            `gorm:"-" json:"virgo"`
-	DPLA             bool            `json:"dpla"`
-	HathiTrust       bool            `gorm:"column:hathitrust" json:"hathitrust"`
-	VirgoURL         string          `gorm:"-" json:"virgoURL"`
-	ExternalSystemID int64           `json:"-"`
-	ExternalSystem   *externalSystem `gorm:"foreignKey:ExternalSystemID" json:"externalSystem,omitempty"`
+	ID          uint64 `json:"id"`
+	PID         string `json:"pid"`
+	SystemName  string `json:"system_name"`
+	Title       string `json:"title"`
+	CallNumber  string `json:"call_number"`
+	Barcode     string `json:"barcode"`
+	CatalogKey  string `json:"catalog_key"`
+	CreatorName string `json:"creator_name"`
+	Virgo       bool   `json:"virgo"`
+	DPLA        bool   `json:"dpla"`
+	HathiTrust  bool   `json:"hathitrust"`
+	VirgoURL    string `json:"virgo_url"`
 }
 
 type orderHit struct {
-	ID                  uint64   `json:"id"`
-	OrderStatus         string   `json:"status"`
-	OrderTitle          string   `json:"title"`
-	StaffNotes          string   `json:"notes"`
-	SpecialInstructions string   `json:"specialInstructions"`
-	CustomerID          uint     `json:"-"`
-	Customer            customer `gorm:"foreignKey:CustomerID" json:"customer"`
-	AgencyID            *uint    `json:"-"`
-	Agency              *agency  `gorm:"foreignKey:AgencyID" json:"agency"`
-}
-
-func (orderHit) TableName() string {
-	return "orders"
+	ID                  uint64 `json:"id"`
+	Status              string `json:"status"`
+	Title               string `json:"title"`
+	StaffNotes          string `json:"staff_notes"`
+	SpecialInstructions string `json:"special_instructions"`
+	CustomerName        string `json:"customer"`
+	Agency              string `json:"agency"`
 }
 
 type unitHit struct {
-	ID                          uint64       `json:"id"`
-	UnitStatus                  string       `json:"status"`
-	IntendedUseID               int64        `json:"-"`
-	IntendedUse                 *intendedUse `gorm:"foreignKey:IntendedUseID" json:"IntendedUse,omitempty"`
-	StaffNotes                  string       `json:"staffNotes"`
-	SpecialInstructions         string       `json:"specialInstructions"`
-	Reorder                     bool         `json:"reorder"`
-	DateDLDeliverablesReady     *time.Time   `gorm:"column:date_dl_deliverables_ready" json:"dateDLDeliverablesReady,omitempty"`
-	DatePatronDeliverablesReady *time.Time   `json:"datePatronDeliverablesReady,omitempty"`
+	ID                          uint64 `json:"id"`
+	Status                      string `json:"status"`
+	StaffNotes                  string `json:"staff_notes"`
+	SpecialInstructions         string `json:"special_instructions"`
+	DateDLDeliverablesReady     string `json:"date_dl_deliverables_ready,omitempty"`
+	DatePatronDeliverablesReady string `json:"date_patron_deliverables_ready,omitempty"`
+}
+
+type componentHit struct {
+	ID              uint64 `json:"id"`
+	PID             string `json:"pid"`
+	Title           string `json:"title"`
+	Label           string `json:"label"`
+	Description     string `json:"description"`
+	Date            string `json:"date"`
+	FindingAid      string `json:"finding_aid"`
+	MasterFileCount uint   `json:"mf_cnt"`
 }
 
 type componentResp struct {
-	Total int64       `json:"total"`
-	Hits  []component `json:"hits"`
+	Total int64          `json:"total"`
+	Hits  []componentHit `json:"hits"`
 }
 type metadataResp struct {
-	Total int64          `json:"total"`
-	Hits  []*metadataHit `json:"hits"`
+	Total int64         `json:"total"`
+	Hits  []metadataHit `json:"hits"`
 }
 type masterFileResp struct {
-	Total int64            `json:"total"`
-	Hits  []*masterFileHit `json:"hits"`
+	Total int64           `json:"total"`
+	Hits  []masterFileHit `json:"hits"`
 }
 type orderResp struct {
 	Total int64      `json:"total"`
@@ -112,24 +110,24 @@ type searchResults struct {
 	Units       unitResp       `json:"units"`
 }
 
-type filterData struct {
+type filterRequest struct {
 	Type   string   `json:"type"`
 	Params []string `json:"params"`
 }
 
+type filterParam struct {
+	Field string
+	Value any
+	Exact bool
+}
+
 type searchFilter struct {
 	Target string
-	Query  *gorm.DB
+	Params []filterParam
 }
 
 type searchContext struct {
 	Query      string
-	QueryAny   string
-	QueryStart string
-	QueryType  string // general, id or pid
-	IntQuery   int64
-	Scope      string
-	Field      string
 	Filter     *searchFilter
 	StartIndex int
 	PageSize   int
@@ -137,78 +135,67 @@ type searchContext struct {
 
 type searchChannel struct {
 	Type    string
-	Results interface{}
+	Results any
 }
 
 func (svc *serviceContext) searchRequest(c *gin.Context) {
-	// setup the search context, starting with the query param
+	// setup the search context, which will be passed to each search function
 	q := strings.TrimSpace(c.Query("q"))
-	sc := searchContext{QueryType: "general", Query: q, QueryAny: fmt.Sprintf("%%%s%%", q), QueryStart: fmt.Sprintf("%s%%", q)}
-	sc.IntQuery, _ = strconv.ParseInt(sc.Query, 10, 64)
-	if sc.IntQuery > 0 {
-		log.Printf("INFO: query %s appears to be an id; use specialized id handling during search", sc.Query)
-		sc.QueryType = "id"
-	} else {
-		if strings.Index(q, "tsm:") == 0 || strings.Index(q, "tsb:") == 0 || strings.Index(q, "uva-lib:") == 0 {
-			log.Printf("INFO: query %s appears to be a pid; just search on pid columns", q)
-			sc.QueryType = "pid"
-		} else if strings.Index(q, "uva-lib-") == 0 {
-			log.Printf("INFO: query %s appears to be a uva-lib pid formatted with a dash; update format and search on pid columns", q)
-			sc.Query = strings.ReplaceAll(q, "uva-lib-", "uva-lib:")
-			sc.QueryType = "pid"
-		} else if strings.Index(q, "tsb-") == 0 {
-			log.Printf("INFO: query %s appears to be a tsb pid formatted with a dash; update format and search on pid columns", q)
-			sc.Query = strings.ReplaceAll(q, "tsb-", "tsb:")
-			sc.QueryType = "pid"
-		}
+	sc := searchContext{Query: q}
+
+	tgtScope := c.Query("scope")
+	if tgtScope != "all" && tgtScope != "masterfiles" && tgtScope != "metadata" && tgtScope != "orders" && tgtScope != "components" && tgtScope != "units" {
+		log.Printf("ERROR: invalid search scope %s specified", tgtScope)
+		c.String(http.StatusBadRequest, "invalid search scope")
+		return
 	}
 
-	// setup pagination
 	sc.StartIndex, _ = strconv.Atoi(c.Query("start"))
 	sc.PageSize, _ = strconv.Atoi(c.Query("limit"))
 	if sc.PageSize == 0 {
 		sc.PageSize = 15
 	}
 
-	// limit search scope to an item type
-	sc.Scope = c.Query("scope")
-	if sc.Scope == "" {
-		sc.Scope = "all"
-	}
-	if sc.Scope != "all" && sc.Scope != "masterfiles" && sc.Scope != "metadata" && sc.Scope != "orders" && sc.Scope != "components" && sc.Scope != "units" {
-		log.Printf("ERROR: invalid search scope %s specified", sc.Scope)
-		c.String(http.StatusBadRequest, "invalid search scope")
-		return
+	sc.Filter = svc.initFilter(c.Query("filters"))
+
+	// cleanup format of PID values which may be pasted from other sources
+	if strings.Index(q, "uva-lib-") == 0 {
+		log.Printf("INFO: query %s appears to be a uva-lib pid formatted with a dash; update format and search on pid columns", q)
+		sc.Query = strings.ReplaceAll(q, "uva-lib-", "uva-lib:")
+	} else if strings.Index(q, "tsb-") == 0 {
+		log.Printf("INFO: query %s appears to be a tsb pid formatted with a dash; update format and search on pid columns", q)
+		sc.Query = strings.ReplaceAll(q, "tsb-", "tsb:")
 	}
 
-	// search specific fields?
-	sc.Field = c.Query("field")
-	if sc.Field == "" {
-		sc.Field = "all"
-	}
-	log.Printf("INFO: search %s.%s for [%s] starting from %d limit %d", sc.Scope, sc.Field, sc.Query, sc.StartIndex, sc.PageSize)
+	log.Printf("INFO: search %s for [%s] starting from %d limit %d", tgtScope, sc.Query, sc.StartIndex, sc.PageSize)
 
-	// extract filter data into a db query that can be appended later
-	var err error
-	sc.Filter, err = svc.initFilter(c.Query("filters"))
-	if err != nil {
-		log.Printf("ERROR: %s", err.Error())
-		c.String(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	// query each type of object individually: components, master files, metadata and orders
+	// query each type of object individually and await for all responses
 	log.Printf("INFO: issue search requests...")
-	pendingCount := 5
+	pendingCount := 0
 	channel := make(chan searchChannel)
 	startTime := time.Now()
-	go svc.queryMasterFiles(&sc, channel)
-	go svc.queryComponents(&sc, channel)
-	go svc.queryMetadata(&sc, channel)
-	go svc.queryOrders(&sc, channel)
-	go svc.queryUnits(&sc, channel)
+	if tgtScope == "all" || tgtScope == "masterfiles" {
+		pendingCount++
+		go svc.queryMasterFiles(&sc, channel)
+	}
+	if tgtScope == "all" || tgtScope == "components" {
+		pendingCount++
+		go svc.queryComponents(&sc, channel)
+	}
+	if tgtScope == "all" || tgtScope == "metadata" {
+		pendingCount++
+		go svc.queryMetadata(&sc, channel)
+	}
+	if tgtScope == "all" || tgtScope == "orders" {
+		pendingCount++
+		go svc.queryOrders(&sc, channel)
+	}
+	if tgtScope == "all" || tgtScope == "units" {
+		pendingCount++
+		go svc.queryUnits(&sc, channel)
+	}
 
-	log.Printf("INFO: await all searchs responses...")
+	log.Printf("INFO: await all search responses...")
 	resp := searchResults{}
 	for pendingCount > 0 {
 		searchResp := <-channel
@@ -252,373 +239,218 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func (svc *serviceContext) initFilter(filterStr string) (*searchFilter, error) {
+func (svc *serviceContext) initFilter(filterStr string) *searchFilter {
 	log.Printf("INFO: raw filters [%s]", filterStr)
-	out := searchFilter{Target: "none"}
+	out := searchFilter{Target: "none", Params: make([]filterParam, 0)}
 
 	if filterStr != "" {
-		log.Printf("INFO: parse filters from query string")
-		var filters filterData
-		err := json.Unmarshal([]byte(filterStr), &filters)
+		//  Format: filters={"type":"TABLE_NAME","params":["FIELD_NAME|contains|sing","FIELD2|equals|true"]}'
+		var reqFilter filterRequest
+		err := json.Unmarshal([]byte(filterStr), &reqFilter)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse filter %s: %s", filterStr, err.Error())
+			log.Printf("ERROR: invalid format for filter %s: %s", filterStr, err.Error())
+			return &out
 		}
-
-		out.Target = filters.Type
-		for idx, f := range filters.Params {
-			log.Printf("INFO: found filter %s", f)
+		out.Target = reqFilter.Type
+		for _, f := range reqFilter.Params {
 			bits := strings.Split(f, "|")
-			tgtField := bits[0]
-			tgtVal, _ := url.QueryUnescape(bits[2])
-			log.Printf("INFO: filter %s on %s", tgtField, tgtVal)
-
-			if tgtField == "type" {
-				typeBits := strings.Split(tgtVal, ":")
-				if len(typeBits) == 1 {
-					out.Query = svc.DB.Where("type=?", tgtVal)
-				} else {
-					out.Query = svc.DB.Where("type=? and external_system_id=?", "ExternalMetadata", typeBits[1])
-				}
-			} else if tgtField == "virgo" {
-				if idx == 0 {
-					if tgtVal == "true" {
-						out.Query = svc.DB.Where("date_dl_ingest is not null")
-					} else {
-						out.Query = svc.DB.Where("date_dl_ingest is null")
-					}
-				} else {
-					if tgtVal == "true" {
-						out.Query = out.Query.Where("date_dl_ingest is not null")
-					} else {
-						out.Query = out.Query.Where("date_dl_ingest is null")
-					}
-				}
-			} else if tgtField == "dpla" {
-				if idx == 0 {
-					if tgtVal == "true" {
-						out.Query = svc.DB.Where("dpla=1")
-					} else {
-						out.Query = svc.DB.Where("dpla=0")
-					}
-				} else {
-					if tgtVal == "true" {
-						out.Query = out.Query.Where("dpla=1")
-					} else {
-						out.Query = out.Query.Where("dpla=0")
-					}
-				}
-			} else if tgtField == "hathitrust" {
-				if idx == 0 {
-					if tgtVal == "true" {
-						out.Query = svc.DB.Where("hathitrust=1")
-					} else {
-						out.Query = svc.DB.Where("hathitrust=0")
-					}
-				} else {
-					if tgtVal == "true" {
-						out.Query = out.Query.Where("dpla=1")
-					} else {
-						out.Query = out.Query.Where("dpla=0")
-					}
-				}
-			} else if tgtField == "clone" {
-				if idx == 0 {
-					if tgtVal == "true" {
-						out.Query = svc.DB.Where("original_mf_id is not null")
-					} else {
-						out.Query = svc.DB.Where("original_mf_id is null")
-					}
-				} else {
-					if tgtVal == "true" {
-						out.Query = out.Query.Where("original_mf_id is not null")
-					} else {
-						out.Query = out.Query.Where("original_mf_id is null")
-					}
-				}
+			if bits[2] == "true" {
+				out.Params = append(out.Params, filterParam{Field: bits[0], Value: 1, Exact: true})
+			} else if bits[2] == "false" {
+				out.Params = append(out.Params, filterParam{Field: bits[0], Value: 0, Exact: true})
 			} else {
-				op := "="
-				if bits[1] == "contains" {
-					tgtVal = fmt.Sprintf("%%%s%%", tgtVal)
-					op = "like"
-				} else if bits[1] == "startsWith" {
-					tgtVal = fmt.Sprintf("%s%%", tgtVal)
-					op = "like"
-				}
-				if idx == 0 {
-					out.Query = svc.DB.Where(fmt.Sprintf("%s %s ?", tgtField, op), tgtVal)
-				} else {
-					out.Query = out.Query.Where(fmt.Sprintf("%s %s ?", tgtField, op), tgtVal)
-				}
+				out.Params = append(out.Params, filterParam{Field: bits[0], Value: bits[2], Exact: bits[1] == "equals"})
 			}
 		}
 	}
-	return &out, nil
-}
 
-func getCallNumRegexp(query string) string {
-	cleanQ := strings.TrimSpace(strings.ToUpper(query))
-	parts := make([]string, 0)
-	if strings.Contains(cleanQ, " ") == false && strings.Index(cleanQ, "MSS") == 0 {
-		// sometimes manuscrips are searched without the space. add it
-		parts = append(parts, "(MSS)")
-		parts = append(parts, fmt.Sprintf("(%s)", cleanQ[3:]))
-	} else {
-		for _, bit := range strings.Split(cleanQ, " ") {
-			if strings.Contains(bit, ".") {
-				// sometimes cutter lines are prefaced by a space, sometimes not. add regex that supports both
-				bit = strings.ReplaceAll(bit, ".", fmt.Sprintf("[ ]*(.)"))
-			}
-			// make a regex group out of each space separated part
-			parts = append(parts, fmt.Sprintf("(%s)", bit))
-
-		}
-	}
-	// join all parts, separating them by 0 or more spaces
-	return fmt.Sprintf("^%s", strings.Join(parts, "[ ]*"))
+	return &out
 }
 
 func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan searchChannel) {
-	resp := masterFileResp{Hits: make([]*masterFileHit, 0)}
-	if sc.Scope == "all" || sc.Scope == "masterfiles" {
-		log.Printf("INFO: searching masterfiles for [%s]...", sc.Query)
-		startTime := time.Now()
-		origQ := "(select mo.pid from master_files mo where mo.id = master_files.original_mf_id) as original_pid"
-		searchQ := svc.DB.Table("master_files").Joins("left outer join metadata md on md.id=metadata_id").Select("master_files.*", origQ)
+	resp := masterFileResp{Hits: make([]masterFileHit, 0)}
 
-		if sc.QueryType != "pid" {
-			if sc.Filter.Target == "masterfiles" {
-				searchQ = searchQ.Where(sc.Filter.Query)
-			}
-
-			callNumQ := getCallNumRegexp(sc.Query)
-			var fieldQ *gorm.DB
-			if sc.Field == "all" {
-				if sc.QueryType == "id" {
-					fieldQ = svc.DB.Or("master_files.id=?", sc.IntQuery).Or("unit_id=?", sc.IntQuery)
-				} else {
-					fieldQ = svc.DB.Or("md.call_number != ? AND md.call_number REGEXP ?", "", callNumQ).
-						Or("master_files.title like ?", sc.QueryAny).
-						Or("description like ?", sc.QueryAny)
-				}
-			} else if sc.Field == "unit_id" {
-				fieldQ = svc.DB.Where("unit_id=?", sc.IntQuery)
-			} else if sc.Field == "call_number" {
-				fieldQ = svc.DB.Where("call_number != ? AND call_number REGEXP ?", "", callNumQ)
-			} else if sc.Field == "title" || sc.Field == "description" {
-				fieldQ = svc.DB.Where(fmt.Sprintf("master_files.%s like ?", sc.Field), sc.QueryAny)
-			} else if sc.Field == "filename" {
-				fieldQ = svc.DB.Where(fmt.Sprintf("master_files.%s like ?", sc.Field), sc.QueryStart)
-			} else if sc.Field == "tag" {
-				searchQ = searchQ.
-					Joins("left outer join master_file_tags mt on mt.master_file_id = master_files.id").
-					Joins("left outer join tags t on mt.tag_id = t.id")
-				fieldQ = svc.DB.Where("t.tag like ?", sc.QueryAny)
-			}
-			searchQ.Where(fieldQ)
-		} else {
-			searchQ.Where("master_files.pid=?", sc.Query)
-		}
-
-		searchQ.Count(&resp.Total)
-		err := searchQ.Preload("Metadata").Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: masterfile search failed: %s", err.Error())
-		}
-		for _, mf := range resp.Hits {
-			imgPID := mf.PID
-			if mf.OriginalPID != "" {
-				imgPID = mf.OriginalPID
-			}
-			mf.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, imgPID)
-			mf.ImageURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, imgPID)
-		}
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: masterfile search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+	newQ := newQuery("masterfiles", sc, int32(sc.StartIndex), int32(sc.PageSize))
+	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
+	if err != nil {
+		log.Printf("ERROR: masterfiles search failed: %s", err.Error())
+		channel <- searchChannel{Type: "masterFiles", Results: resp}
+		return
 	}
+	resp.Total = int64(mResp.Hits.GetTotal())
+
+	for _, h := range mResp.Hits.GetHits() {
+		b, _ := json.Marshal(h.GetSource())
+
+		var hitObj masterFileHit
+		uErr := json.Unmarshal(b, &hitObj)
+		if uErr != nil {
+			log.Printf("ERROR: unable to unmarshal response; %s", uErr)
+		} else {
+			hitObj.ID = uint64(h.GetId())
+			hitObj.ThumbnailURL = fmt.Sprintf("%s/%s/full/!125,200/0/default.jpg", svc.ExternalSystems.IIIF, hitObj.PID)
+			hitObj.ImageURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, hitObj.PID)
+			resp.Hits = append(resp.Hits, hitObj)
+		}
+	}
+
 	channel <- searchChannel{Type: "masterFiles", Results: resp}
 }
 
 func (svc *serviceContext) queryUnits(sc *searchContext, channel chan searchChannel) {
 	resp := unitResp{Hits: make([]unitHit, 0)}
-	if (sc.Scope == "all" || sc.Scope == "units") && sc.QueryType != "pid" {
-		log.Printf("INFO: searching units for [%s]...", sc.Query)
-		startTime := time.Now()
-		searchQ := svc.DB.Table("units")
-		if sc.Filter.Target == "units" {
-			searchQ = searchQ.Where(sc.Filter.Query)
-		}
 
-		var fieldQ *gorm.DB
-		if sc.Field == "all" {
-			fieldQ = svc.DB.Or("staff_notes like ?", sc.QueryAny).
-				Or("special_instructions like ?", sc.QueryAny).
-				Or("id=?", sc.IntQuery)
-		} else if sc.Field == "id" {
-			fieldQ = svc.DB.Where("id=?", sc.Query)
-		} else if sc.Field == "staff_notes" || sc.Field == "special_instructions" {
-			fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
-		}
-		searchQ.Where(fieldQ)
+	newQ := newQuery("units", sc, int32(sc.StartIndex), int32(sc.PageSize))
+	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
+	if err != nil {
+		log.Printf("ERROR: units search failed: %s", err.Error())
+		channel <- searchChannel{Type: "units", Results: resp}
+		return
+	}
+	resp.Total = int64(mResp.Hits.GetTotal())
 
-		searchQ.Count(&resp.Total)
-		err := searchQ.Preload("IntendedUse").Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: unit search failed: %s", err.Error())
+	for _, h := range mResp.Hits.GetHits() {
+		b, _ := json.Marshal(h.GetSource())
+
+		var hitObj unitHit
+		uErr := json.Unmarshal(b, &hitObj)
+		if uErr != nil {
+			log.Printf("ERROR: unable to unmarshal unit response; %s", uErr)
+		} else {
+			hitObj.ID = uint64(h.GetId())
+			resp.Hits = append(resp.Hits, hitObj)
 		}
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: unit search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
 	}
 
 	channel <- searchChannel{Type: "units", Results: resp}
 }
 
-func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchChannel) {
-	resp := metadataResp{Hits: make([]*metadataHit, 0)}
-	if sc.Scope == "all" || sc.Scope == "metadata" {
-		log.Printf("INFO: searching metadata for [%s]...", sc.Query)
-		startTime := time.Now()
-		searchQ := svc.DB.Table("metadata")
-		if sc.QueryType != "pid" {
-			if sc.Filter.Target == "metadata" {
-				searchQ = searchQ.Where(sc.Filter.Query)
-			}
+func newQuery(table string, sc *searchContext, offset, limit int32) *manticore.SearchRequest {
+	searchRequest := manticore.NewSearchRequest(table)
+	searchRequest.SetLimit(limit)
+	searchRequest.SetOffset(offset)
 
-			callNumQ := getCallNumRegexp(sc.Query)
-			var fieldQ *gorm.DB
-			if sc.Field == "all" {
-				fieldQ = svc.DB.Or("title like ?", sc.QueryAny).
-					Or("barcode=?", sc.Query).Or("catalog_key=?", sc.Query).Or("call_number != ? AND call_number REGEXP ?", "", callNumQ).Or("desc_metadata like ?", sc.QueryAny).
-					Or("creator_name like ?", sc.QueryStart).Or("collection_id like ?", sc.QueryStart).Or("collection_facet=?", sc.QueryAny)
-				if sc.QueryType == "id" {
-					fieldQ = fieldQ.Or("metadata.id=?", sc.IntQuery)
-				}
+	searchQuery := manticore.NewSearchQuery()
+
+	// Docs on search filter setup: https://manual.manticoresearch.com/Searching/Filters
+	// search will be comprised of a list of queryFilters. The first filter is a
+	// query_string with the text entered in the main query field on the UI. This
+	// is a full-text search
+	mustFiters := make([]manticore.QueryFilter, 0)
+	qf := manticore.NewQueryFilter()
+	qf.SetQueryString(sc.Query)
+	mustFiters = append(mustFiters, *qf)
+
+	if sc.Filter.Target == table {
+		for _, fp := range sc.Filter.Params {
+			if fp.Exact {
+				// exact matches are for filtering on attributes rather than full text fields
+				// they use a different setup; a query filter with an Equals match rather than a query string
+				qf := manticore.NewQueryFilter()
+				filter := map[string]any{fp.Field: fp.Value}
+				qf.SetEquals(filter)
+				mustFiters = append(mustFiters, *qf)
 			} else {
-				if sc.Field == "title" || sc.Field == "creator_name" {
-					fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
-				} else if sc.Field == "call_number" {
-					fieldQ = svc.DB.Where("call_number != ? AND call_number REGEXP ?", "", callNumQ)
-				} else {
-					fieldQ = svc.DB.Where(fmt.Sprintf("%s=?", sc.Field), sc.Query)
-				}
+				// non-exact matches are added as column-specific full text index searches (queryString)
+				qf := manticore.NewQueryFilter()
+				qf.SetQueryString(fmt.Sprintf("@%s %s", fp.Field, fp.Value))
+				mustFiters = append(mustFiters, *qf)
 			}
-			searchQ.Where(fieldQ)
+		}
+	}
+
+	// add all the QueryFilters collected above to a boolean must query
+	boolFilter := manticore.NewBoolFilter()
+	boolFilter.SetMust(mustFiters)
+	searchQuery.SetBool(*boolFilter)
+
+	searchRequest.Query = searchQuery
+	b, _ := searchRequest.MarshalJSON()
+	log.Printf("INFO: %s query details %s", table, b)
+	return searchRequest
+}
+
+func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchChannel) {
+	resp := metadataResp{Hits: make([]metadataHit, 0)}
+	newQ := newQuery("metadata", sc, int32(sc.StartIndex), int32(sc.PageSize))
+	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
+	if err != nil {
+		log.Printf("ERROR: metadata search failed: %s", err.Error())
+		channel <- searchChannel{Type: "metadata", Results: resp}
+		return
+	}
+	resp.Total = int64(mResp.Hits.GetTotal())
+
+	for _, h := range mResp.Hits.GetHits() {
+		b, _ := json.Marshal(h.GetSource())
+		var hitObj metadataHit
+		uErr := json.Unmarshal(b, &hitObj)
+		if uErr != nil {
+			log.Printf("ERROR: unable to unmarshall metadata hit; %s", uErr)
 		} else {
-			searchQ.Where("pid=?", sc.Query)
-		}
-
-		var err error
-		searchQ.Count(&resp.Total)
-
-		searchQ = searchQ.Preload("ExternalSystem")
-		err = searchQ.Offset(sc.StartIndex).Limit(sc.PageSize).Find(&resp.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: metadata search failed: %s", err.Error())
-		}
-
-		for _, md := range resp.Hits {
-			if md.DateDlIngest != nil {
-				if md.Type == "SirsiMetadata" {
-					md.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, md.CatalogKey)
-					md.Virgo = true
-				} else if md.Type == "XmlMetadata" {
-					md.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
-					md.Virgo = true
+			hitObj.ID = uint64(h.GetId())
+			if hitObj.Virgo {
+				if hitObj.SystemName == "SirsiMetadata" {
+					hitObj.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, hitObj.CatalogKey)
+				} else if hitObj.SystemName == "XmlMetadata" {
+					hitObj.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, hitObj.PID)
 				}
 			}
+			resp.Hits = append(resp.Hits, hitObj)
 		}
-
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: metadata search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
 	}
 	channel <- searchChannel{Type: "metadata", Results: resp}
 }
 
 func (svc *serviceContext) queryOrders(sc *searchContext, channel chan searchChannel) {
 	resp := orderResp{Hits: make([]orderHit, 0)}
-	if (sc.Scope == "all" || sc.Scope == "orders") && sc.QueryType != "pid" {
-		log.Printf("INFO: searching orders for [%s]...", sc.Query)
-		startTime := time.Now()
-		searchQ := svc.DB.Table("orders").
-			Joins("inner join customers on customer_id = customers.id").
-			Joins("left outer join agencies on agency_id = agencies.id")
-		if sc.Filter.Target == "orders" {
-			searchQ = searchQ.Where(sc.Filter.Query)
-		}
-
-		var fieldQ *gorm.DB
-		if sc.Field == "all" {
-			if sc.QueryType == "id" {
-				fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
-			} else {
-				fieldQ = svc.DB.Or("customers.last_name like ?", sc.QueryStart).Or("agencies.name like ?", sc.QueryStart).
-					Or("orders.staff_notes like ?", sc.QueryAny).Or("orders.special_instructions like ?", sc.QueryAny)
-			}
-		} else if sc.Field == "id" {
-			fieldQ = svc.DB.Where("orders.id=?", sc.IntQuery)
-		} else if sc.Field == "last_name" {
-			fieldQ = svc.DB.Where("customers.last_name like ?", sc.QueryStart)
-		} else if sc.Field == "agency" {
-			fieldQ = svc.DB.Where("agencies.name like ?", sc.QueryAny)
-		} else {
-			fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
-		}
-		searchQ.Where(fieldQ)
-
-		searchQ.Count(&resp.Total)
-		err := searchQ.Preload("Customer").Preload("Agency").
-			Offset(sc.StartIndex).Limit(sc.PageSize).
-			Find(&resp.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: order search failed: %s", err.Error())
-		}
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: orders search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+	newQ := newQuery("orders", sc, int32(sc.StartIndex), int32(sc.PageSize))
+	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
+	if err != nil {
+		log.Printf("ERROR: orders search failed: %s", err.Error())
+		channel <- searchChannel{Type: "orders", Results: resp}
+		return
 	}
+	resp.Total = int64(mResp.Hits.GetTotal())
+
+	for _, h := range mResp.Hits.GetHits() {
+		b, _ := json.Marshal(h.GetSource())
+		var hitObj orderHit
+		uErr := json.Unmarshal(b, &hitObj)
+		if uErr != nil {
+			log.Printf("ERROR: unable to unmarshall order hit; %s", uErr)
+		} else {
+			hitObj.ID = uint64(h.GetId())
+			resp.Hits = append(resp.Hits, hitObj)
+		}
+	}
+
 	channel <- searchChannel{Type: "orders", Results: resp}
 }
 
 func (svc *serviceContext) queryComponents(sc *searchContext, channel chan searchChannel) {
-	resp := componentResp{Hits: make([]component, 0)}
-	if sc.Scope == "all" || sc.Scope == "components" {
-		log.Printf("INFO: searching components for [%s]...", sc.Query)
-		startTime := time.Now()
-		searchQ := svc.DB.Table("components")
-		if sc.QueryType != "pid" {
-			if sc.Filter.Target == "components" {
-				searchQ = searchQ.Where(sc.Filter.Query)
-			}
-
-			var fieldQ *gorm.DB
-			if sc.Field == "all" {
-				fieldQ = svc.DB.Or("title like ?", sc.QueryAny).Or("label like ?", sc.QueryAny).
-					Or("content_desc like ?", sc.QueryAny).Or("date like ?", sc.QueryAny).Or("ead_id_att=?", sc.Query)
-				if sc.QueryType == "id" {
-					fieldQ = fieldQ.Or("components.id=?", sc.IntQuery)
-				}
-			} else if sc.Field == "ead_id_att" {
-				fieldQ = svc.DB.Where("ead_id_att=?", sc.Query)
-			} else {
-				fieldQ = svc.DB.Where(fmt.Sprintf("%s like ?", sc.Field), sc.QueryAny)
-			}
-			searchQ.Where(fieldQ)
-		} else {
-			searchQ.Where("pid=?", sc.Query)
-		}
-
-		searchQ.Count(&resp.Total)
-		subQ := "(select count(*) from master_files m where component_id=components.id) as mf_cnt"
-		err := searchQ.Offset(sc.StartIndex).Limit(sc.PageSize).Select("components.*", subQ).Find(&resp.Hits).Error
-		if err != nil {
-			log.Printf("ERROR: component search failed: %s", err.Error())
-		}
-		elapsedNanoSec := time.Since(startTime)
-		elapsedMS := int64(elapsedNanoSec / time.Millisecond)
-		log.Printf("INFO: component search found %d hits. Elapsed Time: %d (ms)", resp.Total, elapsedMS)
+	resp := componentResp{Hits: make([]componentHit, 0)}
+	newQ := newQuery("components", sc, int32(sc.StartIndex), int32(sc.PageSize))
+	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
+	if err != nil {
+		log.Printf("ERROR: components search failed: %s", err.Error())
+		channel <- searchChannel{Type: "components", Results: resp}
+		return
 	}
+	resp.Total = int64(mResp.Hits.GetTotal())
+
+	for _, h := range mResp.Hits.GetHits() {
+		b, _ := json.Marshal(h.GetSource())
+		var hitObj componentHit
+		uErr := json.Unmarshal(b, &hitObj)
+		if uErr != nil {
+			log.Printf("ERROR: unable to unmarshall component hit; %s", uErr)
+		} else {
+			hitObj.ID = uint64(h.GetId())
+			resp.Hits = append(resp.Hits, hitObj)
+		}
+	}
+
 	channel <- searchChannel{Type: "components", Results: resp}
 }
 

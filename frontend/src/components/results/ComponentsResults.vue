@@ -1,6 +1,6 @@
 <template>
    <DataTable :value="searchStore.components.hits" ref="componentHitsTable" dataKey="id"
-      stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+      stripedRows showGridlines size="small"
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
       :lazy="true" :paginator="true" @page="onPage($event)" paginatorPosition="top"
       :rows="searchStore.components.limit" :totalRecords="searchStore.components.total"
@@ -31,7 +31,7 @@
             <InputText type="text" v-model="filterModel.value" placeholder="Label"/>
          </template>
       </Column>
-      <Column field="description" header="Content Description" filterField="content_desc" :showFilterMatchModes="false" >
+      <Column field="description" header="Content Description" filterField="description" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Description"/>
          </template>
@@ -41,8 +41,8 @@
             <InputText type="text" v-model="filterModel.value" placeholder="Date"/>
          </template>
       </Column>
-      <Column field="eadID" header="EAD ID" />
-      <Column field="masterFileCount" header="Master Files"/>
+      <Column field="finding_aid" header="EAD ID" />
+      <Column field="mf_cnt" header="Master Files"/>
    </DataTable>
 </template>
 
@@ -67,7 +67,7 @@ const componentHitsTable = ref()
 const filters = ref( {
    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'label': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'content_desc': {value: null, matchMode: FilterMatchMode.CONTAINS},
+   'description': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'date': {value: null, matchMode: FilterMatchMode.CONTAINS},
 })
 

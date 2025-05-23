@@ -1,6 +1,6 @@
 <template>
    <DataTable :value="searchStore.units.hits" ref="unittHitsTable" dataKey="id"
-      stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+      stripedRows showGridlines size="small"
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
       :lazy="true" :paginator="true" @page="onPage($event)" paginatorPosition="top"
       :rows="searchStore.units.limit" :totalRecords="searchStore.units.total"
@@ -20,7 +20,7 @@
             <router-link :to="`/units/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
          </template>
       </Column>
-      <Column field="status" header="Status" class="nowrap" filterField="unit_status" :showFilterMatchModes="false" >
+      <Column field="status" header="Status" class="nowrap" filterField="status" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <Select v-model="filterModel.value" :options="unitStatuses" optionLabel="name" optionValue="code" placeholder="Select a status" />
          </template>
@@ -28,33 +28,33 @@
             <span :class="`status ${slotProps.data.status}`">{{displayStatus(slotProps.data.status)}}</span>
          </template>
       </Column>
-      <Column field="staffNotes" header="Staff Notes" filterField="staff_notes" :showFilterMatchModes="false" >
+      <Column field="staff_notes" header="Staff Notes" filterField="staff_notes" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Notes"/>
          </template>
          <template #body="slotProps">
-            <span v-if="slotProps.data.staffNotes">{{ slotProps.data.staffNotes }}</span>
+            <span v-if="slotProps.data.staff_notes">{{ slotProps.data.staff_notes }}</span>
             <span v-else class="none">N/A</span>
          </template>
       </Column>
-      <Column field="specialInstructions" header="Special Instructions" filterField="special_instructions" :showFilterMatchModes="false" >
+      <Column field="special_instructions" header="Special Instructions" filterField="special_instructions" :showFilterMatchModes="false" >
          <template #filter="{filterModel}">
             <InputText type="text" v-model="filterModel.value" placeholder="Instructions"/>
          </template>
          <template #body="slotProps">
-            <span v-if="slotProps.data.specialInstructions">{{ slotProps.data.specialInstructions }}</span>
+            <span v-if="slotProps.data.special_instructions">{{ slotProps.data.special_instructions }}</span>
             <span v-else class="none">N/A</span>
          </template>
       </Column>
-      <Column field="dateDLDeliverablesReady" header="DL Deliverable Date" class="nowrap">
+      <Column field="date_dl_deliverables_ready" header="DL Deliverable Date" class="nowrap">
          <template #body="slotProps">
-            <span v-if="slotProps.data.dateDLDeliverablesReady">{{ $formatDate(slotProps.data.dateDLDeliverablesReady) }}</span>
+            <span v-if="slotProps.data.date_dl_deliverables_ready">{{ $formatDate(slotProps.data.date_dl_deliverables_ready) }}</span>
             <span v-else class="none">N/A</span>
          </template>
       </Column>
-      <Column field="datePatronDeliverablesReady" header="Patron Deliverable Date" class="nowrap">
+      <Column field="date_patron_deliverables_ready" header="Patron Deliverable Date" class="nowrap">
          <template #body="slotProps">
-            <span v-if="slotProps.data.datePatronDeliverablesReady">{{ $formatDate(slotProps.data.datePatronDeliverablesReady) }}</span>
+            <span v-if="slotProps.data.date_patron_deliverables_ready">{{ $formatDate(slotProps.data.date_patron_deliverables_ready) }}</span>
             <span v-else class="none">N/A</span>
          </template>
       </Column>
@@ -81,7 +81,7 @@ const searchStore = useSearchStore()
 const unittHitsTable = ref()
 
 const filters = ref( {
-   'unit_status': {value: null, matchMode: FilterMatchMode.EQUALS},
+   'status': {value: null, matchMode: FilterMatchMode.EQUALS},
    'staff_notes': {value: null, matchMode: FilterMatchMode.CONTAINS},
    'special_instructions': {value: null, matchMode: FilterMatchMode.CONTAINS},
 })

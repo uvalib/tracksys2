@@ -6,7 +6,6 @@ export const useSearchStore = defineStore('search', {
 	state: () => ({
       query: "",
       scope: "all",
-      field: "all",
       searched: false,
       unitValid: false,
       view: "",               // name of the view for below. used in client query params
@@ -52,7 +51,6 @@ export const useSearchStore = defineStore('search', {
          total: 0,
          hits: [],
       },
-      searchFields: {},
 	}),
 	getters: {
       hasResults: state => {
@@ -85,13 +83,9 @@ export const useSearchStore = defineStore('search', {
       }
 	},
 	actions: {
-      setGlobalSearchFields( data ) {
-         this.searchFields = data
-      },
       resetSearch() {
          this.query = ""
          this.scope = "all"
-         this.field = "all"
          this.similarSearch = false
          this.searchPHash = 0
          this.distance = 5
@@ -186,9 +180,6 @@ export const useSearchStore = defineStore('search', {
          }
 
          let url = `/api/search?scope=${tgtScope}&q=${encodeURIComponent(this.query)}`
-         if (this.field != "all" ) {
-            url += `&field=${this.field}`
-         }
 
          if (tgtScope == "components") {
             url += `&start=${this.components.start}&limit=${this.components.limit}`

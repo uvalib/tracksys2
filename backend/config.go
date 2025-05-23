@@ -16,6 +16,7 @@ type dbConfig struct {
 type configData struct {
 	port            int
 	db              dbConfig
+	index           string
 	virgoURL        string
 	reportsURL      string
 	projectsURL     string
@@ -59,6 +60,9 @@ func getConfiguration() *configData {
 	flag.StringVar(&config.db.User, "dbuser", "", "Database user")
 	flag.StringVar(&config.db.Pass, "dbpass", "", "Database password")
 
+	// Index connection params
+	flag.StringVar(&config.index, "index", "", "Index connect string")
+
 	// dev user
 	flag.StringVar(&config.devAuthUser, "devuser", "", "Authorized computing id for dev")
 
@@ -78,6 +82,9 @@ func getConfiguration() *configData {
 	}
 	if config.jwtKey == "" {
 		log.Fatal("Parameter jwtkey is required")
+	}
+	if config.index == "" {
+		log.Fatal("Parameter indexhost is required")
 	}
 
 	log.Printf("[CONFIG] port          = [%d]", config.port)
@@ -99,6 +106,7 @@ func getConfiguration() *configData {
 	log.Printf("[CONFIG] dbport        = [%d]", config.db.Port)
 	log.Printf("[CONFIG] dbname        = [%s]", config.db.Name)
 	log.Printf("[CONFIG] dbuser        = [%s]", config.db.User)
+	log.Printf("[CONFIG] index         = [%s]", config.index)
 	if config.devAuthUser != "" {
 		log.Printf("[CONFIG] devuser       = [%s]", config.devAuthUser)
 	}
