@@ -49,10 +49,15 @@
       </div>
       <div class="search">
          <div class="text-search">
-            <div class="search-ctl-group">
-               <Select v-model="selectedScope" :options="scopes" optionLabel="label" optionValue="value" />
+            <Select v-model="selectedScope" :options="scopes" optionLabel="label" optionValue="value" />
+            <div class="search-info">
+               <div class="search-help">
+                  <SearchIndexPopover />
+                  <SearchHelpPopover />
+               </div>
+               <InputText placeholder="Find TrackSys items..." v-model="newQuery" class="searchbar"  @keyup.enter="doSearch" />
             </div>
-            <InputText placeholder="Find TrackSys items..." v-model="newQuery" class="searchbar"  @keyup.enter="doSearch" />
+
             <div class="search-ctl-group">
                <DPGButton label="Search" class="submit-button" @click="doSearch"/>
                <DPGButton v-if="searchStore.searched || searchStore.similarSearch == true" label="Reset Search" severity="secondary" @click="resetSearch"/>
@@ -73,7 +78,6 @@
                @upload="imageUploaded" @before-upload="beforeUpload" :auto="true" chooseLabel="Upload Image" />
          </div>
 
-         <p class="error" v-if="unitError">{{unitError}}</p>
          <template v-if="systemStore.working == false">
             <SearchResults v-if="searchStore.searched" />
             <SimilarImages v-if="searchStore.similarSearch" />
@@ -115,6 +119,8 @@ import { useDashboardStore } from '../stores/dashboard'
 import { useUserStore } from '../stores/user'
 import { useSystemStore } from '../stores/system'
 import { useMetadataStore } from '../stores/metadata'
+import SearchIndexPopover from '@/components/SearchIndexPopover.vue'
+import SearchHelpPopover from '@/components/SearchHelpPopover.vue'
 import SearchResults from '@/components/results/SearchResults.vue'
 import SimilarImages from '@/components/results/SimilarImages.vue'
 import { ref, computed, onBeforeMount } from 'vue'
@@ -126,6 +132,7 @@ import Slider from 'primevue/slider'
 import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
 
+
 const searchStore = useSearchStore()
 const route = useRoute()
 const router = useRouter()
@@ -134,8 +141,6 @@ const userStore = useUserStore()
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
 
-const unitID = ref("")
-const unitError = ref("")
 const showCreateMetadata = ref(false)
 const showCreateCollection = ref(false)
 const newCollectionFacet = ref("")
@@ -239,8 +244,6 @@ const resetSearch = (() => {
 
 const doSearch = (() => {
    if (newQuery.value.length > 0) {
-      unitError.value = ""
-
       // this is only called when clicking search. reset everything.
       searchStore.resetSearch()
 
@@ -384,14 +387,22 @@ const createMetadataClosed = (() => {
       display: flex;
       flex-flow: row nowrap;
       justify-content: center;
-      align-items: center;
+      align-items: flex-end;
       width: 70%;
       margin: 0 auto;
       gap: 10px;
-
-      .searchbar {
-         margin: 0;
+      .search-info {
+         flex-grow: 1;
+         display: flex;
+         flex-direction: column;
+         gap: 5px;
+         .search-help {
+            display: flex;
+            flex-flow: row nowrap;
+            gap: 10px;
+         }
       }
+
       select {
          margin: 0;
          width: max-content;
