@@ -339,7 +339,7 @@ func newQuery(table string, sc *searchContext, offset, limit int32) *manticore.S
 	qf.SetQueryString(sc.Query)
 	intQ, _ := strconv.ParseInt(sc.Query, 10, 64)
 	if intQ != 0 {
-		// if this query is an numeric value, it may be an ID. Add a Should match boolean filter as a
+		// If this query is an numeric value, it may be an ID. Add a Should match boolean filter as a
 		// nested child of the initial query. This makes it an OR match.
 		// https://manual.manticoresearch.com/Searching/Filters?client=CONFIG#Nested-bool-query
 		boolFilter := manticore.NewBoolFilter()
