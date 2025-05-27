@@ -9,8 +9,8 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.7.5
 	github.com/gin-contrib/gzip v1.2.3
-	github.com/gin-gonic/contrib v0.0.0-20250113154928-93b827325fec
-	github.com/gin-gonic/gin v1.10.0
+	github.com/gin-gonic/contrib v0.0.0-20250521004450-2b1292699c15
+	github.com/gin-gonic/gin v1.10.1
 	github.com/go-sql-driver/mysql v1.9.2
 	github.com/manticoresoftware/manticoresearch-go v1.8.0
 	golang.org/x/image v0.27.0

@@ -330,8 +330,6 @@ func newQuery(table string, sc *searchContext, offset, limit int32) *manticore.S
 	searchRequest.SetLimit(limit)
 	searchRequest.SetOffset(offset)
 
-	searchQuery := manticore.NewSearchQuery()
-
 	// Docs on search filter setup: https://manual.manticoresearch.com/Searching/Filters
 	// search will be comprised of a list of queryFilters. The first filter is a
 	// query_string with the text entered in the main query field on the UI. This
@@ -339,6 +337,18 @@ func newQuery(table string, sc *searchContext, offset, limit int32) *manticore.S
 	mustFiters := make([]manticore.QueryFilter, 0)
 	qf := manticore.NewQueryFilter()
 	qf.SetQueryString(sc.Query)
+	intQ, _ := strconv.ParseInt(sc.Query, 10, 64)
+	if intQ != 0 {
+		// if this query is an numeric value, it may be an ID. Add a Should match boolean filter as a
+		// nested child of the initial query. This makes it an OR match.
+		// https://manual.manticoresearch.com/Searching/Filters?client=CONFIG#Nested-bool-query
+		boolFilter := manticore.NewBoolFilter()
+		qf2 := manticore.NewQueryFilter()
+		filter := map[string]any{"id": intQ}
+		qf2.SetEquals(filter)
+		boolFilter.SetShould([]*manticore.QueryFilter{qf2})
+		qf.SetBool(*boolFilter)
+	}
 	mustFiters = append(mustFiters, *qf)
 
 	if sc.Filter.Target == table {
@@ -360,11 +370,12 @@ func newQuery(table string, sc *searchContext, offset, limit int32) *manticore.S
 	}
 
 	// add all the QueryFilters collected above to a boolean must query
+	searchQuery := manticore.NewSearchQuery()
 	boolFilter := manticore.NewBoolFilter()
 	boolFilter.SetMust(mustFiters)
 	searchQuery.SetBool(*boolFilter)
 
-	searchRequest.Query = searchQuery
+	searchRequest.SetQuery(*searchQuery)
 	b, _ := searchRequest.MarshalJSON()
 	log.Printf("INFO: %s query details %s", table, b)
 	return searchRequest
