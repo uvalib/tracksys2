@@ -356,18 +356,19 @@ func (svc *serviceContext) createMetadata(c *gin.Context) {
 		newMD.DPLA = req.DPLA
 	}
 
-	if req.Type == "XmlMetadata" {
+	switch req.Type {
+	case "XmlMetadata":
 		xmlMD := strings.Replace(modsTemplate, "[TITLE]", req.Title, 1)
 		if req.Author != "" {
 			xmlMD += strings.Replace(modsAuthor, "[AUTHOR]", req.Author, 1)
 		}
 		xmlMD += "</mods>"
 		newMD.DescMetadata = &xmlMD
-	} else if req.Type == "SirsiMetadata" {
+	case "SirsiMetadata":
 		newMD.Barcode = &req.Barcode
 		newMD.CallNumber = &req.CallNumber
 		newMD.CatalogKey = &req.CatalogKey
-	} else if req.Type == "ExternalMetadata" {
+	case "ExternalMetadata":
 		newMD.ExternalURI = &req.ExternalURI
 		newMD.ExternalSystemID = &req.ExternalSystemID
 	}
@@ -649,9 +650,10 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 		}
 
 		if md.DateDLIngest != nil {
-			if md.Type == "SirsiMetadata" {
+			switch md.Type {
+			case "SirsiMetadata":
 				out.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, *md.CatalogKey)
-			} else if md.Type == "XmlMetadata" {
+			case "XmlMetadata":
 				out.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, md.PID)
 			}
 		}
@@ -688,7 +690,8 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 	}
 
 	if md.Type == "ExternalMetadata" {
-		if md.ExternalSystem.Name == "ArchivesSpace" {
+		switch md.ExternalSystem.Name {
+		case "ArchivesSpace":
 			log.Printf("INFO: get external ArchivesSpace metadata for %s", md.PID)
 			raw, getErr := svc.getRequest(fmt.Sprintf("%s/archivesspace/lookup?pid=%s&uri=%s", svc.ExternalSystems.Jobs, md.PID, *md.ExternalURI))
 			if getErr != nil {
@@ -714,7 +717,7 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 				}
 			}
 
-		} else if md.ExternalSystem.Name == "JSTOR Forum" {
+		case "JSTOR Forum":
 			log.Printf("INFO: %s is JSTORForum metadata; just return a search link", md.PID)
 			var mfInfo struct {
 				Filename string
@@ -726,7 +729,7 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 				tgtFilename := strings.TrimSuffix(mfInfo.Filename, filepath.Ext(mfInfo.Filename))
 				out.JSTOR = &jstorMetadata{SearchURL: fmt.Sprintf("https://www.jstor.org/action/doBasicSearch?Query=%s&image_search_referrer=global", tgtFilename)}
 			}
-		} else if md.ExternalSystem.Name == "Apollo" {
+		case "Apollo":
 			log.Printf("INFO: get external apollo metadata for %s", md.PID)
 			raw, getErr := svc.getRequest(fmt.Sprintf("%s%s", svc.ExternalSystems.Apollo, *md.ExternalURI))
 			if getErr != nil {
@@ -741,11 +744,12 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 					apollo.ItemURL = fmt.Sprintf("%s/collections/%s?item=%s", svc.ExternalSystems.Apollo, apResp.Collection.PID, apResp.Item.PID)
 					apollo.CollectionURL = fmt.Sprintf("%s/collections/%s", svc.ExternalSystems.Apollo, apResp.Collection.PID)
 					for _, c := range apResp.Collection.Children {
-						if c.Type.Name == "title" {
+						switch c.Type.Name {
+						case "title":
 							apollo.CollectionTitle = c.Value
-						} else if c.Type.Name == "barcode" {
+						case "barcode":
 							apollo.CollectionBarcode = c.Value
-						} else if c.Type.Name == "catalogKey" {
+						case "catalogKey":
 							apollo.CollectionCatalogKey = c.Value
 						}
 					}

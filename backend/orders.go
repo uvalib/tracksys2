@@ -241,15 +241,16 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 		sortOrder = "desc"
 	}
 	sortField := fmt.Sprintf("orders.%s", sortBy)
-	if sortBy == "dateDue" {
+	switch sortBy {
+	case "dateDue":
 		sortField = "date_due"
-	} else if sortBy == "dateSubmitted" {
+	case "dateSubmitted":
 		sortField = "date_request_submitted"
-	} else if sortBy == "title" {
+	case "title":
 		sortField = "order_title"
-	} else if sortBy == "unitCount" {
+	case "unitCount":
 		sortField = "unit_count"
-	} else if sortBy == "masterFileCount" {
+	case "masterFileCount":
 		sortField = "master_file_count"
 	}
 	orderStr := fmt.Sprintf("%s %s", sortField, sortOrder)
@@ -282,29 +283,30 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 		tgtVal, _ := url.QueryUnescape(bits[2])
 		log.Printf("INFO: filter %s %s %s", tgtField, comparison, tgtVal)
 		if tgtField == "status" {
-			if tgtVal == "active" {
+			switch tgtVal {
+			case "active":
 				filterQ = filterQ.Where("order_status!=? and order_status!=?", "canceled", "completed")
-			} else if tgtVal == "await" {
+			case "await":
 				filterQ = filterQ.Where("order_status=? or order_status=?", "requested", "await_fee")
-			} else if tgtVal == "deferred" {
+			case "deferred":
 				filterQ = filterQ.Where("order_status=?", "deferred")
-			} else if tgtVal == "canceled" {
+			case "canceled":
 				filterQ = filterQ.Where("order_status=?", "canceled")
-			} else if tgtVal == "complete" {
+			case "complete":
 				filterQ = filterQ.Where("order_status=?", "completed")
-			} else if tgtVal == "due_week" {
+			case "due_week":
 				dateWeek := time.Now().AddDate(0, 0, 7).Format("2006-01-02")
 				filterQ = filterQ.Joins("inner join units u on u.order_id=orders.id").
 					Where("u.intended_use_id <> ?", 110).
 					Where("date_due>=?", dateNow).Where("date_due<=?", dateWeek).
 					Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled").Distinct("orders.id")
-			} else if tgtVal == "overdue" {
+			case "overdue":
 				oneYearAgo := time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
 				filterQ = filterQ.Joins("inner join units u on u.order_id=orders.id").
 					Where("u.intended_use_id <> ?", 110).
 					Where("date_request_submitted>?", oneYearAgo).Where("date_due<?", dateNow).
 					Where("order_status!=?", "completed").Where("order_status!=?", "deferred").Where("order_status!=?", "canceled").Distinct("orders.id")
-			} else if tgtVal == "ready" {
+			case "ready":
 				filterQ = filterQ.Joins("inner join units u on u.order_id=orders.id").
 					Where("u.intended_use_id <> ?", 110).
 					Where("orders.email is not null and orders.email != ? and date_customer_notified is null", "").

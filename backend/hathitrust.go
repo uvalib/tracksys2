@@ -69,11 +69,12 @@ func (svc *serviceContext) getHathiTrustSubmissions(c *gin.Context) {
 	}
 
 	sortField := fmt.Sprintf("hathitrust_statuses.%s", sortBy)
-	if sortBy == "pid" {
+	switch sortBy {
+	case "pid":
 		sortField = "Metadata.pid"
-	} else if sortBy == "title" {
+	case "title":
 		sortField = "Metadata.title"
-	} else if sortBy == "barcode" {
+	case "barcode":
 		sortField = "Metadata.barcode"
 	}
 
@@ -96,11 +97,12 @@ func (svc *serviceContext) getHathiTrustSubmissions(c *gin.Context) {
 			tgtField := bits[0]
 			tgtVal, _ := url.QueryUnescape(bits[2])
 			log.Printf("INFO: filter %s=%s", tgtField, tgtVal)
-			if tgtField == "metadataStatus" {
+			switch tgtField {
+			case "metadataStatus":
 				tgtField = "metadata_status"
-			} else if tgtField == "packageStatus" {
+			case "packageStatus":
 				tgtField = "package_status"
-			} else {
+			default:
 				continue
 			}
 			if filterQ == nil {

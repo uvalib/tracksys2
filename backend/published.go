@@ -60,11 +60,12 @@ func (svc *serviceContext) getPublished(c *gin.Context, typeQuery string) {
 		comparison := bits[1]
 		tgtVal, _ := url.QueryUnescape(bits[2])
 		log.Printf("INFO: filter %s %s %s", tgtField, comparison, tgtVal)
-		if comparison == "equals" {
+		switch comparison {
+		case "equals":
 			pubQ = pubQ.Where(fmt.Sprintf("%s=?", tgtField), tgtVal)
-		} else if comparison == "startsWith" {
+		case "startsWith":
 			pubQ = pubQ.Where(fmt.Sprintf("%s like ?", tgtField), fmt.Sprintf("%s%%", tgtVal))
-		} else {
+		default:
 			pubQ = pubQ.Where(fmt.Sprintf("%s like ?", tgtField), fmt.Sprintf("%%%s%%", tgtVal))
 		}
 	}

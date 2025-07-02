@@ -200,31 +200,32 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 	for pendingCount > 0 {
 		searchResp := <-channel
 		pendingCount--
-		if searchResp.Type == "masterFiles" {
+		switch searchResp.Type {
+		case "masterFiles":
 			log.Printf("INFO received master files search response")
 			mfResp, ok := searchResp.Results.(masterFileResp)
 			if ok {
 				resp.MasterFiles = mfResp
 			}
-		} else if searchResp.Type == "metadata" {
+		case "metadata":
 			log.Printf("INFO received metadata search response")
 			mResp, ok := searchResp.Results.(metadataResp)
 			if ok {
 				resp.Metadata = mResp
 			}
-		} else if searchResp.Type == "components" {
+		case "components":
 			log.Printf("INFO received components search response")
 			cResp, ok := searchResp.Results.(componentResp)
 			if ok {
 				resp.Components = cResp
 			}
-		} else if searchResp.Type == "orders" {
+		case "orders":
 			log.Printf("INFO received orders search response")
 			oResp, ok := searchResp.Results.(orderResp)
 			if ok {
 				resp.Orders = oResp
 			}
-		} else if searchResp.Type == "units" {
+		case "units":
 			log.Printf("INFO: received units search response")
 			uResp, ok := searchResp.Results.(unitResp)
 			if ok {
@@ -254,11 +255,12 @@ func (svc *serviceContext) initFilter(filterStr string) *searchFilter {
 		out.Target = reqFilter.Type
 		for _, f := range reqFilter.Params {
 			bits := strings.Split(f, "|")
-			if bits[2] == "true" {
+			switch bits[2] {
+			case "true":
 				out.Params = append(out.Params, filterParam{Field: bits[0], Value: 1, Exact: true})
-			} else if bits[2] == "false" {
+			case "false":
 				out.Params = append(out.Params, filterParam{Field: bits[0], Value: 0, Exact: true})
-			} else {
+			default:
 				out.Params = append(out.Params, filterParam{Field: bits[0], Value: bits[2], Exact: bits[1] == "equals"})
 			}
 		}
@@ -401,9 +403,10 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 		} else {
 			hitObj.ID = uint64(h.GetId())
 			if hitObj.Virgo {
-				if hitObj.SystemName == "SirsiMetadata" {
+				switch hitObj.SystemName {
+				case "SirsiMetadata":
 					hitObj.VirgoURL = fmt.Sprintf("%s/sources/uva_library/items/%s", svc.ExternalSystems.Virgo, hitObj.CatalogKey)
-				} else if hitObj.SystemName == "XmlMetadata" {
+				case "XmlMetadata":
 					hitObj.VirgoURL = fmt.Sprintf("%s/sources/images/items/%s", svc.ExternalSystems.Virgo, hitObj.PID)
 				}
 			}
@@ -562,13 +565,14 @@ func (svc *serviceContext) uploadSearchImage(c *gin.Context) {
 	fileType = strings.Replace(fileType, ".", "", 1)
 	var imgData image.Image
 
-	if fileType == "TIF" {
+	switch fileType {
+	case "TIF":
 		imgData, err = tiff.Decode(imgFile)
-	} else if fileType == "JPG" {
+	case "JPG":
 		imgData, err = jpeg.Decode(imgFile)
-	} else if fileType == "PNG" {
+	case "PNG":
 		imgData, err = png.Decode(imgFile)
-	} else if fileType == "GIF" {
+	case "GIF":
 		imgData, err = gif.Decode(imgFile)
 	}
 	if err != nil {

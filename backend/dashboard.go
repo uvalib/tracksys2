@@ -65,11 +65,12 @@ func (svc *serviceContext) getDashboardStats(c *gin.Context) {
 		log.Printf("ERROR: unable to get active archivesspace review stats: %s", err.Error())
 	} else {
 		for _, asR := range asActive {
-			if asR.Status == "rejected" {
+			switch asR.Status {
+			case "rejected":
 				stats.ArchivesSpaceRejections++
-			} else if asR.Status == "requested" {
+			case "requested":
 				stats.ArchivesSpaceRequests++
-			} else {
+			default:
 				stats.ArchivesSpaceReviews++
 			}
 		}

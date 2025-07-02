@@ -92,13 +92,14 @@ func (svc *serviceContext) getAPTrustSubmissions(c *gin.Context) {
 	}
 
 	sortField := fmt.Sprintf("apt.%s", sortBy)
-	if sortBy == "requestedAt" {
+	switch sortBy {
+	case "requestedAt":
 		sortField = "apt.requested_at"
-	} else if sortBy == "processedAt" {
+	case "processedAt":
 		sortField = "apt.processed_at"
-	} else if sortBy == "pid" {
+	case "pid":
 		sortField = "m.pid"
-	} else if sortBy == "title" {
+	case "title":
 		sortField = "m.title"
 	}
 
