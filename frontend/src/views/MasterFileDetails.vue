@@ -43,7 +43,7 @@
             <dl>
                <DataDisplay label="Container Type" :value="location.containerType.name"/>
                <DataDisplay label="Container ID" :value="location.containerID"/>
-               <DataDisplay label="Folder" :value="location.folderID"/>
+               <DataDisplay v-if="location.containerType.hasFolders" label="Folder" :value="location.folderID"/>
                <DataDisplay label="Notes" :value="location.notes"/>
             </dl>
          </Panel>
