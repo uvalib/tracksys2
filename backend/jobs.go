@@ -12,21 +12,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type eventLevel uint
-
-const (
-	info  eventLevel = 0
-	warn  eventLevel = 1
-	err   eventLevel = 2
-	fatal eventLevel = 3
-)
-
 type event struct {
-	ID          uint64     `json:"id"`
-	JobStatusID uint64     `json:"-"`
-	Level       eventLevel `json:"level"`
-	Text        string     `json:"text"`
-	CreatedAt   time.Time  `json:"createdAt"`
+	ID          uint64    `json:"id"`
+	JobStatusID uint64    `json:"-"`
+	Level       uint      `json:"level"` // info=0, warn=1, error=2, fatal=3
+	Text        string    `json:"text"`
+	CreatedAt   time.Time `json:"createdAt"`
 }
 
 type jobStatus struct {

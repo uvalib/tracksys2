@@ -27,7 +27,7 @@ type staffMember struct {
 	Email       string    `json:"email"`
 	IsActive    bool      `json:"active"`
 	Role        staffRole `json:"roleID"`
-	RoleName    string    `gorm:"-" json:"role"`
+	RoleName    string    `gorm:"-" json:"role"` // admin=0,supervisor=1,student=2,viewer=3
 }
 
 func (sm *staffMember) roleString() string {
@@ -38,8 +38,10 @@ func (sm *staffMember) roleString() string {
 		return "supervisor"
 	case student:
 		return "student"
-	default:
+	case viewer:
 		return "viewer"
+	default:
+		return "unknown"
 	}
 }
 

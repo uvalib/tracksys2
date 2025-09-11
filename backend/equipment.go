@@ -15,18 +15,12 @@ import (
 
 type equipmentStatus uint
 
-const (
-	active   equipmentStatus = 0
-	inactive equipmentStatus = 1
-	retured  equipmentStatus = 2
-)
-
 type equipment struct {
 	ID           int64           `json:"id"`
 	Type         string          `json:"type"`
 	Name         string          `json:"name"`
 	SerialNumber string          `json:"serialNumber"`
-	Status       equipmentStatus `json:"status"` // [:active, :inactive, :retired]
+	Status       equipmentStatus `json:"status"` // active=0, inactive=1, retired=2
 	CreatedAt    time.Time       `json:"-"`
 	UpdatedAt    time.Time       `json:"-"`
 }

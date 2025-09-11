@@ -168,17 +168,6 @@ type apolloResp struct {
 	Item       apolloContainer `json:"item"`
 }
 
-type uvaMAP struct {
-	Doc struct {
-		Field []struct {
-			Text   string `xml:",chardata"`
-			Name   string `xml:"name,attr"`
-			Type   string `xml:"type,attr"`
-			Access string `xml:"access,attr"`
-		} `xml:"field"`
-	} `xml:"doc"`
-}
-
 type metadataDetailResponse struct {
 	Metadata            *metadata            `json:"metadata"`
 	Collection          *metadata            `json:"collectionRecord"`
