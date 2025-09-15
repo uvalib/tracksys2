@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import { useCookies } from '@vueuse/integrations/useCookies'
+import { useCookies } from "vue3-cookies"
 import { useUserStore } from '@/stores/user'
 
 const router = createRouter({
@@ -137,7 +137,7 @@ const router = createRouter({
 router.beforeEach( async (to) => {
    console.log("BEFORE ROUTE "+to.path)
    const userStore = useUserStore()
-   const cookies = useCookies()
+   const { cookies } = useCookies()
    const noAuthRoutes = ["not_found", "forbidden", "signedout"]
 
    if (to.path === '/granted') {
