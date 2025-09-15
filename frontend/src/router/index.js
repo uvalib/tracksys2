@@ -147,9 +147,10 @@ router.beforeEach( async (to) => {
          console.log(`GRANTED [${jwtStr}]`)
          let priorURL = localStorage.getItem('tsPriorURL')
          localStorage.removeItem("tsPriorURL")
-         if ( priorURL && priorURL != "/granted" && priorURL != "/") {
+         if ( priorURL ) {
             console.log("RESTORE "+priorURL)
-            return priorURL
+            window.location.href = priorURL
+            return false   // cancel the original navigation
          }
          return "/"
       }
@@ -165,8 +166,8 @@ router.beforeEach( async (to) => {
       console.log("NOT A PROTECTED PAGE")
    } else {
       if (userStore.isSignedIn == false) {
-         console.log("AUTHENTICATE")
-         localStorage.setItem("tsPriorURL", to.fullPath)
+         console.log("AUTHENTICATE FROM URL: "+window.location.toString())
+         localStorage.setItem("tsPriorURL", window.location.toString())
          window.location.href = "/authenticate"
          return false   // cancel the original navigation
       } else {
