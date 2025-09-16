@@ -282,7 +282,8 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 		comparison := bits[1]
 		tgtVal, _ := url.QueryUnescape(bits[2])
 		log.Printf("INFO: filter %s %s %s", tgtField, comparison, tgtVal)
-		if tgtField == "status" {
+		switch tgtField {
+		case "status":
 			switch tgtVal {
 			case "active":
 				filterQ = filterQ.Where("order_status!=? and order_status!=?", "canceled", "completed")
@@ -312,11 +313,11 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 					Where("orders.email is not null and orders.email != ? and date_customer_notified is null", "").
 					Where("order_status != ? and order_status != ?", "canceled", "completed").Distinct("orders.id")
 			}
-		} else if tgtField == "customer" {
+		case "customer":
 			filterQ = filterQ.Where("c.last_name like ?", fmt.Sprintf("%s%%", tgtVal))
-		} else if tgtField == "agency" {
+		case "agency":
 			filterQ = filterQ.Where("orders.agency_id = ?", tgtVal)
-		} else if tgtField == "processor" {
+		case "processor":
 			filterQ = filterQ.Where("p.last_name like ?", fmt.Sprintf("%s%%", tgtVal))
 		}
 	}

@@ -167,7 +167,12 @@ router.beforeEach( async (to) => {
    } else {
       if (userStore.isSignedIn == false) {
          console.log("AUTHENTICATE FROM URL: "+window.location.toString())
-         localStorage.setItem("tsPriorURL", window.location.toString())
+
+         // if a user session expired, the prior URL will already be set, don't set it now
+         // since that URL will be the home page
+         if ( localStorage.getItem('tsPriorURL') == null ) {
+            localStorage.setItem("tsPriorURL", window.location.toString())
+         }
          window.location.href = "/authenticate"
          return false   // cancel the original navigation
       } else {

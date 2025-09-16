@@ -81,6 +81,11 @@ export const useUserStore = defineStore('user', {
                   this.router.push("/forbidden")
                } else {
                   if (err.response && err.response.status == 401) {
+                     // save the URL that was being accessed when the session exired so
+                     // the user can be redirected there after re-auythentication
+                     localStorage.setItem("tsPriorURL", window.location.toString())
+
+                     // clear out all session info and redirect to the expired page
                      localStorage.removeItem("ts2_jwt")
                      this.jwt = ""
                      this.firstName = ""
