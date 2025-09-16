@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -459,7 +458,7 @@ func (svc *serviceContext) putRequest(url string) ([]byte, *RequestError) {
 	return svc.sendRequest("PUT", url, nil)
 }
 
-func (svc *serviceContext) postJSON(url string, jsonPayload interface{}) ([]byte, *RequestError) {
+func (svc *serviceContext) postJSON(url string, jsonPayload any) ([]byte, *RequestError) {
 	log.Printf("INFO: POST json request: %s", url)
 	startTime := time.Now()
 
@@ -529,6 +528,34 @@ func handleAPIResponse(logURL string, resp *http.Response, err error) ([]byte, *
 	}
 
 	defer resp.Body.Close()
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
+	bodyBytes, _ := io.ReadAll(resp.Body)
 	return bodyBytes, nil
+}
+
+func (svc *serviceContext) awaitJobCompletion(jobID int64) {
+	statusURL := fmt.Sprintf("%s/jobs/%d", svc.ExternalSystems.Jobs, jobID)
+	done := false
+	for done == false {
+		time.Sleep(15 * time.Second)
+		rawResp, err := svc.getRequest(statusURL)
+		if err != nil {
+			log.Printf("ERROR: unable to get status for job %d: %s", jobID, err.Message)
+		} else {
+			var js jobStatus
+			pErr := json.Unmarshal(rawResp, &js)
+			if pErr != nil {
+				log.Printf("ERROR: unable to parse job %d status response %s: %s", jobID, rawResp, pErr.Error())
+				done = true
+			} else {
+				switch js.Status {
+				case "finished":
+					log.Printf("INFO: job %d has completed", jobID)
+					done = true
+				case "failure":
+					log.Printf("INFO: job %d failed: %s", jobID, js.Error)
+					done = true
+				}
+			}
+		}
+	}
 }
