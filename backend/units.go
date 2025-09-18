@@ -289,7 +289,10 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 	}
 
 	updateMasterFileMetadata := false
-	if unitDetail.MetadataID != &req.MetadataID {
+	if unitDetail.MetadataID == nil && req.MetadataID != 0 {
+		log.Printf("INFO: unit %d update changes metadata from none to %d; master files must be updated", unitDetail.ID, req.MetadataID)
+		updateMasterFileMetadata = true
+	} else if unitDetail.MetadataID != nil && unitDetail.MetadataID != &req.MetadataID {
 		log.Printf("INFO: unit %d update changes metadata from %d to %d; master files must be updated", unitDetail.ID, *unitDetail.MetadataID, req.MetadataID)
 		updateMasterFileMetadata = true
 	}
