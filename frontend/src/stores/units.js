@@ -232,11 +232,17 @@ export const useUnitsStore = defineStore('units', {
          })
       },
 
-      assignMetadata( metadataID, masterFileIDs) {
+      assignMetadata( metadata, masterFileIDs) {
+         console.log(`assign metadata '${metadata.title}' to masterfiles ${masterFileIDs}`)
          const system = useSystemStore()
-         let data = {ids: masterFileIDs, metadataID:  parseInt(metadataID,10) }
+         let data = {ids: masterFileIDs, metadataID:  metadata.id }
          axios.post(`${system.jobsURL}/units/${this.detail.id}/masterfiles/metadata`, data).then( () => {
-            this.getMasterFiles( this.detail.id )
+            this.masterFiles.forEach( mf => {
+               if ( masterFileIDs.includes(mf.id) ) {
+               mf.metadataID = metadata.id
+               mf.metadata = metadata
+               }
+            })
             system.toastMessage("Assign Metadata Success", 'The selected master files have been assigned new metadata.')
          }).catch( e => {
             system.setError(e)

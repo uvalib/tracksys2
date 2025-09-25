@@ -26,7 +26,7 @@
                   <DPGButton label="PDF" @click="pdfClicked()" severity="secondary" :disabled="filesSelected == false" />
                </template>
                <template  v-if="userStore.isAdmin || userStore.isSupervisor">
-                  <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
+                  <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selectedObject="assignMetadata" target="metadata" :create="true"/>
                   <LookupDialog :disabled="!filesSelected" label="Assign Componment" @selected="assignComponent" target="component" />
                </template>
             </div>
@@ -255,8 +255,8 @@ const onSelectAllChange = ((event) => {
    }
 })
 
-const assignMetadata = ( async ( metadataID ) => {
-   await unitsStore.assignMetadata(metadataID, selectedIDs.value)
+const assignMetadata = ( async ( metadata ) => {
+   await unitsStore.assignMetadata(metadata, selectedIDs.value)
    clearSelections()
 })
 

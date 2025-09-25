@@ -82,7 +82,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import NewMetadataPanel from '@/components/metadata/NewMetadataPanel.vue'
 
-const emit = defineEmits( ['selected' ])
+const emit = defineEmits( ['selected', 'selectedObject' ])
 const props = defineProps({
    target: {
       type: String,
@@ -171,6 +171,7 @@ function truncateTitle(t) {
 }
 function okClicked() {
    emit("selected", selectedHit.value.id)
+   emit("selectedObject", selectedHit.value)
    hide()
 }
 function hide() {
