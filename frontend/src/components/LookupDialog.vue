@@ -128,6 +128,7 @@ function metadataCreateCanceled() {
 function metadataCreated() {
    selectedHit.value = metadataStore.searchHits[0]
    emit("selected", selectedHit.value.id)
+   emit("selectedObject", selectedHit.value)
    hide()
 }
 
