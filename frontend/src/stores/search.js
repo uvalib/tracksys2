@@ -132,7 +132,7 @@ export const useSearchStore = defineStore('search', {
 
       executeSearch( scopeOverride ) {
          const system = useSystemStore()
-         system.working = true
+         // system.working = true
          // console.log("exec search. scopeOverride: ["+scopeOverride+", scope: "+this.scope+", view: "+this.view)
 
          // this lets secondary queries on specific item types with different filter and paginiation settings
@@ -183,27 +183,37 @@ export const useSearchStore = defineStore('search', {
             if (tgtScope == "components" || tgtScope == "all") {
                this.components.hits = response.data.components.hits
                this.components.scroll = response.data.components.scroll
-               this.components.total = response.data.components.total
+               if (this.components.total == 0) {
+                  this.components.total = response.data.components.total
+               }
             }
             if (tgtScope == "masterfiles" || tgtScope == "all") {
                this.masterFiles.hits = response.data.masterFiles.hits
                this.masterFiles.scroll = response.data.masterFiles.scroll
-               this.masterFiles.total = response.data.masterFiles.total
+               if (this.masterFiles.total == 0) {
+                  this.masterFiles.total = response.data.masterFiles.total
+               }
             }
             if (tgtScope == "metadata" || tgtScope == "all") {
                this.metadata.hits = response.data.metadata.hits
                this.metadata.scroll = response.data.metadata.scroll
-               this.metadata.total = response.data.metadata.total
+               if (this.metadata.total == 0) {
+                  this.metadata.total = response.data.metadata.total
+               }
             }
             if (tgtScope == "orders" || tgtScope == "all") {
                this.orders.hits = response.data.orders.hits
                this.orders.scroll = response.data.orders.scroll
-               this.orders.total = response.data.orders.total
+               if (this.orders.total == 0) {
+                  this.orders.total = response.data.orders.total
+               }
             }
             if (tgtScope == "units" || tgtScope == "all") {
                this.units.hits = response.data.units.hits
                this.units.scroll = response.data.units.scroll
-               this.units.total = response.data.units.total
+               if (this.units.total == 0) {
+                  this.units.total = response.data.units.total
+               }
             }
             if ( this.scope == "all" ) {
                if ( this.orders.total > 0) {
