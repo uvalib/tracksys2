@@ -12,6 +12,7 @@ export const useSearchStore = defineStore('search', {
       components: {
          start: 0,
          limit: 15,
+         scroll: "",
          total: 0,
          hits: [],
          filters: []
@@ -19,6 +20,7 @@ export const useSearchStore = defineStore('search', {
       masterFiles: {
          start: 0,
          limit: 15,
+         scroll: "",
          total: 0,
          hits: [],
          filters: []
@@ -26,6 +28,7 @@ export const useSearchStore = defineStore('search', {
       metadata: {
          start: 0,
          limit: 15,
+         scroll: "",
          total: 0,
          hits: [],
          filters: []
@@ -33,6 +36,7 @@ export const useSearchStore = defineStore('search', {
       orders: {
          start: 0,
          limit: 15,
+         scroll: "",
          total: 0,
          hits: [],
          filters: []
@@ -40,6 +44,7 @@ export const useSearchStore = defineStore('search', {
       units: {
          start: 0,
          limit: 15,
+         scroll: "",
          total: 0,
          hits: [],
          filters: []
@@ -84,48 +89,7 @@ export const useSearchStore = defineStore('search', {
 	},
 	actions: {
       resetSearch() {
-         this.query = ""
-         this.scope = "all"
-         this.similarSearch = false
-         this.searchPHash = 0
-         this.distance = 5
-         this.similarImages = {
-            total: 0,
-            hits: [],
-         }
-
-         this.components.start = 0
-         this.components.limit = 15
-         this.components.total = 0
-         this.components.hits = []
-         this.components.filters = []
-
-         this.masterFiles.start = 0
-         this.masterFiles.limit = 15
-         this.masterFiles.total = 0
-         this.masterFiles.hits = []
-         this.masterFiles.filters = []
-
-         this.metadata.start = 0
-         this.metadata.limit = 15
-         this.metadata.total = 0
-         this.metadata.hits = []
-         this.metadata.filters = []
-
-         this.orders.start = 0
-         this.orders.limit = 15
-         this.orders.total = 0
-         this.orders.hits = []
-         this.orders.filters = []
-
-         this.units.start = 0
-         this.units.limit = 15
-         this.units.total = 0
-         this.units.hits = []
-         this.units.filters = []
-
-         this.view = ""
-         this.searched = false
+         this.$reset()
       },
 
       setFilter( filterQueryParm) {
@@ -183,14 +147,29 @@ export const useSearchStore = defineStore('search', {
 
          if (tgtScope == "components") {
             url += `&start=${this.components.start}&limit=${this.components.limit}`
+            if (this.components.scroll != "") {
+               url += `&scroll=${this.components.scroll}`
+            }
          } else if (tgtScope == "masterfiles") {
             url += `&start=${this.masterFiles.start}&limit=${this.masterFiles.limit}`
+            if (this.masterFiles.scroll != "") {
+               url += `&scroll=${this.masterFiles.scroll}`
+            }
          } else if (tgtScope == "metadata") {
             url += `&start=${this.metadata.start}&limit=${this.metadata.limit}`
+            if (this.metadata.scroll != "") {
+               url += `&scroll=${this.metadata.scroll}`
+            }
          } else if (tgtScope == "orders") {
             url += `&start=${this.orders.start}&limit=${this.orders.limit}`
+            if (this.orders.scroll != "") {
+               url += `&scroll=${this.orders.scroll}`
+            }
          } else if (tgtScope == "units") {
             url += `&start=${this.units.start}&limit=${this.units.limit}`
+            if (this.units.scroll != "") {
+               url += `&scroll=${this.units.scroll}`
+            }
          }
 
          // filter is always based on active view
@@ -203,22 +182,27 @@ export const useSearchStore = defineStore('search', {
          axios.get(url).then(response => {
             if (tgtScope == "components" || tgtScope == "all") {
                this.components.hits = response.data.components.hits
+               this.components.scroll = response.data.components.scroll
                this.components.total = response.data.components.total
             }
             if (tgtScope == "masterfiles" || tgtScope == "all") {
                this.masterFiles.hits = response.data.masterFiles.hits
+               this.masterFiles.scroll = response.data.masterFiles.scroll
                this.masterFiles.total = response.data.masterFiles.total
             }
             if (tgtScope == "metadata" || tgtScope == "all") {
                this.metadata.hits = response.data.metadata.hits
+               this.metadata.scroll = response.data.metadata.scroll
                this.metadata.total = response.data.metadata.total
             }
             if (tgtScope == "orders" || tgtScope == "all") {
                this.orders.hits = response.data.orders.hits
+               this.orders.scroll = response.data.orders.scroll
                this.orders.total = response.data.orders.total
             }
             if (tgtScope == "units" || tgtScope == "all") {
                this.units.hits = response.data.units.hits
+               this.units.scroll = response.data.units.scroll
                this.units.total = response.data.units.total
             }
             if ( this.scope == "all" ) {

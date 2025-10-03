@@ -82,24 +82,29 @@ type componentHit struct {
 }
 
 type componentResp struct {
-	Total int64          `json:"total"`
-	Hits  []componentHit `json:"hits"`
+	Total  int64          `json:"total"`
+	Scroll string         `json:"scroll"`
+	Hits   []componentHit `json:"hits"`
 }
 type metadataResp struct {
-	Total int64         `json:"total"`
-	Hits  []metadataHit `json:"hits"`
+	Total  int64         `json:"total"`
+	Scroll string        `json:"scroll"`
+	Hits   []metadataHit `json:"hits"`
 }
 type masterFileResp struct {
-	Total int64           `json:"total"`
-	Hits  []masterFileHit `json:"hits"`
+	Total  int64           `json:"total"`
+	Scroll string          `json:"scroll"`
+	Hits   []masterFileHit `json:"hits"`
 }
 type orderResp struct {
-	Total int64      `json:"total"`
-	Hits  []orderHit `json:"hits"`
+	Total  int64      `json:"total"`
+	Scroll string     `json:"scroll"`
+	Hits   []orderHit `json:"hits"`
 }
 type unitResp struct {
-	Total int64     `json:"total"`
-	Hits  []unitHit `json:"hits"`
+	Total  int64     `json:"total"`
+	Scroll string    `json:"scroll"`
+	Hits   []unitHit `json:"hits"`
 }
 
 type searchResults struct {
@@ -131,6 +136,7 @@ type searchContext struct {
 	Filter     *searchFilter
 	StartIndex int
 	PageSize   int
+	Scroll     string
 }
 
 type searchChannel struct {
@@ -141,7 +147,7 @@ type searchChannel struct {
 func (svc *serviceContext) searchRequest(c *gin.Context) {
 	// setup the search context, which will be passed to each search function
 	q := strings.TrimSpace(c.Query("q"))
-	sc := searchContext{Query: q}
+	sc := searchContext{Query: q, Scroll: c.Query("scroll")}
 
 	tgtScope := c.Query("scope")
 	if tgtScope != "all" && tgtScope != "masterfiles" && tgtScope != "metadata" && tgtScope != "orders" && tgtScope != "components" && tgtScope != "units" {
@@ -272,7 +278,7 @@ func (svc *serviceContext) initFilter(filterStr string) *searchFilter {
 func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan searchChannel) {
 	resp := masterFileResp{Hits: make([]masterFileHit, 0)}
 
-	newQ := newQuery("masterfiles", sc, int32(sc.StartIndex), int32(sc.PageSize))
+	newQ := newQuery("masterfiles", sc, int32(sc.StartIndex), int32(sc.PageSize), sc.Scroll)
 	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
 	if err != nil {
 		log.Printf("ERROR: masterfiles search failed: %s", err.Error())
@@ -280,6 +286,9 @@ func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan sear
 		return
 	}
 	resp.Total = int64(mResp.Hits.GetTotal())
+	if mResp.Scroll != nil {
+		resp.Scroll = *mResp.Scroll
+	}
 
 	for _, h := range mResp.Hits.GetHits() {
 		b, _ := json.Marshal(h.GetSource())
@@ -302,7 +311,7 @@ func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan sear
 func (svc *serviceContext) queryUnits(sc *searchContext, channel chan searchChannel) {
 	resp := unitResp{Hits: make([]unitHit, 0)}
 
-	newQ := newQuery("units", sc, int32(sc.StartIndex), int32(sc.PageSize))
+	newQ := newQuery("units", sc, int32(sc.StartIndex), int32(sc.PageSize), sc.Scroll)
 	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
 	if err != nil {
 		log.Printf("ERROR: units search failed: %s", err.Error())
@@ -310,6 +319,9 @@ func (svc *serviceContext) queryUnits(sc *searchContext, channel chan searchChan
 		return
 	}
 	resp.Total = int64(mResp.Hits.GetTotal())
+	if mResp.Scroll != nil {
+		resp.Scroll = *mResp.Scroll
+	}
 
 	for _, h := range mResp.Hits.GetHits() {
 		b, _ := json.Marshal(h.GetSource())
@@ -327,10 +339,30 @@ func (svc *serviceContext) queryUnits(sc *searchContext, channel chan searchChan
 	channel <- searchChannel{Type: "units", Results: resp}
 }
 
-func newQuery(table string, sc *searchContext, offset, limit int32) *manticore.SearchRequest {
+func newQuery(table string, sc *searchContext, offset, limit int32, scrollToken string) *manticore.SearchRequest {
 	searchRequest := manticore.NewSearchRequest(table)
 	searchRequest.SetLimit(limit)
-	searchRequest.SetOffset(offset)
+	jsonStr := `[{ "id":{ "order":"asc"}}]`
+	var parsed any
+	err := json.Unmarshal([]byte(jsonStr), &parsed)
+	if err != nil {
+		log.Printf("ERROR: unable to unmarshall sort: %s", err.Error())
+	} else {
+		searchRequest.SetSort(parsed)
+	}
+	if offset == 0 {
+		log.Printf("INIT SCROLL")
+		opts := map[string]any{"scroll": true}
+		searchRequest.SetOptions(opts)
+	} else {
+		opts := map[string]any{"scroll": scrollToken}
+		searchRequest.SetOptions(opts)
+	}
+	// Alternative to scroll token. Set limit/offset, then set max_searches to
+	// avoid the default 1000 limit in total results
+	// searchRequest.SetOffset(offset)
+	// opts := map[string]any{"max_matches": limit + offset}
+	// searchRequest.SetOptions(opts)
 
 	// Docs on search filter setup: https://manual.manticoresearch.com/Searching/Filters
 	// search will be comprised of a list of queryFilters. The first filter is a
@@ -385,7 +417,7 @@ func newQuery(table string, sc *searchContext, offset, limit int32) *manticore.S
 
 func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchChannel) {
 	resp := metadataResp{Hits: make([]metadataHit, 0)}
-	newQ := newQuery("metadata", sc, int32(sc.StartIndex), int32(sc.PageSize))
+	newQ := newQuery("metadata", sc, int32(sc.StartIndex), int32(sc.PageSize), sc.Scroll)
 	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
 	if err != nil {
 		log.Printf("ERROR: metadata search failed: %s", err.Error())
@@ -393,6 +425,9 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 		return
 	}
 	resp.Total = int64(mResp.Hits.GetTotal())
+	if mResp.Scroll != nil {
+		resp.Scroll = *mResp.Scroll
+	}
 
 	for _, h := range mResp.Hits.GetHits() {
 		b, _ := json.Marshal(h.GetSource())
@@ -418,7 +453,7 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 
 func (svc *serviceContext) queryOrders(sc *searchContext, channel chan searchChannel) {
 	resp := orderResp{Hits: make([]orderHit, 0)}
-	newQ := newQuery("orders", sc, int32(sc.StartIndex), int32(sc.PageSize))
+	newQ := newQuery("orders", sc, int32(sc.StartIndex), int32(sc.PageSize), sc.Scroll)
 	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
 	if err != nil {
 		log.Printf("ERROR: orders search failed: %s", err.Error())
@@ -426,6 +461,9 @@ func (svc *serviceContext) queryOrders(sc *searchContext, channel chan searchCha
 		return
 	}
 	resp.Total = int64(mResp.Hits.GetTotal())
+	if mResp.Scroll != nil {
+		resp.Scroll = *mResp.Scroll
+	}
 
 	for _, h := range mResp.Hits.GetHits() {
 		b, _ := json.Marshal(h.GetSource())
@@ -444,7 +482,7 @@ func (svc *serviceContext) queryOrders(sc *searchContext, channel chan searchCha
 
 func (svc *serviceContext) queryComponents(sc *searchContext, channel chan searchChannel) {
 	resp := componentResp{Hits: make([]componentHit, 0)}
-	newQ := newQuery("components", sc, int32(sc.StartIndex), int32(sc.PageSize))
+	newQ := newQuery("components", sc, int32(sc.StartIndex), int32(sc.PageSize), sc.Scroll)
 	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
 	if err != nil {
 		log.Printf("ERROR: components search failed: %s", err.Error())
@@ -452,6 +490,9 @@ func (svc *serviceContext) queryComponents(sc *searchContext, channel chan searc
 		return
 	}
 	resp.Total = int64(mResp.Hits.GetTotal())
+	if mResp.Scroll != nil {
+		resp.Scroll = *mResp.Scroll
+	}
 
 	for _, h := range mResp.Hits.GetHits() {
 		b, _ := json.Marshal(h.GetSource())
