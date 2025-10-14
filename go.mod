@@ -11,7 +11,7 @@ require (
 	github.com/gin-gonic/contrib v0.0.0-20250521004450-2b1292699c15
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-sql-driver/mysql v1.9.3
-	github.com/golang-jwt/jwt/v4 v4.5.2
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/manticoresoftware/manticoresearch-go v1.10.0
 	golang.org/x/image v0.32.0
 	gorm.io/driver/mysql v1.6.0
