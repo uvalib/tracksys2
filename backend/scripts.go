@@ -9,8 +9,8 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type scriptRequest struct {
@@ -33,8 +33,8 @@ func (svc *serviceContext) scriptRunner(c *gin.Context) {
 	}
 
 	log.Printf("INFO: validating jwt...")
-	jwtClaims := &jwtClaims{}
-	_, jwtErr := jwt.ParseWithClaims(req.JWT, jwtClaims, func(token *jwt.Token) (any, error) {
+	jwtClaims := jwtClaims{}
+	_, jwtErr := jwt.ParseWithClaims(req.JWT, &jwtClaims, func(token *jwt.Token) (any, error) {
 		return []byte(svc.JWTKey), nil
 	})
 

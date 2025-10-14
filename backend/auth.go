@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type jwtClaims struct {
@@ -18,7 +18,7 @@ type jwtClaims struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	AdminURL  string `json:"adminURL"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func (svc *serviceContext) authenticate(c *gin.Context) {
@@ -70,8 +70,8 @@ func (svc *serviceContext) authenticate(c *gin.Context) {
 		FirstName: sm.FirstName,
 		LastName:  sm.LastName,
 		Role:      sm.roleString(),
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			Issuer:    "tracksys2",
 		},
 	}
@@ -108,8 +108,8 @@ func (svc *serviceContext) authMiddleware(c *gin.Context) {
 	}
 
 	log.Printf("INFO: validating JWT auth token...")
-	jwtClaims := &jwtClaims{}
-	_, jwtErr := jwt.ParseWithClaims(tokenStr, jwtClaims, func(token *jwt.Token) (interface{}, error) {
+	jwtClaims := jwtClaims{}
+	_, jwtErr := jwt.ParseWithClaims(tokenStr, &jwtClaims, func(token *jwt.Token) (any, error) {
 		return []byte(svc.JWTKey), nil
 	})
 	if jwtErr != nil {
