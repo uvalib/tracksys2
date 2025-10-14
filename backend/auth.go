@@ -17,7 +17,6 @@ type jwtClaims struct {
 	Role      string `json:"role"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
-	AdminURL  string `json:"adminURL"`
 	jwt.RegisteredClaims
 }
 
@@ -120,7 +119,6 @@ func (svc *serviceContext) authMiddleware(c *gin.Context) {
 
 	log.Printf("INFO: got valid bearer token: [%s] for %s", tokenStr, jwtClaims.ComputeID)
 	c.Set("jwt", tokenStr)
-	c.Set("claims", jwtClaims)
 	c.Next()
 }
 
