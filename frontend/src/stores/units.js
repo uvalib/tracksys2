@@ -10,13 +10,6 @@ export const useUnitsStore = defineStore('units', {
       loadingMasterFiles: false,
       exportingCSV: false,
       updateInProgress: false,
-
-      pdf: {
-         downloading: false,
-         percent: 0,
-         intervalID: -1,
-         token: ""
-      }
    }),
 	getters: {
       hasText: state => {
@@ -56,6 +49,19 @@ export const useUnitsStore = defineStore('units', {
       },
       hasMasterFiles: state => {
          return state.masterFiles.length > 0
+      },
+      hasMultipleMetadataRecords: state => {
+         let mdID = 0
+         let multiple = false
+         state.masterFiles.some( mf => {
+            if (mdID == 0 ) {
+               mdID = mf.metadataID
+            } else if ( mdID !=  mf.metadataID) {
+               multiple = true
+            }
+            return multiple == true
+         })
+         return multiple
       }
 	},
 	actions: {
@@ -326,61 +332,6 @@ export const useUnitsStore = defineStore('units', {
             system.toastMessage("IIIF Republish Started", `This file is being republished to the IIIF server. Check the Job Statuses page for updates.`)
          }).catch( e => {
             system.setError(e)
-         })
-      },
-
-      requestPDF( masterFileIDs ) {
-         if (this.pdf.downloading) return
-
-         const system = useSystemStore()
-         this.pdf.downloading = true
-         this.pdf.percent = 0
-         this.pdf.token = ""
-         let url = `/api/units/${this.detail.id}/pdf`
-         if ( masterFileIDs ) {
-            url += `?pages=${masterFileIDs.join(",")}`
-         }
-         axios.get(url).then( resp => {
-            if ( resp.data.status == "READY") {
-               this.pdf.percent = 100
-               this.pdf.token = resp.data.token
-               this.downloadPDF()
-            } else if ( resp.data.status == "FAILED") {
-               this.pdf.downloading = false
-               this.pdf.percent = 0
-               system.setError("Unable to download PDF")
-            } else {
-               // processing; start a interval to check status
-               this.pdf.token = resp.data.token
-               this.pdf.intervalID = setInterval( () => {
-                  let statusURL = `/api/units/${this.detail.id}/pdf/status`
-                  if (this.pdf.token != "") {
-                     statusURL += `?token=${this.pdf.token}`
-                  }
-                  axios.get(statusURL).then( resp => {
-                     if ( resp.data == "READY") {
-                        this.pdf.percent = 100
-                        this.downloadPDF()
-                        clearInterval(this.pdf.intervalID)
-                     } else if ( resp.data == "FAILED") {
-                        this.pdf.downloading = false
-                        this.pdf.percent = 0
-                        system.setError("PDF generation failed")
-                        clearInterval(this.pdf.intervalID)
-                     } else {
-                        this.pdf.percent = parseInt(resp.data.replace("%", ""), 10)
-                     }
-                  }).catch( e => {
-                     system.setError(e)
-                     this.pdf.downloading = false
-                     this.pdf.percent = 0
-                  })
-               }, 1000)
-            }
-         }).catch( e => {
-            system.setError(e)
-            this.pdf.downloading = false
-            this.pdf.percent = 0
          })
       },
 

@@ -29,7 +29,7 @@
             <span class="sep">:</span>
             <span :class="le.level">{{le.level.toUpperCase()}}</span>
             <span class="sep">:</span>
-            <span class="txt">{{le.text}}</span>
+            <span class="txt" v-html="le.text"></span>
          </div>
       </div>
    </div>
