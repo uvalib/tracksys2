@@ -32,7 +32,7 @@ func (svc *serviceContext) scriptRunner(c *gin.Context) {
 		return
 	}
 
-	log.Printf("INFO: validating jwt...")
+	log.Printf("INFO: validating jwt [ %s ]", req.JWT)
 	jwtClaims := jwtClaims{}
 	_, jwtErr := jwt.ParseWithClaims(req.JWT, &jwtClaims, func(token *jwt.Token) (any, error) {
 		return []byte(svc.JWTKey), nil
@@ -130,6 +130,8 @@ func (svc *serviceContext) deliverOrderMasterfiles(params any) error {
 	log.Printf("INFO: script [deliver] completed with %d units processed", cnt)
 	return nil
 }
+
+// curl -X POST https://tracksys.lib.virginia.edu/script -H "Content-Type: application/json" --data '{"script": "deliver", "admin_jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOjEyMCwiY29tcHV0ZUlEIjoibGY2ZiIsInJvbGUiOiJhZG1pbiIsImZpcnN0TmFtZSI6IkxvdWlzIiwibGFzdE5hbWUiOiJGb3N0ZXIiLCJpc3MiOiJ0cmFja3N5czIiLCJleHAiOjE3NjIzOTkwOTB9.S7xkGXSPOxEvpMAkKKcBVux82AJQaJlfA6JnNwjpQZc", "params": 6903}'
 
 // SCRIPT TO VERIFY BARCODES ARE SUBMITTED TO HATHITRUST AND ARE DISCOVERABLE
 // func (svc *serviceContext) scriptRunner(c *gin.Context) {
