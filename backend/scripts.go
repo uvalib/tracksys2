@@ -67,6 +67,11 @@ func (svc *serviceContext) scriptRunner(c *gin.Context) {
 	c.String(http.StatusOK, fmt.Sprintf("%s success", req.Script))
 }
 
+// This will download images from the archive into a zipfile named after the unit into
+// a digiserv-delivery directoty named after the order number.
+// IMPORTANT: the csv summary is generated in the directory with the TS executable. When
+// NOT running locally, this file is LOST. This was intended to be run locally against
+// production tracksys DB and production dog-jobs
 func (svc *serviceContext) deliverOrderMasterfiles(params any) error {
 	log.Printf("INFO: script [deliver] started with params %v", params)
 	log.Printf("TYPE OF PARAMS %s", reflect.TypeOf(params))
@@ -130,8 +135,6 @@ func (svc *serviceContext) deliverOrderMasterfiles(params any) error {
 	log.Printf("INFO: script [deliver] completed with %d units processed", cnt)
 	return nil
 }
-
-// curl -X POST https://tracksys.lib.virginia.edu/script -H "Content-Type: application/json" --data '{"script": "deliver", "admin_jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOjEyMCwiY29tcHV0ZUlEIjoibGY2ZiIsInJvbGUiOiJhZG1pbiIsImZpcnN0TmFtZSI6IkxvdWlzIiwibGFzdE5hbWUiOiJGb3N0ZXIiLCJpc3MiOiJ0cmFja3N5czIiLCJleHAiOjE3NjIzOTkwOTB9.S7xkGXSPOxEvpMAkKKcBVux82AJQaJlfA6JnNwjpQZc", "params": 6903}'
 
 // SCRIPT TO VERIFY BARCODES ARE SUBMITTED TO HATHITRUST AND ARE DISCOVERABLE
 // func (svc *serviceContext) scriptRunner(c *gin.Context) {

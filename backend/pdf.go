@@ -20,6 +20,20 @@ import (
 func (svc *serviceContext) requestPDF(c *gin.Context) {
 	unitID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	pagesStr := c.Query("pages")
+	bundle := strings.EqualFold(c.Query("bundle"), "yes")
+	if bundle {
+		log.Printf("INFO: request zipped pdf bundle for unit [%d]", unitID)
+		url := fmt.Sprintf("%s/units/%d/pdf", svc.ExternalSystems.Jobs, unitID)
+		pdfResp, err := svc.getRequest(url)
+		if err != nil {
+			log.Printf("ERROR: pdf bundle request failed: %s", err.Message)
+			c.String(err.StatusCode, err.Message)
+			return
+		}
+		c.String(http.StatusOK, string(pdfResp))
+		return
+	}
+
 	log.Printf("INFO: request pdf for unit %d pages [%s]", unitID, pagesStr)
 
 	var tgtUnit unit

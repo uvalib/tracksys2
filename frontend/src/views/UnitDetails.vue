@@ -158,16 +158,52 @@
          <CloneMasterFiles v-else @canceled="cloneCanceled()" @cloned="cloneCompleted()" />
       </Panel>
    </div>
-   <Dialog v-model:visible="pdfStore.downloading" :modal="true" header="Generating PDF" :style="{width: '350px'}">
+   <Dialog v-model:visible="pdfStore.downloading" :modal="true" position="top" header="Generating PDF" :style="{width: '350px'}">
       <div class="download">
          <p>PDF generation in progress...</p>
          <ProgressBar :value="pdfStore.percent"/>
       </div>
    </Dialog>
+   <Dialog v-model:visible="showPDFOptions" :modal="true" position="top" header="PDF Options" :style="{width: '400px'}">
+      <div class="pdf-options" v-if="bundleSubmitted == false">
+         <div class="pdf-opt" v-if="unitsStore.hasMultipleMetadataRecords">
+            <div>This unit has multiple metadata records. How would you like the PDF to be generated?</div>
+            <Select v-model="pdfType" :options="bundleOpts" optionLabel="name" optionValue="value"
+               placeholder="Select an option"
+            />
+            <div class="pdf-desc" v-if="pdfType=='single'">
+               A singe PDF will be generated that contains images from all metadata records.
+               When generation is complete, it will automatically be downloaded.
+            </div>
+            <div class="pdf-desc" v-if="pdfType=='bundle'">
+               One PDF will be generated for each metadata record. These will be bundled into
+               a single zipfile that will be placed on Digiserv Delivery. Check the job status logs for bundle
+               generation progress and a download link.
+            </div>
+         </div>
+         <div class="pdf-opt" v-if="unitsStore.hasText">
+            <div>This unit has transcription or OCR text. Include it with the PDF?</div>
+            <div class="checkbox">
+               <Checkbox v-model="pdfWithText" inputId="ocr-text" binary />
+               <label for="ocr-text">Include Text</label>
+            </div>
+         </div>
+      </div>
+      <div v-else>
+         Bundle generation has started. Check the job status logs for progress and a download link.
+      </div>
+      <template #footer>
+         <template v-if="bundleSubmitted == false">
+            <DPGButton label="Cancel" severity="secondary" @click="showPDFOptions = false"/>
+            <DPGButton label="Download" @click="downloadPDF()" :disabled="pdfType==''"/>
+         </template>
+         <DPGButton v-else label="Close" severity="secondary" @click="showPDFOptions = false"/>
+      </template>
+   </Dialog>
 </template>
 
 <script setup>
-import { onBeforeMount, computed } from 'vue'
+import { onBeforeMount, computed, ref } from 'vue'
 import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
 import { useCloneStore } from '@/stores/clone'
 import { useSystemStore } from '@/stores/system'
@@ -179,6 +215,8 @@ import { storeToRefs } from "pinia"
 import DataDisplay from '../components/DataDisplay.vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import Select from 'primevue/select'
+import Checkbox from 'primevue/checkbox'
 import CreateProjectDialog from '../components/unit/CreateProjectDialog.vue'
 import AddAttachmentDialog from '../components/unit/AddAttachmentDialog.vue'
 import MasterFilesList from '../components/unit/MasterFilesList.vue'
@@ -196,6 +234,15 @@ const unitsStore = useUnitsStore()
 const userStore = useUserStore()
 const pdfStore = usePDFStore()
 const cloneStore = useCloneStore()
+
+const showPDFOptions = ref(false)
+const bundleSubmitted = ref(false)
+const pdfType = ref("")
+const pdfWithText = ref(false)
+const bundleOpts = ref([
+    { name: 'Single: One PDF for all', value: 'single' },
+    { name: 'Bundle: Multiple PDFs in a zipfile', value: 'bundle' },
+]);
 
 const { detail } = storeToRefs(unitsStore)
 
@@ -260,27 +307,27 @@ const unitOCRClicked = (() => {
 })
 
 const unitPDFClicked = (() => {
-   if (unitsStore.hasText == false ) {
-      pdfStore.requestPDF( unitsStore.detail.id )
+   bundleSubmitted.value = false
+   if ( unitsStore.hasMultipleMetadataRecords || unitsStore.hasText) {
+      pdfType.value = ""
+      pdfWithText.value = false
+      showPDFOptions.value = true
    } else {
-      confirm.require({
-         message: `This unit has transcription or OCR text. Include it with the PDF?`,
-         header: 'Include Text',
-         icon: 'pi pi-question-circle',
-         rejectProps: {
-            label: 'Exclude',
-            severity: 'secondary'
-         },
-         acceptProps: {
-            label: 'Include'
-         },
-         accept: () => {
-            pdfStore.requestPDF( unitsStore.detail.id, [], true )
-         },
-         reject: () => {
-            pdfStore.requestPDF( unitsStore.detail.id )
-         }
-      })
+      pdfStore.requestPDF( unitsStore.detail.id, [], false, false )
+   }
+})
+
+const downloadPDF = (async () => {
+   let bundle = (pdfType.value == "bundle")
+   await pdfStore.requestPDF( unitsStore.detail.id, [], bundle, pdfWithText.value )
+   if ( bundle ) {
+      console.log("BUNDLE! Error: ["+systemStore.error+"]")
+      if ( systemStore.error == "") {
+         bundleSubmitted.value = true
+      }
+   } else {
+      console.log("NO BUNDLE. JUST CLOSE")
+      showPDFOptions.value = false
    }
 })
 
@@ -447,6 +494,29 @@ const displayStatus = (( id) => {
          width: 100%;
          margin-bottom: 8px;
       }
+   }
+}
+.pdf-options {
+   display: flex;
+   flex-direction: column;
+   gap: 25px;
+   .pdf-opt {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+   }
+   .pdf-desc {
+     font-size: 0.95em;
+      margin: 0;
+      border: 1px solid #ccc;
+      border-radius: 0.3rem;
+      padding: 10px;
+   }
+   .checkbox {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-end;
+      gap: 10px;
    }
 }
 .download {

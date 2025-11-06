@@ -144,7 +144,7 @@ const pdfClicked = (() => {
 })
 const requestPDF = (( masterFileIDs ) => {
    if (unitsStore.hasText == false ) {
-      pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs )
+      pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs, false, false )
    } else {
       confirm.require({
          message: `This unit has transcription or OCR text. Include it with the PDF?`,
@@ -158,10 +158,10 @@ const requestPDF = (( masterFileIDs ) => {
             label: 'Include'
          },
          accept: () => {
-            pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs, true )
+            pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs, false, true )
          },
          reject: () => {
-            pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs )
+            pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs, false, false )
          }
       })
    }

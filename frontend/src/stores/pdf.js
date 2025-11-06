@@ -15,7 +15,7 @@ export const usePDFStore = defineStore('pdf', {
 	getters: {
 	},
 	actions: {
-      requestPDF( unitID, masterFileIDs = [], includeText = false ) {
+      async requestPDF( unitID, masterFileIDs, bundle, includeText ) {
          if (this.downloading) return
 
          const system = useSystemStore()
@@ -27,21 +27,33 @@ export const usePDFStore = defineStore('pdf', {
          this.targetMasterFiles = masterFileIDs
 
          let url = `/api/units/${this.unitID}/pdf`
+         let params = []
          if ( masterFileIDs.length > 0 ) {
-            url += `?pages=${masterFileIDs.join(",")}`
+            params.push(`pages=${masterFileIDs.join(",")}`)
          }
-         axios.get(url).then( resp => {
-            this.token = resp.data.token
-            if ( resp.data.status == "READY") {
-               this.percent = 100
+         if ( bundle ) {
+            params.push(`bundle=yes`)
+         }
+         if (params.length > 0 ) {
+            url += "?"+params.join("&")
+         }
+
+         return axios.get(url).then( resp => {
+            if ( bundle ) {
                this.downloading = false
-               this.downloadPDF()
-            } else if ( resp.data.status == "FAILED") {
-               this.downloading = false
-               this.percent = 0
-               system.setError("Unable to generate PDF")
             } else {
-               this.pollStatus()
+               this.token = resp.data.token
+               if ( resp.data.status == "READY") {
+                  this.percent = 100
+                  this.downloading = false
+                  this.downloadPDF()
+               } else if ( resp.data.status == "FAILED") {
+                  this.downloading = false
+                  this.percent = 0
+                  system.setError("Unable to generate PDF")
+               } else {
+                  this.pollStatus()
+               }
             }
          }).catch( e => {
             system.setError(e)

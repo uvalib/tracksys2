@@ -187,7 +187,7 @@ const downloadImage = (() => {
 
 const downloadPDF = (() => {
    if ( masterFiles.hasText == false ) {
-      pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], false )
+      pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], false, false )
    } else {
       confirm.require({
          message: `This master file has transcription or OCR text. Include it with the PDF?`,
@@ -201,10 +201,10 @@ const downloadPDF = (() => {
             label: 'Include'
          },
          accept: () => {
-            pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], true )
+            pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], false, true )
          },
          reject: () => {
-            pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], false )
+            pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], false, false )
          }
       })
    }
