@@ -856,8 +856,7 @@ func (svc *serviceContext) uploadXMLMetadata(c *gin.Context) {
 	}
 
 	savedXMLFile := path.Join("/tmp", formFile.Filename)
-	err = c.SaveUploadedFile(formFile, savedXMLFile)
-	if err != nil {
+	if err := saveUploadedFile(formFile, savedXMLFile); err != nil {
 		log.Printf("ERROR: Unable to read uploaded xml file %s for metadata %d: %s", formFile.Filename, mdID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return

@@ -587,13 +587,13 @@ func (svc *serviceContext) uploadSearchImage(c *gin.Context) {
 
 	log.Printf("INFO: receive image %s", formFile.Filename)
 	destFile := path.Join("/tmp", formFile.Filename)
-	err = c.SaveUploadedFile(formFile, destFile)
-	if err != nil {
+	if err := saveUploadedFile(formFile, destFile); err != nil {
 		log.Printf("ERROR: unable to save %s: %s", formFile.Filename, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	log.Printf("INFO: search image saved in temp location %s; open it", destFile)
 	imgFile, err := os.Open(destFile)
 	if err != nil {
 		log.Printf("ERROR: unable to open %s for phash generation: %s", destFile, err.Error())
@@ -606,6 +606,7 @@ func (svc *serviceContext) uploadSearchImage(c *gin.Context) {
 	fileType = strings.Replace(fileType, ".", "", 1)
 	var imgData image.Image
 
+	log.Printf("INFO: decode %s image data from %s", fileType, destFile)
 	switch fileType {
 	case "TIF":
 		imgData, err = tiff.Decode(imgFile)
@@ -622,6 +623,7 @@ func (svc *serviceContext) uploadSearchImage(c *gin.Context) {
 		return
 	}
 
+	log.Printf("INFO: calculate difference has for %s", destFile)
 	imgHash, err := goimagehash.DifferenceHash(imgData)
 	if err != nil {
 		log.Printf("ERROR: unable to calculate pHash for %s: %s", destFile, err.Error())

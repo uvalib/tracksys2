@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"mime/multipart"
 	"net"
 	"net/http"
 	"net/url"
@@ -558,4 +559,22 @@ func (svc *serviceContext) awaitJobCompletion(jobID int64) {
 			}
 		}
 	}
+}
+
+func saveUploadedFile(formFile *multipart.FileHeader, destFile string) error {
+	frmFile, err := formFile.Open()
+	if err != nil {
+		return fmt.Errorf("unable to open uploaded image %s: %s", formFile.Filename, err.Error())
+	}
+	defer frmFile.Close()
+	out, err := os.Create(destFile)
+	if err != nil {
+		return fmt.Errorf("unable to create temp file %s for uploaded image %s: %s", destFile, formFile.Filename, err.Error())
+	}
+	defer out.Close()
+	_, err = io.Copy(out, frmFile)
+	if err != nil {
+		return err
+	}
+	return nil
 }
