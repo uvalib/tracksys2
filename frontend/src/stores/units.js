@@ -98,15 +98,6 @@ export const useUnitsStore = defineStore('units', {
          this.detail.reorder = true
       },
 
-      async createProject( data ) {
-         const system = useSystemStore()
-         return axios.post( `/api/units/${this.detail.id}/project`, data ).then( (resp) => {
-            this.detail.projectID = parseInt(resp.data, 10)
-         }).catch( e => {
-            system.setError(e)
-         })
-      },
-
       audit() {
          const system = useSystemStore()
          let payload = {type: "unit", data: `${this.detail.id}`}

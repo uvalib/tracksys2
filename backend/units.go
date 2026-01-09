@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -11,29 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
-
-type step struct {
-	ID          int64  `json:"id"`
-	WorkflowID  int64  `json:"workflowID"`
-	StepType    uint   `json:"stepType"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	NextStepID  uint   `json:"nextStepID"`
-	FailStepID  uint   `json:"failStepID"`
-	OwnerType   uint   `json:"ownerType"`
-}
-
-type project struct {
-	ID              int64      `json:"id"`
-	WorkflowID      int64      `json:"-"`
-	ContainerTypeID *int64     `json:"-"`
-	UnitID          int64      `json:"-"`
-	CurrentStepID   int64      `json:"-"`
-	AddedAt         *time.Time `json:"addedAt,omitempty"`
-	CategoryID      int64      `json:"-"`
-	ItemCondition   uint       `json:"itemCondition"`
-	ConditionNote   string     `json:"conditionNote,omitempty"`
-}
 
 type intendedUse struct {
 	ID                    int64  `json:"id"`
@@ -141,14 +119,21 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 		return
 	}
 
-	var project struct {
-		ID int64
+	log.Printf("INFO: check for project associated with unit %s", unitID)
+	var lookupResp struct {
+		Exists    bool  `json:"exists"`
+		ProjectID int64 `json:"projectID"`
 	}
-	err = svc.DB.Table("projects").Select("id").Where("unit_id=?", unitID).Limit(1).Find(&project).Error
-	if err != nil {
-		log.Printf("ERROR: unable to get project id for unit %s: %s", unitID, err.Error())
+	respBytes, reqErr := svc.getRequest(fmt.Sprintf("%s/projects/lookup/%s", svc.ExternalSystems.Projects, unitID))
+	if reqErr != nil {
+		log.Printf("ERROR: lookup project for unit %s failed: %s", unitID, reqErr.Message)
 	} else {
-		unitDetail.ProjectID = project.ID
+		if err := json.Unmarshal(respBytes, &lookupResp); err != nil {
+			log.Printf("ERROR: unable to parse response for project lookup: %s", err.Error())
+		} else if lookupResp.Exists {
+			log.Printf("INFO: unit %s is associated with project %d", unitID, lookupResp.ProjectID)
+			unitDetail.ProjectID = lookupResp.ProjectID
+		}
 	}
 
 	log.Printf("INFO: check if unit %d has any ocr/transcription text", unitDetail.ID)
@@ -179,73 +164,6 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, unitDetail)
-}
-
-func (svc *serviceContext) createProject(c *gin.Context) {
-	unitID := c.Param("id")
-	var unitDetail unit
-	err := svc.DB.Find(&unitDetail, unitID).Error
-	if err != nil {
-		log.Printf("ERROR: unable to get unit %s details before update: %s", unitID, err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	var projCnt int64
-	err = svc.DB.Table("projects").Where("unit_id=?", unitDetail.ID).Count(&projCnt).Error
-	if err != nil {
-		log.Printf("ERROR: unable to determine if a project already exists for unit %d: %s", unitDetail.ID, err.Error())
-	} else if projCnt > 0 {
-		log.Printf("INFO: unable to create project for unit %d as it already has a project", unitDetail.ID)
-		c.String(http.StatusConflict, "a project already exists for this unit")
-		return
-	}
-
-	var req struct {
-		WorkflowID      int64  `json:"workflowID"`
-		ContainerTypeID int64  `json:"containerTypeID"`
-		CategoryID      int64  `json:"categoryID"`
-		Condition       uint   `json:"condition"`
-		Notes           string `json:"notes"`
-	}
-	err = c.BindJSON(&req)
-	if err != nil {
-		log.Printf("ERROR: invalid create project request for unit %s: %s", unitID, err.Error())
-		c.String(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	log.Printf("INFO: lookup first step of new project for unit %d, workflow %d", unitDetail.ID, req.WorkflowID)
-	var firstStep step
-	err = svc.DB.Where("workflow_id=? and step_type=0", req.WorkflowID).First(&firstStep).Error
-	if err != nil {
-		log.Printf("ERROR: unable to get first step for workflow %d: %s", req.WorkflowID, err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	log.Printf("INFO: create project for unit %d", unitDetail.ID)
-	now := time.Now()
-	newProj := project{
-		WorkflowID:    req.WorkflowID,
-		UnitID:        unitDetail.ID,
-		CurrentStepID: firstStep.ID,
-		AddedAt:       &now,
-		CategoryID:    req.CategoryID,
-		ItemCondition: req.Condition,
-		ConditionNote: req.Notes,
-	}
-	if req.ContainerTypeID != 0 {
-		newProj.ContainerTypeID = &req.ContainerTypeID
-	}
-	err = svc.DB.Create(&newProj).Error
-	if err != nil {
-		log.Printf("ERROR: unable to create project for unit %d: %s", unitDetail.ID, err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-	log.Printf("INFO: new project %d created for unit %d", newProj.ID, unitDetail.ID)
-	c.String(http.StatusOK, fmt.Sprintf("%d", newProj.ID))
 }
 
 func (svc *serviceContext) updateUnit(c *gin.Context) {

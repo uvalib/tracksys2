@@ -6,7 +6,7 @@
          <FormKit v-if="project.workflowID==6" label="Container Type" type="select" v-model="project.containerTypeID" :options="containerTypes" required placeholder="Select a container type"/>
          <FormKit label="Category" type="select" v-model="project.categoryID" :options="categories" required placeholder="Select a category"/>
          <FormKit label="Condition" type="select" v-model="project.condition" :options="conditions" required/>
-         <FormKit label="" type="textarea" rows="4" v-model="project.notes"/>
+         <FormKit label="Notes" type="textarea" rows="4" v-model="project.notes"/>
          <div class="acts">
             <DPGButton @click="hide" label="Cancel" severity="secondary"/>
             <FormKit type="submit" label="Create Project" wrapper-class="submit-button" />
@@ -20,15 +20,19 @@ import { ref, computed } from 'vue'
 import Dialog from 'primevue/dialog'
 import { useUnitsStore } from '@/stores/units'
 import { useSystemStore } from '@/stores/system'
+import axios from 'axios'
 
 const unitsStore = useUnitsStore()
 const systemStore = useSystemStore()
 
 const isOpen = ref(false)
+const workflows = ref([])
+const categories = ref([])
 const project = ref({
+   UnitID: 0,
    workflowID: 1,
    containerTypeID: 0,
-   categoryID: 0,
+   categoryID: null,
    condition: 0,
    notes: ""
 })
@@ -37,23 +41,9 @@ const createDisabled = computed(() => {
    let approved = (unitsStore.detail.status == 'approved' && unitsStore.detail.order.status == 'approved')
    return !approved
 })
-const workflows = computed( () => {
-   let out = []
-   systemStore.workflows.forEach( w => {
-      out.push({label: w.name, value: w.id})
-   })
-   return out
-})
 const containerTypes = computed( () => {
    let out = []
    systemStore.containerTypes.forEach( w => {
-      out.push({label: w.name, value: w.id})
-   })
-   return out
-})
-const categories = computed( () => {
-   let out = []
-   systemStore.categories.forEach( w => {
       out.push({label: w.name, value: w.id})
    })
    return out
@@ -67,20 +57,33 @@ const conditions = computed( () => {
 })
 
 async function createProject() {
-   await unitsStore.createProject(project.value)
-   hide()
+   axios.post(`${systemStore.projectsURL}/projects/create`, project.value).then(response => {
+      unitsStore.detail.projectID = parseInt(response.data, 10)
+      systemStore.toastMessage("Project Created", "A new project has been created for this unit")
+      hide()
+   }).catch( err => {
+      systemStore.setError(err)
+   })
 }
 function hide() {
    isOpen.value=false
 }
 function show() {
+   project.value.UnitID = unitsStore.detail.id
    project.value.workflowID = 1
    project.value.categoryID = 0
    project.value.containerTypeID = 0
    project.value.condition = 0
    project.value.notes = ""
-   isOpen.value = true
 
+   // load constants from dpg-imaging
+   axios.get(`${systemStore.projectsURL}/constants`).then(response => {
+      workflows.value = response.data.workflows
+      categories.value = response.data.categories
+      isOpen.value = true
+   }).catch( err => {
+      systemStore.setError(err)
+   })
 }
 </script>
 

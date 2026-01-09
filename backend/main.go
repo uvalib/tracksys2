@@ -128,7 +128,6 @@ func main() {
 		api.GET("/units/:id/pdf/status", svc.getPDFStatus)
 		api.GET("/units/:id/exists", svc.validateUnit)
 		api.POST("/units/:id/exemplar/:mfid", svc.setExemplar)
-		api.POST("/units/:id/project", svc.createProject)
 		api.GET("/units/:id/masterfiles", svc.getUnitMasterfiles)
 		api.GET("/units/:id/clone-sources", svc.getUnitCloneSources)
 		api.POST("/units/:id/update", svc.updateUnit)

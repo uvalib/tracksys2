@@ -63,11 +63,6 @@ type agency struct {
 	Description string `json:"description"`
 }
 
-type category struct {
-	ID   uint64 `json:"id"`
-	Name string `json:"name"`
-}
-
 type collectionFacet struct {
 	ID        uint64    `json:"id"`
 	Name      string    `json:"name"`
@@ -79,13 +74,6 @@ type containerType struct {
 	ID         int64  `json:"id"`
 	Name       string `json:"name"`
 	HasFolders bool   `json:"hasFolders"`
-}
-
-type workflow struct {
-	ID          uint64 `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Active      bool   `json:"-"`
 }
 
 // InitializeService sets up the service context for all API handlers
@@ -268,7 +256,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 			AcademicStatuses     []academicStatus     `json:"academicStatuses"`
 			Agencies             []agency             `json:"agencies"`
 			AvailabilityPolicies []availabilityPolicy `json:"availabilityPolicies"`
-			Categories           []category           `json:"categories"`
 			CollectionFacets     []collectionFacet    `json:"collectionFacets"`
 			ContainerTypes       []containerType      `json:"containerTypes"`
 			ExternalSyatems      []externalSystem     `json:"externalSystems"`
@@ -277,7 +264,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 			OCRLanguageHints     []ocrLanguageHint    `json:"ocrLanguageHints"`
 			PreservationTiers    []preservationTier   `json:"preservationTiers"`
 			UseRights            []useRight           `json:"useRights"`
-			Workflows            []workflow           `json:"workflows"`
 		} `json:"controlledVocabularies"`
 	}
 
@@ -320,14 +306,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 	err = svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.CollectionFacets).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get collection facets: %s", err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	log.Printf("INFO: load categories")
-	err = svc.DB.Order("name asc").Find(&resp.ControlledVocabularies.Categories).Error
-	if err != nil {
-		log.Printf("ERROR: unable to get categories: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -394,14 +372,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 	err = svc.DB.Order("id asc").Find(&resp.ControlledVocabularies.UseRights).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get use rights: %s", err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	log.Printf("INFO: load workflows")
-	err = svc.DB.Order("name asc").Where("active=?", 1).Find(&resp.ControlledVocabularies.Workflows).Error
-	if err != nil {
-		log.Printf("ERROR: unable to get workflows: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}

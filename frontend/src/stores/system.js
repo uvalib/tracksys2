@@ -16,7 +16,6 @@ export const useSystemStore = defineStore('system', {
       agencies: [],
       availabilityPolicies: [],
       collectionFacets: [],
-      categories: [],
       containerTypes: [],
       externalSystems: [],
       intendedUses: [],
@@ -24,7 +23,6 @@ export const useSystemStore = defineStore('system', {
       ocrLanguageHints: [],
       preservationTiers: [],
       useRights: [],
-      workflows: [],
       toast: {
          error: false,
          summary: "",
@@ -77,7 +75,6 @@ export const useSystemStore = defineStore('system', {
             this.academicStatuses = response.data.controlledVocabularies.academicStatuses
             this.agencies = response.data.controlledVocabularies.agencies
             this.availabilityPolicies = response.data.controlledVocabularies.availabilityPolicies
-            this.categories = response.data.controlledVocabularies.categories
             this.collectionFacets = response.data.controlledVocabularies.collectionFacets
             this.containerTypes = response.data.controlledVocabularies.containerTypes
             this.externalSystems = response.data.controlledVocabularies.externalSystems
@@ -86,7 +83,6 @@ export const useSystemStore = defineStore('system', {
             this.ocrLanguageHints = response.data.controlledVocabularies.ocrLanguageHints
             this.preservationTiers = response.data.controlledVocabularies.preservationTiers
             this.useRights = response.data.controlledVocabularies.useRights
-            this.workflows = response.data.controlledVocabularies.workflows
             this.working = false
          }).catch( err => {
             if (err.response && err.response.status == 401) {
