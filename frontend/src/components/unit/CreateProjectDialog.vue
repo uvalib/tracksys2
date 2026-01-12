@@ -57,6 +57,8 @@ const conditions = computed( () => {
 })
 
 async function createProject() {
+   // FIXME cache some TS specific data in the project; order_id, customer_id, agency_id, call_number (needed for search)
+   // possibly cache some for display too: title, special instructions, intended use
    axios.post(`${systemStore.projectsURL}/projects/create`, project.value).then(response => {
       unitsStore.detail.projectID = parseInt(response.data, 10)
       systemStore.toastMessage("Project Created", "A new project has been created for this unit")

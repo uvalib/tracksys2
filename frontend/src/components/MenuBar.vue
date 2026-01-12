@@ -46,7 +46,7 @@ onMounted(() => {
          ]},
          {label: "Job Statuses", command: ()=>menuLinkClicked("/jobs")},
          {label: "Digitization", items: [
-            {label: "Equipment", command: ()=>menuLinkClicked("/equipment")},
+            {label: "Equipment",  url: `${systemStore.projectsURL}/equipment`, target: "_blank"},
             {label: "Projects", url: systemStore.projectsURL, target: "_blank"},
             {label: "Reports", url: `${systemStore.reportsURL}/reports`, target: "_blank"},
             {label: "Statistics", url: systemStore.reportsURL, target: "_blank"},

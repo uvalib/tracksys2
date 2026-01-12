@@ -102,11 +102,6 @@ const router = createRouter({
          component: () => import('../views/ComponentDetails.vue')
       },
       {
-         path: '/equipment',
-         name: 'equipment',
-         component: () => import('../views/DigitizationEquipment.vue')
-      },
-      {
          path: '/staff',
          name: 'staff',
          component: () => import('../views/StaffMembers.vue')
