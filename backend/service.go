@@ -258,7 +258,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 			AvailabilityPolicies []availabilityPolicy `json:"availabilityPolicies"`
 			CollectionFacets     []collectionFacet    `json:"collectionFacets"`
 			ContainerTypes       []containerType      `json:"containerTypes"`
-			ExternalSyatems      []externalSystem     `json:"externalSystems"`
+			ExternalSystems      []externalSystem     `json:"externalSystems"`
 			IntendedUses         []intendedUse        `json:"intendedUses"`
 			OCRHints             []ocrHint            `json:"ocrHints"`
 			OCRLanguageHints     []ocrLanguageHint    `json:"ocrLanguageHints"`
@@ -319,7 +319,7 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 	}
 
 	log.Printf("INFO: load external systems")
-	err = svc.DB.Order("id asc").Find(&resp.ControlledVocabularies.ExternalSyatems).Error
+	err = svc.DB.Order("id asc").Find(&resp.ControlledVocabularies.ExternalSystems).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get external systems: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
@@ -427,6 +427,27 @@ func (svc *serviceContext) getRequest(url string) ([]byte, *RequestError) {
 }
 func (svc *serviceContext) putRequest(url string) ([]byte, *RequestError) {
 	return svc.sendRequest("PUT", url, nil)
+}
+
+func (svc *serviceContext) projectsPost(url string, jwt string) *RequestError {
+	log.Printf("INFO: auth project POST: %s", url)
+	startTime := time.Now()
+	projURL := fmt.Sprintf("%s/api/%s", svc.ExternalSystems.Projects, url)
+
+	req, _ := http.NewRequest("POST", projURL, nil)
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", jwt))
+	rawResp, rawErr := svc.HTTPClient.Do(req)
+	_, err := handleAPIResponse(projURL, rawResp, rawErr)
+	elapsedNanoSec := time.Since(startTime)
+	elapsedMS := int64(elapsedNanoSec / time.Millisecond)
+
+	if err != nil {
+		log.Printf("ERROR: Failed response from auth projects POST %s - %d:%s. Elapsed Time: %d (ms)",
+			projURL, err.StatusCode, err.Message, elapsedMS)
+	} else {
+		log.Printf("INFO: Successful auth projects POST to %s. Elapsed Time: %d (ms)", projURL, elapsedMS)
+	}
+	return err
 }
 
 func (svc *serviceContext) postJSON(url string, jsonPayload any) ([]byte, *RequestError) {

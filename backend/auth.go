@@ -122,6 +122,14 @@ func (svc *serviceContext) authMiddleware(c *gin.Context) {
 	c.Next()
 }
 
+func getJWT(c *gin.Context) string {
+	jwtIface, signedIn := c.Get("jwt")
+	if !signedIn {
+		return ""
+	}
+	return fmt.Sprintf("%v", jwtIface)
+}
+
 // getBearerToken is a helper to extract the token from headers
 func getBearerToken(authorization string) (string, error) {
 	components := strings.Split(strings.Join(strings.Fields(authorization), " "), " ")
