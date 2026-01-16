@@ -65,8 +65,11 @@ type unit struct {
 }
 
 type projectLookupResponse struct {
-	Exists    bool  `json:"exists"`
-	ProjectID int64 `json:"projectID"`
+	Exists      bool   `json:"exists"`
+	ProjectID   int64  `json:"projectID"`
+	Workflow    string `json:"workflow"`
+	CurrentStep string `json:"currentStep"`
+	Finished    bool   `json:"finished"`
 }
 
 func (svc *serviceContext) validateUnit(c *gin.Context) {
@@ -126,7 +129,7 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 
 	log.Printf("INFO: check for project associated with unit %s", unitID)
 	var lookupResp projectLookupResponse
-	respBytes, reqErr := svc.getRequest(fmt.Sprintf("%s/projects/lookup/%s", svc.ExternalSystems.Projects, unitID))
+	respBytes, reqErr := svc.getRequest(fmt.Sprintf("%s/projects/lookup?unit=%s", svc.ExternalSystems.Projects, unitID))
 	if reqErr != nil {
 		log.Printf("ERROR: lookup project for unit %s failed: %s", unitID, reqErr.Message)
 	} else {
@@ -142,7 +145,7 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 	var txtCnt int64
 	err = svc.DB.Table("master_files").Where("unit_id=? and transcription_text is not null and transcription_text != ?", unitDetail.ID, "").Count(&txtCnt).Error
 	if err != nil {
-		log.Printf("ERROR: unabble to determine if unit %d has text associated with its masterfiles: %s", unitDetail.ID, err.Error())
+		log.Printf("ERROR: unable to determine if unit %d has text associated with its masterfiles: %s", unitDetail.ID, err.Error())
 	} else {
 		unitDetail.HasText = txtCnt > 0
 	}
@@ -208,6 +211,23 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 		}
 	}
 
+	var lookupResp projectLookupResponse
+	respBytes, reqErr := svc.getRequest(fmt.Sprintf("%s/projects/lookup?unit=%s", svc.ExternalSystems.Projects, unitID))
+	if reqErr != nil {
+		log.Printf("ERROR: lookup project for unit %s with status %s failed: %s", unitID, req.Status, reqErr.Message)
+	} else {
+		if err := json.Unmarshal(respBytes, &lookupResp); err != nil {
+			log.Printf("ERROR: unable to parse response for project lookup: %s", err.Error())
+		}
+	}
+
+	// do not allow unit to be set to done if it is associated with a project that is not on the finalize step
+	if lookupResp.Exists && req.Status == "done" && lookupResp.Finished == false && lookupResp.CurrentStep != "Finialize" {
+		log.Printf("INFO: cannot set unit to done; it is tied to project %d on step %s", lookupResp.ProjectID, lookupResp.CurrentStep)
+		c.String(http.StatusPreconditionFailed, "Cannot set status to done; associated project is in progress")
+		return
+	}
+
 	updateMasterFileMetadata := false
 	if unitDetail.MetadataID == nil && req.MetadataID != 0 {
 		log.Printf("INFO: unit %d update changes metadata from none to %d; master files must be updated", unitDetail.ID, req.MetadataID)
@@ -242,26 +262,15 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 	}
 
 	if req.Status == "canceled" || req.Status == "done" {
-		log.Printf("INFO: check for project associated with %s unit %s", req.Status, unitID)
-		var lookupResp projectLookupResponse
-		respBytes, reqErr := svc.getRequest(fmt.Sprintf("%s/projects/lookup/%s", svc.ExternalSystems.Projects, unitID))
-		if reqErr != nil {
-			log.Printf("ERROR: lookup project for unit %s with status %s failed: %s", unitID, req.Status, reqErr.Message)
-		} else {
-			if err := json.Unmarshal(respBytes, &lookupResp); err != nil {
-				log.Printf("ERROR: unable to parse response for project lookup: %s", err.Error())
-			} else if lookupResp.Exists {
-				log.Printf("INFO: unit %s is associated with project %d", unitID, lookupResp.ProjectID)
-				updateURL := fmt.Sprintf("projects/%d/done", lookupResp.ProjectID)
-				if req.Status == "canceled" {
-					updateURL = fmt.Sprintf("projects/%d/cancel", lookupResp.ProjectID)
-				}
-				log.Printf("INFO: update status of project %d to reflect unit status %s", lookupResp.ProjectID, req.Status)
-				if rErr := svc.projectsPost(updateURL, getJWT(c)); rErr != nil {
-					log.Printf("ERROR: unable to update project %d status: %s", lookupResp.ProjectID, rErr.Message)
-				}
-			} else {
-				log.Printf("INFO: no project exists for unit %s", unitID)
+		if lookupResp.Exists {
+			log.Printf("INFO: unit %s is associated with project %d", unitID, lookupResp.ProjectID)
+			updateURL := fmt.Sprintf("projects/%d/done", lookupResp.ProjectID)
+			if req.Status == "canceled" {
+				updateURL = fmt.Sprintf("projects/%d/cancel", lookupResp.ProjectID)
+			}
+			log.Printf("INFO: update status of project %d to reflect unit status %s", lookupResp.ProjectID, req.Status)
+			if rErr := svc.projectsPost(updateURL, getJWT(c)); rErr != nil {
+				log.Printf("ERROR: unable to update project %d status: %s", lookupResp.ProjectID, rErr.Message)
 			}
 		}
 	}
