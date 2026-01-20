@@ -107,6 +107,25 @@ func (svc *serviceContext) deleteUnit(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	// check id a project exists, and cancel it if so
+	var lookupResp projectLookupResponse
+	respBytes, reqErr := svc.getRequest(fmt.Sprintf("%s/projects/lookup?unit=%s", svc.ExternalSystems.Projects, unitID))
+	if reqErr != nil {
+		log.Printf("ERROR: unable to determine if unit %s has a project: %s", unitID, reqErr.Message)
+	} else {
+		if err := json.Unmarshal(respBytes, &lookupResp); err != nil {
+			log.Printf("ERROR: unable to parse response for project lookup: %s", err.Error())
+		} else if lookupResp.Exists {
+			log.Printf("INFO: unit %s is associated with project %d; cancel it", unitID, lookupResp.ProjectID)
+			if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", lookupResp.ProjectID), getJWT(c)); rErr != nil {
+				log.Printf("ERROR: unable to cancel project %d: %s", lookupResp.ProjectID, rErr.Message)
+			} else {
+				log.Printf("INFO: project %d associated with deleted unit %s has been canceled", lookupResp.ProjectID, unitID)
+			}
+		}
+	}
+
 	c.String(http.StatusOK, "deleted")
 }
 
