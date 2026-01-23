@@ -31,7 +31,6 @@ func main() {
 	router.GET("/healthcheck", svc.healthCheck)
 	router.GET("/authenticate", svc.authenticate)
 	router.GET("/config", svc.getConfig)
-	router.POST("/cleanup", svc.cleanupExpiredData)
 	router.POST("/upload_search_image", svc.uploadSearchImage)
 	router.GET("/pdf", svc.downloadPDF)
 
@@ -134,7 +133,13 @@ func main() {
 
 		api.GET("/tags", svc.getTags)
 		api.POST("/tags", svc.createTag)
+	}
 
+	cleanup := router.Group("/cleanup")
+	{
+		cleanup.POST("/cleanup/expired-jobs", svc.cleanupExpiredJobLogs)
+		cleanup.POST("/cleanup/cancled-units", svc.cleanupCanceledUnits)
+		cleanup.POST("/cleanup/cancled-units", svc.cleanupCanceledOrders)
 	}
 
 	// Note: in dev mode, this is never actually used. The front end is served

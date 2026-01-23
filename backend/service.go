@@ -154,58 +154,6 @@ func parseDateString(dateStr string) (time.Time, error) {
 	return parsed, err
 }
 
-func (svc *serviceContext) cleanupExpiredData(c *gin.Context) {
-	log.Printf("INFO: cleanup job logs and deleted messages older than 2 months")
-	lastMonth := time.Now().AddDate(0, -2, 0)
-	out := struct {
-		DeletedJobs     int64 `json:"deletedJobs"`
-		DeletedMessages int64 `json:"deletedMessages"`
-	}{
-		DeletedJobs:     0,
-		DeletedMessages: 0,
-	}
-
-	log.Printf("INFO: scan for job statuses to delete")
-	var oldStatuses []jobStatus
-	err := svc.DB.Where("status=? and ended_at < ?", "finished", lastMonth).Find(&oldStatuses).Error
-	if err != nil {
-		log.Printf("ERROR: unable to get count of old jobs: %s", err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-	out.DeletedJobs = int64(len(oldStatuses))
-	if out.DeletedJobs > 0 {
-		log.Printf("INFO: delete %d expired jobs", out.DeletedJobs)
-		jsIDs := make([]uint64, 0)
-		for _, js := range oldStatuses {
-			jsIDs = append(jsIDs, js.ID)
-		}
-		err = svc.DB.Where("id in ?", jsIDs).Delete(&jobStatus{}).Error
-		if err != nil {
-			log.Printf("ERROR: unable to delete old jobs: %s", err.Error())
-			c.String(http.StatusInternalServerError, err.Error())
-			return
-		}
-	}
-
-	log.Printf("INFO: scan for messages to delete")
-	err = svc.DB.Table("messages").Where("deleted=? and deleted_at < ?", 1, lastMonth).Count(&out.DeletedMessages).Error
-	if err != nil {
-		log.Printf("ERROR: unable to get count of old messages: %s", err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-	log.Printf("INFO: delete %d deleted messages", out.DeletedMessages)
-	err = svc.DB.Exec("DELETE from messages where deleted=? and deleted_at < ?", 1, lastMonth).Error
-	if err != nil {
-		log.Printf("ERROR: unable to delete messages: %s", err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, out)
-}
-
 func (svc *serviceContext) addAgency(c *gin.Context) {
 	var req struct {
 		Name string `json:"name"`
