@@ -11,7 +11,7 @@
     "@primeuix/themes": "^2.0.3",
     "@vueuse/core": "^14.1.0",
     "@vueuse/integrations": "^14.1.0",
-    "axios": "^1.13.2",
+    "axios": "^1.13.3",
     "jwt-decode": "^4.0.0",
     "pinia": "^3.0.4",
     "primeicons": "^7.0.0",
