@@ -113,7 +113,88 @@ func (svc *serviceContext) cleanupCanceledUnits(c *gin.Context) {
 
 func (svc *serviceContext) cleanupCanceledOrders(c *gin.Context) {
 	log.Printf("INFO: cleanup canceled orders")
-	c.String(http.StatusNotImplemented, "not implemented")
+	maxDel, _ := strconv.ParseUint(c.Query("max"), 10, 64)
+	if maxDel == 0 {
+		maxDel = 500
+	}
+	log.Printf("INFO: limit to %d deletions", maxDel)
+
+	deleteThreshold := time.Now().AddDate(0, -3, 0)
+	dateStr := deleteThreshold.Format("2006-01-02")
+
+	var orderResp []struct {
+		ID           int64
+		InvoiceID    int64
+		DateCanceled *time.Time
+		UpdatedAt    time.Time
+		Units        int64
+	}
+
+	qStr := "select o.id,o.date_canceled, o.updated_at, (select id from invoices where order_id=o.id) as invoice_id, count(u.id) as units from orders o"
+	qStr += " left join units u on u.order_id = o.id"
+	qStr += " where order_status=? group by o.id"
+	if err := svc.DB.Debug().Raw(qStr, "canceled").Scan(&orderResp).Error; err != nil {
+		log.Printf("ERROR: find canceled units failed: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if len(orderResp) == 0 {
+		log.Printf("INFO: there are no canceled orders to cleanup")
+		c.String(http.StatusOK, "done")
+		return
+	}
+
+	log.Printf("INFO: found %d canceled orders", len(orderResp))
+	go func() {
+		delCnt := 0
+		failed := make([]int64, 0)
+		hasUnits := make([]int64, 0)
+		for _, o := range orderResp {
+			log.Printf("INFO: check if order %d can be deleted", o.ID)
+			if o.Units > 0 {
+				log.Printf("INFO: order %d has %d units and cannot be deleted", o.ID, o.Units)
+				hasUnits = append(hasUnits, o.ID)
+				continue
+			}
+
+			cancelDate := o.UpdatedAt.Format("2006-01-02")
+			if o.DateCanceled != nil {
+				cancelDate = o.DateCanceled.Format("2006-01-02")
+			}
+			if cancelDate < dateStr {
+				log.Printf("INFO: order %d canceled at %s can be deleted", o.ID, cancelDate)
+				if o.InvoiceID > 0 {
+					log.Printf("INFO: canceled order %d has invoice %d; delete it", o.ID, o.InvoiceID)
+					if err := svc.DB.Exec("delete from invoices where id = ?", o.InvoiceID).Error; err != nil {
+						log.Printf("ERROR: unable remove order %d invoice %d: %s", o.ID, o.InvoiceID, err.Error())
+						continue
+					}
+				}
+				if err := svc.DB.Delete(&order{}, o.ID).Error; err != nil {
+					log.Printf("ERROR: unable to delete order %d: %s", o.ID, err.Error())
+					failed = append(failed, o.ID)
+				} else {
+					delCnt++
+				}
+			}
+
+			if delCnt >= int(maxDel) {
+				log.Printf("INFO: max deletions (%d) reached; stopping", maxDel)
+				break
+			}
+			time.Sleep(150 * time.Millisecond)
+		}
+		log.Printf("INFO: oder cleanup done. %d orders deleted", delCnt)
+		if len(failed) > 0 {
+			log.Printf("INFO: %d failed: %v", len(failed), failed)
+		}
+		if len(hasUnits) > 0 {
+			log.Printf("INFO: %d orders with units: %v", len(hasUnits), hasUnits)
+		}
+	}()
+
+	c.String(http.StatusOK, "process started to retire %d of %d canceled orders older than %s", maxDel, len(orderResp), dateStr)
 }
 
 func (svc *serviceContext) cleanupExpiredJobLogs(c *gin.Context) {
