@@ -97,7 +97,7 @@ func (svc *serviceContext) cleanupCanceledUnits(c *gin.Context) {
 				log.Printf("INFO: max deletions (%d) reached; stopping", maxDel)
 				break
 			}
-			time.Sleep(150 * time.Millisecond)
+			time.Sleep(50 * time.Millisecond)
 		}
 		log.Printf("INFO: unit cleanup done. %d units deleted. %d projects deleted", delCnt, projCnt)
 		if len(failed) > 0 {
@@ -183,7 +183,7 @@ func (svc *serviceContext) cleanupCanceledOrders(c *gin.Context) {
 				log.Printf("INFO: max deletions (%d) reached; stopping", maxDel)
 				break
 			}
-			time.Sleep(150 * time.Millisecond)
+			time.Sleep(50 * time.Millisecond)
 		}
 		log.Printf("INFO: oder cleanup done. %d orders deleted", delCnt)
 		if len(failed) > 0 {
