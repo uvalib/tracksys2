@@ -25,10 +25,11 @@ func (svc *serviceContext) cleanupCanceledUnits(c *gin.Context) {
 	var unitResp []struct {
 		ID        int64
 		UpdatedAt time.Time
+		Reorder   bool
 		FileCount int64
 	}
 
-	qStr := "select u.id, u.updated_at, count(f.id) as file_count from units u "
+	qStr := "select u.id, u.updated_at, reorder, count(f.id) as file_count from units u "
 	qStr += " left join master_files f on f.unit_id = u.id  "
 	qStr += " where unit_status=? and u.updated_at < ? group by u.id"
 	if err := svc.DB.Raw(qStr, "canceled", dateStr).Scan(&unitResp).Error; err != nil {
@@ -53,9 +54,27 @@ func (svc *serviceContext) cleanupCanceledUnits(c *gin.Context) {
 		for _, u := range unitResp {
 			log.Printf("INFO: delete unit %d canceled on %s", u.ID, u.UpdatedAt.Format("2006-01-02"))
 			if u.FileCount > 0 {
-				log.Printf("INFO: unit %d has %d masterfiles, not deleting", u.ID, u.FileCount)
-				hasFiles = append(hasFiles, u.ID)
-				continue
+				if u.Reorder {
+					log.Printf("INFO: unit %d is a reorder with %d masterfiles; delete them first", u.ID, u.FileCount)
+					var mfIDs []int64
+					if err := svc.DB.Raw("select id from master_files where unit_id=?", u.ID).Scan(&mfIDs).Error; err != nil {
+						log.Printf("ERROR: unable to get unit %d masterfiles: %s", u.ID, err.Error())
+						continue
+					}
+					if err := svc.DB.Exec("delete from image_tech_meta where master_file_id in ?", mfIDs).Error; err != nil {
+						log.Printf("ERROR: unable remove unit %d image tech metadata: %s", u.ID, err.Error())
+						continue
+					}
+					delQ := "delete from master_files where unit_id=?"
+					if err := svc.DB.Exec(delQ, u.ID).Error; err != nil {
+						log.Printf("ERROR: unable to delete %d masterfiles for reorder unit %d: %s", u.FileCount, u.ID, err.Error())
+						continue
+					}
+				} else {
+					log.Printf("INFO: unit %d has %d masterfiles, not deleting", u.ID, u.FileCount)
+					hasFiles = append(hasFiles, u.ID)
+					continue
+				}
 			}
 
 			projResp := svc.getUnitProject(u.ID)

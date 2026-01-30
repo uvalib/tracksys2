@@ -100,19 +100,40 @@ func (svc *serviceContext) deleteUnit(c *gin.Context) {
 		return
 	}
 
-	var mfCount int64
-	err := svc.DB.Table("master_files").Where("unit_id=?", unitID).Count(&mfCount).Error
-	if err != nil {
+	var tgtUnit unit
+	if err := svc.DB.First(&tgtUnit, unitID).Error; err != nil {
+		log.Printf("ERROR: unable to get unit %d for deletion: %s", unitID, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	var mfIDs []int64
+	if err := svc.DB.Raw("select id from master_files where unit_id=?", unitID).Scan(&mfIDs).Error; err != nil {
 		log.Printf("ERROR: unable to determine if unit %d has master files: %s", unitID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// FIXME reorder units with master files CAN be deleted
-	if mfCount > 0 {
-		log.Printf("INFO: cannot delete unit %d with %d masterfiles", unitID, mfCount)
-		c.String(http.StatusBadRequest, fmt.Sprintf("cannot delete unit with %d master files", mfCount))
-		return
+	if len(mfIDs) > 0 {
+		if tgtUnit.Reorder {
+			log.Printf("INFO: unit %d is a reorder that has master files; delete image tech metadata", unitID)
+			if err := svc.DB.Exec("delete from image_tech_meta where master_file_id in ?", mfIDs).Error; err != nil {
+				log.Printf("ERROR: unable remove unit %d image tech metadata: %s", unitID, err.Error())
+				c.String(http.StatusInternalServerError, err.Error())
+				return
+			}
+
+			log.Printf("INFO: unit %d is a reorder that has master files; delete them", unitID)
+			if err := svc.DB.Exec("delete from master_files where unit_id=?", unitID).Error; err != nil {
+				log.Printf("ERROR: unable to delete %d masterfiles for reorder unit %d: %s", len(mfIDs), unitID, err.Error())
+				c.String(http.StatusInternalServerError, err.Error())
+				return
+			}
+		} else {
+			log.Printf("INFO: cannot delete unit %d with %d masterfiles", unitID, len(mfIDs))
+			c.String(http.StatusBadRequest, fmt.Sprintf("cannot delete unit with %d master files", len(mfIDs)))
+			return
+		}
 	}
 
 	if err := svc.DB.Delete(&unit{}, unitID).Error; err != nil {
