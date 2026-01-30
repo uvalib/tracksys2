@@ -4,14 +4,92 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (svc *serviceContext) cleanupCanceledUnits(c *gin.Context) {
-	log.Printf("INFO: cleanup canceled units")
-	c.String(http.StatusNotImplemented, "not implemented")
+	log.Printf("INFO: cleanup canceled units tha are older than 3 months")
+
+	maxDel, _ := strconv.ParseUint(c.Query("max"), 10, 64)
+	if maxDel == 0 {
+		maxDel = 500
+	}
+	log.Printf("INFO: limit to %d deletions", maxDel)
+
+	deleteThreshold := time.Now().AddDate(0, -3, 0)
+	dateStr := deleteThreshold.Format("2006-01-02")
+
+	var unitResp []struct {
+		ID        int64
+		UpdatedAt time.Time
+		FileCount int64
+	}
+
+	qStr := "select u.id, u.updated_at, count(f.id) as file_count from units u "
+	qStr += " left join master_files f on f.unit_id = u.id  "
+	qStr += " where unit_status=? and u.updated_at < ? group by u.id"
+	if err := svc.DB.Raw(qStr, "canceled", dateStr).Scan(&unitResp).Error; err != nil {
+		log.Printf("ERROR: find canceled units failed: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if len(unitResp) == 0 {
+		log.Printf("INFO: there are no canceled units to cleanup")
+		c.String(http.StatusOK, "done")
+		return
+	}
+
+	log.Printf("INFO: found %d canceled units older than %s", len(unitResp), dateStr)
+	go func() {
+		delCnt := 0
+		projCnt := 0
+		failed := make([]int64, 0)
+		hasFiles := make([]int64, 0)
+
+		for _, u := range unitResp {
+			log.Printf("INFO: delete unit %d canceled on %s", u.ID, u.UpdatedAt.Format("2006-01-02"))
+			if u.FileCount > 0 {
+				log.Printf("INFO: unit %d has %d masterfiles, not deleting", u.ID, u.FileCount)
+				hasFiles = append(hasFiles, u.ID)
+				continue
+			}
+
+			projResp := svc.getUnitProject(u.ID)
+			if projResp.Exists {
+				log.Printf("INFO: canceled unit %d is associated with project %d; cancel it", u.ID, projResp.ProjectID)
+				if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", projResp.ProjectID), getJWT(c)); rErr != nil {
+					log.Printf("ERROR: unable to cancel project %d: %s", projResp.ProjectID, rErr.Message)
+				} else {
+					projCnt++
+				}
+			}
+
+			if err := svc.DB.Delete(&unit{}, u.ID).Error; err != nil {
+				log.Printf("ERROR: unable to delete unit %d: %s", u.ID, err.Error())
+				failed = append(failed, u.ID)
+			} else {
+				delCnt++
+			}
+			if delCnt >= int(maxDel) {
+				log.Printf("INFO: max deletions (%d) reached; stopping", maxDel)
+				break
+			}
+			time.Sleep(150 * time.Millisecond)
+		}
+		log.Printf("INFO: unit cleanup done. %d units deleted. %d projects deleted", delCnt, projCnt)
+		if len(failed) > 0 {
+			log.Printf("INFO: %d failed: %v", len(failed), failed)
+		}
+		if len(hasFiles) > 0 {
+			log.Printf("INFO: %d units with masterfiles: %v", len(hasFiles), hasFiles)
+		}
+	}()
+
+	c.String(http.StatusOK, "process started to retire %d of %d canceled units older than %s", maxDel, len(unitResp), dateStr)
 }
 
 func (svc *serviceContext) cleanupCanceledOrders(c *gin.Context) {

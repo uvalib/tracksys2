@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -91,42 +92,60 @@ func (svc *serviceContext) validateUnit(c *gin.Context) {
 }
 
 func (svc *serviceContext) deleteUnit(c *gin.Context) {
-	unitID := c.Param("id")
-	log.Printf("INFO: delete unit %s details", unitID)
+	unitID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	log.Printf("INFO: delete unit %s details", c.Param("id"))
+	if unitID == 0 {
+		log.Printf("INFO: invalid unit id %s", c.Param("id"))
+		c.String(http.StatusBadRequest, "invalid unit id %s", c.Param("id"))
+		return
+	}
+
 	var mfCount int64
 	err := svc.DB.Table("master_files").Where("unit_id=?", unitID).Count(&mfCount).Error
 	if err != nil {
-		log.Printf("ERROR: unable to determine if unit %s has master files: %s", unitID, err.Error())
+		log.Printf("ERROR: unable to determine if unit %d has master files: %s", unitID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	err = svc.DB.Delete(&unit{}, unitID).Error
-	if err != nil {
-		log.Printf("ERROR: unable to delete unit %s: %s", unitID, err.Error())
+	// FIXME reorder units with master files CAN be deleted
+	if mfCount > 0 {
+		log.Printf("INFO: cannot delete unit %d with %d masterfiles", unitID, mfCount)
+		c.String(http.StatusBadRequest, fmt.Sprintf("cannot delete unit with %d master files", mfCount))
+		return
+	}
+
+	if err := svc.DB.Delete(&unit{}, unitID).Error; err != nil {
+		log.Printf("ERROR: unable to delete unit %d: %s", unitID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	// check id a project exists, and cancel it if so
-	var lookupResp projectLookupResponse
-	respBytes, reqErr := svc.getRequest(fmt.Sprintf("%s/projects/lookup?unit=%s", svc.ExternalSystems.Projects, unitID))
-	if reqErr != nil {
-		log.Printf("ERROR: unable to determine if unit %s has a project: %s", unitID, reqErr.Message)
-	} else {
-		if err := json.Unmarshal(respBytes, &lookupResp); err != nil {
-			log.Printf("ERROR: unable to parse response for project lookup: %s", err.Error())
-		} else if lookupResp.Exists {
-			log.Printf("INFO: unit %s is associated with project %d; cancel it", unitID, lookupResp.ProjectID)
-			if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", lookupResp.ProjectID), getJWT(c)); rErr != nil {
-				log.Printf("ERROR: unable to cancel project %d: %s", lookupResp.ProjectID, rErr.Message)
-			} else {
-				log.Printf("INFO: project %d associated with deleted unit %s has been canceled", lookupResp.ProjectID, unitID)
-			}
+	lookupResp := svc.getUnitProject(unitID)
+	if lookupResp.Exists {
+		log.Printf("INFO: unit %d is associated with project %d; cancel it", unitID, lookupResp.ProjectID)
+		if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", lookupResp.ProjectID), getJWT(c)); rErr != nil {
+			log.Printf("ERROR: unable to cancel project %d: %s", lookupResp.ProjectID, rErr.Message)
+		} else {
+			log.Printf("INFO: project %d associated with deleted unit %d has been canceled", lookupResp.ProjectID, unitID)
 		}
 	}
 
 	c.String(http.StatusOK, "deleted")
+}
+
+func (svc *serviceContext) getUnitProject(unitID int64) projectLookupResponse {
+	var lookupResp projectLookupResponse
+	respBytes, reqErr := svc.getRequest(fmt.Sprintf("%s/projects/lookup?unit=%d", svc.ExternalSystems.Projects, unitID))
+	if reqErr != nil {
+		log.Printf("ERROR: unable to determine if unit %d has a project: %s", unitID, reqErr.Message)
+	} else {
+		if err := json.Unmarshal(respBytes, &lookupResp); err != nil {
+			log.Printf("ERROR: unable to parse response for project lookup: %s", err.Error())
+		}
+	}
+	return lookupResp
 }
 
 func (svc *serviceContext) getUnit(c *gin.Context) {
