@@ -206,7 +206,7 @@
             <Tabs :value="startTab" :lazy="true">
                <TabList>
                   <Tab value="collection" v-if="metadataStore.detail.isCollection">Collection Members</Tab>
-                  <Tab value="orders">Orders</Tab>
+                  <Tab value="orders"  v-if="metadataStore.detail.isCollection==false">Orders</Tab>
                   <Tab value="units">Units</Tab>
                   <Tab value="masterfiles" v-if="metadataStore.related.masterFiles.length > 0">Master Files</Tab>
                </TabList>
@@ -215,7 +215,7 @@
                      <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
                      <CollectionRecords v-else :collectionID="metadataStore.detail.id"/>
                   </TabPanel>
-                  <TabPanel value="orders">
+                  <TabPanel value="orders" v-if="metadataStore.detail.isCollection==false">
                      <RelatedOrders :orders="metadataStore.related.orders" />
                   </TabPanel>
                   <TabPanel value="units">

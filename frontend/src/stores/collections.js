@@ -19,7 +19,6 @@ export const useCollectionsStore = defineStore('collections', {
       },
       collections: [],
       totalCollections: 0,
-      bulkAdd: false,
       metadataHits: [],
    }),
    getters: {
@@ -67,6 +66,7 @@ export const useCollectionsStore = defineStore('collections', {
          const system = useSystemStore()
          return axios.post( `/api/collections/${collectionID}/item?rec=${metadataID}` ).then(() => {
             system.toastMessage( "Collection Updated", "This metadata record has been added to the selected collection" )
+            this.metadataHits = []
          }).catch( e => {
             system.setError(e)
          })
@@ -124,9 +124,7 @@ export const useCollectionsStore = defineStore('collections', {
             system.setError(error)
          })
       },
-      toggleBulkAdd() {
-         this.bulkAdd = !this.bulkAdd
-      },
+
       metadataSearch( query ) {
          const system = useSystemStore()
          let url = `/api/collections/candidates?q=${encodeURIComponent(query)}`

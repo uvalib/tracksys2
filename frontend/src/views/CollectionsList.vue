@@ -74,4 +74,7 @@ const collectionCreated = (() => {
 </script>
 
 <style scoped lang="scss">
+.collections {
+   margin: 20px;
+}
 </style>

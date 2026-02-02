@@ -1,74 +1,71 @@
 <template>
    <div class="collection">
-      <template v-if="collectionStore.bulkAdd == false">
-         <DataTable :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
-            stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-            :sortField="collectionStore.searchOpts.sortField" :sortOrder="sortOrder" @sort="onSort($event)"
-            :lazy="true" :paginator="true" @page="onCollectionPage($event)" paginatorPosition="top"
-            :rows="collectionStore.searchOpts.limit" :totalRecords="collectionStore.totalRecords"
-            paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-            :rowsPerPageOptions="[15,30,100]" :first="collectionStore.searchOpts.start"
-            currentPageReportTemplate="{first} - {last} of {totalRecords}"
-         >
-            <template #empty><h3>No items found</h3></template>
-            <template #paginatorstart>
-               <div class="buttons">
-                  <DPGButton label="Add Item(s)" severity="secondary" @click="bulkAddClicked()" v-if="userStore.isAdmin"/>
-                  <DPGButton label="Export CSV" severity="secondary" @click="exportCollectionCSV" :disabled="collectionStore.totalRecords == 0"/>
-                  <DPGButton label="Export Collection" severity="secondary" @click="exportCollection" :disabled="collectionStore.totalRecords == 0" v-if="userStore.isAdmin"/>
-               </div>
+      <DataTable :value="collectionStore.records" ref="collectionRecordsTable" dataKey="id"
+         stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
+         :sortField="collectionStore.searchOpts.sortField" :sortOrder="sortOrder" @sort="onSort($event)"
+         :lazy="true" :paginator="true" @page="onCollectionPage($event)" paginatorPosition="top"
+         :rows="collectionStore.searchOpts.limit" :totalRecords="collectionStore.totalRecords"
+         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
+         :rowsPerPageOptions="[15,30,100]" :first="collectionStore.searchOpts.start"
+         currentPageReportTemplate="{first} - {last} of {totalRecords}"
+      >
+         <template #empty><h3>No items found</h3></template>
+         <template #paginatorstart>
+            <div class="buttons">
+               <CollectionBulkAdd v-if="userStore.isAdmin" />
+               <DPGButton label="Export CSV" severity="secondary" @click="exportCollectionCSV" :disabled="collectionStore.totalRecords == 0"/>
+               <DPGButton label="Export Collection" severity="secondary" @click="exportCollection" :disabled="collectionStore.totalRecords == 0" v-if="userStore.isAdmin"/>
+            </div>
+         </template>
+         <template #paginatorend>
+            <IconField iconPosition="left">
+               <InputIcon class="pi pi-search" />
+               <InputText v-model="collectionStore.searchOpts.query" placeholder="Collection Search" @input="queryCollection()"/>
+            </IconField>
+         </template>
+         <Column field="id" header="ID" :sortable="true">
+            <template #body="slotProps">
+               <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
             </template>
-            <template #paginatorend>
-               <IconField iconPosition="left">
-                  <InputIcon class="pi pi-search" />
-                  <InputText v-model="collectionStore.searchOpts.query" placeholder="Collection Search" @input="queryCollection()"/>
-               </IconField>
+         </Column>
+         <Column field="pid" header="PID" class="nowrap"/>
+         <Column field="type" header="Type">
+            <template #body="slotProps">
+               <span v-if="slotProps.data.type!='ExternalMetadata'">{{ slotProps.data.type }}</span>
+               <span v-else>{{externalSystemName(slotProps.data.externalSystemID)}}</span>
             </template>
-            <Column field="id" header="ID" :sortable="true">
-               <template #body="slotProps">
-                  <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
-               </template>
-            </Column>
-            <Column field="pid" header="PID" class="nowrap"/>
-            <Column field="type" header="Type">
-               <template #body="slotProps">
-                  <span v-if="slotProps.data.type!='ExternalMetadata'">{{ slotProps.data.type }}</span>
-                  <span v-else>{{externalSystemName(slotProps.data.externalSystemID)}}</span>
-               </template>
-            </Column>
-            <Column field="title" header="Title" :sortable="true"/>
-            <Column field="callNumber" header="Call Number" :sortable="true">
-               <template #body="slotProps">
-                  <span v-if="slotProps.data.callNumber">{{ slotProps.data.callNumber }}</span>
-                  <span v-else class="none">N/A</span>
-               </template>
-            </Column>
-            <Column field="barcode" header="Barcode" :sortable="true">
-               <template #body="slotProps">
-                  <span v-if="slotProps.data.barcode">{{ slotProps.data.barcode }}</span>
-                  <span v-else class="none">N/A</span>
-               </template>
-            </Column>
-            <Column v-if="collectionStore.inAPTrust" header="APTrust" class="apt-status" field="aptStatus" :sortable="true">
-               <template #body="slotProps">
-                  <template v-if="slotProps.data.apTrustSubmission">
-                     <template v-if="slotProps.data.apTrustSubmission.processedAt">
-                        <span v-if="slotProps.data.apTrustSubmission.success" class="pi pi-check-circle success"></span>
-                        <span v-else class="pi pi-times-circle fail"></span>
-                     </template>
-                     <span v-else class="pi pi-spin pi-cog"></span>
+         </Column>
+         <Column field="title" header="Title" :sortable="true"/>
+         <Column field="callNumber" header="Call Number" :sortable="true">
+            <template #body="slotProps">
+               <span v-if="slotProps.data.callNumber">{{ slotProps.data.callNumber }}</span>
+               <span v-else class="none">N/A</span>
+            </template>
+         </Column>
+         <Column field="barcode" header="Barcode" :sortable="true">
+            <template #body="slotProps">
+               <span v-if="slotProps.data.barcode">{{ slotProps.data.barcode }}</span>
+               <span v-else class="none">N/A</span>
+            </template>
+         </Column>
+         <Column v-if="collectionStore.inAPTrust" header="APTrust" class="apt-status" field="aptStatus" :sortable="true">
+            <template #body="slotProps">
+               <template v-if="slotProps.data.apTrustSubmission">
+                  <template v-if="slotProps.data.apTrustSubmission.processedAt">
+                     <span v-if="slotProps.data.apTrustSubmission.success" class="pi pi-check-circle success"></span>
+                     <span v-else class="pi pi-times-circle fail"></span>
                   </template>
-                  <span v-else class="none">N/A</span>
+                  <span v-else class="pi pi-spin pi-cog"></span>
                </template>
-            </Column>
-            <Column header="" class="row-acts nowrap" v-if="userStore.isAdmin">
-               <template #body="slotProps">
-                  <DPGButton icon="pi pi-times" severity="secondary" text rounded @click="deleteItem(slotProps.data)" aria-label="remove from collection"/>
-               </template>
-            </Column>
-         </DataTable>
-      </template>
-      <CollectionBulkAdd v-else />
+               <span v-else class="none">N/A</span>
+            </template>
+         </Column>
+         <Column header="" class="row-acts nowrap" v-if="userStore.isAdmin">
+            <template #body="slotProps">
+               <DPGButton icon="pi pi-times" severity="secondary" text rounded @click="deleteItem(slotProps.data)" aria-label="remove from collection"/>
+            </template>
+         </Column>
+      </DataTable>
    </div>
 </template>
 
@@ -122,10 +119,6 @@ const onSort = ((event) => {
       collectionStore.searchOpts.sortOrder = "desc"
    }
    collectionStore.getItems()
-})
-
-const bulkAddClicked = (() => {
-   collectionStore.toggleBulkAdd()
 })
 
 const onCollectionPage = ((event) => {
