@@ -23,28 +23,29 @@ func (svc *serviceContext) cleanupCanceledUnits(c *gin.Context) {
 	dateStr := deleteThreshold.Format("2006-01-02")
 
 	var unitResp []struct {
-		ID        int64
-		UpdatedAt time.Time
-		Reorder   bool
-		FileCount int64
+		ID         int64
+		UnitStatus string
+		UpdatedAt  time.Time
+		Reorder    bool
+		FileCount  int64
 	}
 
-	qStr := "select u.id, u.updated_at, reorder, count(f.id) as file_count from units u "
+	qStr := "select u.id, u.updated_at, unit_status, reorder, count(f.id) as file_count from units u "
 	qStr += " left join master_files f on f.unit_id = u.id  "
-	qStr += " where unit_status=? and u.updated_at < ? group by u.id"
-	if err := svc.DB.Raw(qStr, "canceled", dateStr).Scan(&unitResp).Error; err != nil {
+	qStr += " where (unit_status=? or unit_status=?) and u.updated_at < ? group by u.id"
+	if err := svc.DB.Raw(qStr, "canceled", "unapproved", dateStr).Scan(&unitResp).Error; err != nil {
 		log.Printf("ERROR: find canceled units failed: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if len(unitResp) == 0 {
-		log.Printf("INFO: there are no canceled units to cleanup")
+		log.Printf("INFO: there are no canceled/unapproved units to cleanup")
 		c.String(http.StatusOK, "done")
 		return
 	}
 
-	log.Printf("INFO: found %d canceled units older than %s", len(unitResp), dateStr)
+	log.Printf("INFO: found %d canceled/unapproved units older than %s", len(unitResp), dateStr)
 	go func() {
 		delCnt := 0
 		projCnt := 0
@@ -52,7 +53,7 @@ func (svc *serviceContext) cleanupCanceledUnits(c *gin.Context) {
 		hasFiles := make([]int64, 0)
 
 		for _, u := range unitResp {
-			log.Printf("INFO: delete unit %d canceled on %s", u.ID, u.UpdatedAt.Format("2006-01-02"))
+			log.Printf("INFO: delete unit %d that was %s on %s", u.ID, u.UnitStatus, u.UpdatedAt.Format("2006-01-02"))
 			if u.FileCount > 0 {
 				if u.Reorder {
 					log.Printf("INFO: unit %d is a reorder with %d masterfiles; delete them first", u.ID, u.FileCount)
@@ -79,7 +80,7 @@ func (svc *serviceContext) cleanupCanceledUnits(c *gin.Context) {
 
 			projResp := svc.getUnitProject(u.ID)
 			if projResp.Exists {
-				log.Printf("INFO: canceled unit %d is associated with project %d; cancel it", u.ID, projResp.ProjectID)
+				log.Printf("INFO: canceled/unapproved unit %d is associated with project %d; cancel it", u.ID, projResp.ProjectID)
 				if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", projResp.ProjectID), getJWT(c)); rErr != nil {
 					log.Printf("ERROR: unable to cancel project %d: %s", projResp.ProjectID, rErr.Message)
 				} else {
