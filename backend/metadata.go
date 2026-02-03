@@ -241,11 +241,22 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 		return
 	}
 
+	if resp.Metadata.IsCollection {
+		log.Printf("INFO: metadata %d is a collection; load collection units", resp.Metadata.ID)
+		units, err := svc.getCollectionUnits(resp.Metadata.ID)
+		if err != nil {
+			log.Printf("ERROR: unable to get units for collection %d: %s", resp.Metadata.ID, err.Error())
+		} else {
+			resp.Units = units
+		}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
 	log.Printf("INFO: get related units and orders for metadata %d", resp.Metadata.ID)
 	// NOTE: Manually calculate the master files count and return it as num_master_files instead of using the inaccurate cache
 	mfCnt := "(select count(*) from master_files m inner join units u on u.id=m.unit_id where u.id=units.id) as num_master_files"
-	err = svc.DB.Where("metadata_id=?", resp.Metadata.ID).Preload("IntendedUse").
-		Preload("Order").Preload("Order.Customer").Preload("Order.Agency").
+	err = svc.DB.Where("metadata_id=?", resp.Metadata.ID).Preload("Order").Preload("Order.Customer").Preload("Order.Agency").
 		Select("units.*", mfCnt).Find(&resp.Units).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get related units for %d: %s", resp.Metadata.ID, err.Error())
@@ -265,8 +276,7 @@ func (svc *serviceContext) getMetadata(c *gin.Context) {
 		log.Printf("INFO: no units directly found for metadata %d; searching master files...", resp.Metadata.ID)
 		err = svc.DB.Preload("Unit").Preload("Unit.Order").
 			Preload("Unit.Order.Customer").Preload("Unit.Order.Agency").
-			Preload("Unit.IntendedUse").Where("metadata_id=?", resp.Metadata.ID).
-			Find(&resp.MasterFiles).Error
+			Where("metadata_id=?", resp.Metadata.ID).Find(&resp.MasterFiles).Error
 		if err != nil {
 			log.Printf("ERROR: unable to get masterfile unit for metadata %d: %s", resp.Metadata.ID, err.Error())
 			c.String(http.StatusInternalServerError, err.Error())

@@ -476,7 +476,7 @@ func (svc *serviceContext) completeOrder(c *gin.Context) {
 	}
 
 	for idx, u := range orderUnits {
-		if *u.IntendedUseID != 110 {
+		if u.IntendedUseID != 110 {
 			patronOrder = true
 		}
 		if idx == 0 {
@@ -835,7 +835,7 @@ func (svc *serviceContext) addUnitToOrder(c *gin.Context) {
 	newUnit := unit{UnitStatus: "approved", MetadataID: &md.ID, PatronSourceURL: addReq.SourceURL,
 		SpecialInstructions: addReq.SpecialInstructions, StaffNotes: addReq.StaffNotes, CompleteScan: addReq.CompleteScan,
 		ThrowAway: addReq.ThrowAway, IncludeInDL: addReq.IncludeInDL, CreatedAt: time.Now(), OrderID: tgtOrder.ID,
-		IntendedUseID: &iu.ID, IntendedUse: &iu, Metadata: &md,
+		IntendedUseID: iu.ID, IntendedUse: &iu, Metadata: &md,
 	}
 	err = svc.DB.Omit("num_master_files").Create(&newUnit).Error
 	if err != nil {

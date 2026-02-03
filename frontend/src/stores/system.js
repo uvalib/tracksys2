@@ -31,6 +31,17 @@ export const useSystemStore = defineStore('system', {
       }
 	}),
 	getters: {
+       getIntendedUse: state => {
+         return (id) => {
+            let out = null
+            state.intendedUses.forEach( val => {
+               if (val.id == id) {
+                  out = val
+               }
+            })
+            return out
+         }
+      },
 	},
 	actions: {
       toastMessage( summary, message ) {

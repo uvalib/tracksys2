@@ -64,6 +64,36 @@ func (svc *serviceContext) getCollections(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+func (svc *serviceContext) getCollectionUnits(collectionID int64) ([]*unit, error) {
+	out := make([]*unit, 0)
+
+	var inCollectionIDs []uint64
+	if err := svc.DB.Raw("select id from metadata where parent_metadata_id=?", collectionID).Scan(&inCollectionIDs).Error; err != nil {
+		return out, err
+	}
+	// NOTE: Manually calculate the master files count and return it as num_master_files instead of using the inaccurate cache
+	mfCnt := "(select count(*) from master_files m inner join units u on u.id=m.unit_id where u.id=units.id) as num_master_files"
+	err := svc.DB.
+		Where("metadata_id in ? and (intended_use_id=? or intended_use_id=?) and unit_status != ?", inCollectionIDs, 110, 101, "canceled").
+		Select("units.*", mfCnt).Find(&out).Error
+	if err != nil {
+		return nil, fmt.Errorf("unable to get related units for %d: %s", collectionID, err.Error())
+	}
+
+	if len(out) == 0 {
+		log.Printf("INFO: no units directly found for collection metadata %d; searching master files...", collectionID)
+		q := "select  u.*,count(m.id) as num_master_files from master_files m "
+		q += " inner join units u on u.id = m.unit_id"
+		q += " where (intended_use_id=? or intended_use_id=?) and unit_status != ?"
+		q += " and m.metadata_id in ? group by u.id"
+		if err := svc.DB.Raw(q, 110, 101, "canceled", inCollectionIDs).Scan(&out).Error; err != nil {
+			return nil, fmt.Errorf("unable to get related units for %d: %s", collectionID, err.Error())
+		}
+	}
+
+	return out, nil
+}
+
 func (svc *serviceContext) getCollectionItems(c *gin.Context) {
 	collectionID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	if collectionID == 0 {

@@ -277,8 +277,8 @@ func (svc *serviceContext) getASPublishUnitID(mdID int64) (int64, error) {
 		candidateCnt := 0
 		candidateIntendedUse := int64(110)
 		for _, u := range tgtUnits {
-			if u.IntendedUseID != nil {
-				if *u.IntendedUseID == candidateIntendedUse {
+			if u.IntendedUseID != 0 {
+				if u.IntendedUseID == candidateIntendedUse {
 					candidateCnt++
 					tgtUnitID = u.ID
 				}

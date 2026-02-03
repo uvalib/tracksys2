@@ -41,7 +41,7 @@ type unit struct {
 	MetadataID                  *int64       `json:"metadataID,omitempty"`
 	Metadata                    *metadata    `gorm:"foreignKey:MetadataID" json:"metadata,omitempty"`
 	UnitStatus                  string       `json:"status"`
-	IntendedUseID               *int64       `json:"-"`
+	IntendedUseID               int64        `json:"intendedUseID"`
 	IntendedUse                 *intendedUse `gorm:"foreignKey:IntendedUseID" json:"intendedUse"`
 	PatronSourceURL             string       `json:"patronSourceURL"`
 	IncludeInDL                 bool         `gorm:"column:include_in_dl" json:"includeInDL"`
@@ -305,7 +305,7 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 	unitDetail.ThrowAway = req.ThrowAway
 	unitDetail.OrderID = req.OrderID
 	unitDetail.MetadataID = &req.MetadataID
-	unitDetail.IntendedUseID = &req.IntendedUseID
+	unitDetail.IntendedUseID = req.IntendedUseID
 	unitDetail.OCRMasterFiles = req.OCRMasterFiles
 	unitDetail.RemoveWatermark = req.RemoveWaterMark
 	unitDetail.IncludeInDL = req.IncludeInDL

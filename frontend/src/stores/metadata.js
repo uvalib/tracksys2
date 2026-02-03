@@ -487,6 +487,14 @@ export const useMetadataStore = defineStore('metadata', {
          }
          let orderIDs = []
          units.forEach( r => {
+            let intendedUse = r.intendedUse
+            if (intendedUse == null ) {
+                const system = useSystemStore()
+               intendedUse = system.getIntendedUse(r.intendedUseID)
+            }
+            if (!intendedUse) {
+               intendedUse = "Unknown"
+            }
             let u = {
                id: r.id,
                status: r.status,
@@ -496,20 +504,22 @@ export const useMetadataStore = defineStore('metadata', {
                dateDLDeliverablesReady: r.dateDLDeliverablesReady,
                datePatronDeliverablesReady: r.datePatronDeliverablesReady,
                masterFilesCount: r.masterFilesCount,
-               intendedUse: r.intendedUse,
+               intendedUse: intendedUse,
                metadata: r.metadata
             }
             this.related.units.push(u)
-            if (orderIDs.includes(r.order.id) == false ) {
-               orderIDs.push(r.order.id)
-               this.related.orders.push({
-                  id: r.order.id,
-                  title: r.order.title,
-                  customer: r.order.customer,
-                  agency: r.order.agency,
-                  staffNotes: r.order.staffNotes,
-                  specialInstructions: r.order.specialInstructions,
-               })
+            if ( r.order ) {
+               if (orderIDs.includes(r.order.id) == false ) {
+                  orderIDs.push(r.order.id)
+                  this.related.orders.push({
+                     id: r.order.id,
+                     title: r.order.title,
+                     customer: r.order.customer,
+                     agency: r.order.agency,
+                     staffNotes: r.order.staffNotes,
+                     specialInstructions: r.order.specialInstructions,
+                  })
+               }
             }
          })
       },
