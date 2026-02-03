@@ -138,8 +138,8 @@ func main() {
 	cleanup := router.Group("/cleanup")
 	{
 		cleanup.POST("/expired-jobs", svc.cleanupExpiredJobLogs)
-		cleanup.POST("/cancled-units", svc.cleanupCanceledUnits)
-		cleanup.POST("/cancled-orders", svc.cleanupCanceledOrders)
+		cleanup.POST("/canceled-units", svc.cleanupCanceledUnits)
+		cleanup.POST("/canceled-orders", svc.cleanupCanceledOrders)
 	}
 
 	// Note: in dev mode, this is never actually used. The front end is served
