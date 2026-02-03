@@ -8,7 +8,29 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
+
+func (svc *serviceContext) mintTemporaryJWT() (string, error) {
+	log.Printf("INFO: mint temporary JWT")
+	expirationTime := time.Now().Add(10 * time.Minute)
+	claims := jwtClaims{
+		UserID:    0,
+		ComputeID: "tracksys-cleanup",
+		Role:      "admin",
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			Issuer:    "dpg-jobs",
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedStr, jwtErr := token.SignedString([]byte(svc.JWTKey))
+	if jwtErr != nil {
+		return "", jwtErr
+	}
+	return signedStr, nil
+}
 
 func (svc *serviceContext) cleanupCanceledUnits(c *gin.Context) {
 	log.Printf("INFO: cleanup canceled units tha are older than 3 months")
@@ -28,6 +50,13 @@ func (svc *serviceContext) cleanupCanceledUnits(c *gin.Context) {
 		UpdatedAt  time.Time
 		Reorder    bool
 		FileCount  int64
+	}
+
+	imagingJWT, jwterr := svc.mintTemporaryJWT()
+	if jwterr != nil {
+		log.Printf("ERROR: unable to mint temporary jwt to be used to cance orders: %s", jwterr.Error())
+		c.String(http.StatusInternalServerError, jwterr.Error())
+		return
 	}
 
 	qStr := "select u.id, u.updated_at, unit_status, reorder, count(f.id) as file_count from units u "
@@ -81,7 +110,7 @@ func (svc *serviceContext) cleanupCanceledUnits(c *gin.Context) {
 			projResp := svc.getUnitProject(u.ID)
 			if projResp.Exists {
 				log.Printf("INFO: canceled/unapproved unit %d is associated with project %d; cancel it", u.ID, projResp.ProjectID)
-				if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", projResp.ProjectID), getJWT(c)); rErr != nil {
+				if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", projResp.ProjectID), imagingJWT); rErr != nil {
 					log.Printf("ERROR: unable to cancel project %d: %s", projResp.ProjectID, rErr.Message)
 				} else {
 					projCnt++
