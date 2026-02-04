@@ -174,6 +174,7 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 	log.Printf("INFO: get unit %s details", unitID)
 	var unitDetail unit
 	err := svc.DB.Preload("IntendedUse").Preload("Attachments").Preload("Order").
+		Preload("Order.Agency").Preload("Order.Customer").
 		Preload("Metadata").Preload("Metadata.OCRHint").First(&unitDetail, unitID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

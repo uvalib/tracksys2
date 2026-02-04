@@ -29,7 +29,12 @@ const isOpen = ref(false)
 const workflows = ref([])
 const categories = ref([])
 const project = ref({
-   UnitID: 0,
+   unitID: 0,
+   orderID: 0,
+   title: "",
+   callNumber: "",
+   customerID: 0,
+   agencyID: 0,
    workflowID: 1,
    containerTypeID: 0,
    categoryID: null,
@@ -71,7 +76,15 @@ function hide() {
    isOpen.value=false
 }
 function show() {
-   project.value.UnitID = unitsStore.detail.id
+   project.value.unitID = unitsStore.detail.id
+   project.value.orderID = unitsStore.detail.orderID
+   project.value.title = unitsStore.detail.metadata.title
+   project.value.callNumber = unitsStore.detail.metadata.callNumber
+   project.value.agencyID = 0
+   if ( unitsStore.detail.order.agency ) {
+       project.value.agencyID = unitsStore.detail.order.agency.id
+   }
+   project.value.customerID = unitsStore.detail.order.customer.id
    project.value.workflowID = 1
    project.value.categoryID = 0
    project.value.containerTypeID = 0
