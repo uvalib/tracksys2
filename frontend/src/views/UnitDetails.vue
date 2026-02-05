@@ -64,12 +64,12 @@
                <CreateProjectDialog />
             </div>
             <div class="acts">
-               <tempalate v-if="detail.intendedUseID != 110">
+               <template v-if="detail.intendedUseID != 110">
                   <DPGButton v-if="detail.datePatronDeliverablesReady == null && detail.status =='done'" @click="generateDeliverablesClicked"
                      severity="secondary" label="Generate Deliverables"
                   />
                   <DPGButton v-if="unitsStore.hasMasterFiles && detail.status =='done'" @click="generateDeliverablesClicked" severity="secondary" label="Regenerate Deliverables" />
-               </tempalate>
+               </template>
                <DPGButton v-if="unitsStore.canDownload" @click="downloadClicked" severity="secondary" label="Download from Archive" />
                <DPGButton label="OCR Master Files" severity="secondary"  @click="unitOCRClicked()" v-if="unitsStore.canOCR && (userStore.isAdmin || userStore.isSupervisor)" />
                <DPGButton label="Download PDF" severity="secondary" @click="unitPDFClicked()" v-if="unitsStore.canPDF" />

@@ -31,6 +31,7 @@ const categories = ref([])
 const project = ref({
    unitID: 0,
    orderID: 0,
+   dateDue: null,
    title: "",
    callNumber: "",
    customerID: 0,
@@ -62,8 +63,6 @@ const conditions = computed( () => {
 })
 
 async function createProject() {
-   // FIXME cache some TS specific data in the project; order_id, customer_id, agency_id, call_number (needed for search)
-   // possibly cache some for display too: title, special instructions, intended use
    axios.post(`${systemStore.projectsURL}/api/projects/create`, project.value).then(response => {
       unitsStore.detail.projectID = parseInt(response.data, 10)
       systemStore.toastMessage("Project Created", "A new project has been created for this unit")
@@ -78,6 +77,7 @@ function hide() {
 function show() {
    project.value.unitID = unitsStore.detail.id
    project.value.orderID = unitsStore.detail.orderID
+   project.value.dateDue = unitsStore.detail.order.dateDue
    project.value.title = unitsStore.detail.metadata.title
    project.value.callNumber = unitsStore.detail.metadata.callNumber
    project.value.agencyID = 0
