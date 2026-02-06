@@ -101,7 +101,7 @@
             <DataDisplay label="Order" :value="`${detail.orderID}`">
                <router-link :to="`/orders/${detail.orderID}`">{{detail.orderID}}</router-link>
             </DataDisplay>
-            <DataDisplay label="Order Units" :value="`${detail.relatedUnits}`">
+            <DataDisplay v-if="detail.relatedUnits.length > 1" label="Order Units" :value="`${detail.relatedUnits}`">
                <div class="related-unit-ids">
                   <template v-for="(uid,idx) in detail.relatedUnits.slice(0,30)" :key="`related-${uid}`">
                      <template v-if="idx > 0"><span class="sep"></span></template>

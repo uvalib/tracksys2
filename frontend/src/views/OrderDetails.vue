@@ -85,6 +85,7 @@
                   <DataDisplay label="Date Fee Sent to Customer" :value="$formatDate(detail.dateFeeEstimateSent)"/>
                </template>
             </template>
+            <DataDisplay v-if="detail.dateCanceled" label="Date Canceled" :value="$formatDate(detail.dateCanceled)"/>
             <DataDisplay v-if="detail.dateDeferred" label="Date Deferred" :value="$formatDate(detail.dateDeferred)"/>
             <DataDisplay label="Date Finalization Started" :value="$formatDateTime(detail.dateFinalizationBegun)"/>
             <DataDisplay label="Date Archiving Complete" :value="$formatDateTime(detail.dateArchivingComplete)"/>
@@ -457,7 +458,21 @@ const approveOrderClicked = (() => {
 })
 
 const cancelOrderClicked = (() => {
-   ordersStore.cancelOrder( user.computeID )
+   confirm.require({
+      message: 'Are you sure you want cancel this order? All related units and projects will be canceled. This cannot be reversed.',
+      header: 'Confirm Cancel Order',
+      icon: 'pi pi-exclamation-triangle',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Delete'
+      },
+      accept: async () => {
+         await ordersStore.cancelOrder( user.computeID )
+      }
+   })
 })
 
 const completeOrderClicked = (() => {

@@ -187,18 +187,10 @@ func (svc *serviceContext) getUnit(c *gin.Context) {
 		return
 	}
 
-	log.Printf("INFO: check for project associated with unit %s", unitID)
-	var lookupResp projectLookupResponse
-	respBytes, reqErr := svc.getRequest(fmt.Sprintf("%s/projects/lookup?unit=%s", svc.ExternalSystems.Projects, unitID))
-	if reqErr != nil {
-		log.Printf("ERROR: lookup project for unit %s failed: %s", unitID, reqErr.Message)
-	} else {
-		if err := json.Unmarshal(respBytes, &lookupResp); err != nil {
-			log.Printf("ERROR: unable to parse response for project lookup: %s", err.Error())
-		} else if lookupResp.Exists {
-			log.Printf("INFO: unit %s is associated with project %d", unitID, lookupResp.ProjectID)
-			unitDetail.ProjectID = lookupResp.ProjectID
-		}
+	lookupResp := svc.getUnitProject(unitDetail.ID)
+	if lookupResp.Exists {
+		log.Printf("INFO: unit %s is associated with project %d", unitID, lookupResp.ProjectID)
+		unitDetail.ProjectID = lookupResp.ProjectID
 	}
 
 	log.Printf("INFO: check if unit %d has any ocr/transcription text", unitDetail.ID)
@@ -271,17 +263,8 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 		}
 	}
 
-	var lookupResp projectLookupResponse
-	respBytes, reqErr := svc.getRequest(fmt.Sprintf("%s/projects/lookup?unit=%s", svc.ExternalSystems.Projects, unitID))
-	if reqErr != nil {
-		log.Printf("ERROR: lookup project for unit %s with status %s failed: %s", unitID, req.Status, reqErr.Message)
-	} else {
-		if err := json.Unmarshal(respBytes, &lookupResp); err != nil {
-			log.Printf("ERROR: unable to parse response for project lookup: %s", err.Error())
-		}
-	}
-
 	// do not allow unit to be set to done if it is associated with a project that is not on the finalize step
+	lookupResp := svc.getUnitProject(unitDetail.ID)
 	if lookupResp.Exists && req.Status == "done" && lookupResp.Finished == false && lookupResp.CurrentStep != "Finialize" {
 		log.Printf("INFO: cannot set unit to done; it is tied to project %d on step %s", lookupResp.ProjectID, lookupResp.CurrentStep)
 		c.String(http.StatusPreconditionFailed, "Cannot set status to done; associated project is in progress")

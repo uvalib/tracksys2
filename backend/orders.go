@@ -590,9 +590,7 @@ func (svc *serviceContext) cancelOrder(c *gin.Context) {
 		return
 	}
 
-	log.Printf("INFO: order %d was canceled; cancel all associated units", oDetail.ID)
-	err = svc.DB.Model(unit{}).Where("order_id = ?", oDetail.ID).Updates(unit{UnitStatus: "canceled"}).Error
-	if err != nil {
+	if err := svc.cancelOrderUnits(oDetail.ID, getJWT(c)); err != nil {
 		log.Printf("ERROR: unable to cancel units related to canceled order %d: %s", oDetail.ID, err.Error())
 	}
 
@@ -880,42 +878,70 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 	}
 	log.Printf("INFO: submitted due date [%s]", updateRequest.DateDue)
 
-	oDetail.OrderStatus = updateRequest.Status
+	fields := make([]string, 0)
+	if oDetail.OrderStatus != updateRequest.Status {
+		if oDetail.OrderStatus == "canceled" {
+			oDetail.DateCanceled = nil
+			fields = append(fields, "DateCanceled")
+		}
+		oDetail.OrderStatus = updateRequest.Status
+		fields = append(fields, "OrderStatus")
+		if oDetail.OrderStatus == "canceled" {
+			now := time.Now()
+			oDetail.DateCanceled = &now
+			fields = append(fields, "DateCanceled")
+		}
+	}
+
 	oDetail.DateDue, err = parseDateString(updateRequest.DateDue)
 	if err != nil {
 		log.Printf("ERROR: unable to parse due date %s: %s", updateRequest.DateDue, err.Error())
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	log.Printf("INFO: parsed due date [%v]", oDetail.DateDue)
-	oDetail.OrderTitle = updateRequest.Title
-	oDetail.SpecialInstructions = updateRequest.SpecialInstructions
-	oDetail.StaffNotes = updateRequest.StaffNotes
+	fields = append(fields, "DateDue")
+	if oDetail.OrderTitle != updateRequest.Title {
+		oDetail.OrderTitle = updateRequest.Title
+		fields = append(fields, "OrderTitle")
+	}
+	if oDetail.SpecialInstructions != updateRequest.SpecialInstructions {
+		oDetail.SpecialInstructions = updateRequest.SpecialInstructions
+		fields = append(fields, "SpecialInstructions")
+	}
+	if oDetail.StaffNotes != updateRequest.StaffNotes {
+		oDetail.StaffNotes = updateRequest.StaffNotes
+		fields = append(fields, "StaffNotes")
+	}
+
 	oDetail.Fee = nil
 	if updateRequest.Fee > 0 {
 		oDetail.Fee = &updateRequest.Fee
 	}
+	fields = append(fields, "Fee")
+
 	oDetail.AgencyID = nil
 	if updateRequest.AgencyID != 0 {
 		svc.DB.Find(&oDetail.Agency, updateRequest.AgencyID)
 		oDetail.AgencyID = &updateRequest.AgencyID
 	}
+	fields = append(fields, "AgencyID")
+
 	oDetail.CustomerID = nil
 	if updateRequest.CustomerID != 0 {
 		svc.DB.Find(&oDetail.Customer, updateRequest.CustomerID)
 		oDetail.CustomerID = &updateRequest.CustomerID
 	}
+	fields = append(fields, "CustomerID")
 
-	err = svc.DB.Model(&oDetail).Select("OrderStatus", "DateDue", "OrderTitle", "SpecialInstructions", "StaffNotes", "Fee", "AgencyID", "CustomerID").Updates(oDetail).Error
+	err = svc.DB.Model(&oDetail).Select(fields).Updates(oDetail).Error
 	if err != nil {
 		log.Printf("ERROR: unable to update order %d: %s", oDetail.ID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 	if oDetail.OrderStatus == "canceled" {
-		log.Printf("INFO: order %d was canceled; cancel all associated units", oDetail.ID)
-		err = svc.DB.Model(unit{}).Where("order_id = ?", oDetail.ID).Updates(unit{UnitStatus: "canceled"}).Error
-		if err != nil {
+		jwt := getJWT(c)
+		if err := svc.cancelOrderUnits(oDetail.ID, jwt); err != nil {
 			log.Printf("ERROR: unable to cancel units related to canceled order %d: %s", oDetail.ID, err.Error())
 		}
 	} else {
@@ -923,4 +949,27 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 	}
 	updated, _ := svc.loadOrder(orderID)
 	c.JSON(http.StatusOK, updated)
+}
+
+func (svc *serviceContext) cancelOrderUnits(orderID int64, jwt string) error {
+	log.Printf("INFO: order %d was canceled; cancel all associated units and projects", orderID)
+	var units []unit
+	if err := svc.DB.Where("order_id=?", orderID).Find(&units).Error; err != nil {
+		return err
+	}
+	for _, u := range units {
+		u.UnitStatus = "canceled"
+		if err := svc.DB.Model(&u).Select("UnitStatus").Updates(u).Error; err != nil {
+			log.Printf("ERROR: unable to cancel unit %d: %s", u.ID, err.Error())
+			continue
+		}
+		lookupResp := svc.getUnitProject(u.ID)
+		if lookupResp.Exists {
+			log.Printf("INFO: canceled unit %d has project %d; cancel it", u.ID, lookupResp.ProjectID)
+			if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", lookupResp.ProjectID), jwt); rErr != nil {
+				log.Printf("ERROR: unable to cancel project %d: %s", u.ID, rErr.Message)
+			}
+		}
+	}
+	return nil
 }
