@@ -49,7 +49,7 @@ onMounted(() => {
             {label: "Equipment",  url: `${systemStore.projectsURL}/equipment`, target: "_blank"},
             {label: "Projects", url: systemStore.projectsURL, target: "_blank"},
             {label: "Reports", url: `${systemStore.reportsURL}/reports`, target: "_blank"},
-            {label: "Statistics", url: systemStore.reportsURL, target: "_blank"},
+            {label: "Statistics", command: ()=>menuLinkClicked("/statistics")},
          ]},
          {label: "Miscellaneous", items: [
             {label: "APTrust Submissions", command: ()=>menuLinkClicked("/aptrust")},

@@ -12,6 +12,7 @@
     "@vueuse/core": "^14.2.0",
     "@vueuse/integrations": "^14.2.0",
     "axios": "^1.13.4",
+    "dayjs": "^1.11.19",
     "jwt-decode": "^4.0.0",
     "pinia": "^3.0.4",
     "primeicons": "^7.0.0",

@@ -117,6 +117,11 @@ const router = createRouter({
          component: () => import('../views/SignedOut.vue')
       },
       {
+         path: '/statistics',
+         name: 'statistics',
+         component: () => import('../views/Statistics.vue')
+      },
+      {
          path: '/forbidden',
          name: 'forbidden',
          component: () => import('../views/ForbiddenView.vue')

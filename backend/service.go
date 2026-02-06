@@ -22,6 +22,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type externalSystems struct {
@@ -100,7 +101,15 @@ func initializeService(version string, cfg *configData) *serviceContext {
 	log.Printf("INFO: connecting to DB...")
 	connectStr := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true",
 		cfg.db.User, cfg.db.Pass, cfg.db.Host, cfg.db.Name)
-	gdb, err := gorm.Open(mysql.Open(connectStr), &gorm.Config{})
+
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold: 1 * time.Minute,
+			LogLevel:      logger.Error,
+		},
+	)
+	gdb, err := gorm.Open(mysql.Open(connectStr), &gorm.Config{Logger: newLogger})
 	if err != nil {
 		log.Fatal(err)
 	}

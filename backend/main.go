@@ -133,6 +133,12 @@ func main() {
 
 		api.GET("/tags", svc.getTags)
 		api.POST("/tags", svc.createTag)
+
+		api.GET("/stats/archive", svc.getArchiveStats)
+		api.GET("/stats/images", svc.getImageStats)
+		api.GET("/stats/metadata", svc.getMetadataStats)
+		api.GET("/stats/published", svc.getPublishedStats)
+		api.GET("/stats/storage", svc.getStorageStats)
 	}
 
 	cleanup := router.Group("/cleanup")
