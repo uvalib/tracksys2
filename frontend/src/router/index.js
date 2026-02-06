@@ -119,7 +119,12 @@ const router = createRouter({
       {
          path: '/statistics',
          name: 'statistics',
-         component: () => import('../views/Statistics.vue')
+         component: () => import('../views/reporting/Statistics.vue')
+      },
+      {
+         path: '/audit-report',
+         name: 'audit-report',
+         component: () => import('../views/reporting/MasterFileAudit.vue')
       },
       {
          path: '/forbidden',

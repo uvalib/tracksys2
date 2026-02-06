@@ -55,6 +55,7 @@ onMounted(() => {
             {label: "APTrust Submissions", command: ()=>menuLinkClicked("/aptrust")},
             {label: "ArchivesSpace Reviews", command: ()=>menuLinkClicked("/archivesspace")},
             {label: "HathiTrust Submissions", command: ()=>menuLinkClicked("/hathitrust")},
+            {label: "Master File Audit", command: ()=>menuLinkClicked("/audit-report")},
             {label: "Customers", command: ()=>menuLinkClicked("/customers")},
             {label: "Staff Members", command: ()=>menuLinkClicked("/staff")},
          ]},

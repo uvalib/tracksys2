@@ -134,11 +134,15 @@ func main() {
 		api.GET("/tags", svc.getTags)
 		api.POST("/tags", svc.createTag)
 
+		// statistics reporting support
 		api.GET("/stats/archive", svc.getArchiveStats)
 		api.GET("/stats/images", svc.getImageStats)
 		api.GET("/stats/metadata", svc.getMetadataStats)
 		api.GET("/stats/published", svc.getPublishedStats)
 		api.GET("/stats/storage", svc.getStorageStats)
+
+		// master file audit report
+		api.GET("/reports/audit", svc.getAuditReport)
 	}
 
 	cleanup := router.Group("/cleanup")
