@@ -30,7 +30,6 @@ type externalSystems struct {
 	IIIFMan  string
 	IIIF     string
 	ILS      string
-	Reports  string
 	Projects string
 	Curio    string
 	Apollo   string
@@ -85,7 +84,6 @@ func initializeService(version string, cfg *configData) *serviceContext {
 			IIIFMan:  cfg.iiifManifestURL,
 			IIIF:     cfg.iiifURL,
 			ILS:      cfg.ilsURL,
-			Reports:  cfg.reportsURL,
 			Projects: cfg.projectsURL,
 			Curio:    cfg.curioURL,
 			Apollo:   cfg.apolloURL,
@@ -203,7 +201,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 	type cfgData struct {
 		Version                string `json:"version"`
 		APTtustURL             string `json:"apTrustURL"`
-		ReportsURL             string `json:"reportsURL"`
 		ProjectsURL            string `json:"projectsURL"`
 		IIIFURL                string `json:"iiifURL"`
 		IIIFManifestURL        string `json:"iiifManifestURL"`
@@ -230,7 +227,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 		CurioURL:        svc.ExternalSystems.Curio,
 		IIIFURL:         svc.ExternalSystems.IIIF,
 		IIIFManifestURL: svc.ExternalSystems.IIIFMan,
-		ReportsURL:      svc.ExternalSystems.Reports,
 		ProjectsURL:     svc.ExternalSystems.Projects,
 		JobsURL:         svc.ExternalSystems.Jobs,
 	}

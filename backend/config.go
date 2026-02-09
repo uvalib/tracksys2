@@ -18,7 +18,6 @@ type configData struct {
 	db              dbConfig
 	index           string
 	virgoURL        string
-	reportsURL      string
 	projectsURL     string
 	iiifManifestURL string
 	iiifURL         string
@@ -40,7 +39,6 @@ func getConfiguration() *configData {
 	flag.IntVar(&config.port, "port", 8080, "Port to offer service on (default 8085)")
 	flag.StringVar(&config.jwtKey, "jwtkey", "", "JWT signature key")
 	flag.StringVar(&config.apTrustURL, "aptrust", "https://repo.aptrust.org", "APTrust URL")
-	flag.StringVar(&config.reportsURL, "reports", "https://dpg-reporting.lib.virginia.edu", "DPG reports URL")
 	flag.StringVar(&config.projectsURL, "projects", "https://dpg-imaging.lib.virginia.edu", "DPG projects URL")
 	flag.StringVar(&config.virgoURL, "virgo", "https://search.lib.virginia.edu", "Virgo URL")
 	flag.StringVar(&config.iiifManifestURL, "iiifman", "https://iiifman.lib.virginia.edu", "IIIF manifest URL")
@@ -90,7 +88,6 @@ func getConfiguration() *configData {
 	log.Printf("[CONFIG] port          = [%d]", config.port)
 	log.Printf("[CONFIG] aptrust       = [%s]", config.apTrustURL)
 	log.Printf("[CONFIG] solr          = [%s]", config.solrURL)
-	log.Printf("[CONFIG] reports       = [%s]", config.reportsURL)
 	log.Printf("[CONFIG] projects      = [%s]", config.projectsURL)
 	log.Printf("[CONFIG] virgo         = [%s]", config.virgoURL)
 	log.Printf("[CONFIG] jobs          = [%s]", config.jobsURL)

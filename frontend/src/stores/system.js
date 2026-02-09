@@ -9,7 +9,6 @@ export const useSystemStore = defineStore('system', {
       showError: false,
       apTrustURL: "",
       jobsURL: "",
-      reportsURL: "",
       projectsURL: "",
       iiifManifestURL: "",
       academicStatuses: [],
@@ -79,7 +78,6 @@ export const useSystemStore = defineStore('system', {
          return axios.get("/config").then(response => {
             this.version = response.data.version
             this.apTrustURL = response.data.apTrustURL
-            this.reportsURL = response.data.reportsURL
             this.projectsURL = response.data.projectsURL
             this.jobsURL = response.data.jobsURL
             this.iiifManifestURL = response.data.iiifManifestURL
