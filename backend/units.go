@@ -146,7 +146,7 @@ func (svc *serviceContext) deleteUnit(c *gin.Context) {
 	lookupResp := svc.getUnitProject(unitID)
 	if lookupResp.Exists {
 		log.Printf("INFO: unit %d is associated with project %d; cancel it", unitID, lookupResp.ProjectID)
-		if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", lookupResp.ProjectID), getJWT(c)); rErr != nil {
+		if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", lookupResp.ProjectID), getJWT(c), nil); rErr != nil {
 			log.Printf("ERROR: unable to cancel project %d: %s", lookupResp.ProjectID, rErr.Message)
 		} else {
 			log.Printf("INFO: project %d associated with deleted unit %d has been canceled", lookupResp.ProjectID, unitID)
@@ -312,7 +312,7 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 				updateURL = fmt.Sprintf("projects/%d/cancel", lookupResp.ProjectID)
 			}
 			log.Printf("INFO: update status of project %d to reflect unit status %s", lookupResp.ProjectID, req.Status)
-			if rErr := svc.projectsPost(updateURL, getJWT(c)); rErr != nil {
+			if rErr := svc.projectsPost(updateURL, getJWT(c), nil); rErr != nil {
 				log.Printf("ERROR: unable to update project %d status: %s", lookupResp.ProjectID, rErr.Message)
 			}
 		}

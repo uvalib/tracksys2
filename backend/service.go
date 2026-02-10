@@ -25,6 +25,15 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+type updateProjectRequest struct {
+	Title      string    `json:"title"`
+	CallNumber string    `json:"callNumber"`
+	CustomerID uint      `json:"customerID"`
+	AgencyID   uint      `json:"agencyID"`
+	OrderID    int64     `json:"orderID"`
+	DateDue    time.Time `json:"dateDue"`
+}
+
 type externalSystems struct {
 	APTrust  string
 	IIIFMan  string
@@ -382,12 +391,20 @@ func (svc *serviceContext) putRequest(url string) ([]byte, *RequestError) {
 	return svc.sendRequest("PUT", url, nil)
 }
 
-func (svc *serviceContext) projectsPost(url string, jwt string) *RequestError {
+func (svc *serviceContext) projectsPost(url string, jwt string, payload any) *RequestError {
 	log.Printf("INFO: auth project POST: %s", url)
 	startTime := time.Now()
 	projURL := fmt.Sprintf("%s/api/%s", svc.ExternalSystems.Projects, url)
 
-	req, _ := http.NewRequest("POST", projURL, nil)
+	var req *http.Request
+	if payload != nil {
+		payloadBytes, _ := json.Marshal(payload)
+		req, _ = http.NewRequest("POST", projURL, bytes.NewBuffer(payloadBytes))
+		req.Header.Add("Content-type", "application/json")
+	} else {
+		req, _ = http.NewRequest("POST", projURL, nil)
+	}
+
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", jwt))
 	rawResp, rawErr := svc.HTTPClient.Do(req)
 	_, err := handleAPIResponse(projURL, rawResp, rawErr)

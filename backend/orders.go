@@ -893,13 +893,20 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 		}
 	}
 
-	oDetail.DateDue, err = parseDateString(updateRequest.DateDue)
+	newDueDate, err := parseDateString(updateRequest.DateDue)
 	if err != nil {
 		log.Printf("ERROR: unable to parse due date %s: %s", updateRequest.DateDue, err.Error())
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	fields = append(fields, "DateDue")
+
+	projectUpdateCandidate := false
+	if oDetail.DateDue.Compare(newDueDate) != 0 {
+		oDetail.DateDue = newDueDate
+		fields = append(fields, "DateDue")
+		projectUpdateCandidate = true
+	}
+
 	if oDetail.OrderTitle != updateRequest.Title {
 		oDetail.OrderTitle = updateRequest.Title
 		fields = append(fields, "OrderTitle")
@@ -919,19 +926,35 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 	}
 	fields = append(fields, "Fee")
 
-	oDetail.AgencyID = nil
-	if updateRequest.AgencyID != 0 {
-		svc.DB.Find(&oDetail.Agency, updateRequest.AgencyID)
-		oDetail.AgencyID = &updateRequest.AgencyID
+	var origAgencyID uint
+	if oDetail.AgencyID != nil {
+		origAgencyID = *oDetail.AgencyID
 	}
-	fields = append(fields, "AgencyID")
+	if updateRequest.AgencyID != origAgencyID {
+		if updateRequest.AgencyID == 0 {
+			oDetail.AgencyID = nil
+		} else {
+			svc.DB.Find(&oDetail.Agency, updateRequest.AgencyID)
+			oDetail.AgencyID = &updateRequest.AgencyID
+		}
+		fields = append(fields, "AgencyID")
+		projectUpdateCandidate = true
+	}
 
-	oDetail.CustomerID = nil
-	if updateRequest.CustomerID != 0 {
-		svc.DB.Find(&oDetail.Customer, updateRequest.CustomerID)
-		oDetail.CustomerID = &updateRequest.CustomerID
+	var oridCustomerID uint
+	if oDetail.CustomerID != nil {
+		oridCustomerID = *oDetail.CustomerID
 	}
-	fields = append(fields, "CustomerID")
+	if updateRequest.CustomerID != oridCustomerID {
+		if updateRequest.CustomerID == 0 {
+			oDetail.CustomerID = nil
+		} else {
+			svc.DB.Find(&oDetail.Customer, updateRequest.CustomerID)
+			oDetail.CustomerID = &updateRequest.CustomerID
+		}
+		fields = append(fields, "CustomerID")
+		projectUpdateCandidate = true
+	}
 
 	err = svc.DB.Model(&oDetail).Select(fields).Updates(oDetail).Error
 	if err != nil {
@@ -946,9 +969,39 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 		}
 	} else {
 		log.Printf("INFO: order %d updated", oDetail.ID)
+		if projectUpdateCandidate {
+			log.Printf("INFO: order %d update is a potential project update", oDetail.ID)
+			svc.updateOrderRelatedProjects(oDetail, getJWT(c))
+		}
 	}
 	updated, _ := svc.loadOrder(orderID)
 	c.JSON(http.StatusOK, updated)
+}
+
+func (svc *serviceContext) updateOrderRelatedProjects(tgtOrder order, jwt string) {
+	var unitsIDs []int64
+	if err := svc.DB.Raw("select id from units where order_id=?", tgtOrder.ID).Scan(&unitsIDs).Error; err != nil {
+		log.Printf("ERROR: unable to get units associated with order %d: %s", tgtOrder.ID, err.Error())
+		return
+	}
+	for _, uID := range unitsIDs {
+		lookupResp := svc.getUnitProject(uID)
+		if lookupResp.Exists {
+			var newAgencyID uint
+			if tgtOrder.AgencyID != nil {
+				newAgencyID = *tgtOrder.AgencyID
+			}
+			update := updateProjectRequest{
+				AgencyID:   newAgencyID,
+				CustomerID: *tgtOrder.CustomerID,
+				DateDue:    tgtOrder.DateDue,
+				OrderID:    tgtOrder.ID,
+			}
+			if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/update", lookupResp.ProjectID), jwt, update); rErr != nil {
+				log.Printf("ERROR: unable to update project %d with changes to order %d: %s", lookupResp.ProjectID, tgtOrder.ID, rErr.Message)
+			}
+		}
+	}
 }
 
 func (svc *serviceContext) cancelOrderUnits(orderID int64, jwt string) error {
@@ -966,7 +1019,7 @@ func (svc *serviceContext) cancelOrderUnits(orderID int64, jwt string) error {
 		lookupResp := svc.getUnitProject(u.ID)
 		if lookupResp.Exists {
 			log.Printf("INFO: canceled unit %d has project %d; cancel it", u.ID, lookupResp.ProjectID)
-			if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", lookupResp.ProjectID), jwt); rErr != nil {
+			if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", lookupResp.ProjectID), jwt, nil); rErr != nil {
 				log.Printf("ERROR: unable to cancel project %d: %s", u.ID, rErr.Message)
 			}
 		}

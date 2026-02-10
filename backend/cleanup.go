@@ -110,7 +110,7 @@ func (svc *serviceContext) cleanupCanceledUnits(c *gin.Context) {
 			projResp := svc.getUnitProject(u.ID)
 			if projResp.Exists {
 				log.Printf("INFO: canceled/unapproved unit %d is associated with project %d; cancel it", u.ID, projResp.ProjectID)
-				if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", projResp.ProjectID), imagingJWT); rErr != nil {
+				if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/cancel", projResp.ProjectID), imagingJWT, nil); rErr != nil {
 					log.Printf("ERROR: unable to cancel project %d: %s", projResp.ProjectID, rErr.Message)
 				} else {
 					projCnt++
