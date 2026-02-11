@@ -525,6 +525,7 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		fields = append(fields, "CollectionFacet")
 	}
 
+	checkProjects := (md.Title != req.Title || *md.CallNumber != req.CallNumber)
 	if md.Type == "SirsiMetadata" {
 		md.Barcode = &req.Barcode
 		md.CallNumber = &req.CallNumber
@@ -561,6 +562,13 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		svc.sendUseRightToSirsi(&md, req.UseRightID)
 	}
 
+	if checkProjects {
+		log.Printf("INFO: metadata %d title or call number updated; check for projects to update", md.ID)
+		go func() {
+			svc.updateMetadataRelatedProjects(md.ID, md.Title, *md.CallNumber, getJWT(c))
+		}()
+	}
+
 	log.Printf("INFO: metadata %d updated, reloadaing details", md.ID)
 	resp, err := svc.loadMetadataDetails(md.ID)
 	if err != nil {
@@ -569,6 +577,26 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, *resp)
+}
+
+func (svc *serviceContext) updateMetadataRelatedProjects(metadataID int64, title, callNumber string, jwt string) {
+	var unitsIDs []int64
+	if err := svc.DB.Raw("select id from units where metadata_id=?", metadataID).Scan(&unitsIDs).Error; err != nil {
+		log.Printf("ERROR: unable to get units associated with metadata %d update: %s", metadataID, err.Error())
+		return
+	}
+	for _, uID := range unitsIDs {
+		lookupResp := svc.getUnitProject(uID)
+		if lookupResp.Exists {
+			update := updateProjectRequest{
+				Title:      title,
+				CallNumber: callNumber,
+			}
+			if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/update", lookupResp.ProjectID), jwt, update); rErr != nil {
+				log.Printf("ERROR: unable to update project %d with changes to metadata %d: %s", lookupResp.ProjectID, metadataID, rErr.Message)
+			}
+		}
+	}
 }
 
 func (svc *serviceContext) sendUseRightToSirsi(md *metadata, useRightID int64) {

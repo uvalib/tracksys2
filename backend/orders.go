@@ -971,7 +971,9 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 		log.Printf("INFO: order %d updated", oDetail.ID)
 		if projectUpdateCandidate {
 			log.Printf("INFO: order %d update is a potential project update", oDetail.ID)
-			svc.updateOrderRelatedProjects(oDetail, getJWT(c))
+			go func() {
+				svc.updateOrderRelatedProjects(oDetail, getJWT(c))
+			}()
 		}
 	}
 	updated, _ := svc.loadOrder(orderID)

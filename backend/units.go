@@ -271,6 +271,7 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 		return
 	}
 
+	updateProject := (unitDetail.OrderID != req.OrderID)
 	updateMasterFileMetadata := false
 	if unitDetail.MetadataID == nil && req.MetadataID != 0 {
 		log.Printf("INFO: unit %d update changes metadata from none to %d; master files must be updated", unitDetail.ID, req.MetadataID)
@@ -316,11 +317,33 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 				log.Printf("ERROR: unable to update project %d status: %s", lookupResp.ProjectID, rErr.Message)
 			}
 		}
+	} else if (updateProject || updateMasterFileMetadata) && lookupResp.Exists {
+		log.Printf("INFO: unit %d updated metadata or order and has project %d; update it", unitDetail.ID, lookupResp.ProjectID)
+		update := updateProjectRequest{
+			OrderID: unitDetail.OrderID,
+		}
+
+		if updateMasterFileMetadata {
+			log.Printf("INFO: project %d metadata has changed; lookup new title and call number", lookupResp.ProjectID)
+			var newMD metadata
+			if err := svc.DB.First(&newMD, unitDetail.MetadataID).Error; err != nil {
+				log.Printf("ERROR: unable to get metadata %d: %s", *unitDetail.MetadataID, err.Error())
+				update.Title = "Unknown"
+				update.CallNumber = "Unknown"
+			} else {
+				update.Title = newMD.Title
+				update.CallNumber = *newMD.CallNumber
+			}
+		}
+
+		if rErr := svc.projectsPost(fmt.Sprintf("projects/%d/update", lookupResp.ProjectID), getJWT(c), update); rErr != nil {
+			log.Printf("ERROR: unable to update project %d with changes to unit %d: %s", lookupResp.ProjectID, unitDetail.ID, rErr.Message)
+		}
 	}
 
 	if updateMasterFileMetadata {
 		log.Printf("INFO: update masterfiles metadata to %d", req.MetadataID)
-		mfErr := svc.DB.Debug().Exec("update master_files set metadata_id=? where unit_id=?", req.MetadataID, unitDetail.ID).Error
+		mfErr := svc.DB.Exec("update master_files set metadata_id=? where unit_id=?", req.MetadataID, unitDetail.ID).Error
 		if mfErr != nil {
 			log.Printf("ERROR: unable to update unit %d masterfiles with new metadata: %s", unitDetail.ID, mfErr.Error())
 			c.String(http.StatusInternalServerError, mfErr.Error())
