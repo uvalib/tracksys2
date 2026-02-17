@@ -122,6 +122,11 @@ const router = createRouter({
          component: () => import('../views/reporting/Statistics.vue')
       },
       {
+         path: '/deliveries',
+         name: 'deliveries',
+         component: () => import('../views/reporting/PatronDeliveries.vue')
+      },
+      {
          path: '/audit-report',
          name: 'audit-report',
          component: () => import('../views/reporting/MasterFileAudit.vue')

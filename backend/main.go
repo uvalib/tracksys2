@@ -140,6 +140,7 @@ func main() {
 		api.GET("/stats/metadata", svc.getMetadataStats)
 		api.GET("/stats/published", svc.getPublishedStats)
 		api.GET("/stats/storage", svc.getStorageStats)
+		api.GET("/stats/deliveries", svc.getDeliveryStats)
 
 		// master file audit report
 		api.GET("/reports/audit", svc.getAuditReport)
