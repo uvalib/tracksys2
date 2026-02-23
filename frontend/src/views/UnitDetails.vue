@@ -64,10 +64,8 @@
                <CreateProjectDialog />
             </div>
             <div class="acts">
-               <template v-if="detail.intendedUseID != 110">
-                  <DPGButton v-if="detail.datePatronDeliverablesReady == null && unitsStore.hasMasterFiles" @click="generateDeliverablesClicked"
-                     severity="secondary" label="Generate Deliverables"
-                  />
+               <template v-if="detail.intendedUseID != 110 && unitsStore.hasMasterFiles">
+                  <DPGButton v-if="detail.datePatronDeliverablesReady == null" @click="generateDeliverablesClicked" severity="secondary" label="Generate Deliverables"/>
                   <DPGButton v-else @click="generateDeliverablesClicked" severity="secondary" label="Regenerate Deliverables" />
                </template>
                <DPGButton v-if="unitsStore.canDownload" @click="downloadClicked" severity="secondary" label="Download from Archive" />
