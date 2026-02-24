@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -125,22 +124,7 @@ func (svc *serviceContext) getMasterFile(c *gin.Context) {
 	}
 
 	out.ThumbURL = fmt.Sprintf("%s/%s/full/!240,385/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
-	if mf.Metadata == nil {
-		out.ViewerURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
-	} else {
-		pageNum, _ := strconv.Atoi(mf.Title)
-		if mf.DateDlIngest != nil {
-			out.ViewerURL = fmt.Sprintf("%s/view/%s", svc.ExternalSystems.Curio, mf.Metadata.PID)
-			if pageNum > 1 {
-				out.ViewerURL += fmt.Sprintf("?page=%d", pageNum)
-			}
-		} else {
-			out.ViewerURL = fmt.Sprintf("%s/view/%s?unit=%d", svc.ExternalSystems.Curio, mf.Metadata.PID, mf.UnitID)
-			if pageNum > 1 {
-				out.ViewerURL += fmt.Sprintf("&page=%d", pageNum)
-			}
-		}
-	}
+	out.ViewerURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
 
 	err = svc.DB.Table("units").Select("order_id").Where("id=?", mf.UnitID).Find(&out.OrderID).Error
 	if err != nil {
