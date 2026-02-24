@@ -276,7 +276,7 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 	if unitDetail.MetadataID == nil && req.MetadataID != 0 {
 		log.Printf("INFO: unit %d update changes metadata from none to %d; master files must be updated", unitDetail.ID, req.MetadataID)
 		updateMasterFileMetadata = true
-	} else if unitDetail.MetadataID != nil && unitDetail.MetadataID != &req.MetadataID {
+	} else if unitDetail.MetadataID != nil && *unitDetail.MetadataID != req.MetadataID {
 		log.Printf("INFO: unit %d update changes metadata from %d to %d; master files must be updated", unitDetail.ID, *unitDetail.MetadataID, req.MetadataID)
 		updateMasterFileMetadata = true
 	}
@@ -332,7 +332,9 @@ func (svc *serviceContext) updateUnit(c *gin.Context) {
 				update.CallNumber = "Unknown"
 			} else {
 				update.Title = newMD.Title
-				update.CallNumber = *newMD.CallNumber
+				if newMD.CallNumber != nil {
+					update.CallNumber = *newMD.CallNumber
+				}
 			}
 		}
 
