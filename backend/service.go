@@ -393,29 +393,34 @@ func (svc *serviceContext) putRequest(url string) ([]byte, *RequestError) {
 
 func (svc *serviceContext) projectsPost(url string, jwt string, payload any) *RequestError {
 	log.Printf("INFO: auth project POST: %s", url)
-	startTime := time.Now()
 	projURL := fmt.Sprintf("%s/api/%s", svc.ExternalSystems.Projects, url)
+	return svc.protectedPost(projURL, jwt, payload)
+}
+
+func (svc *serviceContext) protectedPost(url string, jwt string, payload any) *RequestError {
+	log.Printf("INFO: protected POST to: %s", url)
+	startTime := time.Now()
 
 	var req *http.Request
 	if payload != nil {
 		payloadBytes, _ := json.Marshal(payload)
-		req, _ = http.NewRequest("POST", projURL, bytes.NewBuffer(payloadBytes))
+		req, _ = http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
 		req.Header.Add("Content-type", "application/json")
 	} else {
-		req, _ = http.NewRequest("POST", projURL, nil)
+		req, _ = http.NewRequest("POST", url, nil)
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", jwt))
 	rawResp, rawErr := svc.HTTPClient.Do(req)
-	_, err := handleAPIResponse(projURL, rawResp, rawErr)
+	_, err := handleAPIResponse(url, rawResp, rawErr)
 	elapsedNanoSec := time.Since(startTime)
 	elapsedMS := int64(elapsedNanoSec / time.Millisecond)
 
 	if err != nil {
 		log.Printf("ERROR: Failed response from auth projects POST %s - %d:%s. Elapsed Time: %d (ms)",
-			projURL, err.StatusCode, err.Message, elapsedMS)
+			url, err.StatusCode, err.Message, elapsedMS)
 	} else {
-		log.Printf("INFO: Successful auth projects POST to %s. Elapsed Time: %d (ms)", projURL, elapsedMS)
+		log.Printf("INFO: Successful auth projects POST to %s. Elapsed Time: %d (ms)", url, elapsedMS)
 	}
 	return err
 }

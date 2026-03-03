@@ -117,9 +117,9 @@ func (svc *serviceContext) publishArchivesSpace(c *gin.Context) {
 		UserID:     int64(staff.ID),
 		MetadataID: mdID,
 	}
+
 	url := fmt.Sprintf("%s/archivesspace/publish", svc.ExternalSystems.Jobs)
-	_, asErr := svc.postJSON(url, pubPayload)
-	if asErr != nil {
+	if asErr := svc.protectedPost(url, getJWT(c), pubPayload); asErr != nil {
 		log.Printf("ERROR: unable to publish metadata %d: %d %s", mdID, asErr.StatusCode, asErr.Message)
 		c.String(asErr.StatusCode, asErr.Message)
 		return

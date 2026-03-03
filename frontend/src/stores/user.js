@@ -60,7 +60,7 @@ export const useUserStore = defineStore('user', {
          const system = useSystemStore()
          axios.interceptors.request.use(config => {
             let url = config.url
-            if ( url.match(system.iiifManifestURL) || url.match(system.jobsURL) ) {
+            if ( url.match(system.iiifManifestURL) ) {
                console.log("SKIP AUTH HEADER")
                return config
             }
