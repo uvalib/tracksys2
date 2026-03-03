@@ -129,10 +129,12 @@
             >
                <Column field="filename" header="File Name" />
                <Column field="description" header="Description" />
-               <Column header="" class="row-acts">
+               <Column header="">
                   <template #body="slotProps">
-                     <DPGButton label="Download" severity="secondary" @click="downloadAttachment(slotProps.data)"/>
-                     <DPGButton label="Delete" severity="secondary" @click="deleteAttachment(slotProps.data)"/>
+                     <div class="row-acts">
+                        <DPGButton label="Download" severity="secondary" icon="pi pi-cloud-download"  @click="downloadAttachment(slotProps.data)"/>
+                        <DPGButton label="Delete" severity="danger" icon="pi pi-trash" @click="deleteAttachment(slotProps.data)"/>
+                     </div>
                   </template>
                </Column>
             </DataTable>
@@ -487,13 +489,9 @@ const displayStatus = (( id) => {
       }
    }
    .row-acts {
-      font-size: 0.9em;
-      width: 75px;
-      button.p-button {
-         padding: 4px 10px;
-         width: 100%;
-         margin-bottom: 8px;
-      }
+      display: flex;
+      flex-flow: row nowrap;
+      gap: 10px;
    }
 }
 .pdf-options {

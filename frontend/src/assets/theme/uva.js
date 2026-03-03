@@ -93,13 +93,15 @@ const UVA = definePreset(Aura, {
          },
          colorScheme: {
             light: {
-               secondary: {
-                  background: 'var(--uvalib-grey-lightest)',
-                  hoverBackground: 'var(--uvalib-grey-light)',
-                  hoverBorderColor: 'var(--uvalib-grey)',
-                  borderColor: 'var(--uvalib-grey-light)',
-                  color: 'var(--uvalib-text)',
-               },
+               root: {
+                  secondary: {
+                     background: 'var(--uvalib-grey-lightest)',
+                     hoverBackground: 'var(--uvalib-grey-light)',
+                     hoverBorderColor: 'var(--uvalib-grey)',
+                     borderColor: 'var(--uvalib-grey-light)',
+                     color: 'var(--uvalib-text)',
+                  },
+               }
             }
          }
       },
