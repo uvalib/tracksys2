@@ -7,6 +7,7 @@ export const useMasterFilesStore = defineStore('masterfiles', {
       details: {},
       thumbURL: "",
       viewerURL: "",
+      throwAway: false,
       orderID: 0,
       nextID: 0,
       prevID: 0,
@@ -30,10 +31,13 @@ export const useMasterFilesStore = defineStore('masterfiles', {
          this.nextID = 0
          this.prevID = 0
          return axios.get( `/api/masterfiles/${masterFileID}` ).then(response => {
-            this.details = response.data.masterFile
-            this.thumbURL = response.data.thumbURL
-            this.viewerURL = response.data.viewerURL
+            this.thumbURL = response.data.masterFile.thumbnailURL
+            this.viewerURL = response.data.masterFile.viewerURL
+            delete response.data.masterFile.viewerURL
+            delete response.data.masterFile.thumnailbURL
+            this.throwAway = response.data.throwAway
             this.orderID = response.data.orderID
+            this.details = response.data.masterFile
             if ( response.data.nextID) {
                this.nextID = response.data.nextID
             }

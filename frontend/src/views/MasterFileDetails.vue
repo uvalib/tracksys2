@@ -7,12 +7,12 @@
       <div class="actions">
          <DPGButton label="Previous" @click="prevImage()" v-if="masterFiles.prevID > 0"/>
          <DPGButton label="Next" @click="nextImage()" v-if="masterFiles.nextID > 0"/>
-         <DPGButton label="Download Image" @click="downloadImage()"/>
+         <DPGButton label="Download Image" @click="downloadImage()" v-if="masterFiles.throwAway == false"/>
          <DPGButton label="Download PDF" @click="downloadPDF()" v-if="masterFiles.details.originalID==0"/>
          <DPGButton label="Replace" @click="replaceMasterFile()" v-if="masterFiles.details.originalID==0" :loading="masterFiles.replacing"/>
          <DPGButton label="OCR" @click="masterFiles.ocr()" v-if="masterFiles.isOCRCandidate  && (userStore.isAdmin || userStore.isSupervisor)"/>
          <DPGButton label="Edit" @click="editMasterFile()"/>
-         <DPGButton label="Republish IIIF" @click="masterFiles.regenerateIIIF()" v-if="userStore.isAdmin && masterFiles.details.originalID==0" />
+         <DPGButton label="Republish IIIF" @click="masterFiles.regenerateIIIF()" v-if="userStore.isAdmin && masterFiles.details.originalID==0 && masterFiles.throwAway == false" />
       </div>
    </h2>
    <div class="details" v-if="systemStore.working==false">
@@ -102,7 +102,7 @@
                <DataDisplay label="Software" :value="masterFiles.details.techMetadata.software" />
             </dl>
          </Panel>
-         <Panel header="Audit Information">
+         <Panel header="Audit Information" v-if="masterFiles.throwAway == false">
             <div class="no-audit" v-if="!masterFiles.details.audit">Not Audited</div>
             <dl v-else>
                <DataDisplay label="Audited" :value="$formatDateTime(masterFiles.details.audit.auditedAt)" />

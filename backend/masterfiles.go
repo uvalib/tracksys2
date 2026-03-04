@@ -106,12 +106,15 @@ func (svc *serviceContext) getMasterFile(c *gin.Context) {
 	type mfResp struct {
 		MasterFile masterFile `json:"masterFile"`
 		OrderID    uint64     `json:"orderID"`
-		ThumbURL   string     `json:"thumbURL"`
-		ViewerURL  string     `json:"viewerURL"`
+		ThrowAway  bool       `json:"throwAway"`
 		PrevID     int64      `json:"prevID,omitempty"`
 		NextID     int64      `json:"nextID,omitempty"`
 	}
 	out := mfResp{MasterFile: mf}
+
+	if err := svc.DB.Raw("select throw_away from units where id=?", mf.UnitID).Scan(&out.ThrowAway).Error; err != nil {
+		log.Printf("ERROR: unable to get throwaway status foor master file %d from unit %d", mf.ID, mf.UnitID)
+	}
 
 	mfPID := mf.PID
 	if mf.OriginalMfID > 0 {
@@ -123,8 +126,8 @@ func (svc *serviceContext) getMasterFile(c *gin.Context) {
 		mfPID = originalMF.PID
 	}
 
-	out.ThumbURL = fmt.Sprintf("%s/%s/full/!240,385/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
-	out.ViewerURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
+	out.MasterFile.ThumbnailURL = fmt.Sprintf("%s/%s/full/!240,385/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
+	out.MasterFile.ViewerURL = fmt.Sprintf("%s/%s/full/full/0/default.jpg", svc.ExternalSystems.IIIF, mfPID)
 
 	err = svc.DB.Table("units").Select("order_id").Where("id=?", mf.UnitID).Find(&out.OrderID).Error
 	if err != nil {

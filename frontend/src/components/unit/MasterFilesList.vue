@@ -19,13 +19,13 @@
                   <DPGButton label="Delete" @click="deleteClicked()" severity="secondary" :disabled="!filesSelected" />
                </template>
                <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
-               <template v-if="unitsStore.canDownload">
+               <template v-if="unitsStore.canDownload && unitsStore.throwAway == false">
                   <DPGButton label="Download" @click="downloadClicked()" severity="secondary" :disabled="!filesSelected" />
                </template>
                <template v-if="unitsStore.canPDF">
                   <DPGButton label="PDF" @click="pdfClicked()" severity="secondary" :disabled="filesSelected == false" />
                </template>
-               <template  v-if="userStore.isAdmin || userStore.isSupervisor">
+               <template  v-if="(userStore.isAdmin || userStore.isSupervisor) && unitsStore.throwAway == false">
                   <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selectedObject="assignMetadata" target="metadata" :create="true"/>
                   <LookupDialog :disabled="!filesSelected" label="Assign Componment" @selected="assignComponent" target="component" />
                </template>
@@ -67,11 +67,13 @@
          <Column header="Actions" class="row-acts">
             <template #body="slotProps">
                <DPGButton label="View" severity="secondary" @click="viewClicked(slotProps.data)" size="small"/>
-               <DPGButton label="Download Image" severity="secondary" @click="downloadFile(slotProps.data)" v-if="unitsStore.canDownload" size="small"/>
+               <DPGButton v-if="detail.throwAway == false && unitsStore.canDownload" label="Download Image" severity="secondary" @click="downloadFile(slotProps.data)" size="small"/>
                <DPGButton label="Download PDF" severity="secondary" @click="downloadPDF(slotProps.data)" v-if="unitsStore.canPDF" size="small"/>
                <DPGButton v-if="slotProps.data.exemplar==false && (detail.intendedUse && detail.intendedUse.id == 110 || detail.includeInDL)"
                   label="Set Exemplar" severity="secondary" @click="exemplarClicked(slotProps.data)" size="small"/>
-               <DPGButton label="Republish IIIF" severity="secondary" @click="republishIIIF(slotProps.data.id)" v-if="detail.reorder==false && userStore.isAdmin" size="small"/>
+               <DPGButton label="Republish IIIF" severity="secondary" @click="republishIIIF(slotProps.data.id)"
+                  v-if="detail.throwAway == false && detail.reorder==false && userStore.isAdmin" size="small"
+               />
             </template>
          </Column>
       </DataTable>

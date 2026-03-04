@@ -2,8 +2,6 @@ module github.com/uvalib/tracksys2
 
 go 1.25.0
 
-toolchain go1.24.5
-
 require (
 	github.com/corona10/goimagehash v1.1.0
 	github.com/gin-contrib/cors v1.7.6
