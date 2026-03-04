@@ -6,8 +6,8 @@
       </div>
       <div class="actions">
          <CollectionAddDialog v-if="canAddToCollection" :metadataID="metadataStore.detail.id" />
+         <DPGButton label="Delete" severity="danger" class="edit" @click="deleteMetadata()" v-if="canDelete"/>
          <template  v-if="metadataStore.detail.type == 'XmlMetadata' && systemStore.working==false">
-            <DPGButton label="Delete" class="edit" @click="deleteMetadata()" v-if="canDelete"/>
             <DPGButton label="Download XML"  @click="downloadXMLClicked()" />
             <FileUpload mode="basic" name="xml" accept=".xml" :customUpload="true" @uploader="xmlUploader"
                :auto="true" chooseLabel="Upload XML" uploadIcon="" v-if="userStore.isAdmin || userStore.isSupervisor"/>
@@ -312,9 +312,11 @@ const apTrustPreservation = computed( () => {
 })
 
 const canDelete = computed(() => {
-   if (!userStore.isAdmin && !userStore.isSupervisor) return false
+   if (userStore.isAdmin == false) return false
    if (metadataStore.related.units.length > 0) return false
    if (metadataStore.related.orders.length > 0) return false
+   if (metadataStore.related.masterFiles.length > 0) return false
+   if (metadataStore.related.collection != null) return false
    return true
 })
 
