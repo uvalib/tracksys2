@@ -66,14 +66,12 @@
                <CreateProjectDialog />
             </div>
             <div class="acts">
-               <template>
-                  <template v-if="detail.intendedUseID != 110 && unitsStore.hasMasterFiles">
-                     <DPGButton v-if="detail.datePatronDeliverablesReady == null" @click="generateDeliverablesClicked" severity="secondary" label="Generate Deliverables"/>
-                     <DPGButton v-else @click="generateDeliverablesClicked" severity="secondary" label="Regenerate Deliverables" />
-                  </template>
-                  <DPGButton v-if="unitsStore.canDownload" @click="downloadClicked" severity="secondary" label="Download from Archive" />
-                  <DPGButton label="OCR Master Files" severity="secondary"  @click="unitOCRClicked()" v-if="unitsStore.canOCR && (userStore.isAdmin || userStore.isSupervisor)" />
+               <template v-if="detail.intendedUseID != 110 && unitsStore.hasMasterFiles">
+                  <DPGButton v-if="detail.datePatronDeliverablesReady == null" @click="generateDeliverablesClicked" severity="secondary" label="Generate Deliverables"/>
+                  <DPGButton v-else @click="generateDeliverablesClicked" severity="secondary" label="Regenerate Deliverables" />
                </template>
+               <DPGButton v-if="unitsStore.canDownload" @click="downloadClicked" severity="secondary" label="Download from Archive" />
+               <DPGButton label="OCR Master Files" severity="secondary"  @click="unitOCRClicked()" v-if="unitsStore.canOCR && (userStore.isAdmin || userStore.isSupervisor)" />
                <DPGButton label="Download PDF" severity="secondary" @click="unitPDFClicked()" v-if="unitsStore.canPDF" />
                <DPGButton v-if="unitsStore.canComplete" @click="completeClicked" severity="secondary" label="Complete Unit" />
             </div>
