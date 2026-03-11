@@ -1,0 +1,142 @@
+searchd {
+   listen = 127.0.0.1:9312
+   listen = 127.0.0.1:9306:mysql
+   listen = 127.0.0.1:9308:http
+   log = /opt/homebrew/var/log/manticore/searchd.log
+   query_log = /opt/homebrew/var/log/manticore/query.log
+   pid_file = /opt/homebrew/var/run/manticore/searchd.pid
+}
+
+source metadata {
+   type = mysql
+   sql_host = 127.0.0.1
+   sql_user = root
+   sql_pass = pass
+   sql_db = tracksys
+   sql_query = SELECT m.id,pid,title,barcode,call_number,replace(call_number, ' ', '') as search_call_number,catalog_key,creator_name,not isnull(date_dl_ingest) as virgo,dpla,hathitrust,(case when(isnull(s.name)) then m.type else s.name  end) as system_name from metadata m left outer join external_systems s on s.id=external_system_id
+   sql_field_string = pid
+   sql_field_string = title
+   sql_field_string = barcode
+   sql_field_string = call_number
+   sql_field_string = search_call_number
+   sql_field_string = catalog_key
+   sql_field_string = creator_name
+   sql_attr_string = system_name
+   sql_attr_bool = virgo
+   sql_attr_bool = dpla
+   sql_attr_bool = hathitrust
+}
+
+table metadata {
+   type = plain
+   min_prefix_len = 2
+   morphology = stem_en
+   stopwords = en
+   index_exact_words = 1
+   path = /Users/lf6f/dev/tracksys_dev/manticore_index/tsmetadata
+   source = metadata
+}
+
+source orders {
+   type = mysql
+   sql_host = 127.0.0.1
+   sql_user = root
+   sql_pass = pass
+   sql_db = tracksys
+   sql_query = select o.id,order_status as status,order_title as title, concat_ws(', ',last_name,first_name) as customer, a.name as agency, staff_notes, special_instructions from orders o inner join customers c on c.id = customer_id left join agencies a on a.id = agency_id
+   sql_field_string = title
+   sql_field_string = customer
+   sql_field_string = agency
+   sql_field_string = staff_notes
+   sql_field_string = special_instructions
+   sql_attr_string = status
+}
+
+table orders {
+   type = plain
+   min_prefix_len = 3
+   morphology = stem_en
+   stopwords = en
+   index_exact_words = 1
+   path = /Users/lf6f/dev/tracksys_dev/manticore_index/tsorders
+   source = orders
+}
+
+source units {
+   type = mysql
+   sql_host = 127.0.0.1
+   sql_user = root
+   sql_pass = pass
+   sql_db = tracksys
+   sql_query = SELECT id,unit_status as status,special_instructions,staff_notes,date_patron_deliverables_ready,date_dl_deliverables_ready from units
+   sql_field_string = staff_notes
+   sql_field_string = special_instructions
+   sql_attr_string = status
+   sql_attr_string = date_patron_deliverables_ready
+   sql_attr_string = date_dl_deliverables_ready
+}
+
+table units {
+   type = plain
+   min_prefix_len = 3
+   morphology = stem_en
+   stopwords = en
+   index_exact_words = 1
+   path = /Users/lf6f/dev/tracksys_dev/manticore_index/tsunits
+   source = units
+}
+
+source masterfiles {
+   type = mysql
+   sql_host = 127.0.0.1
+   sql_user = root
+   sql_pass = pass
+   sql_db = tracksys
+   sql_query = SELECT m.id,unit_id,md.id as metadata_id,m.pid,m.title,m.description,m.filename,md.call_number,replace(md.call_number, ' ', '') as search_call_number,t.tag,(original_mf_id>0) as is_clone from master_files m left outer join metadata md on md.id=metadata_id left outer join master_file_tags mt on mt.master_file_id = m.id left outer join tags t on mt.tag_id = t.id
+   sql_field_string = pid
+   sql_field_string = title
+   sql_field_string = description
+   sql_field_string = filename
+   sql_field_string = call_number
+   sql_field_string = search_call_number
+   sql_field_string = tag
+   sql_attr_bigint = unit_id
+   sql_attr_bigint = metadata_id
+   sql_attr_bool = is_clone
+}
+
+table masterfiles {
+   type = plain
+   min_prefix_len = 2
+   morphology = stem_en
+   stopwords = en
+   index_exact_words = 1
+   path = /Users/lf6f/dev/tracksys_dev/manticore_index/tsmasterfiles
+   source = masterfiles
+}
+
+source components {
+   type = mysql
+   sql_host = 127.0.0.1
+   sql_user = root
+   sql_pass = pass
+   sql_db = tracksys
+   sql_query = select id, pid, title, label, content_desc as description, date, ead_id_att as finding_aid, (select count(*) from master_files where component_id=c.id) as mf_cnt from components c
+   sql_field_string = pid
+   sql_field_string = title
+   sql_field_string = label
+   sql_field_string = description
+   sql_field_string = date 
+   sql_field_string = finding_aid
+   sql_attr_uint = mf_cnt
+}
+
+table components {
+   type = plain
+   min_prefix_len = 3
+   morphology = stem_en
+   stopwords = en
+   index_exact_words = 1
+   path = /Users/lf6f/dev/tracksys_dev/manticore_index/tscomponents
+   source = components
+}

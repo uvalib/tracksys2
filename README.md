@@ -38,18 +38,32 @@ Example migrate commads to create a migration and run one:
 Search is powered by Manficore https://manual.manticoresearch.com/Quick_start_guide?client=CONFIG. The
 golang integration is handled by github.com/manticoresoftware/manticoresearch-go. On a Mac, the install steps:
 
-* `brew install manticoresoftware/tap/manticoresearch manticoresoftware/tap/manticore-extra`
+* `brew install manticoresearch`
 * `brew services start|stop manticoresearch`
 
-After that, it will be exposed as MySQL running on port 9306; connect with: mysql -P9306 (no password).
 The config is located here: /opt/homebrew/etc/manticoresearch/manticore.conf. Note that by default
-the manticore binaries are not on the path. Link them to the homebrew bin with something like this:
+the manticore binaries are not on the path. Add them with this (put it .zshrc or .bashrc):
 
-`ln -s /opt/homebrew/Cellar/manticoresearch/9.2.14-25032816-23296c0f8/bin/indexer manticore_indexer`
+`export PATH="/opt/homebrew/opt/manticoresearch/bin:$PATH"`
 
-The config template for the index can be found here:
-`/terraform-infrastructure/tracksys-manticore/production/ansible/templates`
+A sample config is found here:
+`./backend/db/index/manticore.conf.sample`
 
-With the config in the manticore path, the index is regenerated with this command:
+Important: in the config file, each table defination specifies a path. This is where the index will be stored.
+This path must exist prior to running the indexer.
 
-`manticore_indexer --all`
+The production and staging config templates for the index can be found here:
+`/terraform-infrastructure/tracksys-manticore/production/ansible/templates/manticore.conf.template`
+`/terraform-infrastructure/tracksys-manticore/staging/ansible/templates/manticore.conf.template`
+
+With the config in the manticore path, the index is regenerated and service restarted with this command:
+
+`indexer --all --rotate`
+
+Once the index has been populated, you can search it with curl:
+
+`curl "http://localhost:9308/sql?query=select%20*%20from%20orders%20where%20match('chance')"`
+
+Or MySQL:
+`mysql -h0 -P9306`
+`select * from orders where match('chance')`
