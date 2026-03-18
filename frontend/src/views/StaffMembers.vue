@@ -33,29 +33,41 @@
          </Column>
       </DataTable>
       <Dialog v-model:visible="showEdit" :style="{width: '450px'}" header="Staff Member Details" :modal="true" position="top" :closable="false">
-         <FormKit type="form" id="staff-detail" :actions="false" @submit="submitChanges">
-            <FormKit label="Last Name" type="text" v-model="staffDetails.lastName" validation="required" autofocus />
-            <FormKit label="First Name" type="text" v-model="staffDetails.firstName" validation="required" />
-            <FormKit label="UVA Computing ID" type="text" v-model="staffDetails.computingID" validation="required" />
-            <FormKit label="Email" type="email" v-model="staffDetails.email" validation="required" />
-            <FormKit type="select" label="Role" v-model="staffDetails.roleID" :options="{ 0: 'Admin', 1: 'Supervisor', 2: 'Student', 3: 'Viewer' }" />
-            <FormKit type="select" label="Active" v-model="staffDetails.active" :options="{ false: 'No', true: 'Yes' }" />
+         <Form v-slot="$form" :initialValues :resolver @submit="submitChanges" id="staff-detail" :validateOnBlur="true">
+            <FormField id="lname" label="Last Name" :error="$form.lastName?.invalid ? $form.lastName.error.message : ''" :required="true">
+               <InputText id="lname" name="lastName" type="text" autofocus/>   
+            </FormField>
+            <FormField id="fname" label="First Name" :error="$form.firstName?.invalid ? $form.firstName.error.message : ''" :required="true">
+               <InputText id="fname" name="firstName" type="text" />   
+            </FormField>
+            <FormField id="cid" label="UVA Computing ID" :error="$form.computingID?.invalid ? $form.computingID.error.message : ''" :required="true">
+               <InputText id="cid" name="computingID" type="text" />   
+            </FormField>
+            <FormField id="email" label="Email" :error="$form.email?.invalid ? $form.email.error.message : ''" :required="true">
+               <InputText id="email" name="email" type="text" />   
+            </FormField>
+            <FormField id="role" label="Role" :error="$form.roleID?.invalid ? $form.roleID.error.message : ''" :required="true">
+               <Select id="role" name="roleID"  :options="roles" optionLabel="label" optionValue="id" placeholder="Select a role" />   
+            </FormField>
+             <FormField id="active" label="Active" error="">
+               <Select id="active" name="active"  :options="[{label: 'No', val: 'false'},{label: 'Yes', val: 'true'}]" optionLabel="label" optionValue="val" />   
+            </FormField>
             <div class="notes">
                <b>IMPORTANT:</b>
                <span>All new staff must be added to a group named lb-digiserv. This can be done here: </span>
                <a href="https://mygroups.virginia.edu/groups/" target="_blank">MyGroups</a>
             </div>
             <div class="form-controls">
-               <FormKit type="button" label="Cancel" wrapper-class="cancel-button" @click="showEdit = false" />
-               <FormKit type="submit" label="Save" wrapper-class="submit-button" />
+               <DPGButton label="Cancel" severity="secondary" @click="showEdit=false"/>
+               <DPGButton label="Save" type="submit" />
             </div>
-         </FormKit>
+         </Form>
       </Dialog>
    </div>
 </template>
 
 <script setup>
-import { onMounted, ref} from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useStaffStore } from '@/stores/staff'
 import { useUserStore } from '../stores/user'
 import DataTable from 'primevue/datatable'
@@ -63,8 +75,14 @@ import Column from 'primevue/column'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import Dialog from 'primevue/dialog'
 import { usePinnable } from '@/composables/pin'
+
+import { Form } from '@primevue/forms'
+import { yupResolver } from '@primevue/forms/resolvers/yup'
+import * as yup from 'yup'
+import FormField from '@/components/FormField.vue'
 
 usePinnable("p-datatable-paginator-top")
 
@@ -73,48 +91,68 @@ const userStore = useUserStore()
 
 const filter = ref("")
 const showEdit = ref(false)
-const staffDetails = ref({
+
+const initialValues = ref({
    id: 0,
    lastName: "",
    firstName: "",
    email: "",
    computingID: "",
-   roleID: 0,
-   active: false}
-)
+   roleID: null,
+   active: false
+})
+
+const roles = computed( () => {
+   return [
+      {label:"Admin", id: 0}, {label:"Supervisor", id: 1}, 
+      {label:"Student", id: 2}, {label:"Viewer", id: 3}
+   ]
+})
+
+const resolver = yupResolver( yup.object().shape({
+   lastName: yup.string().required('Last name is required'),
+   firstName: yup.string().required('First name is required'),
+   computingID: yup.string().required('ComputingID is required'),
+   email: yup.string().email("Email is invalid").required("Email is required"),
+   roleID: yup.string().required("Role is required"),
+}))
 
 const addStaff = (() => {
-   staffDetails.value = {
+   initialValues.value = {
       id: 0,
       lastName: "",
       firstName: "",
       email: "",
       computingID: "",
-      roleID: 0,
-      active: false
+      roleID: null,
+      active: "true"
    }
    showEdit.value = true
 })
 
-const submitChanges = (() => {
-   let active = false
-   if (staffDetails.value.active == "true") {
-      active = true
+const submitChanges = ({ valid, values }) => {
+   if ( valid ) {
+      values.id = initialValues.value.id
+      let roles = ['Admin', 'Supervisor', 'Student', 'Viewer']
+      let roleID = parseInt(values.roleID, 10)
+      values.role = roles[ roleID ]
+      values.roleID = roleID
+      if (values.active == "true") {
+         values.active = true
+      } else {
+         values.active = false
+      }
+      staffStore.addOrUpdateStaff(values)
+      showEdit.value = false
    }
-   let roles = ['Admin', 'Supervisor', 'Student', 'Viewer']
-   staffDetails.value.active = active
-   staffDetails.value.roleID = parseInt(staffDetails.value.roleID, 10)
-   staffDetails.value.role = roles[ staffDetails.value.roleID ]
-   staffStore.addOrUpdateStaff(staffDetails.value)
-   showEdit.value = false
-})
+}
 
-const edit = ((data) => {
-   staffDetails.value = {...data} // clone the data so edits dont change the store
-   if (staffDetails.value.active) {
-      staffDetails.value.active = "true"
+const edit = ((data) => {   
+   initialValues.value = {...data}
+   if (initialValues.value.active) {
+      initialValues.value.active = "true"
    } else {
-      staffDetails.value.active = "false"
+      initialValues.value.active = "false"
    }
    showEdit.value = true
 })
@@ -138,11 +176,6 @@ const applyFilter = (() => {
    staffStore.getStaff( filter.value )
 })
 
-const clearSearch = (() => {
-   filter.value = ""
-   staffStore.getStaff( filter.value )
-})
-
 onMounted(() => {
    staffStore.getStaff( filter.value  )
    document.title = `Staff Members`
@@ -151,14 +184,15 @@ onMounted(() => {
 
 <style scoped lang="scss">
 #staff-detail {
+   display: flex;
+   flex-direction: column;
+   gap: 15px;
+
    .form-controls {
       display: flex;
       flex-flow: row nowrap;
       gap: 10px;
       justify-content: flex-end;
-      margin-top: 5px;
-      text-align: right;
-      padding: 10px 0;
    }
 }
 .notes {

@@ -44,8 +44,8 @@
          </template>
       </DataTable>
        <Dialog v-model:visible="showEdit" :style="{width: '500px'}" header="Customer Details" :modal="true" position="top" :closable="false">
-         <FormKit type="form" id="customer-detail" :actions="false" @submit="submitChanges">
-            <Tabs value="customer" :lazy="true">
+         <Form v-slot="$form" :initialValues="customerDetails" :resolver @submit="submitChanges" id="customer-detail" :validateOnBlur="true">
+            <Tabs value="customer">
                <TabList>
                   <Tab value="customer">Customer</Tab>
                   <Tab value="address1">Primary Address</Tab>
@@ -53,10 +53,18 @@
                </TabList>
                <TabPanels>
                   <TabPanel value="customer">
-                     <FormKit label="Last Name" type="text" name="lastName" v-model="customerDetails.lastName" validation="required" autofocus />
-                     <FormKit label="First Name" type="text"name="firstName"  v-model="customerDetails.firstName" validation="required" />
-                     <FormKit label="Email" type="email" name="email" v-model="customerDetails.email" validation="required" />
-                     <FormKit label="Academic Status" type="select" name="academicStatus" v-model="customerDetails.academicStatus" :options="academicStatuses" required/>
+                     <FormField id="lname" label="Last Name" :error="$form.lastName?.invalid ? $form.lastName.error.message : ''" :required="true">
+                        <InputText id="lname" name="lastName" type="text" autofocus/>   
+                     </FormField>
+                     <FormField id="fname" label="First Name" :error="$form.firstName?.invalid ? $form.firstName.error.message : ''" :required="true">
+                        <InputText id="fname" name="firstName" type="text"/>   
+                     </FormField>
+                     <FormField id="email" label="Email" :error="$form.email?.invalid ? $form.email.error.message : ''" :required="true">
+                        <InputText id="email" name="email" type="text"/>   
+                     </FormField>
+                     <FormField id="astatus" label="Academic Status" :error="$form.academicStatusID?.invalid ? $form.academicStatusID.error.message : ''" :required="true">
+                        <Select id="astatus" name="academicStatusID"  :options="academicStatuses" optionLabel="label" optionValue="id" placeholder="Select a status" />   
+                     </FormField>
                   </TabPanel>
                   <TabPanel value="address1">
                      <template v-if="customerDetails.addresses.length == 0">
@@ -64,16 +72,30 @@
                         <DPGButton label="Add Primary Address" @click="addAddress('primary')"/>
                      </template>
                      <template v-else>
-                        <FormKit label="Addresss 1" type="text" name="address1" v-model="customerDetails.addresses[0].address1" validation="required" />
-                        <FormKit label="Addresss 2" type="text" name="address2" v-model="customerDetails.addresses[0].address2" />
-                        <FormKit label="City" type="text" name="city" v-model="customerDetails.addresses[0].city" validation="required" />
+                        <FormField id="primary1" label="Addresss 1" :error="addrErr($form, 0, 'address1' )" :required="true">
+                           <InputText id="primary1" name="addresses[0].address1"  v-model="customerDetails.addresses[0].address1" type="text"/>   
+                        </FormField>
+                        <FormField id="primary2" label="Addresss 2">
+                           <InputText id="primary2" name="addresses[0].address2" v-model="customerDetails.addresses[0].address2" type="text"/>   
+                        </FormField>
+                        <FormField id="primarycity" label="City" :error="addrErr($form, 0, 'city' )" :required="true">
+                           <InputText id="primarycity" name="addresses[0].city" v-model="customerDetails.addresses[0].city" type="text"/>   
+                        </FormField>
                         <div class="two-col">
-                           <FormKit label="State" type="text" name="state" v-model="customerDetails.addresses[0].state" outer-class="state"/>
-                           <FormKit label="Zip" type="text" name="zip" v-model="customerDetails.addresses[0].zip" />
+                           <FormField id="primarystate" label="State">
+                              <InputText id="primarystate" name="addresses[0].state" v-model="customerDetails.addresses[0].state" type="text"/>   
+                           </FormField>
+                           <FormField id="primaryzip" label="Zip">
+                              <InputText id="primaryzip" name="addresses[0].zip" v-model="customerDetails.addresses[0].zip" type="text"/>   
+                           </FormField>
                         </div>
                         <div class="two-col">
-                           <FormKit label="Country" type="text" name="country" v-model="customerDetails.addresses[0].country" validation="required" outer-class="state"/>
-                           <FormKit label="Phone" type="text" name="phone" v-model="customerDetails.addresses[0].phone" />
+                           <FormField id="primarycountry" label="Country" :error="addrErr($form, 0, 'country' )" :required="true">
+                              <InputText id="primarycountry" name="addresses[0].country" v-model="customerDetails.addresses[0].country" type="text"/>   
+                           </FormField>
+                           <FormField id="primaryphone" label="Phone">
+                              <InputText id="primaryphone" name="addresses[0].phone" v-model="customerDetails.addresses[0].phone" type="text"/>   
+                           </FormField>
                         </div>
                      </template>
                   </TabPanel>
@@ -86,26 +108,40 @@
                         <DPGButton label="Add Billing Address" @click="addAddress('billable_address')"/>
                      </template>
                      <template v-else>
-                        <FormKit label="Addresss 1" type="text" v-model="customerDetails.addresses[1].address1" validation="required" />
-                        <FormKit label="Addresss 2" type="text" v-model="customerDetails.addresses[1].address2" />
-                        <FormKit label="City" type="text" v-model="customerDetails.addresses[1].city" validation="required" />
+                        <FormField id="biz1" label="Addresss 1" :error="addrErr($form, 1, 'address1' )" :required="true">
+                           <InputText id="biz1" name="addresses[1].address1"  v-model="customerDetails.addresses[1].address1" type="text"/>   
+                        </FormField>
+                        <FormField id="biz2" label="Addresss 2">
+                           <InputText id="biz2" name="addresses[1].address2" v-model="customerDetails.addresses[1].address2" type="text"/>   
+                        </FormField>
+                        <FormField id="bizcity" label="City" :error="addrErr($form, 1, 'city' )" :required="true">
+                           <InputText id="bizcity" name="addresses[1].city" v-model="customerDetails.addresses[1].city" type="text"/>   
+                        </FormField>
                         <div class="two-col">
-                           <FormKit label="State" type="text" v-model="customerDetails.addresses[1].state" outer-class="state"/>
-                           <FormKit label="Zip" type="text" v-model="customerDetails.addresses[1].zip" />
+                           <FormField id="bizstate" label="State">
+                              <InputText id="bizstate" name="addresses[1].state" v-model="customerDetails.addresses[1].state" type="text"/>   
+                           </FormField>
+                           <FormField id="bizzip" label="Zip">
+                              <InputText id="bizzip" name="addresses[1].zip" v-model="customerDetails.addresses[1].zip" type="text"/>   
+                           </FormField>
                         </div>
                         <div class="two-col">
-                           <FormKit label="Country" type="text" v-model="customerDetails.addresses[1].country" validation="required" outer-class="state"/>
-                           <FormKit label="Phone" type="text" v-model="customerDetails.addresses[1].phone" />
+                           <FormField id="bizcountry" label="Country" :error="addrErr($form, 1, 'country' )" :required="true">
+                              <InputText id="bizcountry" name="addresses[1].country" v-model="customerDetails.addresses[1].country" type="text"/>   
+                           </FormField>
+                           <FormField id="bizphone" label="Phone">
+                              <InputText id="bizphone" name="addresses[1].phone" v-model="customerDetails.addresses[1].phone" type="text"/>   
+                           </FormField>
                         </div>
                      </template>
                   </TabPanel>
                </TabPanels>
             </Tabs>
             <div class="form-controls">
-               <FormKit type="button" label="Cancel" wrapper-class="cancel-button" @click="showEdit = false" />
-               <FormKit type="submit" label="Save" wrapper-class="submit-button" />
+               <DPGButton label="Cancel" severity="secondary" @click="showEdit=false"/>
+               <DPGButton label="Save" type="submit" />
             </div>
-         </FormKit>
+         </Form>
       </Dialog>
    </div>
 </template>
@@ -120,6 +156,7 @@ import Column from 'primevue/column'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import Dialog from 'primevue/dialog'
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
@@ -127,6 +164,10 @@ import Tab from 'primevue/tab'
 import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
 import { FilterMatchMode } from '@primevue/core/api'
+import { Form } from '@primevue/forms'
+import { yupResolver } from '@primevue/forms/resolvers/yup'
+import * as yup from 'yup'
+import FormField from '@/components/FormField.vue'
 import { usePinnable } from '@/composables/pin'
 
 usePinnable("p-datatable-paginator-top")
@@ -138,22 +179,47 @@ const userStore = useUserStore()
 const filter = ref( {'global': {value: null, matchMode: FilterMatchMode.STARTS_WITH}})
 const expandedRows = ref([])
 const showEdit = ref(false)
+
 const customerDetails = ref({
    lastName: "",
    firstName: "",
-   academicStatusID: 0,
-   academicStatus: {id: 0},
+   academicStatusID: null,
    email: "",
    addresses: [],
    id: 0
 })
 
+const resolver = yupResolver( 
+   yup.object().shape({
+      lastName: yup.string().required('Last name is required'),
+      firstName: yup.string().required('First name is required'),
+      email: yup.string().email("Email is invalid").required("Email is required"),
+      academicStatusID: yup.string().required("Academic status is required"),
+      addresses: yup.array(
+         yup.object({
+            address1: yup.string().required('Address 1 is required'),
+            city: yup.string().required('City is required'),
+            state: yup.string().required('State is required'),
+            zip: yup.string().required('Zip is required'),
+            country: yup.string().required('Country is required'),
+         })   
+      ),
+   })
+)
+
 const academicStatuses = computed(() => {
    let out = []
    systemStore.academicStatuses.forEach( i => {
-      out.push( {label: i.name, value: {id: i.id, name: i.name}} )
+      out.push( {label: i.name, id: i.id} )
    })
    return out
+})
+
+const addrErr = ((form, addrIdx, field) => {
+   if (form.addresses && form.addresses[addrIdx] && form.addresses[addrIdx][field].invalid) {
+      return form.addresses[addrIdx][field].error.message
+   }
+   return ""
 })
 
 onBeforeMount(() => {
@@ -161,10 +227,13 @@ onBeforeMount(() => {
    document.title = `Customers`
 })
 
-const submitChanges = (() => {
-   customersStore.addOrUpdateCustomer(customerDetails.value)
-   showEdit.value = false
-})
+const submitChanges = async ({ valid, values }) => {
+   if (valid ) {
+      values.id = customerDetails.value.id
+      customersStore.addOrUpdateCustomer(values)
+      showEdit.value = false
+   }
+}
 
 const addAddress = (( addrType ) => {
    let newAddr = {address1: "", address2: "", city: "", state: "", zip: "", country: "", phone: "", addressType: addrType}
@@ -184,8 +253,7 @@ const addCustomer = (() => {
    customerDetails.value = {
       lastName: "",
       firstName: "",
-      academicStatusID: 0,
-      academicStatus: {id: 0},
+      academicStatusID: null,
       email: "",
       addresses: [],
       id: 0
@@ -226,26 +294,23 @@ const edit = ((data) => {
    }
 }
 
-#customer-detail {
+.form-controls {
+   display: flex;
+   flex-flow: row nowrap;
+   justify-content: flex-end;
+   gap: 10px;
+}
+
+:deep(.p-tabpanel) {
+   display: flex;
+   flex-direction: column;
+   gap: 15px;
+
    .two-col {
       display: flex;
       flex-flow: row nowrap;
       justify-content: space-between;
-      :deep(.formkit-outer) {
-         flex-grow: 1;
-      }
-      :deep(.formkit-outer.state) {
-         margin-right: 15px;
-      }
-   }
-   .form-controls {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 5px;
-      text-align: right;
-      padding: 10px 0;
    }
 }
+   
 </style>
