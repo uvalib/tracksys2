@@ -33,24 +33,24 @@
          </Column>
       </DataTable>
       <Dialog v-model:visible="showEdit" :style="{width: '450px'}" header="Staff Member Details" :modal="true" position="top" :closable="false">
-         <Form v-slot="$form" :initialValues :resolver @submit="submitChanges" id="staff-detail" :validateOnBlur="true">
-            <FormField id="lname" label="Last Name" :error="$form.lastName?.invalid ? $form.lastName.error.message : ''" :required="true">
-               <InputText id="lname" name="lastName" type="text" autofocus/>   
+         <form @submit="submitChanges" id="staff-detail">
+            <FormField id="lname" label="Last Name" :error="errors.lastName" :required="true">
+               <InputText id="lname" v-model="lastName" type="text" autofocus/>   
             </FormField>
-            <FormField id="fname" label="First Name" :error="$form.firstName?.invalid ? $form.firstName.error.message : ''" :required="true">
-               <InputText id="fname" name="firstName" type="text" />   
+            <FormField id="fname" label="First Name" :error="errors.firstName" :required="true">
+               <InputText id="fname" v-model="firstName" type="text" />   
             </FormField>
-            <FormField id="cid" label="UVA Computing ID" :error="$form.computingID?.invalid ? $form.computingID.error.message : ''" :required="true">
-               <InputText id="cid" name="computingID" type="text" />   
+            <FormField id="cid" label="UVA Computing ID" :error="errors.computingID" :required="true">
+               <InputText id="cid" v-model="computingID" type="text" />   
             </FormField>
-            <FormField id="email" label="Email" :error="$form.email?.invalid ? $form.email.error.message : ''" :required="true">
-               <InputText id="email" name="email" type="text" />   
+            <FormField id="email" label="Email" :error="errors.email" :required="true">
+               <InputText id="email" v-model="email" type="text" />   
             </FormField>
-            <FormField id="role" label="Role" :error="$form.roleID?.invalid ? $form.roleID.error.message : ''" :required="true">
-               <Select id="role" name="roleID"  :options="roles" optionLabel="label" optionValue="id" placeholder="Select a role" />   
+            <FormField id="role" label="Role" :error="errors.roleID" :required="true">
+               <Select id="role" v-model="roleID"  :options="roles" optionLabel="label" optionValue="id" placeholder="Select a role" />   
             </FormField>
-             <FormField id="active" label="Active" error="">
-               <Select id="active" name="active"  :options="[{label: 'No', val: 'false'},{label: 'Yes', val: 'true'}]" optionLabel="label" optionValue="val" />   
+             <FormField id="active" label="Active">
+               <Select id="active" v-model="active"  :options="[{label: 'No', val: 'false'},{label: 'Yes', val: 'true'}]" optionLabel="label" optionValue="val" />   
             </FormField>
             <div class="notes">
                <b>IMPORTANT:</b>
@@ -61,7 +61,7 @@
                <DPGButton label="Cancel" severity="secondary" @click="showEdit=false"/>
                <DPGButton label="Save" type="submit" />
             </div>
-         </Form>
+         </form>
       </Dialog>
    </div>
 </template>
@@ -77,30 +77,36 @@ import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Dialog from 'primevue/dialog'
-import { usePinnable } from '@/composables/pin'
 
-import { Form } from '@primevue/forms'
-import { yupResolver } from '@primevue/forms/resolvers/yup'
+import { usePinnable } from '@/composables/pin'
+usePinnable("p-datatable-paginator-top")
+
+import { useForm } from 'vee-validate'
 import * as yup from 'yup'
 import FormField from '@/components/FormField.vue'
 
-usePinnable("p-datatable-paginator-top")
+const { errors, resetForm, handleSubmit, defineField } = useForm({
+  validationSchema: yup.object().shape({
+      lastName: yup.string().required('Last name is required'),
+      firstName: yup.string().required('First name is required'),
+      computingID: yup.string().required('ComputingID is required'),
+      email: yup.string().email("Email is invalid").required("Email is required"),
+      roleID: yup.string().required("Role is required"),
+   })
+})
+
+const [lastName] = defineField('lastName')
+const [firstName] = defineField('firstName')
+const [email] = defineField('email')
+const [computingID] = defineField('computingID')
+const [roleID] = defineField('roleID')
+const [active] = defineField('active')
 
 const staffStore = useStaffStore()
 const userStore = useUserStore()
 
 const filter = ref("")
 const showEdit = ref(false)
-
-const initialValues = ref({
-   id: 0,
-   lastName: "",
-   firstName: "",
-   email: "",
-   computingID: "",
-   roleID: null,
-   active: false
-})
 
 const roles = computed( () => {
    return [
@@ -109,51 +115,42 @@ const roles = computed( () => {
    ]
 })
 
-const resolver = yupResolver( yup.object().shape({
-   lastName: yup.string().required('Last name is required'),
-   firstName: yup.string().required('First name is required'),
-   computingID: yup.string().required('ComputingID is required'),
-   email: yup.string().email("Email is invalid").required("Email is required"),
-   roleID: yup.string().required("Role is required"),
-}))
-
 const addStaff = (() => {
-   initialValues.value = {
-      id: 0,
-      lastName: "",
-      firstName: "",
-      email: "",
-      computingID: "",
-      roleID: null,
-      active: "true"
-   }
+   resetForm({ 
+      values: {
+         id: 0,
+         lastName: "",
+         firstName: "",
+         email: "",
+         computingID: "",
+         roleID: null,
+         active: "true"
+      } 
+   })
    showEdit.value = true
 })
 
-const submitChanges = ({ valid, values }) => {
-   if ( valid ) {
-      values.id = initialValues.value.id
-      let roles = ['Admin', 'Supervisor', 'Student', 'Viewer']
-      let roleID = parseInt(values.roleID, 10)
-      values.role = roles[ roleID ]
-      values.roleID = roleID
-      if (values.active == "true") {
-         values.active = true
-      } else {
-         values.active = false
-      }
-      staffStore.addOrUpdateStaff(values)
-      showEdit.value = false
+
+const submitChanges = handleSubmit(values => {
+   let roles = ['Admin', 'Supervisor', 'Student', 'Viewer']
+   values.roleID = parseInt(values.roleID, 10)
+   values.role = roles[ values.roleID ]
+   if (values.active == "true") {
+      values.active = true
+   } else {
+      values.active = false
    }
-}
+   staffStore.addOrUpdateStaff(values)
+   showEdit.value = false
+}) 
 
 const edit = ((data) => {   
-   initialValues.value = {...data}
-   if (initialValues.value.active) {
-      initialValues.value.active = "true"
-   } else {
-      initialValues.value.active = "false"
+   let editData  = {...data}
+   editData.active = "false"
+   if (editData.active) {
+      editData.active = "true"
    }
+   resetForm({ values: editData })
    showEdit.value = true
 })
 

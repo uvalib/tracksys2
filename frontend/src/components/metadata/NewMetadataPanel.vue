@@ -1,18 +1,29 @@
 <template>
-   <FormKit type="form" id="create-metadata" :actions="false" @submit="createMetadata">
-      <Panel header="General Information" class="margin-bottom">
-         <FormKit label="Metadata Type" type="select" outer-class="first" :options="metadataTypes" v-model="info.type" @change="typeChanged"/>
-         <template v-if="info.type == 'SirsiMetadata'">
+   <form @submit="createMetadata" id="create-metadata">
+      <Panel header="General Information">
+         <FormField id="mdtype" label="Metadata Type" :error="errors.lastName" :required="true">
+            <Select id="mdtype" v-model="type" placeholder="Select metadata type" @value-change="typeChanged"
+               :options="metadataTypes" optionLabel="label" optionValue="value"
+            />   
+         </FormField>
+         <template v-if="type == 'SirsiMetadata'">
             <div class="split">
-               <FormKit label="Catalog Key" type="text" v-model="info.catalogKey"/>
-               <FormKit label="Barcode" type="text" v-model="info.barcode"/>
-               <DPGButton @click="sirsiLookup" label="Lookup" size="small" severity="secondary" :loading="metadataStore.sirsiMatch.searching"/>
+               <FormField id="catkey" label="Catalog Key">
+                  <InputText id="catkey" v-model="catalogKey" type="text" />   
+               </FormField>
+               <FormField id="barcode" label="Barcode">
+                  <InputText id="barcode" v-model="barcode" type="text" />   
+               </FormField>
+               <DPGButton @click="sirsiLookup" label="Lookup" severity="secondary" :loading="metadataStore.sirsiMatch.searching"/>
             </div>
-            <p v-if="metadataStore.sirsiMatch.error" class="error">{{metadataStore.sirsiMatch.error}}</p>
-            <dl>
-               <DataDisplay label="Title" :value="info.title" blankValue="Unknown"/>
-               <DataDisplay label="Call Number" :value="info.callNumber" blankValue="Unknown"/>
-            </dl>
+            <Message v-if="metadataStore.sirsiMatch.error" severity="error" size="small" variant="simple">{{metadataStore.sirsiMatch.error}}</Message>
+            <div>
+               <dl>
+                  <DataDisplay label="Title" :value="title" blankValue="Unknown"/>
+                  <DataDisplay label="Call Number" :value="callNumber" blankValue="Unknown"/>
+               </dl>
+               <Message v-if="errors.title" severity="error" size="small" variant="simple">{{ errors.title}}</Message>
+            </div>
             <div v-if="metadataStore.sirsiMatch.metadataExists" class="md-exists">
                <p>
                   TrackSys already contains a metadata record for this item. Details can be found
@@ -20,11 +31,15 @@
                </p>
             </div>
          </template>
-         <template v-if="info.type == 'XmlMetadata'">
-            <FormKit label="Title" type="text" v-model="info.title" validation="required" @input="xmlTitleChanged"/>
-            <FormKit label="Author" type="text" v-model="info.author"/>
+        <template v-if="type == 'XmlMetadata'">
+            <FormField id="xmltitle" label="Title" :error="errors.title" :required="true">
+               <InputText id="xmltitle" v-model="title" type="text" />   
+            </FormField>
+            <FormField id="xmlauthor" label="Author">
+               <InputText id="xmlauthor" v-model="author" type="text" />   
+            </FormField>
          </template>
-         <template v-if="info.type == 'ExternalMetadata'">
+         <template v-if="type == 'ExternalMetadata'">
             <p class="note"><b>IMPORTANT</b>: Only URIs containing /resources/ or /archival_objects/ are supported.</p>
             <p class="note">Examples:</p>
             <ul class="note">
@@ -32,54 +47,126 @@
                <li class="note">/repositories/3/resources/811</li>
             </ul>
             <div class="split">
-               <FormKit label="External URI" type="text" v-model="info.externalURI" validation="required"/>
-               <DPGButton @click="validateASMetadata" label="Validate" severity="secondary" size="small" :loading="metadataStore.asMatch.searching"/>
+               <FormField id="exturi" label="External URI" :error="errors.externalURI" :required="true">
+                  <InputText id="exturi" type="text" v-model="externalURI"  />   
+               </FormField>
+               <DPGButton @click="validateASMetadata" label="Validate" severity="secondary" :loading="metadataStore.asMatch.searching"/>
             </div>
-            <p class="error" v-if="metadataStore.asMatch.error">Validation Failed: {{metadataStore.asMatch.error}}</p>
+            <Message v-if="metadataStore.asMatch.error" severity="error" size="small" variant="simple">{{metadataStore.asMatch.error}}</Message>
             <dl>
                <DataDisplay label="Title" :value="metadataStore.asMatch.title" blankValue="Unknown"/>
                <DataDisplay label="ID" :value="metadataStore.asMatch.id" blankValue="Unknown"/>
             </dl>
          </template>
-         <div class="split">
-            <FormKit label="Collection" type="select" :options="yesNo" v-model="info.isCollection"/>
-            <FormKit label="Personal Item" type="select" :options="yesNo" v-model="info.personalItem"/>
-            <FormKit label="Manuscript" type="select" :options="yesNo" v-model="info.manuscript"/>
-         </div>
-         <div class="split">
-            <FormKit label="OCR Hint" type="select" :options="ocrHints" v-model="info.ocrHint" placeholder="Select a hint"/>
-            <FormKit label="OCR Language" type="select" :options="ocrLanguages" :disabled="isLanguageDisabled"
-               v-model="info.ocrLanguageHint" placeholder="Select a language"/>
-            <FormKit label="Preservation Tier" type="select" :options="preservationTiers" v-model="info.preservationTier" placeholder="Select a tier"/>
-         </div>
+         <template v-if="type">
+            <div class="split">
+               <FormField id="iscoll" label="Collection">
+                  <Select id="iscoll" v-model="isCollection"  :options="yesNo" optionLabel="label" optionValue="value" />   
+               </FormField>
+               <FormField id="ispersonal" label="Personal Item">
+                  <Select id="ispersonal" v-model="personalItem"  :options="yesNo" optionLabel="label" optionValue="value" />   
+               </FormField>
+               <FormField id="iscoll" label="Manuscript">
+                  <Select id="iscoll" v-model="manuscript"  :options="yesNo" optionLabel="label" optionValue="value" />   
+               </FormField>
+            </div>
+            <div class="split">
+               <FormField id="ocrhint" label="OCR Hint">
+                  <Select id="ocrhint" v-model="ocrHint"  :options="ocrHints" optionLabel="label" optionValue="value"  placeholder="Select a hint"/>   
+               </FormField>
+               <FormField id="ocrlang" label="OCR Language">
+                  <Select id="ocrlang" v-model="ocrLanguageHint" :disabled="isLanguageDisabled"  
+                     :options="ocrLanguages" optionLabel="label" optionValue="value"  placeholder="Select a language"
+                  />   
+               </FormField>
+               <FormField id="ptier" label="Preservation Tier">
+                  <Select id="ptier" v-model="preservationTier"  :options="preservationTiers" optionLabel="label" optionValue="value"  placeholder="Select a tier"/>   
+               </FormField>
+            </div>
+         </template>
       </Panel>
-      <Panel v-if="info.type != 'ExternalMetadata'" header="Digital Library Information">
+      <Panel v-if="type && type != 'ExternalMetadata'" header="Digital Library Information">
          <div class="split" v-if="props.collection == false">
-            <FormKit label="Collection ID" type="text" v-model="info.collectionID"/>
-            <FormKit label="Collection Facet" type="select" :options="collectionFacets" v-model="info.collectionFacet" placeholder="Select a facet"/>
+            <FormField id="collid" label="Collection ID">
+               <InputText id="collid" v-model="collectionID" type="text" />   
+            </FormField>
+            <FormField id="cfacet" label="Collection Facet">
+               <Select id="cfacet" v-model="collectionFacet"  :options="collectionFacets" optionLabel="label" optionValue="value"  placeholder="Select a facet"/>   
+            </FormField>
          </div>
          <div class="split">
-            <FormKit label="In DPLA" type="select" :options="yesNo" v-model="info.inDPLA"/>
-            <FormKit label="Availability Policy" outer-class="first" type="select" :options="availabilityPolicies" v-model="info.availabilityPolicy" validation="required"/>
+            <FormField id="indpla" label="In DPLA">
+               <Select id="indpla" v-model="inDPLA"  :options="yesNo" optionLabel="label" optionValue="value" />   
+            </FormField>
+            <FormField id="availpolicy" label="Availability Policy" :error="errors.lastName" :required="true">
+               <Select id="availpolicy" v-model="availabilityPolicy" 
+                  :options="availabilityPolicies" optionLabel="label" optionValue="value"  placeholder="Select a policy"
+               />   
+            </FormField>
          </div>
-         <div class="use-right" v-if="info.type == 'SirsiMetadata'">
-            <FormKit label="Use Right" outer-class="first" type="select" :options="useRights" v-model="info.useRight" validation="required"/>
+         <div class="use-right" v-if="type == 'SirsiMetadata'">
+            <FormField id="uright" label="Use Right"  :error="errors.useRight" :required="true">
+               <Select id="uright" name="useRight"  v-model="useRight" 
+                  :options="useRights" optionLabel="label" optionValue="value"  placeholder="Select a right"
+               />   
+            </FormField>
             <p>{{ rightStatement }}</p>
          </div>
       </Panel>
       <div class="acts">
          <DPGButton @click="cancelCreate" label="Cancel" severity="secondary"/>
-         <FormKit type="submit" :label="createLabel" :disabled="validated==false" :wrapper-class="submitClass"/>
+         <DPGButton :label="createLabel" type="submit" /> 
       </div>
-   </FormKit>
+   </Form>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import DataDisplay from '@/components/DataDisplay.vue'
 import Panel from 'primevue/panel'
+import Select from 'primevue/select'
+import InputText from 'primevue/inputtext'
 import { useSystemStore } from "@/stores/system"
 import { useMetadataStore } from "@/stores/metadata"
+
+import { useForm } from 'vee-validate'
+import * as yup from 'yup'
+import FormField from '@/components/FormField.vue'
+import Message from 'primevue/message'
+
+const schema = yup.object().shape({
+   type: yup.string().required('Metadata type is required'),
+   title: yup.string().required('Title is required'),
+   availabilityPolicy: yup.number().min(1).required("Availability policy is required"),
+   useRight: yup.number().min(1).required("Use right is required"),
+   externalURI: yup.string().when('type', {
+      is: (value) => value == 'ExternalMetadata',
+      then: (schema) => schema.required("external url is required"),
+   })
+})
+
+const { values, errors, resetForm, handleSubmit, defineField, setValues } = useForm({
+   validationSchema: schema
+})
+
+const [type] = defineField('type')
+const [externalURI] = defineField('externalURI')
+const [title] = defineField('title')
+const [author] = defineField('author')
+const [callNumber] = defineField('callNumber')
+const [catalogKey] = defineField('catalogKey')
+const [barcode] = defineField('barcode')
+const [personalItem] = defineField('personalItem')
+const [manuscript] = defineField('manuscript')
+const [ocrHint] = defineField('ocrHint')
+const [ocrLanguageHint] = defineField('ocrLanguageHint')
+const [preservationTier] = defineField('preservationTier')
+const [availabilityPolicy] = defineField('availabilityPolicy')
+const [useRight] = defineField('useRight')
+const [inDPLA] = defineField('inDPLA')
+const [collectionID] = defineField('collectionID')
+const [collectionFacet] = defineField('collectionFacet')
+const [isCollection] = defineField('isCollection')
 
 const emit = defineEmits( ['canceled', 'created' ])
 
@@ -93,63 +180,39 @@ const props = defineProps({
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
 
-const validated = ref(false)
-const info = ref({
-   type: "XmlMetadata",
-   externalSystemID: 0,
-   externalURI: "",
-   title: "",
-   callNumber: "",
-   author: "",
-   catalogKey: "",
-   barcode: "",
-   personalItem: false,
-   manuscript: false,
-   ocrHint: 0,
-   ocrLanguageHint: "",
-   preservationTier: 0,
-   availabilityPolicy: 1,
-   useRight: 1,
-   inDPLA: false,
-   collectionID: "",
-   collectionFacet: "",
-   isCollection: props.collection
-})
-
 onMounted(() => {
-   validated.value = false
-   info.value.type = "XmlMetadata"
-   info.value.externalSystemID = 0
-   info.value.externalURI = ""
-   info.value.title = ""
-   info.value.callNumber = ""
-   info.value.author = ""
-   info.value.catalogKey = ""
-   info.value.barcode = ""
-   info.value.personalItem = false
-   info.value.manuscript = false
-   info.value.ocrHint = 0
-   info.value.ocrLanguageHint = ""
-   info.value.preservationTier = 0
-   info.value.availabilityPolicy = 1
-   info.value.useRight = 1
-   info.value.inDPLA = false
-   info.value.collectionID = ""
-   info.value.collectionFacet = ""
-   info.value.isCollection = props.collection
+   resetData()
 })
 
+const resetData = (() => {
+   resetForm({ 
+      values: {
+         type: null,
+         externalURI: "",
+         title: "",
+         callNumber: "",
+         author: "",
+         catalogKey: "",
+         barcode: "",
+         personalItem: false,
+         manuscript: false,
+         ocrHint: 0,
+         ocrLanguageHint: "",
+         preservationTier: 0,
+         availabilityPolicy: 1,
+         useRight: 1,
+         inDPLA: false,
+         collectionID: "",
+         collectionFacet: "",
+         isCollection: props.collection,
+      }
+   })
+})
 const createLabel = computed(() => {
    if ( props.collection) return "Create Collection"
    return "Create Metadata"
 })
-const submitClass = computed(() => {
-   let c = "submit-button"
-   if (validated.value === false ) {
-      c += " disabled"
-   }
-   return c
-})
+
 const availabilityPolicies = computed(() => {
    let out = []
    systemStore.availabilityPolicies.forEach( o => {
@@ -193,7 +256,7 @@ const metadataTypes = computed(() => {
    return out
 })
 const rightStatement = computed(() => {
-   let ur = systemStore.useRights.find( r => r.id == info.value.useRight)
+   let ur = systemStore.useRights.find( r => r.id == values.useRight)
    if (ur) {
       return ur.statement
    }
@@ -213,76 +276,60 @@ const yesNo = computed(() => {
    return out
 })
 const isLanguageDisabled = computed(() => {
-   if ( info.value.ocrHint == 0) return true
-   let hint = systemStore.ocrHints.find( h => h.id == info.value.ocrHint)
+   if ( values.ocrHint == 0) return true
+   let hint = systemStore.ocrHints.find( h => h.id == values.ocrHint)
    return !hint.ocrCandidate
 })
 
-function typeChanged() {
-   info.value.externalSystemID = 0
-   validated.value = false
-   if (info.value.type == "ExternalMetadata") {
-      info.value.externalSystemID = 1
-   }
-}
-function xmlTitleChanged() {
-   validated.value = ( info.value.title.length > 0)
-}
-async function validateASMetadata() {
-   await metadataStore.validateArchivesSpaceURI(info.value.externalURI.trim())
+const typeChanged = (() => {
+   const newType = type.value
+   resetData()
+   metadataStore.sirsiMatch.error = ""
+   setValues({type: newType})
+})
+
+const validateASMetadata = ( async () => {
+   await metadataStore.validateArchivesSpaceURI(externalURI.value.trim())
    if (metadataStore.asMatch.error == "") {
-      validated.value = true
-      info.value.externalURI = metadataStore.asMatch.validatedURL
-      info.value.externalSystemID = 1
-      info.value.title = metadataStore.asMatch.title
+      setValues({
+         externalURI: metadataStore.asMatch.validatedURL,
+         title: metadataStore.asMatch.title
+      })
    }
-}
-async function sirsiLookup() {
-   await metadataStore.sirsiLookup(info.value.barcode, info.value.catalogKey)
-   info.value.title = metadataStore.sirsiMatch.title
-   info.value.callNumber = metadataStore.sirsiMatch.callNumber
-   info.value.author = metadataStore.sirsiMatch.creatorName
-   info.value.catalogKey = metadataStore.sirsiMatch.catalogKey
-   info.value.barcode = metadataStore.sirsiMatch.barcode
+})
+
+const sirsiLookup= (async () => {
+   await metadataStore.sirsiLookup(barcode.value, catalogKey.value)
    if ( metadataStore.sirsiMatch.error == "") {
-      validated.value = true
+      setValues({
+         title: metadataStore.sirsiMatch.title,
+         callNumber: metadataStore.sirsiMatch.callNumber,
+         author: metadataStore.sirsiMatch.creatorName,
+         catalogKey: metadataStore.sirsiMatch.catalogKey,
+         barcode: metadataStore.sirsiMatch.barcode,
+      })
    }
-}
-function cancelCreate() {
+})
+
+const cancelCreate = (() => {
    emit("canceled")
-}
-async function createMetadata() {
-   if ( validated.value == false) {
-      return
+})
+
+const createMetadata = handleSubmit( async (values) => {
+   if (values.type == "ExternalMetadata") {
+      values.externalSystemID = 1
    }
-   await metadataStore.create(info.value)
+   await metadataStore.create( values )
    emit("created")
-}
+})
 </script>
 
 <style lang="scss" scoped>
-.margin-bottom {
-   margin-bottom: 15px;
-}
-p.error {
-   color: var(--uvalib-red-emergency);
-   text-align: right;
-   margin:5px 0 0 0;
-}
-p.valid {
-   margin:5px 0 0 0;
-   color: var(--uvalib-green-dark);
-   font-weight: bold;
-   text-align: right;
-}
-div.p-panel {
-   font-size: 0.8em;
-}
 dl {
-   margin: 10px 0 25px 0;
+   margin: 0;
    display: inline-grid;
    grid-template-columns: max-content 1fr;
-   grid-column-gap: 0px;
+   grid-column-gap: 5px;
    text-align: left;
    box-sizing: border-box;
 }
@@ -311,13 +358,19 @@ ul.note {
    }
 }
 
+:deep(.p-panel-content), #create-metadata {
+   display: flex;
+   flex-direction: column;
+   gap: 15px;
+}
+
 .split {
    display: flex;
    flex-flow: row nowrap;
    justify-content: flex-start;
    align-items: flex-end;
    gap: 10px;
-   :deep(.formkit-outer) {
+   .form-field {
       flex-grow: 1;
    }
 }
@@ -325,9 +378,6 @@ ul.note {
    display: flex;
    flex-flow: row nowrap;
    justify-content: flex-end;
-   padding: 20px 0 10px 0;
-   button {
-      margin-right: 10px;
-   }
+   gap: 10px;
 }
 </style>
