@@ -325,6 +325,7 @@ const edit = ((data) => {
       display: flex;
       flex-flow: row nowrap;
       justify-content: space-between;
+      gap: 15px;
    }
 }
    

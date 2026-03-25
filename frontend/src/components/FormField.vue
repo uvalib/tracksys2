@@ -37,6 +37,7 @@ const props = defineProps({
    display: flex;
    flex-direction: column;
    gap: 5px;
+   flex-grow: 1;
 }
 .required {
    margin-left: 5px;

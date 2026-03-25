@@ -48,9 +48,11 @@
             </ul>
             <div class="split">
                <FormField id="exturi" label="External URI" :error="errors.externalURI" :required="true">
-                  <InputText id="exturi" type="text" v-model="externalURI"  />   
+                  <div style="display: flex; flex-flow: row nowrap; gap: 10px">
+                     <InputText id="exturi" type="text" v-model="externalURI"  /> 
+                     <DPGButton @click="validateASMetadata" label="Validate" severity="secondary" :loading="metadataStore.asMatch.searching"/>
+                  </div>  
                </FormField>
-               <DPGButton @click="validateASMetadata" label="Validate" severity="secondary" :loading="metadataStore.asMatch.searching"/>
             </div>
             <Message v-if="metadataStore.asMatch.error" severity="error" size="small" variant="simple">{{metadataStore.asMatch.error}}</Message>
             <dl>
@@ -137,11 +139,17 @@ import Message from 'primevue/message'
 const schema = yup.object().shape({
    type: yup.string().required('Metadata type is required'),
    title: yup.string().required('Title is required'),
-   availabilityPolicy: yup.number().min(1).required("Availability policy is required"),
-   useRight: yup.number().min(1).required("Use right is required"),
+   availabilityPolicy:  yup.number().when('type', {
+      is: (value) => value == 'SirsiMetadata',
+      then: (schema) => schema.min(1).required("Availability policy is required"),
+   }),
+   useRight:  yup.number().when('type', {
+      is: (value) => value == 'SirsiMetadata',
+      then: (schema) => schema.min(1).required("Use right is required"),
+   }),
    externalURI: yup.string().when('type', {
       is: (value) => value == 'ExternalMetadata',
-      then: (schema) => schema.required("external url is required"),
+      then: (schema) => schema.required("External URI is required"),
    })
 })
 
