@@ -9,13 +9,14 @@
          <template v-if="type == 'SirsiMetadata'">
             <div class="split">
                <FormField id="catkey" label="Catalog Key">
-                  <InputText id="catkey" v-model="catalogKey" type="text" />   
+                  <InputText id="catkey" v-model="catalogKey" type="text" @update:modelValue="needsValidation=true"/>  
                </FormField>
                <FormField id="barcode" label="Barcode">
-                  <InputText id="barcode" v-model="barcode" type="text" />   
+                  <InputText id="barcode" v-model="barcode" type="text" @update:modelValue="needsValidation=true"/>  
                </FormField>
                <DPGButton @click="sirsiLookup" label="Lookup" severity="secondary" :loading="metadataStore.sirsiMatch.searching"/>
             </div>
+            <Message v-if="needsValidation" severity="error" size="small" variant="simple">Lookup a new match for changes in barcode or catalog key</Message>
             <Message v-if="metadataStore.sirsiMatch.error" severity="error" size="small" variant="simple">{{metadataStore.sirsiMatch.error}}</Message>
             <div>
                <dl>
@@ -49,11 +50,12 @@
             <div class="split">
                <FormField id="exturi" label="External URI" :error="errors.externalURI" :required="true">
                   <div style="display: flex; flex-flow: row nowrap; gap: 10px">
-                     <InputText id="exturi" type="text" v-model="externalURI"  /> 
+                     <InputText id="exturi" type="text" v-model="externalURI"  @update:modelValue="needsValidation=true"/>  
                      <DPGButton @click="validateASMetadata" label="Validate" severity="secondary" :loading="metadataStore.asMatch.searching"/>
                   </div>  
                </FormField>
             </div>
+            <Message v-if="needsValidation" severity="error" size="small" variant="simple">Changes to external URI need to be validated</Message>
             <Message v-if="metadataStore.asMatch.error" severity="error" size="small" variant="simple">{{metadataStore.asMatch.error}}</Message>
             <dl>
                <DataDisplay label="Title" :value="metadataStore.asMatch.title" blankValue="Unknown"/>
@@ -123,7 +125,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import DataDisplay from '@/components/DataDisplay.vue'
 import Panel from 'primevue/panel'
 import Select from 'primevue/select'
@@ -177,6 +179,9 @@ const [collectionFacet] = defineField('collectionFacet')
 const [isCollection] = defineField('isCollection')
 
 const emit = defineEmits( ['canceled', 'created' ])
+
+// this indicates that extURI, barcode or catkey have changed and need to be validated
+const needsValidation = ref(false) 
 
 const props = defineProps({
    collection: {
@@ -292,6 +297,7 @@ const isLanguageDisabled = computed(() => {
 const typeChanged = (() => {
    const newType = type.value
    resetData()
+   needsValidation.value = false
    metadataStore.sirsiMatch.error = ""
    setValues({type: newType})
 })
@@ -299,6 +305,7 @@ const typeChanged = (() => {
 const validateASMetadata = ( async () => {
    await metadataStore.validateArchivesSpaceURI(externalURI.value.trim())
    if (metadataStore.asMatch.error == "") {
+      needsValidation.value = false
       setValues({
          externalURI: metadataStore.asMatch.validatedURL,
          title: metadataStore.asMatch.title
@@ -309,6 +316,7 @@ const validateASMetadata = ( async () => {
 const sirsiLookup= (async () => {
    await metadataStore.sirsiLookup(barcode.value, catalogKey.value)
    if ( metadataStore.sirsiMatch.error == "") {
+      needsValidation.value = false
       setValues({
          title: metadataStore.sirsiMatch.title,
          callNumber: metadataStore.sirsiMatch.callNumber,
@@ -324,6 +332,7 @@ const cancelCreate = (() => {
 })
 
 const createMetadata = handleSubmit( async (values) => {
+   if (needsValidation.value ) return
    if (values.type == "ExternalMetadata") {
       values.externalSystemID = 1
    }
