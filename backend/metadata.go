@@ -525,8 +525,9 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		fields = append(fields, "CollectionFacet")
 	}
 
-	checkProjects := (md.Title != req.Title || *md.CallNumber != req.CallNumber)
+	checkProjects := false
 	if md.Type == "SirsiMetadata" {
+		checkProjects = (md.Title != req.Title || *md.CallNumber != req.CallNumber)
 		md.Barcode = &req.Barcode
 		md.CallNumber = &req.CallNumber
 		md.CatalogKey = &req.CatalogKey
@@ -538,6 +539,9 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		md.ExternalURI = &req.ExternalURI
 		md.Title = req.Title
 		fields = append(fields, "ExternalURI", "Title")
+	}
+	if md.Type == "XmlMetadata" {
+		checkProjects = md.Title != req.Title
 	}
 
 	err = svc.DB.Model(&md).Select(fields).Updates(md).Error
@@ -562,7 +566,7 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		svc.sendUseRightToSirsi(&md, req.UseRightID)
 	}
 
-	if checkProjects {
+	if checkProjects && md.CallNumber != nil {
 		log.Printf("INFO: metadata %d title or call number updated; check for projects to update", md.ID)
 		go func() {
 			svc.updateMetadataRelatedProjects(md.ID, md.Title, *md.CallNumber, getJWT(c))

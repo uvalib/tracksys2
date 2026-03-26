@@ -6,13 +6,14 @@
             <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
                <div class="split">
                   <FormField id="catkey" label="Catalog Key">
-                     <InputText id="catkey" v-model="catalogKey" type="text" />   
+                     <InputText id="catkey" v-model="catalogKey" type="text" @update:modelValue="needsValidation=true"/>   
                   </FormField>
                   <FormField id="barcode" label="Barcode">
-                     <InputText id="barcode" v-model="barcode" type="text" />   
+                     <InputText id="barcode" v-model="barcode" type="text" @update:modelValue="needsValidation=true"/>   
                   </FormField>
                   <DPGButton @click="sirsiLookup" label="Lookup" severity="secondary" :loading="metadataStore.sirsiMatch.searching"/>
                </div>
+               <Message v-if="needsValidation" severity="error" size="small" variant="simple">Lookup a new match for changes in barcode or catalog key</Message>
                <Message v-if="metadataStore.sirsiMatch.error" severity="error" size="small" variant="simple">{{metadataStore.sirsiMatch.error}}</Message>
                <dl>
                   <DataDisplay label="Title" :value="title" blankValue="Unknown"/>
@@ -30,12 +31,13 @@
                <div class="split">
                   <FormField id="exturi" label="External URI" :error="errors.externalURI" :required="true">
                      <div style="display: flex; flex-flow: row nowrap; gap: 10px">
-                        <InputText id="exturi" type="text" v-model="externalURI"  />   
+                        <InputText id="exturi" type="text" v-model="externalURI" @update:modelValue="needsValidation=true" />   
                         <DPGButton @click="validateASMetadata" label="Validate" severity="secondary" :loading="metadataStore.asMatch.searching"/>
                      </div>
                   </FormField>
                  
                </div>
+               <Message v-if="needsValidation" severity="error" size="small" variant="simple">Changes to external URI need to be validated</Message>
                <Message v-if="metadataStore.asMatch.error" severity="error" size="small" variant="simple">{{metadataStore.asMatch.error}}</Message>
                <dl>
                   <DataDisplay label="Title" :value="title" blankValue="Unknown"/>
@@ -169,8 +171,9 @@ const systemStore = useSystemStore()
 const userStore = useUserStore()
 
 const originalUseRight = ref(1)
-const updatingURI = ref(true) // on page load, the URL is from existing data. consider it valid by default FIXME???
-// NEED TO ENSURE THAT WHEN EXT URI OR BARCODE/CALL NUM IS CHANGED THE VALIDATION CATCHES IT
+
+// this indicates that extURI, barcode or catkey have changed and need to be validated
+const needsValidation = ref(false) 
 
 const pageHeader = computed( () => {
    let baseHdr = `Metadata ${route.params.id}`
@@ -218,7 +221,7 @@ const yesNo = computed(() => {
 })
 
 const preservationDisabled = computed(() => {
-   if ( !values.preservationTier) return true
+   if (typeof values.preservationTier === 'undefined') return true
    if (values.preservationTier < 2) {
       // no aptrust requested
       return false
@@ -235,7 +238,7 @@ const preservationDisabled = computed(() => {
    return true
 })
 const isLanguageDisabled = computed(() => {
-   if ( !values.ocrHint ) return true
+   if (typeof values.ocrHint === 'undefined') return true
    if ( values.ocrHint == 0) return true
    let hint = systemStore.ocrHints.find( h => h.id == values.ocrHint)
    return !hint.ocrCandidate
@@ -278,6 +281,7 @@ onMounted( async () =>{
    let mdID = route.params.id
    await metadataStore.getDetails(mdID)
    document.title = `Edit | Metadata ${mdID}`
+   needsValidation.value = false
 
    // NOTE: catalogKey and barcode may be null as they are optional data members
    // but the lookup code does not handle null values. make sure they are empty string instead
@@ -299,6 +303,10 @@ onMounted( async () =>{
       isCollection: metadataStore.detail.isCollection,
       collectionID: metadataStore.detail.collectionID,
       collectionFacet: metadataStore.detail.collectionFacet,
+   }
+
+   if (metadataStore.detail.type == "ExternalMetadata") {
+      md.externalSystemID = 1
    }
 
    if (  metadataStore.detail.catalogKey ) {
@@ -330,6 +338,7 @@ onMounted( async () =>{
 const sirsiLookup = ( async () => {
    await metadataStore.sirsiLookup(barcode.value, catalogKey.value)
    if ( metadataStore.sirsiMatch.error == "") {
+      needsValidation.value = false
       setValues({
          title: metadataStore.sirsiMatch.title,
          callNumber: metadataStore.sirsiMatch.callNumber,
@@ -343,6 +352,7 @@ const sirsiLookup = ( async () => {
 const validateASMetadata = ( async () => {
    await metadataStore.validateArchivesSpaceURI(values.externalURI)
    if (metadataStore.asMatch.error == "") {
+      needsValidation.value = false
       setValues({
          externalURI: metadataStore.asMatch.validatedURL,
          title: metadataStore.asMatch.title
@@ -356,6 +366,9 @@ const cancelEdit = (() => {
 })
 
 const submitChanges = handleSubmit( async (values) => {
+   if ( needsValidation.value ) {
+      return
+   }
    let currTierID = null
    if ( metadataStore.detail.preservationTier ) {
       currTierID = metadataStore.detail.preservationTier.id
