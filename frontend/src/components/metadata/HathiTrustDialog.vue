@@ -1,43 +1,71 @@
 <template>
    <Dialog v-model:visible="showDialog" :style="{width: '550px'}" header="HathiTrust Status" :modal="true" position="top" @hide="emit('closed')">
-      <FormKit type="form" id="hathitrust-detail" :actions="false" @submit="submitChanges">
+      <form id="hathitrust-detail" @submit="submitChanges">
          <div class="split">
-            <FormKit label="Date Requested" type="date" v-model="status.requestedAt" readonly outer-class="first" />
-            <span class="sep"/>
-            <FormKit label="Date Finished" type="date" v-model="status.finishedAt" outer-class="first"/>
+            <FormField id="drequest" label="Date Requested">
+               <InputText id="drequest" v-model="requestedAt" type="text" :readonly="true"/>   
+            </FormField>
+            <FormField id="dfinish" label="Date Finished">
+               <InputText id="dfinish" v-model="finishedAt" type="date"/>   
+            </FormField>
          </div>
-         <div class="group">
+        <div class="group">
             <p class="group-name">Metadata</p>
             <div class="split">
-               <FormKit label="Date Submitted" type="date" v-model="status.metadataSubmittedAt" outer-class="first" />
-               <span class="sep"/>
-               <FormKit label="Status" type="text" v-model="status.metadataStatus" outer-class="first" />
+               <FormField id="dsubmit" label="Date Submitted">
+                  <InputText id="dsubmit" v-model="metadataSubmittedAt" type="date"/>   
+               </FormField>
+               <FormField id="mdstatus" label="Status">
+                  <InputText id="mdstatus" v-model="metadataStatus" type="text"/>   
+               </FormField>
             </div>
          </div>
          <div class="group">
             <p class="group-name">Package</p>
             <div class="split">
-               <FormKit label="Date Created" type="date" v-model="status.packageCreatedAt" />
-               <span class="sep"/>
-               <FormKit label="Date Submitted" type="date" v-model="status.packageSubmittedAt" />
-               <span class="sep"/>
-               <FormKit label="Status" type="text" v-model="status.packageStatus" />
+               <FormField id="pcreate" label="Date Created">
+                  <InputText id="pcreate" v-model="packageCreatedAt" type="date"/>   
+               </FormField>
+               <FormField id="psubmit" label="Date Submitted">
+                  <InputText id="psubmit" v-model="packageSubmittedAt" type="date"/>   
+               </FormField>
+               <FormField id="pstatus" label="Status">
+                  <InputText id="pstatus" v-model="packageStatus" type="text"/>   
+               </FormField>
             </div>
          </div>
-         <FormKit label="Notes" type="textarea" v-model="status.notes" />
-         <p class="error" v-if="metadataStore.error ">{{ metadataStore.error }}</p>
+         <FormField id="htnotes" label="Notes">
+            <Textarea id="htnotes" v-model="notes" autoResize rows="3" /> 
+         </FormField>
+         <Message v-if="metadataStore.error" severity="error" size="small" variant="simple">{{metadataStore.error}}</Message>
          <div class="acts">
             <DPGButton @click="closeDialog" label="Cancel" severity="secondary"/>
-            <FormKit type="submit" label="Update" :wrapper-class="submitClass" />
+            <DPGButton label="Update" type="submit" />
          </div>
-      </FormKit>
+      </form>
    </Dialog>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useMetadataStore } from '@/stores/metadata'
 import Dialog from 'primevue/dialog'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
+import Message from 'primevue/message'
+import { useForm } from 'vee-validate'
+import FormField from '@/components/FormField.vue'
+
+const { resetForm, handleSubmit, defineField } = useForm({})
+
+const [requestedAt] = defineField('requestedAt')
+const [packageCreatedAt] = defineField('packageCreatedAt')
+const [packageSubmittedAt] = defineField('packageSubmittedAt')
+const [packageStatus] = defineField('packageStatus')
+const [metadataSubmittedAt] = defineField('metadataSubmittedAt')
+const [metadataStatus] = defineField('metadataStatus')
+const [finishedAt] = defineField('finishedAt')
+const [notes] = defineField('notes')
 
 const metadataStore = useMetadataStore()
 
@@ -45,35 +73,21 @@ const emit = defineEmits( ['closed' ])
 
 const showDialog = ref(true)
 
-const status = ref({
-   requestedAt: null,
-   packageCreatedAt: null,
-   packageSubmittedAt: null,
-   packageStatus: "",
-   metadataSubmittedAt: null,
-   metadataStatus: "",
-   finishedAt: null,
-   notes: ""}
-)
-
-const submitClass = computed(() => {
-   let btnClass = "submit-button"
-   if ( metadataStore.working) {
-      btnClass += " disabled"
-   }
-   return btnClass
-})
-
 onMounted( () => {
    metadataStore.error = ""
-   status.value.requestedAt = cleanDate(metadataStore.hathiTrustStatus.requestedAt)
-   status.value.packageCreatedAt = cleanDate(metadataStore.hathiTrustStatus.packageCreatedAt)
-   status.value.packageSubmittedAt = cleanDate(metadataStore.hathiTrustStatus.packageSubmittedAt)
-   status.value.packageStatus = metadataStore.hathiTrustStatus.packageStatus
-   status.value.metadataSubmittedAt = cleanDate(metadataStore.hathiTrustStatus.metadataSubmittedAt)
-   status.value.metadataStatus = metadataStore.hathiTrustStatus.metadataStatus
-   status.value.finishedAt = cleanDate(metadataStore.hathiTrustStatus.finishedAt)
-   status.value.notes = metadataStore.hathiTrustStatus.notes
+   resetForm( {
+      values: {
+         requestedAt: cleanDate(metadataStore.hathiTrustStatus.requestedAt),
+         packageCreatedAt: cleanDate(metadataStore.hathiTrustStatus.packageCreatedAt),
+         packageSubmittedAt: cleanDate(metadataStore.hathiTrustStatus.packageSubmittedAt),
+         packageStatus: metadataStore.hathiTrustStatus.packageStatus,
+         metadataSubmittedAt: cleanDate(metadataStore.hathiTrustStatus.metadataSubmittedAt),
+         metadataStatus: metadataStore.hathiTrustStatus.metadataStatus,
+         finishedAt: cleanDate(metadataStore.hathiTrustStatus.finishedAt),
+         notes: metadataStore.hathiTrustStatus.notes,
+      }
+   })
+  
    showDialog.value = true
 })
 
@@ -89,8 +103,8 @@ const closeDialog = (() => {
    emit("closed")
 })
 
-const submitChanges = ( async () => {
-   await metadataStore.updateHathiTrustStatus( status.value )
+const submitChanges = handleSubmit( async (values) => {
+   await metadataStore.updateHathiTrustStatus( values )
    if ( metadataStore.error == "" ) {
       closeDialog()
    }
@@ -99,41 +113,37 @@ const submitChanges = ( async () => {
 </script>
 
 <style scoped lang="scss">
-.group {
-   border: 1px solid var(--uvalib-grey-lightest);
-   padding: 10px;
-   margin-top: 10px;
-   border-radius: 5px;
+form {
+   display: flex;
+   flex-direction: column;
+   gap: 15px;
 
-   p.group-name {
-      margin: 0 0 5px 0;
-      font-weight: bold;
+   .group {
+      border: 1px solid var(--uvalib-grey-light);
+      border-radius: 0.3rem;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      p.group-name {
+         font-weight: bold;
+         margin:0;
+         padding: 0;
+      }
    }
-}
-.split {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: flex-end;
-   :deep(.formkit-outer) {
-      flex-grow: 1;
+   .split {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-start;
+      align-items: flex-end;
+      gap: 15px;
    }
-   .sep {
-      display: inline-block;
-      width: 10px;
+   .acts {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-end;
+      gap: 10px;
    }
-}
-p.error {
-   text-align: center;
-   font-style: italic;
-   color: var(--uvalib-red-emergency);
-   margin: 10px 0 0 0;
-}
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   padding: 20px 0 10px 0;
-   gap: 10px;
 }
 </style>
