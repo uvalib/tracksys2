@@ -83,9 +83,6 @@
                      :options="ocrLanguages" optionLabel="label" optionValue="value"  placeholder="Select a language"
                   />   
                </FormField>
-               <FormField id="ptier" label="Preservation Tier">
-                  <Select id="ptier" v-model="preservationTier"  :options="preservationTiers" optionLabel="label" optionValue="value"  placeholder="Select a tier"/>   
-               </FormField>
             </div>
          </template>
       </Panel>
@@ -170,7 +167,6 @@ const [personalItem] = defineField('personalItem')
 const [manuscript] = defineField('manuscript')
 const [ocrHint] = defineField('ocrHint')
 const [ocrLanguageHint] = defineField('ocrLanguageHint')
-const [preservationTier] = defineField('preservationTier')
 const [availabilityPolicy] = defineField('availabilityPolicy')
 const [useRight] = defineField('useRight')
 const [inDPLA] = defineField('inDPLA')
@@ -211,7 +207,6 @@ const resetData = (() => {
          manuscript: false,
          ocrHint: 0,
          ocrLanguageHint: "",
-         preservationTier: 0,
          availabilityPolicy: 1,
          useRight: 1,
          inDPLA: false,
@@ -237,13 +232,6 @@ const collectionFacets = computed(() => {
    let out = []
    systemStore.collectionFacets.forEach( o => {
       out.push({label: o.name, value: o.name})
-   })
-   return out
-})
-const preservationTiers = computed(() => {
-   let out = []
-   systemStore.preservationTiers.forEach( o => {
-      out.push({label: o.name, value: o.id})
    })
    return out
 })

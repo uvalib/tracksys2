@@ -121,7 +121,6 @@
                <DataDisplay label="Personal Item" :value="$formatBool(metadataStore.detail.isPersonalItem)"/>
                <DataDisplay label="OCR Hint" :value="ocrHint"/>
                <DataDisplay label="OCR Language Hint" :value="metadataStore.detail.ocrLanguageHint"/>
-               <DataDisplay label="Preservation Tier" :value="preservationTier"/>
             </dl>
 
             <template v-if="externalSystem == 'ArchivesSpace'">
@@ -141,7 +140,7 @@
                <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
             </template>
          </Panel>
-         <Panel header="APTrust Information" v-if="apTrustPreservation">
+         <Panel header="APTrust Information" v-if="apTrust.hasItemStatus">
             <APTrustPanel />
          </Panel>
       </div>
@@ -306,11 +305,6 @@ const sortedFolders = computed(() => {
    })
 })
 
-const apTrustPreservation = computed( () => {
-   if ( metadataStore.detail.preservationTier && metadataStore.detail.preservationTier.id > 1 ) return true
-   return false
-})
-
 const canDelete = computed(() => {
    if (userStore.isAdmin == false) return false
    if (metadataStore.related.units.length > 0) return false
@@ -334,12 +328,6 @@ const externalSystem = computed(() => {
 const availabilityPolicy = computed(() => {
    if ( metadataStore.detail.availabilityPolicy ) {
       return metadataStore.detail.availabilityPolicy.name
-   }
-   return ""
-})
-const preservationTier = computed(() => {
-   if ( metadataStore.detail.preservationTier ) {
-      return `${metadataStore.detail.preservationTier.name}: ${metadataStore.detail.preservationTier.description}`
    }
    return ""
 })

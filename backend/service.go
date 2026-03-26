@@ -225,7 +225,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 			IntendedUses         []intendedUse        `json:"intendedUses"`
 			OCRHints             []ocrHint            `json:"ocrHints"`
 			OCRLanguageHints     []ocrLanguageHint    `json:"ocrLanguageHints"`
-			PreservationTiers    []preservationTier   `json:"preservationTiers"`
 			UseRights            []useRight           `json:"useRights"`
 		} `json:"controlledVocabularies"`
 	}
@@ -320,14 +319,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 				resp.ControlledVocabularies.OCRLanguageHints = append(resp.ControlledVocabularies.OCRLanguageHints, ocrLanguageHint{Code: rec[0], Language: rec[1]})
 			}
 		}
-	}
-
-	log.Printf("INFO: load preservation tiers")
-	err = svc.DB.Order("id asc").Find(&resp.ControlledVocabularies.PreservationTiers).Error
-	if err != nil {
-		log.Printf("ERROR: unable to get preservtion tiers: %s", err.Error())
-		c.String(http.StatusInternalServerError, err.Error())
-		return
 	}
 
 	log.Printf("INFO: load use rights")

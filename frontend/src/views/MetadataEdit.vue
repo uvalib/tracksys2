@@ -63,10 +63,6 @@
                      :options="ocrLanguages" optionLabel="label" optionValue="value"  placeholder="Select a language"
                   />   
                </FormField>
-               <FormField id="ptier" label="Preservation Tier">
-                  <Select id="ptier" v-model="preservationTier" :disabled="preservationDisabled" 
-                     :options="preservationTiers" optionLabel="label" optionValue="value"  placeholder="Select a tier"/>   
-               </FormField>
             </div>
          </Panel>
          <Panel v-if="metadataStore.detail.type != 'ExternalMetadata'" header="Digital Library Information">
@@ -154,7 +150,6 @@ const [personalItem] = defineField('personalItem')
 const [manuscript] = defineField('manuscript')
 const [ocrHint] = defineField('ocrHint')
 const [ocrLanguageHint] = defineField('ocrLanguageHint')
-const [preservationTier] = defineField('preservationTier')
 const [availabilityPolicy] = defineField('availabilityPolicy')
 const [useRight] = defineField('useRight')
 const [inDPLA] = defineField('inDPLA')
@@ -220,23 +215,6 @@ const yesNo = computed(() => {
    return out
 })
 
-const preservationDisabled = computed(() => {
-   if (typeof values.preservationTier === 'undefined') return true
-   if (values.preservationTier < 2) {
-      // no aptrust requested
-      return false
-   }
-   if (!metadataStore.apTrustStatus) {
-      // aptrust requested, but not yet submitted
-      return false
-   }
-   if (metadataStore.apTrustStaus == "Canceled" || metadataStore.apTrustStaus == "Failed") {
-      // aptrust failed or canceled
-      return false
-   }
-   // aptrust submit in progress
-   return true
-})
 const isLanguageDisabled = computed(() => {
    if (typeof values.ocrHint === 'undefined') return true
    if ( values.ocrHint == 0) return true
@@ -247,13 +225,6 @@ const availabilityPolicies = computed(() => {
    let out = []
    systemStore.availabilityPolicies.forEach( o => {
       out.push({label: o.name, value: o.id})
-   })
-   return out
-})
-const preservationTiers = computed(() => {
-   let out = []
-   systemStore.preservationTiers.forEach( o => {
-      out.push({label: `${o.name}: ${o.description}`, value: o.id})
    })
    return out
 })
@@ -297,7 +268,6 @@ onMounted( async () =>{
       manuscript: metadataStore.detail.isManuscript,
       ocrHint: 0,
       ocrLanguageHint: metadataStore.detail.ocrLanguageHint,
-      preservationTier: 0,
       inDPLA: metadataStore.detail.inDPLA,
       inHathiTrust: metadataStore.detail.inHathiTrust,
       isCollection: metadataStore.detail.isCollection,
@@ -317,9 +287,6 @@ onMounted( async () =>{
    }
    if (metadataStore.detail.ocrHint) {
       md.ocrHint = metadataStore.detail.ocrHint.id
-   }
-   if (metadataStore.detail.preservationTier) {
-      md.preservationTier = metadataStore.detail.preservationTier.id
    }
    if (metadataStore.detail.availabilityPolicy) {
       md.availabilityPolicy = metadataStore.detail.availabilityPolicy.id
@@ -369,32 +336,7 @@ const submitChanges = handleSubmit( async (values) => {
    if ( needsValidation.value ) {
       return
    }
-   let currTierID = null
-   if ( metadataStore.detail.preservationTier ) {
-      currTierID = metadataStore.detail.preservationTier.id
-   }
-   if ( metadataStore.detail.isCollection && currTierID != values.preservationTier ) {
-      confirm.require({
-         message: "Updating the preservation tier for a collection will also update the preservation tier for all collection items. Are you sure?",
-         header: 'Confirm Preservation Tier',
-         icon: 'pi pi-question-circle',
-         rejectProps: {
-            label: 'Cancel',
-            severity: 'secondary'
-         },
-         acceptProps: {
-            label: 'Update'
-         },
-         accept: () => {
-            doSubmit(values)
-         },
-      })
-   } else {
-      doSubmit(values)
-   }
-})
 
-const doSubmit = ( async (values) => {
    if (metadataStore.detail.type == 'SirsiMetadata') {
       // SEE IF UR changed from CNE / UND to sotething else, or if UR chanegd from something valid to CNE/UND
       // in these cases, send the new ID. Otehrwise send a 0 so backend ignores the request.

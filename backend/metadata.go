@@ -53,12 +53,6 @@ type externalSystem struct {
 	APIURL    string `gorm:"column:api_url" jjson:"apiURL"`
 }
 
-type preservationTier struct {
-	ID          uint   `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
 type metadata struct {
 	ID                   int64               `json:"id"`
 	PID                  string              `gorm:"column:pid" json:"pid"`
@@ -86,8 +80,6 @@ type metadata struct {
 	SupplementalSystemID *int64              `json:"-"`
 	SupplementalSystem   *externalSystem     `gorm:"foreignKey:SupplementalSystemID" json:"supplementalSystem"`
 	SupplementalURI      *string             `json:"supplementalURI"`
-	PreservationTierID   int64               `json:"-"`
-	PreservationTier     *preservationTier   `gorm:"foreignKey:PreservationTierID" json:"preservationTier"`
 	APTrustSubmission    *apTrustSubmission  `gorm:"foreignKey:MetadataID" json:"apTrustSubmission,omitempty"`
 	DPLA                 bool                `gorm:"column:dpla" json:"dpla"`
 	HathiTrust           bool                `gorm:"column:hathitrust" json:"hathiTrust"`
@@ -197,7 +189,6 @@ type metadataRequest struct {
 	Manuscript           bool   `json:"manuscript"`
 	OCRHint              int64  `json:"ocrHint"`
 	OCRLanguageHint      string `json:"ocrLanguageHint"`
-	PreservationTierID   int64  `json:"preservationTier"`
 	AvailabilityPolicyID int64  `json:"availabilityPolicy"`
 	UseRightID           int64  `json:"useRight"`
 	DPLA                 bool   `json:"inDPLA"`
@@ -344,9 +335,6 @@ func (svc *serviceContext) createMetadata(c *gin.Context) {
 		if req.OCRHint == 1 && req.OCRLanguageHint != "" {
 			newMD.OCRLanguageHint = req.OCRLanguageHint
 		}
-	}
-	if req.PreservationTierID > 0 {
-		newMD.PreservationTierID = req.PreservationTierID
 	}
 
 	// For non-external, set digital library attributes
@@ -504,10 +492,6 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		md.OCRLanguageHint = req.OCRLanguageHint
 		fields = append(fields, "OCRLanguageHint")
 	}
-	if req.PreservationTierID > 0 {
-		md.PreservationTierID = req.PreservationTierID
-		fields = append(fields, "PreservationTierID")
-	}
 	if req.AvailabilityPolicyID > 0 {
 		md.AvailabilityPolicyID = &req.AvailabilityPolicyID
 		fields = append(fields, "AvailabilityPolicyID")
@@ -549,15 +533,6 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 		log.Printf("ERROR: unable to update metadata %d: %s", md.ID, err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
-	}
-
-	if md.IsCollection && req.PreservationTierID > 0 {
-		log.Printf("INFO: updated preservation tier of a collection; update all members to match")
-		sql := `update metadata set preservation_tier_id=? where parent_metadata_id = ? and (preservation_tier_id is null or preservation_tier_id <=1)`
-		err = svc.DB.Exec(sql, req.PreservationTierID, md.ID).Error
-		if err != nil {
-			log.Printf("ERROR: unable to update preservation tier of collection members: %s", err.Error())
-		}
 	}
 
 	// after a successful update, send any updated use right info to sirsi
@@ -632,8 +607,7 @@ func (svc *serviceContext) sendUseRightToSirsi(md *metadata, useRightID int64) {
 func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailResponse, error) {
 	var md metadata
 	err := svc.DB.Preload("OCRHint").Preload("AvailabilityPolicy").Preload("APTrustSubmission").
-		Preload("ExternalSystem").Preload("SupplementalSystem").Preload("HathiTrustStatus").
-		Preload("PreservationTier").Preload("Locations").
+		Preload("ExternalSystem").Preload("SupplementalSystem").Preload("HathiTrustStatus").Preload("Locations").
 		Limit(1).Find(&md, mdID).Error
 	if err != nil {
 		return nil, err
