@@ -22,7 +22,6 @@ app.use(pinia)
 app.use(router)
 
 // Styles
-import './assets/styles/forms.scss'
 import './assets/styles/main.scss'
 
 // Primevue setup
@@ -57,56 +56,4 @@ import ConfirmDialog from 'primevue/confirmdialog'
 app.component("DPGButton", Button)
 app.component("ConfirmDialog", ConfirmDialog)
 
-// FormKit
-import { plugin, defaultConfig } from '@formkit/vue'
-const dc = defaultConfig({
-   plugins: [addErrorAlertIconPlugin, addRequiredNotePlugin],
-   config: {
-      classes: {
-         input: '$reset dpg-form-input',
-         label: '$reset dpg-form-label',
-         messages: '$reset dpg-form-invalid',
-         help: '$reset dpg-form-help',
-      },
-   }
-})
-app.use(plugin, dc)
-
 app.mount('#app')
-
-/* FORMKIT PLUGINS */
-function addRequiredNotePlugin(node) {
-   node.on('created', () => {
-      const schemaFn = node.props.definition.schema
-      node.props.definition.schema = (sectionsSchema = {}) => {
-         sectionsSchema["label"] = {
-            children: [`$label`, {
-               $el: 'span',
-               if: '$state.required',
-                  attrs: {
-                     innerHTML: "*</i><span class='req'>(required)</span>"
-                  },
-            }]
-         }
-         return schemaFn(sectionsSchema)
-      }
-   })
-}
-
-function addErrorAlertIconPlugin(node) {
-   node.on('created', () => {
-      const schemaFn = node.props.definition.schema
-      node.context.warningIcon = '<i class="pi pi-exclamation-triangle"></i>'
-      node.props.definition.schema = (extensions) => {
-         if (!extensions.message) {
-            extensions.message = {
-               attrs: {
-                  innerHTML: '$warningIcon + " " + $message.value'
-               },
-               children: null
-            }
-         }
-         return schemaFn(extensions)
-      }
-   })
-}
