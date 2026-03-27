@@ -1,17 +1,27 @@
 <template>
    <DPGButton @click="show" severity="secondary" label="Create Digitization Project" :disabled="createDisabled"/>
    <Dialog v-model:visible="isOpen" :modal="true" header="Create Digitization Project" :style="{width: '400px'}" :closable="false">
-      <FormKit type="form" id="create-project" :actions="false" @submit="createProject">
-         <FormKit label="Workflow" type="select" v-model="project.workflowID" :options="workflows" required outer-class="first" />
-         <FormKit v-if="project.workflowID==6" label="Container Type" type="select" v-model="project.containerTypeID" :options="containerTypes" required placeholder="Select a container type"/>
-         <FormKit label="Category" type="select" v-model="project.categoryID" :options="categories" required placeholder="Select a category"/>
-         <FormKit label="Condition" type="select" v-model="project.condition" :options="conditions" required/>
-         <FormKit label="Notes" type="textarea" rows="4" v-model="project.notes"/>
+      <form @submit="createProject">
+         <FormField id="workdlow" label="Workflow" :error="errors.workflowID" :required="true">
+            <Select id="workdlow" v-model="workflowID"  :options="workflows" optionLabel="label" optionValue="value" placeholder="Select a workflow" />   
+         </FormField>
+         <FormField  v-if="workflowID==6" id="containertype" label="Container Tyoe" :error="errors.containerTypeID" :required="true">
+            <Select id="containertype" v-model="containerTypeID"  :options="containerTypes" optionLabel="label" optionValue="value" placeholder="Select a container type" />   
+         </FormField>
+         <FormField id="category" label="Category" :error="errors.categoryID" :required="true">
+            <Select id="category" v-model="categoryID"  :options="categories" optionLabel="label" optionValue="value" placeholder="Select a category" />   
+         </FormField>
+         <FormField id="condition" label="Condition" :error="errors.condition" :required="true">
+            <Select id="condition" v-model="condition"  :options="conditions" optionLabel="label" optionValue="value" placeholder="Select a condition" />   
+         </FormField>
+         <FormField id="notes" label="Notes">
+            <Textarea id="notes" v-model="notes" rows="4"/>   
+         </FormField>
          <div class="acts">
             <DPGButton @click="hide" label="Cancel" severity="secondary"/>
-            <FormKit type="submit" label="Create Project" wrapper-class="submit-button" />
+            <DPGButton label="Create Project" type="submit"/>
          </div>
-      </FormKit>
+      </form>
    </Dialog>
 </template>
 
@@ -20,7 +30,29 @@ import { ref, computed } from 'vue'
 import Dialog from 'primevue/dialog'
 import { useUnitsStore } from '@/stores/units'
 import { useSystemStore } from '@/stores/system'
+import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
 import axios from 'axios'
+import { useForm } from 'vee-validate'
+import * as yup from 'yup'
+import FormField from '@/components/FormField.vue'
+
+const schema = yup.object().shape({
+      workflowID: yup.number().min(1, 'Workflow is required'),
+      categoryID: yup.number().min(1, 'Category is required'),
+      condition: yup.bool().required("Condition is required"),
+      containerTypeID: yup.number().when('workflowID', {
+         is: (value) => value == 6,
+         then: (schema) => schema.min(1,"Container type is required"),
+      }),
+   })
+const { errors, resetForm, handleSubmit, defineField } = useForm({validationSchema: schema})
+
+const [workflowID] = defineField('workflowID')
+const [containerTypeID] = defineField('containerTypeID')
+const [categoryID] = defineField('categoryID')
+const [condition] = defineField('condition')
+const [notes] = defineField('notes')
 
 const unitsStore = useUnitsStore()
 const systemStore = useSystemStore()
@@ -28,20 +60,6 @@ const systemStore = useSystemStore()
 const isOpen = ref(false)
 const workflows = ref([])
 const categories = ref([])
-const project = ref({
-   unitID: 0,
-   orderID: 0,
-   dateDue: null,
-   title: "",
-   callNumber: "",
-   customerID: 0,
-   agencyID: 0,
-   workflowID: 1,
-   containerTypeID: 0,
-   categoryID: null,
-   condition: 0,
-   notes: ""
-})
 
 const createDisabled = computed(() => {
    let approved = (unitsStore.detail.status == 'approved' && unitsStore.detail.order.status == 'approved')
@@ -62,53 +80,62 @@ const conditions = computed( () => {
    return out
 })
 
-async function createProject() {
-   axios.post(`${systemStore.projectsURL}/api/projects/create`, project.value).then(response => {
+const createProject = handleSubmit( async (values) => {
+   axios.post(`${systemStore.projectsURL}/api/projects/create`, values).then(response => {
       unitsStore.detail.projectID = parseInt(response.data, 10)
       systemStore.toastMessage("Project Created", "A new project has been created for this unit")
       hide()
    }).catch( err => {
       systemStore.setError(err)
    })
-}
-function hide() {
-   isOpen.value=false
-}
-function show() {
-   project.value.unitID = unitsStore.detail.id
-   project.value.orderID = unitsStore.detail.orderID
-   project.value.dateDue = unitsStore.detail.order.dateDue
-   project.value.title = unitsStore.detail.metadata.title
-   project.value.callNumber = unitsStore.detail.metadata.callNumber
-   project.value.agencyID = 0
-   if ( unitsStore.detail.order.agency ) {
-       project.value.agencyID = unitsStore.detail.order.agency.id
-   }
-   project.value.customerID = unitsStore.detail.order.customer.id
-   project.value.workflowID = 1
-   project.value.categoryID = 0
-   project.value.containerTypeID = 0
-   project.value.condition = 0
-   project.value.notes = ""
+})
 
+const hide = (() => {
+   isOpen.value=false
+})
+
+const show = (() => {
+   let vals = {
+      unitID: unitsStore.detail.id,
+      orderID: unitsStore.detail.orderID,
+      dateDue: unitsStore.detail.order.dateDue,
+      title: unitsStore.detail.metadata.title,
+      callNumber: unitsStore.detail.metadata.callNumber,
+      agencyID: 0,
+      customerID: unitsStore.detail.order.customer.id,
+      workflowID: 1,
+      categoryID: 0,
+      containerTypeID: 0,
+      condition: null,
+      notes: "",
+   }
+   if ( unitsStore.detail.order.agency ) {
+       vals.agencyID = unitsStore.detail.order.agency.id
+   }
+   resetForm({ values: vals })
+   
    // load constants from dpg-imaging
    axios.get(`${systemStore.projectsURL}/constants`).then(response => {
       workflows.value = response.data.workflows
       categories.value = response.data.categories
+      console.log(response.data)
       isOpen.value = true
    }).catch( err => {
       systemStore.setError(err)
    })
-}
+})
 </script>
 
 <style lang="scss" scoped>
-.acts {
+form {
    display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   padding: 15px 0 10px 0;
-   margin: 0;
-   gap: 10px;
+   flex-direction: column;
+   gap: 15px;
+   .acts {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-end;
+      gap: 10px;
+   }
 }
 </style>
