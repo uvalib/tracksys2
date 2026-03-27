@@ -31,8 +31,8 @@
                   :options="agencies" optionLabel="label" optionValue="value" 
                />   
             </FormField>
-            <FormField id="customer" label="Customer">
-               <Select id="customer" v-model="customerID" filter :error="errors.customerID" :required="true"
+            <FormField id="customer" label="Customer" :error="errors.customerID" :required="true">
+               <Select id="customer" v-model="customerID" filter 
                   :options="customers" optionLabel="label" optionValue="value" placeholder="Select a customer"
                />   
             </FormField>

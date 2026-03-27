@@ -1,15 +1,22 @@
 <template>
    <h2>Unit {{route.params.id}}</h2>
    <div class="edit-form">
-      <FormKit type="form" id="customer-detail" :actions="false" @submit="submitChanges">
+      <form @submit="submitChanges">
          <div class="split">
             <Panel header="General Information">
-               <FormKit label="Status" type="select" v-model="edited.status" :options="unitStatuses" required outer-class="first" />
-               <FormKit label="Source URL" type="text" v-model="edited.patronSourceURL"/>
-               <FormKit label="Special Instructions" type="textarea" rows="4" v-model="edited.specialInstructions"/>
-               <FormKit label="Staff Notes" type="textarea" rows="3" v-model="edited.staffNotes"/>
+               <FormField id="status" label="Status">
+                  <Select id="status" fluid v-model="status"  :options="unitStatuses" optionLabel="label" optionValue="value" placeholder="Select a status" />   
+               </FormField>
+               <FormField id="srcurl" label="Source URL">
+                  <InputText id="srcurl" v-model="patronSourceURL" type="text" />   
+               </FormField>
+               <FormField id="specialinst" label="Special Instructions">
+                  <Textarea id="specialinst" v-model="specialInstructions" rows="3" fluid/>   
+               </FormField>
+               <FormField id="staffnotes" label="Staff Notes">
+                  <Textarea id="staffnotes" v-model="staffNotes" rows="3" fluid/>   
+               </FormField>
             </Panel>
-            <div class="sep"></div>
             <div class="column">
                <Panel header="Related Information">
                   <div class="split">
@@ -28,32 +35,31 @@
                         </div>
                      </div>
                   </div>
+                  <Message v-if="errors.metadataID" severity="error" size="small" variant="simple">{{ errors.metadataID}}</Message>
+                  <Message v-if="errors.orderID" severity="error" size="small" variant="simple">{{ errors.orderID }}</Message>
                </Panel>
-               <div class="sep"></div>
                <Panel header="Digitization Information">
-                  <div class="dd">
-                     <FormKit label="Intended Use" type="select" v-model="edited.intendedUseID" outer-class="first" :options="intendedUses"
-                        placeholder="Select an intended use" required />
-                  </div>
-
+                  <FormField id="intendeduse" label="Intended Use" :error="errors.intendedUseID" :required="true">
+                     <Select id="intendeduse" v-model="intendedUseID"  :options="intendedUses" optionLabel="label" optionValue="value" placeholder="Select an intended use" />   
+                  </FormField>
                   <div class="checkbox" v-if="unitsStore.canPublishToVirgo">
-                     <input type="checkbox" v-model="edited.includeInDL"/>
+                     <input type="checkbox" v-model="includeInDL"/>
                      <span class="label">Include in Virgo</span>
                   </div>
                   <div class="checkbox">
-                     <input type="checkbox" v-model="edited.ocrMasterFiles"/>
+                     <input type="checkbox" v-model="ocrMasterFiles"/>
                      <span class="label">OCR Master Files</span>
                   </div>
                   <div class="checkbox">
-                     <input type="checkbox" v-model="edited.removeWatermark"/>
+                     <input type="checkbox" v-model="removeWatermark"/>
                      <span class="label">Remove Watermark</span>
                   </div>
                   <div class="checkbox">
-                     <input type="checkbox" v-model="edited.completeScan"/>
+                     <input type="checkbox" v-model="completeScan"/>
                      <span class="label">Complete Scan</span>
                   </div>
                   <div class="checkbox">
-                     <input type="checkbox" v-model="edited.throwAway"/>
+                     <input type="checkbox" v-model="throwAway"/>
                      <span class="label">
                         Throw Away
                         <span class="note">
@@ -66,9 +72,9 @@
          </div>
          <div class="acts">
             <DPGButton label="Cancel" severity="secondary" @click="cancelEdit()"/>
-            <FormKit type="submit" label="Save" wrapper-class="submit-button" />
+            <DPGButton label="Save" type="submit"/>
          </div>
-      </FormKit>
+      </form>
    </div>
 </template>
 
@@ -78,14 +84,40 @@ import { onMounted, ref, computed } from 'vue'
 import { useUnitsStore } from '@/stores/units'
 import { useSystemStore } from '@/stores/system'
 import Panel from 'primevue/panel'
+import Select from 'primevue/select'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
+import Message from 'primevue/message'
 import LookupDialog from '@/components/LookupDialog.vue'
 import { useConfirm } from "primevue/useconfirm"
+import { useForm } from 'vee-validate'
+import * as yup from 'yup'
+import FormField from '@/components/FormField.vue'
 
 const confirm = useConfirm()
 const route = useRoute()
 const router = useRouter()
 const unitsStore = useUnitsStore()
 const systemStore = useSystemStore()
+
+const { values, errors, resetForm, handleSubmit, defineField, setValues } = useForm({
+  validationSchema: yup.object().shape({
+      orderID: yup.number().min(1, 'OrderID is required'),
+      metadataID: yup.number().min(1, 'MetadataID is required'),
+      intendedUseID: yup.number().min(1,'Intended use is required'),
+   })
+})
+
+const [status] = defineField('status')
+const [patronSourceURL] = defineField('patronSourceURL')
+const [specialInstructions] = defineField('specialInstructions')
+const [staffNotes] = defineField('staffNotes')
+const [intendedUseID] = defineField('intendedUseID')
+const [ocrMasterFiles] = defineField('ocrMasterFiles')
+const [removeWatermark] = defineField('removeWatermark')
+const [includeInDL] = defineField('includeInDL')
+const [throwAway] = defineField('throwAway')
+const [completeScan] = defineField('completeScan')
 
 const unitStatuses = computed(() => {
    let out = []
@@ -96,6 +128,7 @@ const unitStatuses = computed(() => {
    out.push( {label: "Unapproved", value: "unapproved"} )
    return out
 })
+
 const intendedUses = computed(() => {
    let out = []
    systemStore.intendedUses.forEach( a => {
@@ -113,32 +146,19 @@ const intendedUses = computed(() => {
    })
    return out
 })
+
 const displayMetadataID = computed( () => {
-   if (edited.value.metadataID && edited.value.metadataID) {
-      return edited.value.metadataID
-   }
-   return "None"
-})
-const displayOrderID = computed( () => {
-   if (edited.value.orderID && edited.value.orderID) {
-      return edited.value.orderID
+   if (values.metadataID) {
+      return values.metadataID
    }
    return "None"
 })
 
-const edited = ref({
-   status: "",
-   patronSourceURL: "",
-   specialInstructions: "",
-   staffNotes: "",
-   completeScan: false,
-   throwAway: false,
-   orderID: "",
-   metadataID: "",
-   intendedUseID: 0,
-   ocrMasterFiles: false,
-   removeWatermark: false,
-   includeInDL: false,
+const displayOrderID = computed( () => {
+   if (values.orderID) {
+      return values.orderID
+   }
+   return "None"
 })
 
 onMounted( async () =>{
@@ -146,36 +166,40 @@ onMounted( async () =>{
    await unitsStore.getDetails(unitID)
    document.title = `Edit | Unit ${unitID}`
 
-   edited.value.status = unitsStore.detail.status
-   edited.value.patronSourceURL = unitsStore.detail.patronSourceURL
-   edited.value.staffNotes = unitsStore.detail.staffNotes
-   edited.value.specialInstructions = unitsStore.detail.specialInstructions
-   edited.value.completeScan = unitsStore.detail.completeScan
-   edited.value.throwAway = unitsStore.detail.throwAway
-   edited.value.metadataID = unitsStore.detail.metadataID
-   edited.value.orderID = unitsStore.detail.orderID
-   if (unitsStore.detail.intendedUse) {
-      edited.value.intendedUseID =  unitsStore.detail.intendedUse.id
+   let vals = {
+      status: unitsStore.detail.status,
+      patronSourceURL: unitsStore.detail.patronSourceURL,
+      staffNotes: unitsStore.detail.staffNotes,
+      specialInstructions: unitsStore.detail.specialInstructions,
+      completeScan: unitsStore.detail.completeScan,
+      throwAway: unitsStore.detail.throwAway,
+      metadataID: unitsStore.detail.metadataID,
+      orderID: unitsStore.detail.orderID,
+      ocrMasterFiles: unitsStore.detail.ocrMasterFiles,
+      removeWatermark: unitsStore.detail.removeWatermark,
+      includeInDL: unitsStore.detail.includeInDL,
+      intendedUseID: 0,
    }
-   edited.value.ocrMasterFiles = unitsStore.detail.ocrMasterFiles
-   edited.value.removeWatermark = unitsStore.detail.removeWatermark
-   edited.value.includeInDL = unitsStore.detail.includeInDL
+   if (unitsStore.detail.intendedUse) {
+     vals.intendedUseID =  unitsStore.detail.intendedUse.id
+   }
+   resetForm({values: vals})
 })
 
-const orderSelected = (( o ) => {
-   edited.value.orderID = o
+const orderSelected = (( newOrderID ) => {
+   setValues({ orderID: newOrderID})
 })
 
-const metadataSelected = (( o ) => {
-   edited.value.metadataID = o
+const metadataSelected = (( newMetadataID ) => {
+   setValues({ metadataID: newMetadataID} )
 })
 
 const cancelEdit = (() => {
    router.push(`/units/${route.params.id}`)
 })
 
-const submitChanges = ( async () => {
-   if (edited.value.metadataID != unitsStore.detail.metadataID) {
+const submitChanges = handleSubmit( async (values) => {
+   if ( values.metadataID != unitsStore.detail.metadataID) {
       confirm.require({
          message: "You have changed the metadata record for this unit. All master files will also be updated to use this metadata. Are you sure?",
          header: 'Confirm Metadata Change',
@@ -188,14 +212,14 @@ const submitChanges = ( async () => {
             label: 'Update'
          },
          accept: async () => {
-            await unitsStore.submitEdit( edited.value )
+            await unitsStore.submitEdit( values )
             if (systemStore.showError == false) {
                router.push(`/units/${unitsStore.detail.id}`)
             }
          },
       })
    } else {
-      await unitsStore.submitEdit( edited.value )
+      await unitsStore.submitEdit( values )
       if (systemStore.showError == false) {
          router.push(`/units/${unitsStore.detail.id}`)
       }
@@ -217,24 +241,18 @@ const submitChanges = ( async () => {
       margin: 0 0 0 5px;
       display: inline-block
    }
-   .dd {
-     margin-bottom: 20px;
-   }
-   .checkbox {
-      padding-bottom: 10px;
+
+   .column {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
    }
 
    .split {
       display: flex;
       flex-flow: row nowrap;
       justify-content: space-between;
-      :deep(.p-panel), .column {
-         flex-grow: 1;
-      }
-      .sep {
-         display: inline-block;
-         width: 20px;
-      }
+      gap: 20px;
       .related {
          label {
             display: block;
@@ -247,22 +265,28 @@ const submitChanges = ( async () => {
             justify-content: flex-start;
             align-items: center;
             margin-top: 10px;
-            :deep(button.small-button) {
-               padding: 3px 15px;
-               font-size: 0.85em;
-               margin-left: 10px;
-            }
+            gap: 10px;
          }
       }
    }
 }
-.acts {
+:deep(.p-panel) {
+   flex-grow: 1;
+   .p-panel-content {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+   }
+}
+form {
    display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   padding: 25px 0;
-   button {
-      margin-right: 10px;
+   flex-direction: column;
+   gap: 15px;
+   .acts {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-end;
+      gap: 10px;
    }
 }
 </style>

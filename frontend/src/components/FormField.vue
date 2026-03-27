@@ -38,6 +38,7 @@ const props = defineProps({
    flex-direction: column;
    gap: 5px;
    flex-grow: 1;
+   text-align: left;
 }
 .required {
    margin-left: 5px;
