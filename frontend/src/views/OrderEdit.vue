@@ -4,32 +4,44 @@
       <span v-else>New Order</span>
    </h2>
    <div class="edit-form">
-      <FormKit type="form" id="order-edit" :actions="false" @submit="submitChanges">
+      <form @submit="submitChanges">
          <div class="split">
-            <FormKit label="Status" type="select" v-model="edited.status" :options="orderStatuses" required/>
-            <div class="sep"></div>
-            <FormKit label="Date Due" type="date" v-model="edited.dateDue" required/>
+            <FormField id="ostatus" label="Status">
+               <Select id="ostatus" v-model="status"  :options="orderStatuses" optionLabel="label" optionValue="value" />   
+            </FormField>
+            <FormField id="datedue" label="Date Due" :error="errors.dateDue" :required="true">
+               <DatePicker id="datedue" v-model="dateDue" showIcon dateFormat="yy-mm-dd" updateModelType="string"/>   
+            </FormField>
          </div>
-         <FormKit label="Order Title" type="text" v-model="edited.title"/>
-         <FormKit label="Special Instructions" type="textarea" rows="5" v-model="edited.specialInstructions"/>
-         <FormKit label="Staff Notes" type="textarea" rows="5" v-model="edited.staffNotes"/>
-         <FormKit v-if="isExternalCustomer && !ordersStore.detail.feeWaived" label="Fee" type="text" v-model="edited.fee"/>
+         <FormField id="otitle" label="Order Title">
+            <InputText id="otitle" v-model="title" type="text"/>   
+         </FormField>
+         <FormField id="instruct" label="Special Instructions">
+            <Textarea id="instruct" v-model="specialInstructions" rows="5"/>   
+         </FormField>
+         <FormField id="notes" label="Staff Notes">
+            <Textarea id="notes" v-model="staffNotes" rows="5"/>   
+         </FormField>
+         <FormField  v-if="isFeeRequired" id="fee" label="Fee" :error="errors.fee" :required="true">
+            <InputNumber id="fee" v-model="fee" mode="currency" currency="USD" locale="en-US"/>   
+         </FormField>
          <div class="split">
-            <div class="select-wrapper">
-               <label class="dpg-form-label">Agency</label>
-               <Select v-model="edited.agencyID" :options="agencies" optionLabel="label" optionValue="value" placeholder="Select an agency" :filter="true" />
-            </div>
-            <div class="select-wrapper">
-               <label class="dpg-form-label">Customer</label>
-               <Select v-model="edited.customerID" :options="customers" optionLabel="label" optionValue="value" placeholder="Select a customer" :filter="true" />
-            </div>
+             <FormField id="agency" label="Agency">
+               <Select id="agency" v-model="agencyID" filter placeholder="Select an agency"
+                  :options="agencies" optionLabel="label" optionValue="value" 
+               />   
+            </FormField>
+            <FormField id="customer" label="Customer">
+               <Select id="customer" v-model="customerID" filter :error="errors.customerID" :required="true"
+                  :options="customers" optionLabel="label" optionValue="value" placeholder="Select a customer"
+               />   
+            </FormField>
          </div>
-         <p class="error" v-if="error">{{error}}</p>
          <div class="acts">
             <DPGButton label="Cancel" severity="secondary" @click="cancelEdit()"/>
-            <FormKit type="submit" label="Save" wrapper-class="submit-button" />
+            <DPGButton label="Save" type="submit" />
          </div>
-      </FormKit>
+      </form>
    </div>
 </template>
 
@@ -40,29 +52,48 @@ import { useSystemStore } from '@/stores/system'
 import { useCustomersStore } from '@/stores/customers'
 import { onMounted, ref, computed } from 'vue'
 import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
+import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
+import DatePicker from 'primevue/datepicker'
 import { useDateFormat } from '@vueuse/core'
+
+import { useForm } from 'vee-validate'
+import * as yup from 'yup'
+import FormField from '@/components/FormField.vue'
+
+const schema = yup.object().shape({
+   dateDue: yup.string().required('Due date is required'),
+   customerID: yup.number().min(1, "Customer is required"),
+   fee: yup.number().when('feeRequired', {
+      is: (value) => value == true,
+      then: (schema) => schema.moreThan(0, "Non-zero fee is required").required("Fee is required"),
+   }),
+})
+const { errors, resetForm, handleSubmit, defineField } = useForm({ validationSchema: schema })
 
 const route = useRoute()
 const router = useRouter()
 const ordersStore = useOrdersStore()
 const systemStore = useSystemStore()
 const customersStore = useCustomersStore()
-const edited = ref({
-   status: "",
-   dateDue: 0,
-   title: "",
-   specialInstructions: "",
-   staffNotes: "",
-   fee: 0.0,
-   agencyID: 0,
-   customerID: 0,
-})
-const newOrder = ref(false)
-const error = ref("")
 
-const isExternalCustomer = computed( () => {
-   if (ordersStore.detail.customer == null) return false
-   return customersStore.isExternal(ordersStore.detail.customer.id)
+const [status] = defineField('status')
+const [dateDue] = defineField('dateDue')
+const [title] = defineField('title')
+const [specialInstructions] = defineField('specialInstructions')
+const [staffNotes] = defineField('staffNotes')
+const [fee] = defineField('fee')
+const [agencyID] = defineField('agencyID')
+const [customerID] = defineField('customerID')
+
+const newOrder = ref(false)
+
+const isFeeRequired = computed( () => {
+   if ( ordersStore.detail.customer == null ) return false
+   if ( customersStore.isExternal(ordersStore.detail.customer.id) == false) return false 
+   if ( ordersStore.detail.feeWaived ) return false 
+   return true
 })
 
 const agencies = computed(() => {
@@ -106,25 +137,27 @@ onMounted( async () =>{
 
    await customersStore.getCustomers()
 
-   edited.value.status = ordersStore.detail.status
-   edited.value.dateDue = useDateFormat(ordersStore.detail.dateDue, "YYYY-MM-DD").value
-   edited.value.title = ordersStore.detail.title
-   edited.value.specialInstructions = ordersStore.detail.specialInstructions
-   edited.value.staffNotes = ordersStore.detail.staffNotes
-   edited.value.fee = 0.0
+   let val = {
+      status: ordersStore.detail.status,
+      dateDue: useDateFormat(ordersStore.detail.dateDue, "YYYY-MM-DD").value,
+      title: ordersStore.detail.title,
+      specialInstructions: ordersStore.detail.specialInstructions,
+      staffNotes: ordersStore.detail.staffNotes,
+      fee: 0.0,
+      agencyID: 0,
+      customerID: 0,
+      feeRequired: isFeeRequired.value,
+   }
    if (ordersStore.detail.fee && !ordersStore.detail.feeWaived ) {
-      edited.value.fee = parseFloat(ordersStore.detail.fee).toFixed(2)
+      val.fee = parseFloat(ordersStore.detail.fee).toFixed(2)
    }
    if (ordersStore.detail.agency) {
-      edited.value.agencyID = ordersStore.detail.agency.id
-   } else {
-      edited.value.agencyID = 0
-   }
+      val.agencyID = ordersStore.detail.agency.id
+   } 
    if (ordersStore.detail.customer) {
-      edited.value.customerID = ordersStore.detail.customer.id
-   } else {
-      edited.value.customerID = 0
-   }
+      val.customerID = ordersStore.detail.customer.id
+   } 
+   resetForm({values: val})
 })
 
 const cancelEdit = (() => {
@@ -135,22 +168,11 @@ const cancelEdit = (() => {
    }
 })
 
-const submitChanges = ( async () => {
-   if ( edited.value.customerID == 0) {
-      error.value = "Customer is required"
-      return
-   }
-
-   edited.value.fee = parseFloat(edited.value.fee)
-   if (isExternalCustomer.value && !ordersStore.detail.feeWaived && edited.value.fee == 0 ) {
-      error.value = "A non-zero fee is required"
-      return
-   }
-
+const submitChanges = handleSubmit( async (values) => {
    if ( newOrder.value == true) {
-      await ordersStore.createOrder( edited.value )
+      await ordersStore.createOrder( values )
    } else {
-      await ordersStore.submitEdit( edited.value )
+      await ordersStore.submitEdit( values )
    }
    if (systemStore.showError == false) {
       router.push(`/orders/${ordersStore.detail.id}`)
@@ -162,48 +184,24 @@ const submitChanges = ( async () => {
 <style lang="scss" scoped>
 .edit-form {
    width: 50%;
-   margin: 0 auto;
-   p.error {
-      color: var(--uvalib-red-emergency);
+   margin: 20px auto;
+   form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      text-align: left;
    }
-
    .split {
       display: flex;
       flex-flow: row nowrap;
       justify-content: space-between;
-      gap: 20px;
-      .select-wrapper {
-         flex-grow: 1;
-         display: flex;
-         flex-direction: column;
-         justify-content: flex-start;
-         align-items: flex-start;
-         gap: 5px;
-         .p-select {
-            width: 100%;
-            text-align: left;
-         }
-      }
-      // :deep(.formkit-outer), .select-wrapper {
-      //    flex-grow: 1;
-      // }
-      // :deep(.p-dropdown) {
-      //    width: 100%;
-      //    text-align: left;
-      // }
-      // .sep {
-      //    display: inline-block;
-      //    width: 20px;
-      // }
+      gap: 15px;
    }
 }
 .acts {
    display: flex;
    flex-flow: row nowrap;
    justify-content: flex-end;
-   padding: 25px 0;
-   button {
-      margin-right: 10px;
-   }
+   gap: 10px;
 }
 </style>
