@@ -114,7 +114,6 @@ import Panel from 'primevue/panel'
 import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
 import DataDisplay from '@/components/DataDisplay.vue'
-import { useConfirm } from "primevue/useconfirm"
 
 import { useForm } from 'vee-validate'
 import * as yup from 'yup'
@@ -158,7 +157,6 @@ const [collectionID] = defineField('collectionID')
 const [collectionFacet] = defineField('collectionFacet')
 const [isCollection] = defineField('isCollection')
 
-const confirm = useConfirm()
 const route = useRoute()
 const router = useRouter()
 const metadataStore = useMetadataStore()
@@ -352,7 +350,6 @@ const submitChanges = handleSubmit( async (values) => {
          }
       }
    }
-   console.log(values)
    await metadataStore.submitEdit( values )
    if (systemStore.showError == false) {
       router.push(`/metadata/${metadataStore.detail.id}`)
