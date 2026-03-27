@@ -219,19 +219,13 @@ export const useOrdersStore = defineStore('orders', {
             this.working = false
          })
       },
-      async addUnit( metadataID, unitInfo, itemID=0) {
+      async addUnit( unitInfo ) {
          const system = useSystemStore()
          system.working = true
-         let req = {metadataID: metadataID, intendedUseID: unitInfo.intendedUseID, sourceURL: unitInfo.sourceURL,
-            specialInstructions: unitInfo.specialInstructions, staffNotes: unitInfo.staffNotes,
-            completeScan: unitInfo.completeScan, throwAway: unitInfo.throwAway, includeInDL: unitInfo.includeInDL}
-         if (itemID != 0) {
-            req.ItemID = itemID
-         }
-         return axios.post( `/api/orders/${this.detail.id}/units`, req ).then(response => {
+         return axios.post( `/api/orders/${this.detail.id}/units`, unitInfo ).then(response => {
             this.units.push( response.data )
-            if (itemID != 0) {
-               let item = this.items.find( i => i.id == itemID)
+            if (unitInfo.itemID != 0) {
+               let item = this.items.find( i => i.id == unitInfo.itemID)
                if ( item ) {
                   item.converted = true
                }
