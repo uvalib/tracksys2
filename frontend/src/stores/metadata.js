@@ -215,11 +215,10 @@ export const useMetadataStore = defineStore('metadata', {
             this.sirsiMatch.existingID = response.data.existingID
             this.sirsiMatch.existingPID = response.data.existingPID
          }).catch( e => {
+            console.log("sirsi lookup failed")
+            console.log(e)
             this.sirsiMatch.searching = false
-            this.sirsiMatch.error = e
-            if (e.response) {
-               this.sirsiMatch.error = e.response.data
-            }
+            this.sirsiMatch.error = "Unable to find matching sirsi record"
          })
       },
       async lookup( query, collectionID ) {

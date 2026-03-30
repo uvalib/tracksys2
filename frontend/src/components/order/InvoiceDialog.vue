@@ -1,6 +1,6 @@
 <template>
-   <Dialog v-model:visible="ordersStore.showInvoice" :modal="true" header="Invoice" @show="invoiceOpened()"
-      @hide="invoiceClosed()" :style="{width: '650px'}" :closable="false">
+   <Dialog v-model:visible="ordersStore.showInvoice" :modal="true" header="Invoice" @show="invoiceOpened"
+      @hide="invoiceClosed" :style="{width: '650px'}" :closable="false">
       <div v-if="ordersStore.editInvoice == false">
          <Panel header="Date Information" :style="{marginBottom: '20px'}">
             <dl>
@@ -17,26 +17,35 @@
             </dl>
          </Panel>
       </div>
-      <FormKit v-else type="form" id="customer-detail" :actions="false" @submit="submitChanges">
+      <form v-else @submit="submitChanges">
          <div class="split">
-            <FormKit label="Date Fee Paid" type="date" v-model="edit.dateFeePaid"/>
-            <div class="sep"></div>
-            <FormKit label="Fee Amount Paid" type="text" v-model="edit.feeAmountPaid"/>
+            
+            <FormField id="feepaid" label="Fee Amount Paid" >
+               <InputNumber id="feepaid" v-model="feeAmountPaid" mode="currency" currency="USD" locale="en-US"/>   
+            </FormField>
+            <FormField id="paiddate" label="Date Fee Paid">
+               <DatePicker id="paiddate" v-model="dateFeePaid" showIcon dateFormat="yy-mm-dd" updateModelType="string"/>   
+            </FormField>
          </div>
          <div class="split">
-            <FormKit label="Date Fee Declined" type="date" v-model="edit.dateFeeDeclined"/>
-            <div class="sep"></div>
-            <FormKit label="Transmittal/Confirmation Number" type="text" v-model="edit.transmittalNumber"/>
+            <FormField id="declinedate" label="Date Fee Declined">
+               <DatePicker id="declinedate" v-model="dateFeeDeclined" showIcon dateFormat="yy-mm-dd" updateModelType="string"/>   
+            </FormField>
+            <FormField id="confnum" label="Transmittal/Confirmation Number" >
+               <InputText id="confnum" v-model="transmittalNumber" />   
+            </FormField>
          </div>
-         <FormKit label="Notes" type="textarea" rows="5" v-model="edit.notes"/>
+         <FormField id="notes" label="Notes" >
+            <Textarea id="notes" v-model="notes" rows="5" />   
+         </FormField>
          <div class="acts">
-            <DPGButton label="Cancel" severity="secondary" @click="invoiceClosed()"/>
-            <FormKit type="submit" label="Save" wrapper-class="submit-button" />
+            <DPGButton label="Cancel" severity="secondary" @click="invoiceClosed"/>
+            <DPGButton label="Save" type="submit" />
          </div>
-      </FormKit>
+      </form>
       <template #footer v-if="ordersStore.editInvoice == false">
          <DPGButton label="Edit" autofocus severity="secondary" @click="editInvoice()"/>
-         <DPGButton label="OK" autofocus severity="secondary" @click="invoiceClosed()"/>
+         <DPGButton label="OK" autofocus severity="secondary" @click="invoiceClosed"/>
       </template>
    </Dialog>
 </template>
@@ -48,60 +57,72 @@ import DataDisplay from '@/components/DataDisplay.vue'
 import Panel from 'primevue/panel'
 import { useDateFormat } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { useForm } from 'vee-validate'
+import FormField from '@/components/FormField.vue'
+import Textarea from 'primevue/textarea'
+import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
+import DatePicker from 'primevue/datepicker'
 
 const ordersStore = useOrdersStore()
 const { detail } = storeToRefs(ordersStore)
 
-const edit = ref({
-   dateFeePaid: "",
-   dateFeeDeclined: "",
-   feeAmountPaid: null,
-   transmittalNumber: "",
-   notes: ""
+const { resetForm, handleSubmit, defineField } = useForm({})
+
+const [dateFeePaid] = defineField('dateFeePaid')
+const [dateFeeDeclined] = defineField('dateFeeDeclined')
+const [feeAmountPaid] = defineField('lastName')
+const [transmittalNumber] = defineField('transmittalNumber')
+const [notes] = defineField('notes')
+
+const submitChanges = handleSubmit(values => {
+   ordersStore.updateInvoice( values )
+   ordersStore.showInvoice = false
 })
 
-function submitChanges() {
-   ordersStore.updateInvoice( edit.value )
-   ordersStore.showInvoice = false
-}
-
-function formatFee( fee ) {
+const formatFee = ( (fee) => {
    if (fee) {
       return `$${fee}`
    }
    return ""
-}
+})
 
-function invoiceOpened() {
+const invoiceOpened = (() => {
    if (ordersStore.editInvoice) {
       updateEditData()
    }
-}
+})
 
-function editInvoice() {
+const editInvoice = (() => {
    ordersStore.editInvoice = true
    updateEditData()
-}
+})
 
-function updateEditData() {
+const updateEditData = (() => {
+   let val = {
+      dateFeePaid: "",
+      dateFeeDeclined: "",
+      feeAmountPaid: 0,
+      transmittalNumber: "",
+      notes: "",
+   }
    if ( ordersStore.detail.invoice ) {
       if (ordersStore.detail.invoice.dateFeePaid) {
-         edit.value.dateFeePaid = useDateFormat(ordersStore.detail.invoice.dateFeePaid, "YYYY-MM-DD").value
+         val.dateFeePaid = useDateFormat(ordersStore.detail.invoice.dateFeePaid, "YYYY-MM-DD").value
       }
       if (ordersStore.detail.invoice.dateFeeDeclined) {
-         edit.value.dateFeeDeclined = useDateFormat(ordersStore.detail.invoice.dateFeeDeclined, "YYYY-MM-DD").value
+         val.dateFeeDeclined = useDateFormat(ordersStore.detail.invoice.dateFeeDeclined, "YYYY-MM-DD").value
       }
-      edit.value.feeAmountPaid = ordersStore.detail.invoice.feeAmountPaid
-      edit.value.transmittalNumber = ordersStore.detail.invoice.transmittalNumber
-      edit.value.notes = ordersStore.detail.invoice.notes
+      val.feeAmountPaid = ordersStore.detail.invoice.feeAmountPaid
+      val.transmittalNumber = ordersStore.detail.invoice.transmittalNumber
+      val.notes = ordersStore.detail.invoice.notes
    }
-}
+   resetForm({values: val})
+})
 
-function invoiceClosed() {
+const invoiceClosed = (() => {
    ordersStore.showInvoice = false
-}
-
+})
 </script>
 
 <style scoped lang="scss">
@@ -110,34 +131,7 @@ function invoiceClosed() {
    flex-flow: row nowrap;
    justify-content: flex-start;
    align-items: baseline;
-   :deep(.formkit-outer) {
-      flex-grow: 0.6;
-   }
-   .sep {
-      display: inline-block;
-      width: 20px;
-   }
-   .checkbox {
-      margin-top: 20px;
-      label {
-         color: var(--uvalib-text-dark);
-         font-weight: normal;
-         display: block;
-      }
-      input[type=checkbox] {
-         display: block;
-         width: 18px;
-         height: 18px;
-         margin: 10px 0 0 0;
-      }
-   }
-}
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   padding: 15px 0 5px 5px;
-   gap: 10px;
+   gap: 20px;
 }
 
 :deep(dl) {

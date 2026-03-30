@@ -1,72 +1,92 @@
 <template>
    <h2>Master File {{route.params.id}}</h2>
    <div class="edit-form">
-      <FormKit type="form" id="masterfile-detail" :actions="false" @submit="submitChanges">
+      <form id="masterfile-detail" @submit="submitChanges">
          <div class="split">
             <Panel header="General Information">
-               <FormKit label="Title" type="text" v-model="edited.title" required outer-class="first" />
-               <FormKit label="Description" type="textarea" :rows="4" v-model="edited.description"/>
-               <FormKit label="Orientation" type="select" v-model="edited.orientation" :options="orientations" />
+               <FormField id="mftitle" label="Title">
+                  <InputText id="mftitle" v-model="title" type="text" />   
+               </FormField>
+               <FormField id="mfdesc" label="Desctiption">
+                  <Textarea id="mfdesc" v-model="description" autoResize rows="4" /> 
+               </FormField>
+               <FormField id="orient" label="Orientation">
+                  <Select id="orient" v-model="orientation"  :options="orientations" optionLabel="label" optionValue="id" />   
+               </FormField>
             </Panel>
-            <div class="sep"></div>
             <div class="column">
                <Panel header="Related Information">
                   <div class="metadata-lookup">
                      <label>Metadata ID</label>
                      <div class="item">
                         <span>{{displayMetadataID}}</span>
-                        <LookupDialog target="metadata" @selected="metadataSelected" class="small-button"/>
+                        <LookupDialog target="metadata" @selected="metadataSelected"/>
                      </div>
                   </div>
-                  <template v-if="edited.updateLocation">
-                     <FormKit label="Container Type" type="select" v-model="edited.containerTypeID" :options="containerTypes" outer-class="first" />
-                     <FormKit label="Container ID" type="text" v-model="edited.containerID"  />
-                     <FormKit label="Folder" type="text" v-model="edited.folderID" />
-                     <FormKit label="Notes" type="textarea" :rows="3" v-model="edited.notes" />
+                  <template v-if="updateLocation">
+                     <FormField id="containertype" label="Container Type">
+                        <Select id="containertype" v-model="containerTypeID"  :options="containerTypes" 
+                           optionLabel="label" optionValue="id" placeholder="Select a type"
+                        />   
+                     </FormField>
+                     <FormField id="container" label="Container ID">
+                        <InputText id="container" v-model="containerID" type="text" />   
+                     </FormField>
+                     <FormField id="folder" label="Folder">
+                        <InputText id="folder" v-model="folderID" type="text" />   
+                     </FormField>
+                     <FormField id="locnotes" label="Notes">
+                        <Textarea id="locnotes" v-model="notes" autoResize rows="3" /> 
+                     </FormField>
                   </template>
                   <template v-else>
-                     <DPGButton label="Add Location" severity="secondary" @click="edited.updateLocation = true"/>
+                     <DPGButton label="Add Location" severity="secondary" @click="updateLocation = true"/>
                   </template>
                </Panel>
             </div>
          </div>
          <div class="acts">
             <DPGButton label="Cancel" severity="secondary" @click="cancelEdit()"/>
-            <FormKit type="submit" label="Save" wrapper-class="submit-button" />
+            <DPGButton label="Save" type="submit" />
          </div>
-      </FormKit>
+      </form>
    </div>
 </template>
 
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useMasterFilesStore } from '@/stores/masterfiles'
 import { useSystemStore } from '@/stores/system'
 import Panel from 'primevue/panel'
 import LookupDialog from '@/components/LookupDialog.vue'
+
+import { useForm } from 'vee-validate'
+import FormField from '@/components/FormField.vue'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
+
+const { values, setValues, resetForm, handleSubmit, defineField } = useForm({})
+
+const [orientation] = defineField('orientation') 
+const [title] = defineField('title')
+const [description] = defineField('description')
+const [updateLocation] = defineField('updateLocation')
+const [containerTypeID] = defineField('containerTypeID')
+const [containerID] = defineField('containerID')
+const [folderID] = defineField('folderID')
+const [notes] = defineField('notes')
 
 const route = useRoute()
 const router = useRouter()
 const masterFiles = useMasterFilesStore()
 const systemStore = useSystemStore()
 
-const edited = ref({
-   orientation: 0,
-   title: "",
-   description: "",
-   metadataID: 0,
-   updateLocation: false,
-   containerTypeID: 0,
-   containerID: "",
-   folderID: "",
-   notes: ""
-})
-
 const containerTypes = computed(() => {
    let out = []
    systemStore.containerTypes.forEach( c => {
-      out.push( {label: c.name, value: c.id} )
+      out.push( {label: c.name, id: c.id} )
    })
    return out
 })
@@ -74,17 +94,17 @@ const containerTypes = computed(() => {
 const orientations = computed(() => {
    let out = []
    // { normal: 0, flip_y_axis: 1, rotate90: 2, rotate180: 3, rotate270: 4 }
-   out.push( {label: "Normal", value: 0} )
-   out.push( {label: "Flip Y Axis", value: 1} )
-   out.push( {label: "Rotate 90&deg;", value: 2} )
-   out.push( {label: "Rotate 180&deg;", value: 3} )
-   out.push( {label: "Rotate 270&deg;", value: 4} )
+   out.push( {label: "Normal", id: 0} )
+   out.push( {label: "Flip Y Axis", id: 1} )
+   out.push( {label: "Rotate 90&deg;", id: 2} )
+   out.push( {label: "Rotate 180&deg;", id: 3} )
+   out.push( {label: "Rotate 270&deg;", id: 4} )
    return out
 })
 
 const displayMetadataID = computed( () => {
-   if (edited.value.metadataID && edited.value.metadataID) {
-      return edited.value.metadataID
+   if (values.metadataID) {
+      return values.metadataID
    }
    return "None"
 })
@@ -94,30 +114,38 @@ onMounted( async () =>{
    await masterFiles.getDetails(mfID)
    document.title = `Edit | Master File ${mfID}`
 
-   edited.value.metadataID = masterFiles.details.metadataID
-   edited.value.title = masterFiles.details.title
-   edited.value.description = masterFiles.details.description
-   edited.value.orientation = masterFiles.details.orientation
-   edited.value.updateLocation = false
-   if (masterFiles.details.locations.length > 0) {
-      edited.value.containerTypeID = masterFiles.details.locations[0].containerType.id
-      edited.value.containerID = masterFiles.details.locations[0].containerID
-      edited.value.folderID = masterFiles.details.locations[0].folderID
-      edited.value.notes = masterFiles.details.locations[0].notes
-      edited.value.updateLocation = true
+   let vals = {
+      metadataID: masterFiles.details.metadataID,
+      title: masterFiles.details.title,
+      description: masterFiles.details.description,
+      orientation: masterFiles.details.orientation,
+      updateLocation: false,
+      containerTypeID: 1,
    }
+   if ( !vals.orientation) {
+      vals.orientation = 0
+   }
+   if (masterFiles.details.locations.length > 0) {
+      vals.containerTypeID = masterFiles.details.locations[0].containerType.id
+      vals.containerID = masterFiles.details.locations[0].containerID
+      vals.folderID = masterFiles.details.locations[0].folderID
+      vals.notes = masterFiles.details.locations[0].notes
+      vals.updateLocation = true
+   }
+   resetForm({ values: vals})
+   console.log(vals)
 })
 
-const metadataSelected = (( o ) => {
-   edited.value.metadataID = o
+const metadataSelected = (( metadataID ) => {
+   setValues({ metadataID: metadataID})
 })
 
 const cancelEdit = (() => {
    router.push(`/masterfiles/${masterFiles.details.id}`)
 })
 
-const submitChanges = ( async () => {
-   await masterFiles.submitEdit( edited.value )
+const submitChanges = handleSubmit( async (values) => {
+   await masterFiles.submitEdit( values )
    if (systemStore.showError == false) {
       router.push(`/masterfiles/${masterFiles.details.id}`)
    }
@@ -130,28 +158,23 @@ const submitChanges = ( async () => {
    width: 80%;
    margin: 30px auto 0 auto;
 
+   :deep(.p-panel-content) {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+   }
+
    .metadata-lookup {
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      margin-bottom: 15px;
-
-      label {
-         display: block;
-         text-align: left;
-      }
+      gap: 15px;
       .item {
-         margin-left: 15px;
          display: flex;
          flex-flow: row nowrap;
          justify-content: flex-start;
          align-items: center;
-         margin-top: 10px;
-         :deep(button.small-button) {
-            padding: 3px 15px;
-            font-size: 0.85em;
-            margin-left: 10px;
-         }
+         gap: 10px;
       }
    }
 
@@ -159,12 +182,10 @@ const submitChanges = ( async () => {
       display: flex;
       flex-flow: row nowrap;
       justify-content: space-between;
+      gap: 15px;
+      text-align: left;
       :deep(.p-panel), .column {
          flex-grow: 1;
-      }
-      .sep {
-         display: inline-block;
-         width: 20px;
       }
       .related {
          label {
@@ -179,15 +200,6 @@ const submitChanges = ( async () => {
             align-items: center;
          }
       }
-   }
-}
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   padding: 25px 0;
-   button {
-      margin-right: 10px;
    }
 }
 </style>

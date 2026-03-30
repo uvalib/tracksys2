@@ -1,13 +1,12 @@
 <template>
    <DPGButton @click="show" severity="secondary" label="Renumber" :disabled="props.disabled"/>
    <Dialog v-model:visible="isOpen" :modal="true" header="Renumber Master Files" :style="{width: '400px'}" :closable="false">
-      <FormKit type="form" id="renumber" :actions="false" @submit="renumberPages">
-         <FormKit label="New starting page number" type="text" v-model="startPage" required autofocus/>
-         <div class="acts">
-            <DPGButton @click="hide" label="Cancel" severity="secondary"/>
-            <FormKit type="submit" label="Renumber" wrapper-class="submit-button" />
-         </div>
-      </FormKit>
+      <label for="start">Starting page number:</label>
+      <InputNumber id="start" v-model="startPage" :useGrouping="false" fluid/>  
+      <template #footer>
+         <DPGButton @click="hide" label="Cancel" severity="secondary"/>
+         <DPGButton @click="renumberPages" label="Renumber"  />
+      </template>
    </Dialog>
 </template>
 
@@ -15,6 +14,7 @@
 import { ref } from 'vue'
 import Dialog from 'primevue/dialog'
 import { useUnitsStore } from '@/stores/units'
+import InputNumber from 'primevue/inputnumber'
 
 const props = defineProps({
    disabled: {
@@ -30,7 +30,7 @@ const props = defineProps({
 const unitsStore = useUnitsStore()
 
 const isOpen = ref(false)
-const startPage = ref()
+const startPage = ref(1)
 
 async function renumberPages() {
    await unitsStore.renumberPages(startPage.value, props.filenames)
@@ -40,19 +40,15 @@ function hide() {
    isOpen.value=false
 }
 function show() {
-   startPage.value = ""
+   startPage.value = 1
    isOpen.value = true
 
 }
 </script>
 
 <style lang="scss" scoped>
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   padding: 15px 0 10px 0;
-   margin: 0;
-   gap: 10px;
+label {
+   display: block;
+   margin-bottom: 5px;
 }
 </style>

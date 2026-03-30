@@ -37,7 +37,8 @@ export const useCustomersStore = defineStore('customers', {
          if (data.id == 0) {
             add = true
          }
-         data.academicStatusID = data.academicStatus.id
+         data.academicStatusID = parseInt(data.academicStatusID,10)
+         data.academicStatus = system.academicStatuses.find( s => s.id == data.academicStatusID)
          axios.post( "/api/customers", data ).then(response => {
             if ( add == false) {
                let idx  = this.customers.findIndex( s => s.id == data.id)

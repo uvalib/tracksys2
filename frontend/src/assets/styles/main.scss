@@ -8,6 +8,18 @@ body {
    -moz-osx-font-smoothing: grayscale;
    color: var(--color-primary-text);
 
+   form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      .acts {
+         display: flex;
+         flex-flow: row nowrap;
+         justify-content: flex-end;
+         gap: 10px;
+      }
+   }
+
    .sticky {
       position: fixed;
       z-index: 1000;

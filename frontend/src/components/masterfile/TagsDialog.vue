@@ -3,7 +3,7 @@
    <Dialog v-model:visible="isOpen" :modal="true" header="Master File Tags" :style="{width: '450px'}">
       <IconField iconPosition="left">
          <InputIcon class="pi pi-search" />
-         <InputText v-model="tagStore.query" placeholder="Search" @input="tagStore.getTags()" autofocus/>
+         <InputText v-model="tagStore.query" placeholder="Search" @input="tagStore.getTags()" autofocus fluid/>
       </IconField>
       <VirtualScroller :items="tagStore.tags" :itemSize="22" showLoader class="taglist" :showLoader="tagStore.loading" >
          <template v-slot:item="{ item }">
@@ -11,7 +11,7 @@
          </template>
       </VirtualScroller>
       <div class="add">
-         <InputText v-model="newTag" placeholder="New Tag"/>
+         <InputText v-model="newTag" placeholder="New Tag" fluid/>
          <DPGButton label="Add" severity="secondary" @click="createTag()"/>
       </div>
       <div class="selected">

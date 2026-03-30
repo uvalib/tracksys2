@@ -20,7 +20,6 @@ export const useSystemStore = defineStore('system', {
       intendedUses: [],
       ocrHints: [],
       ocrLanguageHints: [],
-      preservationTiers: [],
       useRights: [],
       toast: {
          error: false,
@@ -90,7 +89,6 @@ export const useSystemStore = defineStore('system', {
             this.intendedUses = response.data.controlledVocabularies.intendedUses
             this.ocrHints = response.data.controlledVocabularies.ocrHints
             this.ocrLanguageHints = response.data.controlledVocabularies.ocrLanguageHints
-            this.preservationTiers = response.data.controlledVocabularies.preservationTiers
             this.useRights = response.data.controlledVocabularies.useRights
             this.working = false
          }).catch( err => {
