@@ -276,17 +276,7 @@ const submitChanges = handleSubmit( async (values) => {
       display: flex;
       flex-direction: column;
       gap: 15px;
-   }
-}
-form {
-   display: flex;
-   flex-direction: column;
-   gap: 15px;
-   .acts {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-end;
-      gap: 10px;
+      text-align: left;
    }
 }
 </style>

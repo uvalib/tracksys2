@@ -137,7 +137,7 @@
                   </TabPanel>
                </TabPanels>
             </Tabs>
-            <div class="form-controls">
+            <div class="acts">
                <DPGButton label="Cancel" severity="secondary" @click="showEdit=false"/>
                <DPGButton label="Save" type="submit" />
             </div>
@@ -307,13 +307,6 @@ const edit = ((data) => {
          }
       }
    }
-}
-
-.form-controls {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   gap: 10px;
 }
 
 :deep(.p-tabpanel) {

@@ -19,11 +19,12 @@
       </div>
       <form v-else @submit="submitChanges">
          <div class="split">
-            <FormField id="paiddate" label="Date Fee Paid">
-               <DatePicker id="paiddate" v-model="dateFeePaid" showIcon dateFormat="yy-mm-dd" updateModelType="string"/>   
-            </FormField>
+            
             <FormField id="feepaid" label="Fee Amount Paid" >
                <InputNumber id="feepaid" v-model="feeAmountPaid" mode="currency" currency="USD" locale="en-US"/>   
+            </FormField>
+            <FormField id="paiddate" label="Date Fee Paid">
+               <DatePicker id="paiddate" v-model="dateFeePaid" showIcon dateFormat="yy-mm-dd" updateModelType="string"/>   
             </FormField>
          </div>
          <div class="split">
@@ -131,17 +132,6 @@ const invoiceClosed = (() => {
    justify-content: flex-start;
    align-items: baseline;
    gap: 20px;
-}
-form {
-   display: flex;
-   flex-direction: column;
-   gap: 15px;
-   .acts {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-end;
-      gap: 10px;
-   }
 }
 
 :deep(dl) {

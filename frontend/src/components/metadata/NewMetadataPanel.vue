@@ -379,10 +379,4 @@ ul.note {
       flex-grow: 1;
    }
 }
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   gap: 10px;
-}
 </style>

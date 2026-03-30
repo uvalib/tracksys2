@@ -113,37 +113,26 @@ const submitChanges = handleSubmit( async (values) => {
 </script>
 
 <style scoped lang="scss">
-form {
+.group {
+   border: 1px solid var(--uvalib-grey-light);
+   border-radius: 0.3rem;
+   padding: 15px;
    display: flex;
    flex-direction: column;
-   gap: 15px;
+   gap: 10px;
 
-   .group {
-      border: 1px solid var(--uvalib-grey-light);
-      border-radius: 0.3rem;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-
-      p.group-name {
-         font-weight: bold;
-         margin:0;
-         padding: 0;
-      }
-   }
-   .split {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-start;
-      align-items: flex-end;
-      gap: 15px;
-   }
-   .acts {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-end;
-      gap: 10px;
+   p.group-name {
+      font-weight: bold;
+      margin:0;
+      padding: 0;
    }
 }
+.split {
+   display: flex;
+   flex-flow: row nowrap;
+   justify-content: flex-start;
+   align-items: flex-end;
+   gap: 15px;
+}
+
 </style>

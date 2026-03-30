@@ -157,11 +157,7 @@ const submitChanges = handleSubmit( async (values) => {
 .edit-form {
    width: 80%;
    margin: 30px auto 0 auto;
-   form {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-   }
+
    :deep(.p-panel-content) {
       display: flex;
       flex-direction: column;
@@ -205,11 +201,5 @@ const submitChanges = handleSubmit( async (values) => {
          }
       }
    }
-}
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   gap:10px;
 }
 </style>

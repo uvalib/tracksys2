@@ -4,7 +4,7 @@
       <form v-if="mode=='unit'" @submit="createUnit">
          <Panel header="Unit Metadata">
             <div class="lookup">
-               <input type="text" v-model="metadataSearch"  @keydown.stop.prevent.enter="lookupMetadata"/>
+               <InputText v-model="metadataSearch"  @keydown.stop.prevent.enter="lookupMetadata" fluid/>
                <DPGButton @click="lookupMetadata" label="Lookup" severity="secondary" :loading="metadataStore.working" loadingIcon="pi pi-spin pi-spinner"/>
                <DPGButton @click="createMetadata" label="Create" severity="secondary"/>
             </div>
@@ -246,29 +246,16 @@ div.p-panel {
       font-weight: 600;
       text-align: center;
    }
-   :deep(div.hits) {
-      margin-top: 15px;
+   div.hits {
       .scroller {
          max-height: 250px;
          overflow-y: scroll;
       }
    }
 }
-div.opts {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: space-between;
-   margin: 20px 0 10px 0;
-}
-:deep(.p-panel-content), form {
+:deep(.p-panel-content) {
    display: flex;
    flex-direction: column;
    gap: 15px;
-}
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   gap: 10px;
 }
 </style>

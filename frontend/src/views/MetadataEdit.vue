@@ -362,18 +362,14 @@ const submitChanges = handleSubmit( async (values) => {
    width: 60%;
    margin: 30px auto 0 auto;
    text-align: left;
-   form {
+
+   :deep(.p-panel-content) {
       display: flex;
       flex-direction: column;
-      gap: 15px;
-      :deep(.p-panel-content) {
-         display: flex;
-         flex-direction: column;
-         gap: 15px;   
-         dl {
-            margin: 0 !important;
-         } 
-      }
+      gap: 15px;   
+      dl {
+         margin: 0 !important;
+      } 
    }
 
    p.note {
@@ -392,11 +388,5 @@ const submitChanges = handleSubmit( async (values) => {
       align-items: flex-end;
       gap: 10px;
    }
-}
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   gap: 10px;
 }
 </style>

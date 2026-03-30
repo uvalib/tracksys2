@@ -57,7 +57,7 @@
                <span>All new staff must be added to a group named lb-digiserv. This can be done here: </span>
                <a href="https://mygroups.virginia.edu/groups/" target="_blank">MyGroups</a>
             </div>
-            <div class="form-controls">
+            <div class="acts">
                <DPGButton label="Cancel" severity="secondary" @click="showEdit=false"/>
                <DPGButton label="Save" type="submit" />
             </div>
@@ -180,18 +180,6 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-#staff-detail {
-   display: flex;
-   flex-direction: column;
-   gap: 15px;
-
-   .form-controls {
-      display: flex;
-      flex-flow: row nowrap;
-      gap: 10px;
-      justify-content: flex-end;
-   }
-}
 .notes {
    font-size: 0.9em;
    margin: 15px 0 10px 0;
