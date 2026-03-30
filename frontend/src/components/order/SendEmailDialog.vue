@@ -1,18 +1,23 @@
 <template>
    <DPGButton @click="show" :label="buttonLabel" severity="secondary"/>
    <Dialog v-model:visible="isOpen" :modal="true" :header="buttonLabel">
-      <div class="choice border">
-        <input type="checkbox" v-model="sendToCustomer"/>
-        <span>Send to customer email: {{ordersStore.detail.customer.email}}</span>
+      <div class="email">
+         <div class="choice">
+            <Checkbox id="tocustomer" v-model="sendToCustomer" binary />
+            <label for="tocustomer">Send to customer email: {{ordersStore.detail.customer.email}}</label>
+         </div>
+         <div class="choice">
+            <Checkbox id="usealtemail" v-model="sendToAlt" binary />
+            <label for="usealtemail">Send to alternate email</label>
+         </div>
+         <div class="choice leftpad">
+            <label for="altemail">Alternate email:</label>
+            <InputText id="altemail"  v-model="altEmail" fluid/>
+         </div>
+         <p class="error">{{error}}</p>
       </div>
-      <div class="choice">
-         <input type="checkbox" v-model="sendToAlt"/>
-         <label>Send to alternate email:<input type="text" v-model="altEmail"/></label>
-      </div>
-      <p class="error">{{error}}</p>
       <template #footer>
          <DPGButton @click="hide" label="Cancel" severity="secondary"/>
-         <span class="spacer"></span>
          <DPGButton autofocus @click="sendClicked" label="Send"/>
       </template>
    </Dialog>
@@ -23,6 +28,8 @@ import { ref, computed } from 'vue'
 import {useOrdersStore} from '@/stores/orders'
 import {useUserStore} from '@/stores/user'
 import Dialog from 'primevue/dialog'
+import InputText from 'primevue/inputtext'
+import Checkbox from 'primevue/checkbox'
 
 const ordersStore = useOrdersStore()
 const user = useUserStore()
@@ -71,30 +78,26 @@ function show() {
 </script>
 
 <style lang="scss" scoped>
-   .choice {
-      padding: 5px;
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-start;
-      align-items: flex-start;
-      span, label {
-         position: relative;
-         top: 3px;
-      }
+.email {
+   display: flex;
+   flex-direction: column;
+   gap: 15px;
+}
+.choice {
+   display: flex;
+   flex-flow: row nowrap;
+   justify-content: flex-start;
+   align-items: center;
+   gap: 10px;
+   label {
+      white-space: nowrap;
+      flex-grow: 1;
+   }
+}
+.leftpad {
+   margin-left: 30px;
+}
 
-      input[type=checkbox] {
-         width: 18px;
-         height: 18px;
-         margin-right: 10px;
-      }
-      input[type=text] {
-         margin-top: 5px;
-      }
-   }
-   .choice.border {
-      padding-bottom: 10px;
-      margin-bottom: 10px;
-   }
 .error {
    padding: 0;
    margin: 0;
