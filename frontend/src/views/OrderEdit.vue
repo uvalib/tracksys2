@@ -4,7 +4,6 @@
       <span v-else>New Order</span>
    </h2>
    <div class="edit-form">
-      <div>V: {{ values }}</div>
       <form @submit="submitChanges">
          <div class="split">
             <FormField id="ostatus" label="Status" :error="errors.status" :required="true">
@@ -72,7 +71,7 @@ const schema = yup.object().shape({
       then: (schema) => schema.moreThan(0, "Non-zero fee is required").required("Fee is required"),
    }),
 })
-const { values, errors, resetForm, handleSubmit, defineField } = useForm({ validationSchema: schema })
+const { errors, resetForm, handleSubmit, defineField } = useForm({ validationSchema: schema })
 
 const route = useRoute()
 const router = useRouter()
