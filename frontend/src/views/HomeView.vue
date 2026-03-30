@@ -87,9 +87,9 @@
    <Dialog v-model:visible="showCreateAgency" :modal="true" header="Create Agency"@hide="createAgencyClosed" :style="{width: '450px'}">
       <div class="agency">
          <label>Name</label>
-         <input type="text" v-model="newAgencyName" autofocus/>
+         <InputText v-model="newAgencyName" autofocus fluid/>
          <label>Description</label>
-         <textarea rows="4" v-model="newAgencyDesc"/>
+         <Textarea rows="4" v-model="newAgencyDesc" fluid/>
       </div>
       <template #footer>
          <div class="acts">
@@ -103,7 +103,7 @@
    </Dialog>
    <Dialog v-model:visible="showCreateCollection" :modal="true" header="Create Collection Facet" @hide="createCollectionClosed" :style="{width: '450px'}">
       <p>Enter the name of the new collection facet</p>
-      <input type="text" v-model="newCollectionFacet" autofocus/>
+      <InputText v-model="newCollectionFacet" autofocus fluid/>
       <template #footer>
          <div class="acts">
             <DPGButton @click="createCollectionClosed" label="Cancel" severity="secondary"/>
@@ -131,6 +131,7 @@ import FileUpload from 'primevue/fileupload'
 import Slider from 'primevue/slider'
 import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 
 
 const searchStore = useSearchStore()

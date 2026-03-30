@@ -4,9 +4,10 @@
       <span v-else>New Order</span>
    </h2>
    <div class="edit-form">
+      <div>V: {{ values }}</div>
       <form @submit="submitChanges">
          <div class="split">
-            <FormField id="ostatus" label="Status">
+            <FormField id="ostatus" label="Status" :error="errors.status" :required="true">
                <Select id="ostatus" v-model="status"  :options="orderStatuses" optionLabel="label" optionValue="value" />   
             </FormField>
             <FormField id="datedue" label="Date Due" :error="errors.dateDue" :required="true">
@@ -63,6 +64,7 @@ import * as yup from 'yup'
 import FormField from '@/components/FormField.vue'
 
 const schema = yup.object().shape({
+   status: yup.string().required('Status is required'),
    dateDue: yup.string().required('Due date is required'),
    customerID: yup.number().min(1, "Customer is required"),
    fee: yup.number().when('feeRequired', {
@@ -70,7 +72,7 @@ const schema = yup.object().shape({
       then: (schema) => schema.moreThan(0, "Non-zero fee is required").required("Fee is required"),
    }),
 })
-const { errors, resetForm, handleSubmit, defineField } = useForm({ validationSchema: schema })
+const { values, errors, resetForm, handleSubmit, defineField } = useForm({ validationSchema: schema })
 
 const route = useRoute()
 const router = useRouter()
@@ -139,7 +141,7 @@ onMounted( async () =>{
 
    let val = {
       status: ordersStore.detail.status,
-      dateDue: useDateFormat(ordersStore.detail.dateDue, "YYYY-MM-DD").value,
+      dateDue: "",
       title: ordersStore.detail.title,
       specialInstructions: ordersStore.detail.specialInstructions,
       staffNotes: ordersStore.detail.staffNotes,
@@ -157,6 +159,11 @@ onMounted( async () =>{
    if (ordersStore.detail.customer) {
       val.customerID = ordersStore.detail.customer.id
    } 
+   if (ordersStore.detail.dateDue != "") {
+      val.dateDue = useDateFormat(ordersStore.detail.dateDue, "YYYY-MM-DD").value
+   } 
+
+   useDateFormat(ordersStore.detail.dateDue, "YYYY-MM-DD").value
    resetForm({values: val})
 })
 
@@ -185,23 +192,11 @@ const submitChanges = handleSubmit( async (values) => {
 .edit-form {
    width: 50%;
    margin: 20px auto;
-   form {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      text-align: left;
-   }
    .split {
       display: flex;
       flex-flow: row nowrap;
       justify-content: space-between;
       gap: 15px;
    }
-}
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-   gap: 10px;
 }
 </style>
