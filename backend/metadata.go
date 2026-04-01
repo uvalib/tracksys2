@@ -605,7 +605,7 @@ func (svc *serviceContext) sendUseRightToSirsi(md *metadata, useRightID int64) {
 }
 
 func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailResponse, error) {
-	var md metadata
+	var md *metadata
 	err := svc.DB.Preload("OCRHint").Preload("AvailabilityPolicy").Preload("APTrustSubmission").
 		Preload("ExternalSystem").Preload("SupplementalSystem").Preload("HathiTrustStatus").Preload("Locations").
 		Limit(1).Find(&md, mdID).Error
@@ -613,7 +613,7 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 		return nil, err
 	}
 
-	out := metadataDetailResponse{Metadata: &md, Units: make([]*unit, 0)}
+	out := metadataDetailResponse{Metadata: md, Units: make([]*unit, 0)}
 	if md.ID == 0 {
 		return &out, nil
 	}
@@ -707,6 +707,13 @@ func (svc *serviceContext) loadMetadataDetails(mdID int64) (*metadataDetailRespo
 				if err != nil {
 					log.Printf("ERROR: unable to parse AS response for %s: %s", md.PID, err.Error())
 				} else {
+					if md.CallNumber == nil {
+						log.Printf("INFO: metadata record does not have call number set to as accession id; update")
+						md.CallNumber = &asData.CollectionID
+						if err := svc.DB.Model(md).Update("call_number", md.CallNumber).Error; err != nil {
+							log.Printf("ERROR: unable to update callnum data: %s", err.Error())
+						}
+					}
 					out.ArchiveSpace = &asData
 				}
 				log.Printf("Parsed AS metadta collectionID=%s", asData.CollectionID)
@@ -797,8 +804,7 @@ func (svc *serviceContext) validateArchivesSpaceMetadata(c *gin.Context) {
 
 	log.Printf("INFO: ensure no duplicate records are created for validated uri %s", resp.URI)
 	var dups []metadata
-	err := svc.DB.Where("external_uri=?", resp.URI).Select("id").Find(&dups).Error
-	if err != nil {
+	if err := svc.DB.Where("external_uri=?", resp.URI).Select("id").Find(&dups).Error; err != nil {
 		log.Printf("ERROR: unable to detect if %s is already present: %s", resp.URI, err.Error())
 	} else if len(dups) > 0 {
 		log.Printf("ERROR: as uri %s already exists", resp.URI)
@@ -814,10 +820,9 @@ func (svc *serviceContext) validateArchivesSpaceMetadata(c *gin.Context) {
 		return
 	}
 	log.Printf("INFO: detail %s", rawDetail)
-	parseErr := json.Unmarshal(rawDetail, &resp.Detail)
-	if parseErr != nil {
-		log.Printf("ERROR: unable to parse archivespace details for %s: %s", resp.URI, parseErr.Error())
-		c.String(http.StatusInternalServerError, parseErr.Error())
+	if err := json.Unmarshal(rawDetail, &resp.Detail); err != nil {
+		log.Printf("ERROR: unable to parse archivespace details for %s: %s", resp.URI, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 

@@ -50,7 +50,7 @@
             <div class="split">
                <FormField id="exturi" label="External URI" :error="errors.externalURI" :required="true">
                   <div style="display: flex; flex-flow: row nowrap; gap: 10px">
-                     <InputText id="exturi" type="text" v-model="externalURI"  @update:modelValue="needsValidation=true"/>  
+                     <InputText id="exturi" type="text" v-model="externalURI"  @update:modelValue="needsValidation=true" fluid/>  
                      <DPGButton @click="validateASMetadata" label="Validate" severity="secondary" :loading="metadataStore.asMatch.searching"/>
                   </div>  
                </FormField>
@@ -301,7 +301,7 @@ const validateASMetadata = ( async () => {
    }
 })
 
-const sirsiLookup= (async () => {
+const sirsiLookup = (async () => {
    await metadataStore.sirsiLookup(barcode.value, catalogKey.value)
    if ( metadataStore.sirsiMatch.error == "") {
       needsValidation.value = false
@@ -323,6 +323,7 @@ const createMetadata = handleSubmit( async (values) => {
    if (needsValidation.value ) return
    if (values.type == "ExternalMetadata") {
       values.externalSystemID = 1
+      values.callNumber = metadataStore.asMatch.id
    }
    await metadataStore.create( values )
    emit("created")

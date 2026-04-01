@@ -351,7 +351,6 @@ func newQuery(table string, sc *searchContext, offset, limit int32, scrollToken 
 		searchRequest.SetSort(parsed)
 	}
 	if offset == 0 {
-		log.Printf("INIT SCROLL")
 		opts := map[string]any{"scroll": true}
 		searchRequest.SetOptions(opts)
 	} else {

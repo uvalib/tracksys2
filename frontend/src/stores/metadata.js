@@ -181,7 +181,7 @@ export const useMetadataStore = defineStore('metadata', {
             if (response.data.detail.dates) {
                this.asMatch.title = `${this.asMatch.title}, ${response.data.detail.dates}`
             }
-            this.asMatch.id = response.data.detail.id
+            this.asMatch.id = response.data.detail.collection_id
             this.asMatch.searching = false
          }).catch( e => {
             this.asMatch.searching = false
