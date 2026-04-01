@@ -70,6 +70,7 @@
                   <DPGButton v-if="detail.datePatronDeliverablesReady == null" @click="generateDeliverablesClicked" severity="secondary" label="Generate Deliverables"/>
                   <DPGButton v-else @click="generateDeliverablesClicked" severity="secondary" label="Regenerate Deliverables" />
                </template>
+               <DPGButton v-if="unitsStore.hasMasterFiles" @click="unitsStore.regenerateIIIF()" severity="secondary" label="Republish IIIF"" />
                <DPGButton v-if="unitsStore.canDownload" @click="downloadClicked" severity="secondary" label="Download from Archive" />
                <DPGButton label="OCR Master Files" severity="secondary"  @click="unitOCRClicked()" v-if="unitsStore.canOCR && (userStore.isAdmin || userStore.isSupervisor)" />
                <DPGButton label="Download PDF" severity="secondary" @click="unitPDFClicked()" v-if="unitsStore.canPDF" />

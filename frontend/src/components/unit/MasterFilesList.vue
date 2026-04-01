@@ -239,7 +239,7 @@ const exemplarClicked = (( info) => {
    unitsStore.setExemplar( info.id )
 })
 const republishIIIF =((masterFileID) => {
-   unitsStore.regenerateIIIF( masterFileID )
+   unitsStore.regenerateMasterFileIIIF( masterFileID )
 })
 const onRowSelect = (() => {
    selectAll.value = selectedMasterFiles.value < unitsStore.masterFiles.length
