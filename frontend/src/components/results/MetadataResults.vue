@@ -133,7 +133,7 @@ const mdTypes = computed(() => {
    out.push({name: "Sirsi", code: "SirsiMetadata"})
    out.push({name: "XML", code: "XmlMetadata"})
    system.externalSystems.forEach( es => {
-      out.push({name: es.name, code: `ExternalMetadata:${es.id}`})
+      out.push({name: es.name, code: es.name})
    })
    return out
 })
