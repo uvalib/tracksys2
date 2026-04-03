@@ -19,13 +19,13 @@
                   <DPGButton label="Delete" @click="deleteClicked()" severity="secondary" :disabled="!filesSelected" />
                </template>
                <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
-               <template v-if="unitsStore.canDownload && unitsStore.throwAway == false">
+               <template v-if="unitsStore.canDownload && detail.throwAway == false">
                   <DPGButton label="Download" @click="downloadClicked()" severity="secondary" :disabled="!filesSelected" />
                </template>
                <template v-if="unitsStore.canPDF">
                   <DPGButton label="PDF" @click="pdfClicked()" severity="secondary" :disabled="filesSelected == false" />
                </template>
-               <template  v-if="(userStore.isAdmin || userStore.isSupervisor) && unitsStore.throwAway == false">
+               <template  v-if="(userStore.isAdmin || userStore.isSupervisor) && detail.throwAway == false">
                   <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selectedObject="assignMetadata" target="metadata" :create="true"/>
                   <LookupDialog :disabled="!filesSelected" label="Assign Componment" @selected="assignComponent" target="component" />
                </template>
