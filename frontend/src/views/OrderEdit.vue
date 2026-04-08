@@ -22,7 +22,7 @@
          <FormField id="notes" label="Staff Notes">
             <Textarea id="notes" v-model="staffNotes" rows="5"/>   
          </FormField>
-         <FormField  v-if="isFeeRequired" id="fee" label="Fee" :error="errors.fee" :required="true">
+         <FormField  v-if="isFeeRequired" id="fee" label="Fee">
             <InputNumber id="fee" v-model="fee" mode="currency" currency="USD" locale="en-US"/>   
          </FormField>
          <div class="split">
@@ -66,10 +66,6 @@ const schema = yup.object().shape({
    status: yup.string().required('Status is required'),
    dateDue: yup.string().required('Due date is required'),
    customerID: yup.number().min(1, "Customer is required"),
-   fee: yup.number().when('feeRequired', {
-      is: (value) => value == true,
-      then: (schema) => schema.moreThan(0, "Non-zero fee is required").required("Fee is required"),
-   }),
 })
 const { errors, resetForm, handleSubmit, defineField } = useForm({ validationSchema: schema })
 
