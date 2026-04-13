@@ -699,11 +699,11 @@ func (svc *serviceContext) updateInvoice(c *gin.Context) {
 	}
 
 	var updateRequest struct {
-		DateFeePaid       string `json:"dateFeePaid"`
-		DateFeeDeclined   string `json:"dateFeeDeclined"`
-		FeeAmountPaid     string `json:"feeAmountPaid"`
-		TransmittalNumber string `json:"transmittalNumber"`
-		Notes             string `json:"notes"`
+		DateFeePaid       string  `json:"dateFeePaid"`
+		DateFeeDeclined   string  `json:"dateFeeDeclined"`
+		FeeAmountPaid     float64 `json:"feeAmountPaid"`
+		TransmittalNumber string  `json:"transmittalNumber"`
+		Notes             string  `json:"notes"`
 	}
 	err = c.BindJSON(&updateRequest)
 	if err != nil {
@@ -724,9 +724,8 @@ func (svc *serviceContext) updateInvoice(c *gin.Context) {
 	} else {
 		inv.DateFeeDeclined = nil
 	}
-	if updateRequest.FeeAmountPaid != "" {
-		fee, _ := strconv.ParseFloat(updateRequest.FeeAmountPaid, 64)
-		inv.FeeAmountPaid = &fee
+	if updateRequest.FeeAmountPaid > 0 {
+		inv.FeeAmountPaid = &updateRequest.FeeAmountPaid
 	} else {
 		inv.FeeAmountPaid = nil
 	}
