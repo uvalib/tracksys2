@@ -71,7 +71,7 @@ const { resetForm, handleSubmit, defineField } = useForm({})
 
 const [dateFeePaid] = defineField('dateFeePaid')
 const [dateFeeDeclined] = defineField('dateFeeDeclined')
-const [feeAmountPaid] = defineField('lastName')
+const [feeAmountPaid] = defineField('feeAmountPaid')
 const [transmittalNumber] = defineField('transmittalNumber')
 const [notes] = defineField('notes')
 
