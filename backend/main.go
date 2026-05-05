@@ -11,7 +11,7 @@ import (
 )
 
 // Version of the service
-const Version = "2.1.0"
+const Version = "2.2.0"
 
 func main() {
 	// Load cfg
@@ -40,7 +40,6 @@ func main() {
 	{
 		api.POST("/agency", svc.addAgency)
 
-		api.GET("/aptrust", svc.getAPTrustSubmissions)
 		api.GET("/archivesspace", svc.getArchivesSpaceReviews)
 		api.GET("/hathitrust", svc.getHathiTrustSubmissions)
 		api.PUT("/hathitrust", svc.updateHathiTrustSubmissions)
@@ -52,7 +51,6 @@ func main() {
 		api.GET("/collections/:id/csv", svc.exportCollectionCSV)
 		api.DELETE("/collections/:id/items/:item", svc.removeCollectionItem)
 		api.POST("/collections/:id/item", svc.addCollectionItem)
-		api.GET("/collections/:id/aptrust", svc.getAPTrustCollectionStatus)
 
 		api.GET("/components/:id", svc.getComponentTree)
 		api.GET("/components/:id/masterfiles", svc.getComponentMasterFiles)
@@ -78,7 +76,6 @@ func main() {
 		api.POST("/metadata/:id/xml", svc.uploadXMLMetadata)
 		api.GET("/metadata/:id/xml", svc.getXMLMetadata)
 		api.POST("/metadata", svc.createMetadata)
-		api.GET("/metadata/:id/aptrust", svc.getAPTrustMetadataStatus)
 
 		api.POST("/metadata/:id/archivesspace", svc.requestArchivesSpaceReview)
 		api.POST("/metadata/:id/archivesspace/review", svc.beginArchivesSpaceReview)

@@ -9,7 +9,6 @@ export const useCollectionsStore = defineStore('collections', {
       records: [],
       totalRecords: 0,
       collectionID: -1,
-      inAPTrust: false,
       searchOpts: {
          start: 0,
          limit: 30,
@@ -26,7 +25,6 @@ export const useCollectionsStore = defineStore('collections', {
 	actions: {
       setCollection( collection) {
          this.collectionID = collection.id
-         this.inAPTrust = collection.inAPTrust
          this.records = []
          this.totalRecords = 0
          this.searchOpts.start = 0

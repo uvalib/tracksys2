@@ -35,7 +35,6 @@ type updateProjectRequest struct {
 }
 
 type externalSystems struct {
-	APTrust  string
 	IIIFMan  string
 	IIIF     string
 	ILS      string
@@ -89,7 +88,6 @@ type containerType struct {
 func initializeService(version string, cfg *configData) *serviceContext {
 	ctx := serviceContext{Version: version,
 		ExternalSystems: externalSystems{
-			APTrust:  cfg.apTrustURL,
 			IIIFMan:  cfg.iiifManifestURL,
 			IIIF:     cfg.iiifURL,
 			ILS:      cfg.ilsURL,
@@ -209,7 +207,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 
 	type cfgData struct {
 		Version                string `json:"version"`
-		APTtustURL             string `json:"apTrustURL"`
 		ProjectsURL            string `json:"projectsURL"`
 		IIIFURL                string `json:"iiifURL"`
 		IIIFManifestURL        string `json:"iiifManifestURL"`
@@ -231,7 +228,6 @@ func (svc *serviceContext) getConfig(c *gin.Context) {
 
 	vMap := svc.lookupVersion()
 	resp := cfgData{Version: fmt.Sprintf("%s-%s", vMap["version"], vMap["build"]),
-		APTtustURL:      svc.ExternalSystems.APTrust,
 		CurioURL:        svc.ExternalSystems.Curio,
 		IIIFURL:         svc.ExternalSystems.IIIF,
 		IIIFManifestURL: svc.ExternalSystems.IIIFMan,

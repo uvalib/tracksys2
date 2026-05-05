@@ -140,9 +140,6 @@
                <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
             </template>
          </Panel>
-         <Panel header="APTrust Information" v-if="apTrust.hasItemStatus">
-            <APTrustPanel />
-         </Panel>
       </div>
       <div class="column">
          <Panel header="Digital Library Information">
@@ -239,7 +236,6 @@ import { useSystemStore } from '@/stores/system'
 import { useMetadataStore } from '@/stores/metadata'
 import { useUserStore } from '@/stores/user'
 import { useCollectionsStore } from '@/stores/collections'
-import { useAPTrustStore } from '@/stores/aptrust'
 import Panel from 'primevue/panel'
 import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel'
@@ -251,7 +247,6 @@ import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
 import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
-import APTrustPanel from '@/components/aptrust/APTrustPanel.vue'
 import RelatedOrders from '@/components/related/RelatedOrders.vue'
 import RelatedUnits from '@/components/related/RelatedUnits.vue'
 import RelatedMasterFiles from '@/components/related/RelatedMasterFiles.vue'
@@ -270,7 +265,6 @@ const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
 const userStore = useUserStore()
 const collectionStore = useCollectionsStore()
-const apTrust = useAPTrustStore()
 
 const publishing = ref(false)
 const showHathiDialog = ref(false)
@@ -352,10 +346,7 @@ onBeforeMount( async () => {
 const loadDetails = ( async (mdID) => {
    document.title = `Metadata #${mdID}`
    await metadataStore.getDetails( mdID )
-   apTrust.clearItemStatus()
-   if ( metadataStore.detail.inAPTrust) {
-      apTrust.getItemStatus(metadataStore.detail.id)
-   }
+   
    if (metadataStore.detail.isCollection) {
       collectionStore.setCollection( metadataStore.detail )
       collectionStore.getItems()

@@ -53,7 +53,6 @@ onMounted(() => {
             {label: "Patron Deliveries", command: ()=>menuLinkClicked("/deliveries")},
          ]},
          {label: "Miscellaneous", items: [
-            {label: "APTrust Submissions", command: ()=>menuLinkClicked("/aptrust")},
             {label: "ArchivesSpace Reviews", command: ()=>menuLinkClicked("/archivesspace")},
             {label: "HathiTrust Submissions", command: ()=>menuLinkClicked("/hathitrust")},
             {label: "Master File Audit", command: ()=>menuLinkClicked("/audit-report")},

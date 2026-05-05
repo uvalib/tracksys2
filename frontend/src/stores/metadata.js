@@ -35,7 +35,6 @@ export const useMetadataStore = defineStore('metadata', {
          inDL: false,
          inDPLA: false,
          inHathiTrust: false,
-         inAPTrust: false,
          useRightName: "",
          useRightURI: "",
          useRightStatement: "",
@@ -339,11 +338,6 @@ export const useMetadataStore = defineStore('metadata', {
          details.metadata.locations = null
          if ( details.metadata.locations ) {
             this.detail.folders = details.metadata.locations
-         }
-
-         this.detail.inAPTrust = false
-         if ( details.metadata.apTrustSubmission) {
-            this.detail.inAPTrust = true
          }
 
          if (this.detail.type == "SirsiMetadata") {

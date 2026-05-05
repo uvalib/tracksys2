@@ -12,11 +12,6 @@ const router = createRouter({
          component: () => import('../views/HomeView.vue')
       },
       {
-         path: '/aptrust',
-         name: 'aptrust',
-         component: () => import('../views/APTrustSubmissions.vue')
-      },
-      {
          path: '/archivesspace',
          name: 'archivesspace',
          component: () => import('../views/ArchivesSpaceReviews.vue')

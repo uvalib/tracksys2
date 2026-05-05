@@ -118,9 +118,6 @@ func (svc *serviceContext) getCollectionItems(c *gin.Context) {
 	if sortBy == "callNumber" {
 		sortField = "call_number"
 	}
-	if sortBy == "aptStatus" {
-		sortField = "APTrustSubmission.success"
-	}
 	orderStr := fmt.Sprintf("%s %s", sortField, sortOrder)
 
 	qStr := c.Query("q")
@@ -143,7 +140,7 @@ func (svc *serviceContext) getCollectionItems(c *gin.Context) {
 			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
-		err = svc.DB.Joins("APTrustSubmission").Where("parent_metadata_id=?", collectionID).Where(queryClause).
+		err = svc.DB.Where("parent_metadata_id=?", collectionID).Where(queryClause).
 			Offset(startIndex).Limit(pageSize).Order(orderStr).Find(&resp.Metadata).Error
 		if err != nil {
 			log.Printf("ERROR: unable to get filtered collection records for collection %d: %s", collectionID, err.Error())
@@ -157,7 +154,7 @@ func (svc *serviceContext) getCollectionItems(c *gin.Context) {
 			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
-		err = svc.DB.Joins("APTrustSubmission").Where("parent_metadata_id=?", collectionID).
+		err = svc.DB.Where("parent_metadata_id=?", collectionID).
 			Offset(startIndex).Limit(pageSize).Order(orderStr).Find(&resp.Metadata).Error
 		if err != nil {
 			log.Printf("ERROR: unable to get collection records for collection %d: %s", collectionID, err.Error())

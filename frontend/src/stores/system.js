@@ -7,7 +7,6 @@ export const useSystemStore = defineStore('system', {
 		version: "unknown",
 		error: "",
       showError: false,
-      apTrustURL: "",
       jobsURL: "",
       projectsURL: "",
       iiifManifestURL: "",
@@ -76,7 +75,6 @@ export const useSystemStore = defineStore('system', {
          this.working = true
          return axios.get("/config").then(response => {
             this.version = response.data.version
-            this.apTrustURL = response.data.apTrustURL
             this.projectsURL = response.data.projectsURL
             this.jobsURL = response.data.jobsURL
             this.iiifManifestURL = response.data.iiifManifestURL
