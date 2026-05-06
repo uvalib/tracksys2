@@ -180,8 +180,9 @@
                   <DataDisplay label="Virgo Update" :value="$formatDateTime(metadataStore.detail.dateDLUpdate)"/>
                </template>
             </dl>
-            <div v-if="metadataStore.canPublishToVirgo" class="publish">
-               <DPGButton label="Publish to Virgo" autofocus severity="secondary" @click="publishVirgoClicked()" :loading="publishing"/>
+            <div class="metadata-acts">
+               <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" severity="secondary" @click="apTrustSubmitClicked"/>
+               <DPGButton v-if="metadataStore.canPublishToVirgo" label="Publish to Virgo" autofocus severity="secondary" @click="publishVirgoClicked()" :loading="publishing"/>
             </div>
          </Panel>
       </div>
@@ -275,6 +276,13 @@ const startTab = computed( () => {
    if ( metadataStore.detail.isCollection ) return "collection"
    if ( metadataStore.related.units.length > 0  ) return "units"
    return "orders"
+})
+
+
+const canSubmitAPTrust = computed(() => {
+   // TODO maybe check for candidate units
+   if (userStore.isAdmin == false) return false
+   return true
 })
 
 const canAddToCollection = computed(() => {
@@ -404,6 +412,24 @@ const downloadXMLClicked = (() => {
 
 const xmlUploader = (( event ) => {
    metadataStore.uploadXML( event.files[0] )
+})
+
+const apTrustSubmitClicked = (() => {
+   confirm.require({
+      message: 'Are you sure you want to submit this metadata record to APTrust?',
+      header: 'Confirm APTrust Submission',
+      icon: 'pi pi-exclamation-triangle',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Submit'
+      },
+      accept: async () => {
+         metadataStore.apTrustSubmit()  
+      }
+   })
 })
 
 const publishVirgoClicked = (async () => {
@@ -551,9 +577,12 @@ const submitForASReview = ( async () => {
       padding: 0;
       margin: 15px 0 0 0;
    }
-   .publish {
+   .metadata-acts {
       padding: 15px 0 0 0;
-      text-align: right;
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-end;
+      gap: 10px;
    }
 }
 </style>

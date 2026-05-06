@@ -248,6 +248,14 @@ export const useMetadataStore = defineStore('metadata', {
             system.setError(e)
          })
       },
+      apTrustSubmit() {
+         const system = useSystemStore()
+         axios.post( `${system.jobsURL}/metadata/${this.detail.id}/aptrust` ).then( () => {
+          system.toastMessage("APTrust Submission", "The APTrust Submission process has begun for this item.")
+         }).catch( e => {
+            system.setError(e)
+         })
+      },
       async requestArchivesSpaceReview(userID) {
          const system = useSystemStore()
          return axios.post( `/api/metadata/${this.detail.id}/archivesspace?user=${userID}` ).then( (response) => {
