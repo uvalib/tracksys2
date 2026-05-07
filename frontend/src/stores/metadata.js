@@ -30,7 +30,6 @@ export const useMetadataStore = defineStore('metadata', {
          isPersonalItem: false,
          ocrHint: null,
          ocrLanguageHint: "",
-         preservationTier: null,
          folders: [],
          inDL: false,
          inDPLA: false,
@@ -338,7 +337,6 @@ export const useMetadataStore = defineStore('metadata', {
          this.detail.isPersonalItem = details.metadata.isPersonalItem
          this.detail.ocrHint = details.metadata.ocrHint
          this.detail.ocrLanguageHint = details.metadata.ocrLanguageHint
-         this.detail.preservationTier = details.metadata.preservationTier
          this.detail.thumbURL = details.thumbURL
          this.detail.viewerURL = details.viewerURL
          this.detail.virgoURL = details.virgoURL
