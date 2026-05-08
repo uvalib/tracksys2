@@ -7,6 +7,7 @@
 umask 0002
 cd bin; ./tracksys2                \
    -jwtkey $TRACKSYS_JWT_KEY       \
+   -aptrust $APTRUST_URL           \
    -projects $PROJECTS_SERVICE_URL \
    -virgo $VIRGO_URL               \
    -iiifman $IIIFMAN_SERVICE_URL   \

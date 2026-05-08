@@ -157,6 +157,13 @@
                   </div>
                   <span v-else>No</span>
                </DataDisplay>
+               <DataDisplay label="APTrust" :value="metadataStore.detail.apTrustSubmissionID">
+                  <a v-if="metadataStore.detail.apTrustSubmissionID" class="virgo no-pad" 
+                     :href="`${systemStore.apTrustURL}/submissions/${metadataStore.detail.apTrustSubmissionID}`" target="_blank">
+                     Yes<i class="icon pi pi-external-link"></i>
+                  </a>
+                  <span v-else>No</span>
+               </DataDisplay>
                <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
                   <DataDisplay label="Use Right" :value="metadataStore.detail.useRightName">
                      <a :href="metadataStore.detail.useRightURI" target="_blank" class="supplemental">
@@ -282,6 +289,7 @@ const startTab = computed( () => {
 const canSubmitAPTrust = computed(() => {
    // TODO maybe check for candidate units
    if (userStore.isAdmin == false) return false
+   if ( metadataStore.detail.apTrustSubmissionID ) return false
    return true
 })
 

@@ -17,6 +17,7 @@ type configData struct {
 	port            int
 	db              dbConfig
 	index           string
+	aptrustURL      string
 	virgoURL        string
 	projectsURL     string
 	iiifManifestURL string
@@ -37,6 +38,7 @@ func getConfiguration() *configData {
 	var config configData
 	flag.IntVar(&config.port, "port", 8080, "Port to offer service on (default 8085)")
 	flag.StringVar(&config.jwtKey, "jwtkey", "", "JWT signature key")
+	flag.StringVar(&config.aptrustURL, "aptrust", "https://aptrust-submit-dev.internal.lib.virginia.edu", "APTrust Client URL")
 	flag.StringVar(&config.projectsURL, "projects", "https://dpg-imaging.lib.virginia.edu", "DPG projects URL")
 	flag.StringVar(&config.virgoURL, "virgo", "https://search.lib.virginia.edu", "Virgo URL")
 	flag.StringVar(&config.iiifManifestURL, "iiifman", "https://iiifman.lib.virginia.edu", "IIIF manifest URL")
@@ -84,6 +86,7 @@ func getConfiguration() *configData {
 	}
 
 	log.Printf("[CONFIG] port          = [%d]", config.port)
+	log.Printf("[CONFIG] aptrust       = [%s]", config.aptrustURL)
 	log.Printf("[CONFIG] solr          = [%s]", config.solrURL)
 	log.Printf("[CONFIG] projects      = [%s]", config.projectsURL)
 	log.Printf("[CONFIG] virgo         = [%s]", config.virgoURL)

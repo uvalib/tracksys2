@@ -340,6 +340,7 @@ export const useMetadataStore = defineStore('metadata', {
          this.detail.thumbURL = details.thumbURL
          this.detail.viewerURL = details.viewerURL
          this.detail.virgoURL = details.virgoURL
+         this.detail.apTrustSubmissionID = details.metadata.apTrustSubmissionID
 
          details.metadata.locations = null
          if ( details.metadata.locations ) {

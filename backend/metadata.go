@@ -83,6 +83,7 @@ type metadata struct {
 	DPLA                 bool                `gorm:"column:dpla" json:"dpla"`
 	HathiTrust           bool                `gorm:"column:hathitrust" json:"hathiTrust"`
 	HathiTrustStatus     *hathitrustStatus   `gorm:"foreignKey:MetadataID" json:"hathiTrustStatus,omitempty"`
+	APTrustSubmissionID  string              `gorm:"column:apt_submission_id" json:"apTrustSubmissionID,omitempty"`
 	IsManuscript         bool                `json:"isManuscript"`
 	IsPersonalItem       bool                `json:"isPersonalItem"`
 	DateDLIngest         *time.Time          `gorm:"date_dl_ingest" json:"dateDLIngest"`
