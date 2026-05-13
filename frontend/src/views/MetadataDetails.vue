@@ -287,10 +287,10 @@ const startTab = computed( () => {
 
 
 const canSubmitAPTrust = computed(() => {
-   // TODO maybe check for candidate units
-   if (userStore.isAdmin == false) return false
-   if ( metadataStore.detail.apTrustSubmissionID ) return false
-   return true
+   // if (userStore.isAdmin == false) return false
+   // if ( metadataStore.detail.apTrustSubmissionID ) return false
+   // return true
+   return false // TODO REMOVE ME AND UNCOMMENT ABOVE TO ALLOW APTRUST SUBMITS
 })
 
 const canAddToCollection = computed(() => {
