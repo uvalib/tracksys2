@@ -157,12 +157,11 @@
                   </div>
                   <span v-else>No</span>
                </DataDisplay>
-               <DataDisplay label="APTrust" :value="metadataStore.detail.apTrustSubmissionID">
-                  <a v-if="metadataStore.detail.apTrustSubmissionID" class="virgo no-pad" 
+               <DataDisplay  v-if="metadataStore.detail.apTrustSubmissionID" label="APTrust" :value="metadataStore.detail.apTrustSubmissionID">
+                  <a class="virgo no-pad" 
                      :href="`${systemStore.apTrustURL}/submissions/${metadataStore.detail.apTrustSubmissionID}`" target="_blank">
                      Yes<i class="icon pi pi-external-link"></i>
                   </a>
-                  <span v-else>No</span>
                </DataDisplay>
                <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
                   <DataDisplay label="Use Right" :value="metadataStore.detail.useRightName">
