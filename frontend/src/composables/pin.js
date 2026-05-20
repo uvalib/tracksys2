@@ -10,7 +10,7 @@ export function usePinnable( pinClass ) {
 
    watch(y, (newY) => {
       if ( pinned.value == false ) {
-         if ( bounds.value.top <= 0 ) {
+         if ( bounds.value.top <= 0 && bounds.value.width > 0 ) {
             pinnedY.value = y.value+bounds.value.top
             let dts = document.getElementsByClassName("p-datatable-table-container")
             if ( dts ) {
