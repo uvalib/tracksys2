@@ -215,7 +215,10 @@ export const useSearchStore = defineStore('search', {
                   this.units.total = response.data.units.total
                }
             }
-            if ( this.scope == "all" ) {
+            if ( scopeOverride ) {
+               this.view = scopeOverride
+            }
+            else if ( this.scope == "all" ) {
                if ( this.orders.total > 0) {
                   this.view = "orders"
                } else if  ( this.metadata.total > 0) {
@@ -230,7 +233,6 @@ export const useSearchStore = defineStore('search', {
             } else {
                this.view = tgtScope
             }
-            system.working = false
             this.searched = true
          }).catch( e => {
             system.setError(e)
