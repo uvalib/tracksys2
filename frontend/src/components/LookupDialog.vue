@@ -2,7 +2,7 @@
    <DPGButton @click="show" severity="secondary" :label="props.label" :disabled="props.disabled" :class="props.class" />
    <Dialog v-model:visible="isOpen" :modal="true" :header="dialogTitle" style="width: 80%;z-index: 9999" position="top" :maximizable="true" :closable="false">
       <div class="lookup" v-if="mode=='lookup'">
-         <input type="text" v-model="query"  @keydown.stop.prevent.enter="lookupRecords" autofocus :placeholder="searchPlaceholder"/>
+         <InputText v-model="query"  @keydown.stop.prevent.enter="lookupRecords" autofocus :placeholder="searchPlaceholder" fluid/>
          <DPGButton @click="lookupRecords" label="Lookup" severity="secondary"/>
          <DPGButton @click="createMetadata" label="Create" severity="secondary" v-if="props.create"/>
       </div>
@@ -79,6 +79,7 @@ import { useMetadataStore } from '@/stores/metadata'
 import { useOrdersStore } from '@/stores/orders'
 import { useComponentsStore } from '@/stores/components'
 import DataTable from 'primevue/datatable'
+import InputText from 'primevue/inputtext'
 import Column from 'primevue/column'
 import NewMetadataPanel from '@/components/metadata/NewMetadataPanel.vue'
 
@@ -192,8 +193,9 @@ div.lookup {
    display: flex;
    flex-flow: row nowrap;
    justify-content: flex-start;
-   align-items: stretch;
+   align-items: baseline;
    gap: 10px;
+   padding: 10px;
 }
 div.no-results {
    margin: 15px 0 0 0;
