@@ -78,14 +78,14 @@ type order struct {
 }
 
 type orderRequest struct {
-	Status              string  `json:"status"`
-	DateDue             string  `json:"dateDue"`
-	Title               string  `json:"title"`
-	SpecialInstructions string  `json:"specialInstructions"`
-	StaffNotes          string  `json:"staffNotes"`
-	Fee                 float64 `json:"fee"`
-	AgencyID            uint    `json:"agencyID"`
-	CustomerID          uint    `json:"customerID"`
+	Status              string `json:"status"`
+	DateDue             string `json:"dateDue"`
+	Title               string `json:"title"`
+	SpecialInstructions string `json:"specialInstructions"`
+	StaffNotes          string `json:"staffNotes"`
+	Fee                 string `json:"fee"`
+	AgencyID            uint   `json:"agencyID"`
+	CustomerID          uint   `json:"customerID"`
 }
 
 func (svc *serviceContext) deleteOrder(c *gin.Context) {
@@ -920,8 +920,13 @@ func (svc *serviceContext) updateOrder(c *gin.Context) {
 	}
 
 	oDetail.Fee = nil
-	if updateRequest.Fee > 0 {
-		oDetail.Fee = &updateRequest.Fee
+	if len(updateRequest.Fee) > 0 {
+		floatFee, err := strconv.ParseFloat(updateRequest.Fee, 64)
+		if err != nil {
+			log.Printf("ERROR: unable to parse fee %s: %s", updateRequest.Fee, err.Error())
+		} else {
+			oDetail.Fee = &floatFee
+		}
 	}
 	fields = append(fields, "Fee")
 
