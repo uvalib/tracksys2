@@ -38,7 +38,7 @@ func getConfiguration() *configData {
 	var config configData
 	flag.IntVar(&config.port, "port", 8080, "Port to offer service on (default 8085)")
 	flag.StringVar(&config.jwtKey, "jwtkey", "", "JWT signature key")
-	flag.StringVar(&config.aptrustURL, "aptrust", "https://aptrust-submit-dev.internal.lib.virginia.edu", "APTrust Client URL")
+	flag.StringVar(&config.aptrustURL, "aptrust", "", "APTrust Client URL")
 	flag.StringVar(&config.projectsURL, "projects", "https://dpg-imaging.lib.virginia.edu", "DPG projects URL")
 	flag.StringVar(&config.virgoURL, "virgo", "https://search.lib.virginia.edu", "Virgo URL")
 	flag.StringVar(&config.iiifManifestURL, "iiifman", "https://iiifman.lib.virginia.edu", "IIIF manifest URL")
@@ -83,6 +83,9 @@ func getConfiguration() *configData {
 	}
 	if config.index == "" {
 		log.Fatal("Parameter indexhost is required")
+	}
+	if config.aptrustURL == "" {
+		log.Fatal("Parameter aptrust is required")
 	}
 
 	log.Printf("[CONFIG] port          = [%d]", config.port)
