@@ -157,7 +157,7 @@
                   </div>
                   <span v-else>No</span>
                </DataDisplay>
-               <DataDisplay  v-if="metadataStore.detail.apTrustSubmissionID && canSubmitAPTrust" label="APTrust" :value="metadataStore.detail.apTrustSubmissionID">
+               <DataDisplay  v-if="metadataStore.detail.apTrustSubmissionID" label="APTrust" :value="metadataStore.detail.apTrustSubmissionID">
                   <a class="virgo no-pad" 
                      :href="`${systemStore.apTrustURL}/submissions/${metadataStore.detail.apTrustSubmissionID}`" target="_blank">
                      Yes<i class="icon pi pi-external-link"></i>
@@ -284,9 +284,8 @@ const startTab = computed( () => {
    return "orders"
 })
 
-
 const canSubmitAPTrust = computed(() => {
-   if (userStore.isAdmin == false) return false
+   if ( userStore.isAdmin == false ) return false
    if ( metadataStore.detail.apTrustSubmissionID ) return false
    if ( metadataStore.detail.isCollection == false ) return false
    return true
