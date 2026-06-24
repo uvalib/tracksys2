@@ -288,7 +288,9 @@ const canSubmitAPTrust = computed(() => {
    if ( userStore.isAdmin == false ) return false
    if ( metadataStore.detail.apTrustSubmissionID ) return false
    if ( metadataStore.detail.isCollection == false ) return false
-   return true
+   // return true
+   // FIXME
+   return false
 })
 
 const canAddToCollection = computed(() => {

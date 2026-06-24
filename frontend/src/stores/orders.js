@@ -306,6 +306,14 @@ export const useOrdersStore = defineStore('orders', {
 
       async createOrder( data ) {
          const system = useSystemStore()
+
+         // ensure fee is either not present or is a string
+         if (data.fee == 0) {
+            delete data.fee
+         } else {
+            data.fee = `${data.fee}`
+         }
+         
          system.working = true
          return axios.post( `/api/orders`, data ).then( (response ) => {
             this.detail = response.data
