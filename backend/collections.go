@@ -327,3 +327,42 @@ func (svc *serviceContext) exportCollectionCSV(c *gin.Context) {
 	}
 	cw.Flush()
 }
+
+func (svc *serviceContext) exportCollectionMasterFiles(c *gin.Context) {
+	collectionID := c.Param("id")
+	log.Printf("INFO: export masterfiles for collection %s", collectionID)
+
+	type mfResp struct {
+		Filename      string
+		MetadataID    int64
+		MetadataTitle string
+		Checksum      string
+		Filesize      uint64
+	}
+	out := make([]mfResp, 0)
+
+	q := "select f.filename, m.id as metadata_id, m.title as metadata_title, f.filesize, f.md5 as checksum "
+	q += "from metadata m inner join master_files f on f.metadata_id=m.id where m.id in (select id from metadata where parent_metadata_id=?) "
+	q += " order by f.filename asc"
+	if err := svc.DB.Debug().Raw(q, collectionID).Scan(&out).Error; err != nil {
+		log.Printf("ERROR: unable to get collection %s masterfile rreport", collectionID)
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.Header("Content-Type", "text/csv")
+	cw := csv.NewWriter(c.Writer)
+	csvHead := []string{"filename", "metadata_id", "metadata_title", "checksum", "filesize"}
+	cw.Write(csvHead)
+	for _, info := range out {
+		line := []string{
+			info.Filename,
+			fmt.Sprintf("%d", info.MetadataID),
+			info.MetadataTitle,
+			info.Checksum,
+			fmt.Sprintf("%d", info.Filesize),
+		}
+		cw.Write(line)
+	}
+	cw.Flush()
+}

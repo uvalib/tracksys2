@@ -15,6 +15,7 @@
                <CollectionBulkAdd v-if="userStore.isAdmin" />
                <DPGButton label="Export CSV" severity="secondary" @click="exportCollectionCSV" :disabled="collectionStore.totalRecords == 0"/>
                <DPGButton label="Export Collection" severity="secondary" @click="exportCollection" :disabled="collectionStore.totalRecords == 0" v-if="userStore.isAdmin"/>
+               <DPGButton label="Master Files Report" severity="secondary" @click="exportCollectionMasterfiles" :disabled="collectionStore.totalRecords == 0" v-if="userStore.isAdmin"/>
             </div>
          </template>
          <template #paginatorend>
@@ -137,6 +138,24 @@ const deleteItem = (( item ) => {
 })
 const exportCollectionCSV = (() => {
    collectionStore.exportCSV()
+})
+
+const exportCollectionMasterfiles = (() => {
+   confirm.require({
+      message: `Generate a master files report for this collection?`,
+      header: 'Master Files Report',
+      icon: 'pi pi-question-circle',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Export'
+      },
+      accept: (() => {
+         collectionStore.masterFilesReport()
+      })
+   })
 })
 
 const exportCollection = (() => {

@@ -340,7 +340,8 @@ func (svc *serviceContext) queryUnits(sc *searchContext, channel chan searchChan
 }
 
 func newQuery(table string, sc *searchContext, offset, limit int32, scrollToken string) *manticore.SearchRequest {
-	searchRequest := manticore.NewSearchRequest(table)
+	searchRequest := manticore.NewSearchRequest()
+	searchRequest.SetTable(table)
 	searchRequest.SetLimit(limit)
 	jsonStr := `[{ "id":{ "order":"asc"}}]`
 	var parsed any

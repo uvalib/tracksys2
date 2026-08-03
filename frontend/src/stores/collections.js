@@ -122,6 +122,21 @@ export const useCollectionsStore = defineStore('collections', {
             system.setError(error)
          })
       },
+       masterFilesReport() {
+         const system = useSystemStore()
+         axios.get(`/api/collections/${this.collectionID}/masterfiles`, null, {responseType: "blob"}).then((response) => {
+            const fileURL = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }))
+            const fileLink = document.createElement('a')
+            fileLink.href =  fileURL
+            fileLink.setAttribute('download', `collection-${this.collectionID}-masterfiles.csv`)
+            document.body.appendChild(fileLink)
+            fileLink.click()
+            window.URL.revokeObjectURL(fileURL)
+         }).catch((error) => {
+            const system = useSystemStore()
+            system.setError(error)
+         })
+      },
 
       metadataSearch( query ) {
          const system = useSystemStore()

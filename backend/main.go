@@ -11,7 +11,7 @@ import (
 )
 
 // Version of the service
-const Version = "2.2.1"
+const Version = "2.3.0"
 
 func main() {
 	// Load cfg
@@ -49,6 +49,7 @@ func main() {
 		api.GET("/collections/candidates", svc.findCollectionCandidates)
 		api.GET("/collections/:id", svc.getCollectionItems)
 		api.GET("/collections/:id/csv", svc.exportCollectionCSV)
+		api.GET("/collections/:id/masterfiles", svc.exportCollectionMasterFiles)
 		api.DELETE("/collections/:id/items/:item", svc.removeCollectionItem)
 		api.POST("/collections/:id/item", svc.addCollectionItem)
 
