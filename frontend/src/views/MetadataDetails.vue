@@ -187,7 +187,8 @@
                </template>
             </dl>
             <div class="metadata-acts">
-               <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" severity="secondary" @click="apTrustSubmitClicked"/>
+               <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" severity="secondary" @click="apTrustSubmitClicked" 
+                  :disabled="metadataStore.detail.apTrustSubmissionPending" :loading="metadataStore.detail.apTrustSubmissionPending"/>
                <DPGButton v-if="metadataStore.canPublishToVirgo" label="Publish to Virgo" autofocus severity="secondary" @click="publishVirgoClicked()" :loading="publishing"/>
             </div>
          </Panel>

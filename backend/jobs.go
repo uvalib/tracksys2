@@ -33,6 +33,39 @@ type jobStatus struct {
 	EndedAt        *time.Time `json:"finishedAt"`
 }
 
+type jobQuery struct {
+	Name           string `json:"name"`
+	OriginatorType string `json:"originatorType"`
+	OriginatorID   string `json:"originatorID"`
+}
+
+func (svc *serviceContext) searchJobStatuses(c *gin.Context) {
+	var req jobQuery
+	if qpErr := c.ShouldBindJSON(&req); qpErr != nil {
+		log.Printf("ERROR: invalid job query payload: %v", qpErr)
+		c.String(http.StatusBadRequest, "Invalid request")
+		return
+	}
+	log.Printf("INFO: received job search request: %+v", req)
+	var resp jobStatus
+	if err := svc.DB.Where("name=? and originator_type=? and originator_id=?",
+		req.Name, req.OriginatorType, req.OriginatorID).
+		Order("started_at desc").First(&resp).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) == false {
+			log.Printf("ERROR: job query failed: %s", err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+		log.Printf("INFO: no job found for %+v", req)
+		c.JSON(http.StatusOK, nil)
+		return
+	}
+
+	log.Printf("INFO: found job status %+v", resp)
+
+	c.JSON(http.StatusOK, resp)
+}
+
 func (svc *serviceContext) getJobStatuses(c *gin.Context) {
 	startIndex, _ := strconv.Atoi(c.Query("start"))
 	pageSize, _ := strconv.Atoi(c.Query("limit"))

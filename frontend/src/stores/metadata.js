@@ -428,6 +428,11 @@ export const useMetadataStore = defineStore('metadata', {
          system.working = true
          return axios.get( `/api/metadata/${metadataID}` ).then(response => {
             this.setMetadataDetails(response.data)
+             if ( this.detail.isCollection &&  !this.detail.apTrustSubmissionID ) {
+               // this is a candidate fot aptrust. make check to see if any submit jobs are running
+               // if so, disable the submit button
+               this.checkAPTrustJobs(metadataID)
+             }
             system.working = false
          }).catch( e => {
             if (e.response && e.response.status == 404) {
@@ -436,6 +441,18 @@ export const useMetadataStore = defineStore('metadata', {
             } else {
                system.setError(e)
             }
+         })
+      },
+
+      checkAPTrustJobs(metadataID) {
+         let req = { name: "APTrustSubmit", originatorType: "Metadata", originatorID: `${metadataID}`}
+         return axios.post( `/api/jobs/search`, req ).then(response => {
+            if (response.data && !response.data.finishedAt) {
+               this.detail.apTrustSubmissionPending = true
+            }
+         }).catch( e => {
+            // nothing to do; just log the error
+            console.error(e)
          })
       },
 
