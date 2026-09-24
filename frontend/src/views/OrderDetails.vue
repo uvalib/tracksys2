@@ -2,6 +2,7 @@
    <h2>
       <span>Order {{route.params.id}}</span>
       <div class="actions" v-if="(user.isAdmin || user.isSupervisor)" >
+         <DPGButton label="Package for HathiTrust" class="edit" @click="packageForHathiTrust" v-if="canPackageHathiTrust"/>
          <HathiTrustMetadataDialog @submit="submitHathiTrustMetadata" :order="detail.id" v-if="canSubmitHathiTrustMetadata"/>
          <DPGButton label="Flag for HathiTrust" class="edit" @click="flagForHathiTrust" v-if="canFlagForHathiTrust"/>
          <DPGButton label="Delete" class="edit" @click="deleteOrder()" v-if="canDelete"/>
@@ -231,6 +232,9 @@ const canFlagForHathiTrust = computed( () => {
 const canSubmitHathiTrustMetadata = computed( () => {
    return user.isAdmin && ordersStore.hasHathiTrustCandidateMetadata
 })
+const canPackageHathiTrust = computed( () => {
+   return user.isAdmin && ordersStore.hathiTrustPackageCandidate
+})
 
 const canDelete = computed(() => {
    return (user.isAdmin || user.isSupervisor) && ordersStore.detail.status=='requested' && ordersStore.units.length == 0
@@ -327,6 +331,24 @@ const flagForHathiTrust = (() => {
          ordersStore.flagForHathiTrust( user.computeID )
       }
    })
+})
+const packageForHathiTrust = (() => {
+    confirm.require({
+      message: 'Are you sure you want package all units in this order for submission to HathiTrust?',
+      header: 'Confirm HathiTrust Package',
+      icon: 'pi pi-exclamation-triangle',
+      rejectProps: {
+         label: 'Cancel',
+         severity: 'secondary'
+      },
+      acceptProps: {
+         label: 'Include'
+      },
+      accept: () => {
+         ordersStore.packageForHathiTrust( user.computeID )
+      }
+   })
+
 })
 const submitHathiTrustMetadata = (( info ) => {
    ordersStore.submitHathiTrustMetadata( user.computeID, info.mode, info.name )

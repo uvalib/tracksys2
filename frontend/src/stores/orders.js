@@ -58,19 +58,41 @@ export const useOrdersStore = defineStore('orders', {
          })
          return cnt
       },
+      hathiTrustPackageCandidate: state => {
+         if ( state.detail.status == "canceled") return false
+
+         let candidate = false
+         state.units.some( u => {
+            if ( u.metadata.hathiTrust == true) {
+               const htStatus = u.metadata.hathiTrustStatus
+               if ( htStatus.packageStatus == 'pending' || htStatus.packageStatus == 'failed') {
+                  candidate = true
+               }
+            }
+            return candidate == true
+         })
+         return candidate
+      },
       hasHathiTrustCandidateMetadata: state => {
          if ( state.detail.status == "canceled") return false
 
          let hasDCBMetadata = false
+         let hasSubmissions = false
          state.units.some( u => {
             if ( u.metadata.hathiTrust == true) {
                const htStatus = u.metadata.hathiTrustStatus
-               if ( htStatus.metadataStatus == 'pending' || htStatus.metadataStatus == 'failed') {
+               if ( htStatus.metadataStatus == 'submitted') {
+                  hasSubmissions = true
+               } else if ( htStatus.metadataStatus == 'pending' || htStatus.metadataStatus == 'failed') {
                   hasDCBMetadata = true
                }
             }
-            return hasDCBMetadata==true
+            return hasSubmissions==true
          })
+
+         // parts have been submitted. it is no longer a candidate
+         if (hasSubmissions ) return false 
+
          return hasDCBMetadata
       },
       hasHathiTrustCandidateUnits: state => {
@@ -207,10 +229,21 @@ export const useOrdersStore = defineStore('orders', {
             this.working = false
          })
       },
+      packageForHathiTrust(computeID) {
+         const system = useSystemStore()
+         const req = {computeID: computeID, order: this.detail.id}
+         axios.post(`${system.jobsURL}/hathitrust/package`, req).then(() => {
+            system.toastMessage('Success', 'Units in this order are being packaged for submission HathiTrust. Check job status logs for more info.')
+            this.working = false
+         }).catch((error) => {
+            system.toastError('Request Failed', `HathiTrust package reuest failed: ${error}`)
+            this.working = false
+         })
+      },
 
       submitHathiTrustMetadata( computeID, mode, submissionName ) {
          const system = useSystemStore()
-         const req = {computeID: computeID, mode: mode, orders: [this.detail.id], name: submissionName}
+         const req = {computeID: computeID, mode: mode, order: this.detail.id, name: submissionName}
          axios.post(`${system.jobsURL}/hathitrust/metadata`, req).then(() => {
             system.toastMessage('Success', 'HathiTrust metadata submission has begun. Check job status logs for more info.')
             this.working = false
