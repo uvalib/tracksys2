@@ -73,7 +73,23 @@ export const useOrdersStore = defineStore('orders', {
          })
          return candidate
       },
-      hasHathiTrustCandidateMetadata: state => {
+      hathiTrustPackageSubmitCandidate: state => {
+         if ( state.detail.status == "canceled") return false
+
+         let candidate = false
+         state.units.some( u => {
+            if ( u.metadata.hathiTrust == true) {
+               const htStatus = u.metadata.hathiTrustStatus
+               if ( htStatus.packageStatus == 'created' && htStatus.metadataStatus == 'accepted') {
+                  candidate = true
+               }
+            }
+            return candidate == true
+         })
+         return candidate
+      },
+      
+      hasHathiTrustMetadataCandidate: state => {
          if ( state.detail.status == "canceled") return false
 
          let hasDCBMetadata = false
@@ -250,6 +266,17 @@ export const useOrdersStore = defineStore('orders', {
          const req = {computeID: computeID, order: this.detail.id}
          axios.post(`${system.jobsURL}/hathitrust/package`, req).then(() => {
             system.toastMessage('Success', 'Units in this order are being packaged for submission HathiTrust. Check job status logs for more info.')
+            this.working = false
+         }).catch((error) => {
+            system.toastError('Request Failed', `HathiTrust package reuest failed: ${error}`)
+            this.working = false
+         })
+      },
+      submitHathiTrustPackage(computeID) {
+         const system = useSystemStore()
+         const req = {computeID: computeID, order: this.detail.id}
+         axios.post(`${system.jobsURL}/hathitrust/package/submit`, req).then(() => {
+            system.toastMessage('Success', 'Packages for this order are being submitted HathiTrust. Check job status logs for more info.')
             this.working = false
          }).catch((error) => {
             system.toastError('Request Failed', `HathiTrust package reuest failed: ${error}`)

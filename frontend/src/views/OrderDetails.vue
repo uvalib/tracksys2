@@ -3,6 +3,7 @@
       <span>Order {{route.params.id}}</span>
       <div class="actions" v-if="(user.isAdmin || user.isSupervisor)" >
          <DPGButton label="HathiTrust Metadata Accepted" class="edit" @click="hathiTrustMetadataAccepted" v-if="canAcceptHathiTrustMetadata"/>
+         <DPGButton label="Submit HathiTrust Packages" class="edit" @click="submitHathiTrustPackage" v-if="canSubmitHathiTrustPackage"/>
          <DPGButton label="Package for HathiTrust" class="edit" @click="packageForHathiTrust" v-if="canPackageHathiTrust"/>
          <HathiTrustMetadataDialog @submit="submitHathiTrustMetadata" :order="detail.id" v-if="canSubmitHathiTrustMetadata"/>
          <DPGButton label="Flag for HathiTrust" class="edit" @click="flagForHathiTrust" v-if="canFlagForHathiTrust"/>
@@ -231,13 +232,16 @@ const canFlagForHathiTrust = computed( () => {
    return user.isAdmin && ordersStore.hasHathiTrustCandidateUnits
 })
 const canSubmitHathiTrustMetadata = computed( () => {
-   return user.isAdmin && ordersStore.hasHathiTrustCandidateMetadata
+   return user.isAdmin && ordersStore.hasHathiTrustMetadataCandidate
 })
 const canAcceptHathiTrustMetadata = computed( () => {
    return user.isAdmin && ordersStore.hasSubmittedHathiTrustMetadata
 })
 const canPackageHathiTrust = computed( () => {
    return user.isAdmin && ordersStore.hathiTrustPackageCandidate
+})
+const canSubmitHathiTrustPackage = computed( () => {
+   return user.isAdmin && ordersStore.hathiTrustPackageSubmitCandidate
 })
 
 const canDelete = computed(() => {
@@ -352,6 +356,9 @@ const packageForHathiTrust = (() => {
          ordersStore.packageForHathiTrust( user.computeID )
       }
    })
+})
+const submitHathiTrustPackage = (() => {
+   ordersStore.submitHathiTrustPackage( user.computeID )  
 })
 const hathiTrustMetadataAccepted = (() => {
    ordersStore.hathiTrustMetadataAccepted()
