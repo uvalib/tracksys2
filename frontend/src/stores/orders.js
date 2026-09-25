@@ -95,6 +95,22 @@ export const useOrdersStore = defineStore('orders', {
 
          return hasDCBMetadata
       },
+      hasSubmittedHathiTrustMetadata: state => {
+         if ( state.detail.status == "canceled") return false
+
+         let hasSubmissions = false
+         state.units.some( u => {
+            if ( u.metadata.hathiTrust == true) {
+               const htStatus = u.metadata.hathiTrustStatus
+               if ( htStatus.metadataStatus == 'submitted') {
+                  hasSubmissions = true
+               } 
+            }
+            return hasSubmissions==true
+         })
+
+         return hasSubmissions
+      },
       hasHathiTrustCandidateUnits: state => {
          if ( state.detail.status == "canceled") return false
 
@@ -250,6 +266,15 @@ export const useOrdersStore = defineStore('orders', {
          }).catch((error) => {
             system.toastError('Request Failed', `HathiTrust metadata submission failed: ${error}`)
             this.working = false
+         })
+      },
+      hathiTrustMetadataAccepted() {
+         const system = useSystemStore()
+         let req = {orderID: this.detail.id, field: "metadata_status", value: "accepted"}
+         axios.put( `/api/hathitrust`, req ).then( () => {
+            system.toastMessage("Updated", `HathiTrust metadata marked as accepted.`)
+         }).catch( e => {
+            system.setError(e)
          })
       },
       async addUnit( unitInfo ) {

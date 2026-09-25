@@ -2,6 +2,7 @@
    <h2>
       <span>Order {{route.params.id}}</span>
       <div class="actions" v-if="(user.isAdmin || user.isSupervisor)" >
+         <DPGButton label="HathiTrust Metadata Accepted" class="edit" @click="hathiTrustMetadataAccepted" v-if="canAcceptHathiTrustMetadata"/>
          <DPGButton label="Package for HathiTrust" class="edit" @click="packageForHathiTrust" v-if="canPackageHathiTrust"/>
          <HathiTrustMetadataDialog @submit="submitHathiTrustMetadata" :order="detail.id" v-if="canSubmitHathiTrustMetadata"/>
          <DPGButton label="Flag for HathiTrust" class="edit" @click="flagForHathiTrust" v-if="canFlagForHathiTrust"/>
@@ -232,6 +233,9 @@ const canFlagForHathiTrust = computed( () => {
 const canSubmitHathiTrustMetadata = computed( () => {
    return user.isAdmin && ordersStore.hasHathiTrustCandidateMetadata
 })
+const canAcceptHathiTrustMetadata = computed( () => {
+   return user.isAdmin && ordersStore.hasSubmittedHathiTrustMetadata
+})
 const canPackageHathiTrust = computed( () => {
    return user.isAdmin && ordersStore.hathiTrustPackageCandidate
 })
@@ -348,7 +352,9 @@ const packageForHathiTrust = (() => {
          ordersStore.packageForHathiTrust( user.computeID )
       }
    })
-
+})
+const hathiTrustMetadataAccepted = (() => {
+   ordersStore.hathiTrustMetadataAccepted()
 })
 const submitHathiTrustMetadata = (( info ) => {
    ordersStore.submitHathiTrustMetadata( user.computeID, info.mode, info.name )
