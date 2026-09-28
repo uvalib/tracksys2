@@ -1,28 +1,38 @@
 <template>
-   <Toast position="top-center" />
-   <ConfirmDialog position="top" :closable="false"/>
-   <div class="header" role="banner" id="uva-header">
-      <div class="main-header">
-         <div class="library-link">
-            <a target="_blank" href="https://library.virginia.edu">
-               <UvaLibraryLogo />
-            </a>
+
+<ConfirmDialog position="top" :closable="false"/>
+
+   <UApp :toaster="toaster">
+
+      <div class="header" role="banner" id="uva-header">
+         <div class="main-header">
+            <div class="library-link">
+               <a target="_blank" href="https://library.virginia.edu">
+                  <UvaLibraryLogo />
+               </a>
+            </div>
+            <div class="site-link">
+               <router-link @click="homeClicked" to="/">Tracksys</router-link>
+               <p class="version">v{{ systemStore.version }}</p>
+            </div>
          </div>
-         <div class="site-link">
-            <router-link @click="homeClicked" to="/">Tracksys</router-link>
-            <p class="version">v{{ systemStore.version }}</p>
-         </div>
+         <MenuBar v-if="userStore.jwt" />
       </div>
-      <MenuBar v-if="userStore.jwt" />
-   </div>
-   <div class="content" v-if="configuring==false">
-      <router-view />
-   </div>
-   <Dialog v-model:visible="systemStore.showError" :modal="true" header="System Error" @hide="errorClosed()" class="error">
-      {{systemStore.error}}
-   </Dialog>
-   <WaitSpinner v-if="systemStore.working" :overlay="true" message="Please wait..." />
-   <ScrollTop />
+
+      <UMain>
+         <div class="content" v-if="configuring==false">
+            <router-view />
+         </div>
+      </UMain>
+
+      <WaitSpinner v-if="systemStore.working" :overlay="true" message="Please wait..." />
+
+      <UModal v-model:open="systemStore.showError" :modal="true" :dismissible="false" title="System Error">
+         <template #body>
+            <div style="text-align: left" v-html="systemStore.error"></div>
+         </template>
+      </UModal>
+   </UApp>
 </template>
 
 <script setup>
@@ -33,25 +43,27 @@ import { useSystemStore } from "@/stores/system"
 import { useUserStore } from "@/stores/user"
 import { useSearchStore } from "@/stores/search"
 import { onBeforeMount, watch, ref } from 'vue'
-import Dialog from 'primevue/dialog'
-import Toast from 'primevue/toast'
-import { useToast } from "primevue/usetoast"
-import ScrollTop from 'primevue/scrolltop'
 
 const systemStore = useSystemStore()
 const userStore = useUserStore()
 const searchStore = useSearchStore()
 const toast = useToast()
 
+const toaster = { duration: 5000, position: "top-center" }
+
 const configuring = ref(true)
 
 watch(() => systemStore.toast.show, (newShow) => {
    if ( newShow == true) {
+      let color = "primary"
       if ( systemStore.toast.error) {
-         toast.add({severity:'error', summary:  systemStore.toast.summary, detail:  systemStore.toast.message, life: 10000})
-      } else {
-         toast.add({severity:'success', summary:  systemStore.toast.summary, detail:  systemStore.toast.message, life: 5000})
+        color = "error"
       }
+      toast.add({
+         title: systemStore.toast.summary,
+         description: systemStore.toast.message,
+         color: color
+      })
       systemStore.clearToastMessage()
    }
 })

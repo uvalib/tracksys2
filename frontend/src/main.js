@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import formatDatePlugin from './plugins/formatdate'
 import formatDateTimePlugin from './plugins/formatdatetime'
 import formatBoolPlugin from './plugins/formatbool'
+import './assets/main.css'
 
 import App from './App.vue'
 import router from './router'
@@ -21,8 +22,11 @@ app.use(formatDateTimePlugin)
 app.use(pinia)
 app.use(router)
 
-// Styles
-import './assets/styles/main.scss'
+// NuxtUI defaukted to LIGHT mode
+import ui from '@nuxt/ui/vue-plugin'
+import { useColorMode } from '@vueuse/core'
+useColorMode().value = 'light'
+app.use(ui)
 
 // Primevue setup
 import PrimeVue from 'primevue/config'

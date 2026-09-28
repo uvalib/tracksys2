@@ -12,5 +12,7 @@
 .notfound {
    padding: 25px;
    min-height: 600px;
+   font-size: 1.25em;
+   text-align: center;
 }
 </style>

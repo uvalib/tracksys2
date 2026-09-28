@@ -21,3 +21,5 @@ buildtag.*
 package/scripts/build.ksh
 package/scripts/shell.ksh
 local_db.sh
+auto-imports.d.ts
+
