@@ -183,6 +183,9 @@ onMounted( async () =>{
    if (unitsStore.detail.intendedUse) {
      vals.intendedUseID =  unitsStore.detail.intendedUse.id
    }
+   if (unitsStore.canPublishToVirgo == false ) {
+      vals.includeInDL = false
+   }
    resetForm({values: vals})
 })
 
