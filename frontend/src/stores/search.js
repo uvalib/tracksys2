@@ -112,21 +112,48 @@ export const useSearchStore = defineStore('search', {
          }
       },
 
-      imageSearch( pHash ) {
+      async uploadSearchImage( file ) {
          const system = useSystemStore()
          system.working = true
-         this.searchPHash = pHash
+
+         let formData = new FormData()
+         formData.append('imageSearch', file)
+         await axios.post(`/upload_search_image`, formData, {
+            headers: {
+               'Content-Type': 'multipart/form-data',
+            }
+         }).then(( resp ) => {
+            this.searchPHash = resp.data
+            this.imageSearch()
+         }).catch( e => {
+            system.setError(e)
+            system.working = false
+         })
+      },
+
+      resetImageSearch() {
+         this.similarImages = {
+            total: 0,
+            hits: [],
+         }
+         this.searchPHash = 0
+      },
+
+      imageSearch( ) {
+         const system = useSystemStore()
+         system.working = true
          this.similarSearch = true
          this.similarImages = {
             total: 0,
             hits: [],
          }
-         axios.get(`/api/search/images?phash=${pHash}&distance=${this.distance}`).then(response => {
+         axios.get(`/api/search/images?phash=${ this.searchPHash }&distance=${this.distance}`).then(response => {
             this.similarImages.hits = response.data.hits
-            this,this.similarImages.total = response.data.total
+            this.similarImages.total = response.data.total
             system.working = false
          }).catch( e => {
             system.setError(e)
+            system.working = false
          })
       },
 

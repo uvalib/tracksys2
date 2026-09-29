@@ -123,12 +123,18 @@ input[type=checkbox] {
    }
 
    h2 {
-      color: var(--uvalib-brand-blue);
-      margin: 10px 0;
+      text-align: left;
+      background: var(--uvalib-grey-lightest);
+      border-bottom: 1px solid var(--uvalib-grey-light);
+      flex-flow: row;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0;
+      padding: 10px 10px 10px 20px;
+      font-weight: 700;
+      display: flex;
       position: relative;
       font-size: 1.5em;
-      font-weight: bold;
-      text-align: center;
    }
 
    dl {

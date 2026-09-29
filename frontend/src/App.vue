@@ -1,6 +1,6 @@
 <template>
 
-<ConfirmDialog position="top" :closable="false"/>
+<ConfirmDialog position="top" :closable="false"/> <!-- FIXME use composable nuxt -->
 
    <UApp :toaster="toaster">
 
@@ -16,26 +16,11 @@
 
           <template #right>
             <div class="site-link">
-               <router-link @click="homeClicked" to="/">Tracksys</router-link>
+               <RouterLink to="/">Tracksys</RouterLink>
                <p class="version">{{ systemStore.version }}</p>
             </div>
          </template>
       </UHeader>
-
-      <!-- <div class="header" role="banner" id="uva-header">
-         <div class="main-header">
-            <div class="library-link">
-               <a target="_blank" href="https://library.virginia.edu">
-                  <UvaLibraryLogo />
-               </a>
-            </div>
-            <div class="site-link">
-               <router-link @click="homeClicked" to="/">Tracksys</router-link>
-               <p class="version">v{{ systemStore.version }}</p>
-            </div>
-         </div>
-         <MenuBar v-if="userStore.jwt" />
-      </div> -->
 
       <UMain>
          <div class="content" v-if="configuring==false">
@@ -55,48 +40,52 @@
 
 <script setup>
 import UvaLibraryLogo from "@/components/UvaLibraryLogo.vue"
-import MenuBar from "@/components/MenuBar.vue"
 import WaitSpinner from "@/components/WaitSpinner.vue"
 import { useSystemStore } from "@/stores/system"
 import { useUserStore } from "@/stores/user"
 import { useSearchStore } from "@/stores/search"
 import { onBeforeMount, watch, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 const systemStore = useSystemStore()
 const userStore = useUserStore()
 const searchStore = useSearchStore()
 const toast = useToast()
+const router = useRouter()
 
 const toaster = { duration: 5000, position: "top-center" }
 
 const configuring = ref(true)
-const menuItems = [ 
-   {label: "Home", icon: 'i-lucide-house', onSelect: () => homeClicked()}, 
-   {label: userStore.signedInUser,  icon: "i-lucide-user", children: [
-      {label: "Sign Out", icon: 'i-lucide-log-out',  onSelect: () => signout()}    
-   ]}
-]
-
-/*
-if ( userStore.isAdmin || userStore.isSupervisor ) {
-      menu.push( {label: "Equipment", icon: 'i-lucide-settings', to: "/equipment"} ) 
-      menu.push( {label: "Reports", icon: 'i-lucide-chart-line', to: "/reports"} ) 
-   }
-   let msgLabel = "Messages"
-   if ( messageStore.unreadMessageCount(userStore.ID) > 0 ) {
-      msgLabel += ` (${messageStore.unreadMessageCount(userStore.ID)})`
-   }
-   let userMenu = { label: userStore.signedInUser, icon: "i-lucide-user", 
-      children: [
-         {label: msgLabel, icon: 'i-lucide-mail', to: "/messages"},
-         {label: "Sign out", icon: 'i-lucide-log-out',  onSelect: () => signout()} 
-      ]
-   }
-   if ( messageStore.unreadMessageCount(userStore.ID) > 0 ) {
-      userMenu.chip = { color: "info"}
-   }
-   menu.push(userMenu)
-   return menu*/
+const menuItems = computed(()=> {
+   return [ 
+      {label: "Home", onSelect: () => homeClicked()}, 
+      {label: "Orders", to: "/orders"},  
+      {label: "Collections", to: "/collections"}, 
+      {label: "Published", children: [
+         {label: "Virgo", to: "/published/virgo"},    
+         {label: "ArchivesSpace", to: "/published/archivesspace"},
+         {label: "DPLA", to: "/published/depla"}
+      ]},
+      {label: "Job Statuses", to: "/jobs"},
+      {label: "Digitization", children: [
+         {label: "Equipment", to: `${systemStore.projectsURL}/equipment`, target: "_blank"},
+         {label: "Projects", to: `${systemStore.projectsURL}`, target: "_blank"},
+         {label: "Reports", to: `${systemStore.projectsURL}/reports`, target: "_blank"},
+         {label: "Statistics", to: "/statistics"},
+         {label: "Patron Deliveries", to: "/deliveries"},
+      ]},
+      {label: "Miscellaneous", children: [
+         {label: "ArchivesSpace Reviews", to: "/archivesspace"},
+         {label: "HathiTrust Submissions", to: "/hathitrust"},
+         {label: "Master File Audit", to: "/audit-report"},
+         {label: "Customers", to: "/customers"},
+         {label: "Staff Members", to: "/staff"},
+      ]},
+      {label: userStore.signedInUser, children: [
+         {label: "Sign Out", icon: 'i-lucide-log-out',  onSelect: () => signout()}    
+      ]},
+   ]
+})
 
 watch(() => systemStore.toast.show, (newShow) => {
    if ( newShow == true) {
@@ -131,57 +120,26 @@ onBeforeMount( async () => {
 </script>
 
 <style scoped lang="scss">
-div.header {
-   background-color: var(--uvalib-brand-blue);
-   color: white;
-   text-align: left;
-   position: relative;
-   box-sizing: border-box;
-
-   .main-header {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: nowrap;
-      justify-content: space-between;
-      align-content: stretch;
-      align-items: center;
-      padding: 1vw 20px 5px 10px;
-      a {
-         color: white !important;
-      }
-   }
-}
-// a {
-//    color: var(--uvalib-blue-alt-dark);
-//    font-weight: 500;
-//    text-decoration: none;
-//    &:hover {
-//       text-decoration: underline;
-//    }
-// }
-p.version {
-   margin: 5px 0 0 0;
-   font-size: 0.5em;
-   text-align: right;
-}
 div.library-link {
    width: 220px;
-   order: 0;
-   flex: 0 1 auto;
-   align-self: flex-start;
 }
 div.site-link {
-   order: 0;
    font-size: 1.5em;
    a {
-      color: white;
-      text-decoration: none;
+      color: white !important;
+      padding: 3px 6px;
+      border-radius: 0.3rem;
       &:hover {
-         text-decoration: underline;
+         background: var(--uvalib-blue-alt);
+         text-decoration: none !important;
       }
    }
+   p.version {
+      margin: 0;
+      font-size: 0.5em;
+      text-align: right;
+      padding: 0;
+   }
 }
-div.content {
-   position: relative;
-}
+
 </style>

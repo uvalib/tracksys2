@@ -52,7 +52,8 @@ export default defineConfig({
             },
             card: {
                slots: {
-                  body: 'h-full'
+                  body: 'h-full',
+                  header: 'sm:px-2 px-2 py-2 bg-brand-grey-200',
                }
             },
             checkbox: {

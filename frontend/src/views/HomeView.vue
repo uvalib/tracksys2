@@ -1,81 +1,76 @@
 <template>
    <h2>
       <span>Home</span>
-      <div class="actions" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
-         <DPGButton v-if="userStore.isAdmin" label="Create Agency" class="create" @click="showCreateAgencyClicked()"/>
-         <DPGButton v-if="userStore.isAdmin" label="Create Collection Facet" class="create" @click="showCreateCollectionDialog()"/>
-         <DPGButton label="Create Metadata" class="create" @click="createMetadata()"/>
-         <DPGButton label="Create Order" class="create" @click="createOrder()"/>
+      <div class="acts" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
+         <CreateAgencyModal v-if="userStore.isAdmin" />
+         <CreateCollectionFacetModal v-if="userStore.isAdmin" />
+         <CreateMetadataModal />
+         <UButton label="Create Order" @click="createOrder()"/>
       </div>
    </h2>
    <div class="home">
       <div class="stats">
-         <div>
-            <label>Orders due in one week:</label>
-            <router-link  v-if="dashboard.dueInOneWeek" to='/orders?filters=["status|equals|due_week"]&sort=id+desc'>{{dashboard.dueInOneWeek}}</router-link>
-            <span v-else>0</span>
+         <div class="row">
+            <div class="value">
+               <label>Orders due in one week:</label>
+               <router-link  v-if="dashboard.dueInOneWeek" to='/orders?filters=["status|equals|due_week"]&sort=id+desc'>{{dashboard.dueInOneWeek}}</router-link>
+               <span v-else>0</span>
+            </div>
+            <div class="value">
+               <label>Overdue orders:</label>
+               <router-link  v-if="dashboard.overdue" to='/orders?filters=["status|equals|overdue"]&sort=id+desc'>{{dashboard.overdue}}</router-link>
+               <span v-else>0</span>
+            </div>
+            <div class="value">
+               <label>Orders ready for delivery:</label>
+               <router-link v-if="dashboard.readyForDelivery" to='/orders?filters=["status|equals|ready"]&sort=id+desc'>{{dashboard.readyForDelivery}}</router-link>
+               <span v-else>0</span>
+            </div>
          </div>
-         <span class="sep"></span>
-         <div>
-            <label>Overdue orders:</label>
-            <router-link  v-if="dashboard.overdue" to='/orders?filters=["status|equals|overdue"]&sort=id+desc'>{{dashboard.overdue}}</router-link>
-            <span v-else>0</span>
-         </div>
-         <span class="sep"></span>
-         <div>
-            <label>Orders ready for delivery:</label>
-            <router-link v-if="dashboard.readyForDelivery" to='/orders?filters=["status|equals|ready"]&sort=id+desc'>{{dashboard.readyForDelivery}}</router-link>
-            <span v-else>0</span>
-         </div>
-      </div>
-      <div class="stats archivesspace">
-         <div>
-            <label>ArchivesSpace Requests:</label>
-            <router-link v-if="dashboard.asRequests" to='/archivesspace?view=request'>{{dashboard.asRequests}}</router-link>
-            <span v-else>0</span>
-         </div>
-         <span class="sep"></span>
-         <div>
-            <label>ArchivesSpace Reviews:</label>
-            <router-link v-if="dashboard.asReviews" to='/archivesspace?view=review'>{{dashboard.asReviews}}</router-link>
-            <span v-else>0</span>
-         </div>
-         <span class="sep"></span>
-         <div>
-            <label>ArchivesSpace Rejections:</label>
-            <router-link v-if="dashboard.asRejections" to='/archivesspace?view=reject'>{{dashboard.asRejections}}</router-link>
-            <span v-else>0</span>
+         <div class="row">
+            <div class="value">
+               <label>ArchivesSpace Requests:</label>
+               <router-link v-if="dashboard.asRequests" to='/archivesspace?view=request'>{{dashboard.asRequests}}</router-link>
+               <span v-else>0</span>
+            </div>
+            <div class="value">
+               <label>ArchivesSpace Reviews:</label>
+               <router-link v-if="dashboard.asReviews" to='/archivesspace?view=review'>{{dashboard.asReviews}}</router-link>
+               <span v-else>0</span>
+            </div>
+            <div class="value">
+               <label>ArchivesSpace Rejections:</label>
+               <router-link v-if="dashboard.asRejections" to='/archivesspace?view=reject'>{{dashboard.asRejections}}</router-link>
+               <span v-else>0</span>
+            </div>
          </div>
       </div>
+
       <div class="search">
          <div class="text-search">
-            <Select v-model="selectedScope" :options="scopes" optionLabel="label" optionValue="value" />
+            <USelect v-model="selectedScope" :items="scopes"  />
             <div class="search-info">
                <div class="search-help">
                   <SearchIndexPopover />
                   <SearchHelpPopover />
                </div>
-               <InputText placeholder="Find TrackSys items..." v-model="newQuery" class="searchbar"  @keyup.enter="doSearch" />
+               <UInput placeholder="Find TrackSys items..." v-model="newQuery"  @keyup.enter="doSearch" />
             </div>
 
-            <div class="search-ctl-group">
-               <DPGButton label="Search" class="submit-button" @click="doSearch"/>
-               <DPGButton v-if="searchStore.searched || searchStore.similarSearch == true" label="Reset Search" severity="secondary" @click="resetSearch"/>
-            </div>
+            <UButton label="Search"  @click="doSearch"/>
+            <UButton v-if="searchStore.searched || searchStore.similarSearch == true" label="Reset Search" color="secondary" @click="resetSearch"/>
          </div>
 
          <div class="image-search" v-if="userStore.isAdmin">
             <label>Search for similar images</label>
-            <p class="hint">Set a similarity threshold then upload the search image</p>
-            <div class="slide">
-               <div class="labels">
-                  <span>More Similar</span>
-                  <span>Less Similar</span>
-               </div>
-               <Slider class="w-14rem" :min="5" :max="20" v-model="searchStore.distance" @change="slideChanged"/>
+            <p class="hint">Set a similarity threshold, select a search image then click 'Search Images'</p>
+            <div class="labels">
+               <span>More Similar</span>
+               <span>Less Similar</span>
             </div>
-            <FileUpload mode="basic" name="imageSearch" url="/upload_search_image" accept="image/*" :maxFileSize="55000000"
-               @upload="imageUploaded" @before-upload="beforeUpload" :auto="true" chooseLabel="Upload Image" />
+            <USlider class="w-full" :min="5" :max="20" v-model="searchStore.distance" @change="slideChanged"/>
+            <UFileUpload accept="image/*" label="Drop your image here" v-model="lookupImage" @change="uploadImageChanged"/>
+            <UButton color="secondary" size="sm" label="Search Images" @click="startImageUpload" :disabled="!lookupImage"/>
          </div>
 
          <template v-if="systemStore.working == false">
@@ -84,33 +79,6 @@
          </template>
       </div>
    </div>
-   <Dialog v-model:visible="showCreateAgency" :modal="true" header="Create Agency"@hide="createAgencyClosed" :style="{width: '450px'}">
-      <div class="agency">
-         <label>Name</label>
-         <InputText v-model="newAgencyName" autofocus fluid/>
-         <label>Description</label>
-         <Textarea rows="4" v-model="newAgencyDesc" fluid/>
-      </div>
-      <template #footer>
-         <div class="acts">
-            <DPGButton @click="createAgencyClosed()" label="Cancel" severity="secondary"/>
-            <DPGButton @click="createAgency()" label="Create" :disabled="newAgencyName.length == 0"/>
-         </div>
-      </template>
-   </Dialog>
-   <Dialog v-model:visible="showCreateMetadata" :modal="true" header="Create Metadata" @hide="createMetadataClosed" :style="{width: '750px'}">
-      <NewMetadataPanel @canceled="createMetadataClosed" @created="metadataCreated" />
-   </Dialog>
-   <Dialog v-model:visible="showCreateCollection" :modal="true" header="Create Collection Facet" @hide="createCollectionClosed" :style="{width: '450px'}">
-      <p>Enter the name of the new collection facet</p>
-      <InputText v-model="newCollectionFacet" autofocus fluid/>
-      <template #footer>
-         <div class="acts">
-            <DPGButton @click="createCollectionClosed" label="Cancel" severity="secondary"/>
-            <DPGButton @click="createCollection()" label="Create" :disabled="newCollectionFacet.length == 0"/>
-         </div>
-      </template>
-   </Dialog>
 </template>
 
 <script setup>
@@ -118,21 +86,15 @@ import { useSearchStore } from '../stores/search'
 import { useDashboardStore } from '../stores/dashboard'
 import { useUserStore } from '../stores/user'
 import { useSystemStore } from '../stores/system'
-import { useMetadataStore } from '../stores/metadata'
 import SearchIndexPopover from '@/components/SearchIndexPopover.vue'
 import SearchHelpPopover from '@/components/SearchHelpPopover.vue'
 import SearchResults from '@/components/results/SearchResults.vue'
 import SimilarImages from '@/components/results/SimilarImages.vue'
+import CreateAgencyModal from '@/components/CreateAgencyModal.vue'
+import CreateCollectionFacetModal from '@/components/CreateCollectionFacetModal.vue'
 import { ref, computed, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import Dialog from 'primevue/dialog'
-import NewMetadataPanel from '@/components/metadata/NewMetadataPanel.vue'
-import FileUpload from 'primevue/fileupload'
-import Slider from 'primevue/slider'
-import Select from 'primevue/select'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-
+import CreateMetadataModal from '../components/CreateMetadataModal.vue'
 
 const searchStore = useSearchStore()
 const route = useRoute()
@@ -140,18 +102,12 @@ const router = useRouter()
 const dashboard = useDashboardStore()
 const userStore = useUserStore()
 const systemStore = useSystemStore()
-const metadataStore = useMetadataStore()
 
 const showCreateMetadata = ref(false)
-const showCreateCollection = ref(false)
-const newCollectionFacet = ref("")
-
-const showCreateAgency = ref(false)
-const newAgencyName = ref("")
-const newAgencyDesc = ref("")
 
 const selectedScope = ref("all")
 const newQuery = ref("")
+const lookupImage = ref()
 
 const scopes = computed( () => {
    return [
@@ -218,16 +174,14 @@ onBeforeMount( () => {
 
 const slideChanged = ( () => {
    if (searchStore.similarSearch == true && searchStore.searchPHash !== 0) {
-      searchStore.imageSearch( searchStore.searchPHash )
+      searchStore.imageSearch()
    }
 })
-
-const beforeUpload = (() => {
-   systemStore.working = true
+const uploadImageChanged = (() => {
+   searchStore.resetImageSearch()
 })
-
-const imageUploaded = ((e) => {
-   searchStore.imageSearch( e.xhr.responseText )
+const startImageUpload = ( async () => {
+   searchStore.uploadSearchImage( lookupImage.value )
 })
 
 const resetSearch = (() => {
@@ -277,49 +231,10 @@ const doSearch = (() => {
    }
 })
 
-const showCreateAgencyClicked = ( () => {
-   newAgencyDesc.value = ""
-   newAgencyName.value = ""
-   showCreateAgency.value = true
-})
-const createAgency = ( async () => {
-   await systemStore.createAgency(newAgencyName.value, newAgencyDesc.value)
-   showCreateAgency.value = false
-})
-const createAgencyClosed = ( () => {
-   showCreateAgency.value = false
-})
-
 const createOrder = (() => {
    router.push("/orders/new")
 })
 
-const showCreateCollectionDialog = (() => {
-   newCollectionFacet.value = ""
-   showCreateCollection.value = true
-})
-
-const createCollection = ( async () => {
-   await systemStore.createCollectionFacet(newCollectionFacet.value)
-   showCreateCollection.value = false
-})
-
-const createCollectionClosed = (() => {
-   showCreateCollection.value = false
-})
-
-const createMetadata = (() => {
-   showCreateMetadata.value = true
-})
-
-const metadataCreated = (() => {
-   systemStore.toastMessage("Metadata Created", `Metadata ${metadataStore.detail.pid}: ${metadataStore.detail.title} has been created.`)
-   showCreateMetadata.value = false
-})
-
-const createMetadataClosed = (() => {
-   showCreateMetadata.value = false
-})
 </script>
 
 <style scoped lang="scss">
@@ -329,55 +244,49 @@ const createMetadataClosed = (() => {
    min-height:600px;
    .image-search {
       width: 275px;
-      margin: 50px auto 0 auto;
+      margin: 25px auto 0 auto;
       border: 1px solid var(--uvalib-grey-light);
-      padding: 15px 25px 25px 25px;
+      padding: 15px;
       border-radius: 5px;
-
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
       label {
-         font-weight: 600;
-         margin-bottom: 15px;
-         display: inline-block;
-      }
-      .p-fileupload.p-fileupload-basic {
-         margin-top: 5px;
+         font-weight: bold;
       }
       .hint {
          font-size: 0.8em;
-         margin: 5px 0 10px 0;;
-
       }
-      .slide {
-         margin: 15px 0 20px 0;
-         .labels {
-            margin: 10px 0 15px 0;
-            font-size: 0.85em;
-            display: flex;
-            flex-flow: row nowrap;
-            justify-content: space-between;
-         }
+      .labels {
+         width: 100%;
+         font-size: 0.85em;
+         display: flex;
+         flex-flow: row nowrap;
+         justify-content: space-between;
       }
-   }
-  .stats.archivesspace {
-      margin: 0 auto 40px auto;
-      border-bottom: 1px solid var(--uvalib-grey-light);
-      padding: 10px 0 10px 0;
    }
    .stats {
-      margin: 0 auto 0 auto;
       display: flex;
-      flex-flow: row wrap;
-      justify-content: center;
-      background: #fafafa;
-      padding: 15px 0 5px;
-
-      label {
-         font-weight: 600;
-         margin-right: 5px;
-      }
-      .sep {
-         display: inline-block;
-         width: 50px;
+      flex-direction: column;
+      gap: 5px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--uvalib-grey-light);
+      margin-bottom: 25px;
+      background: #f8f8f8;
+      .row {
+         display: flex;
+         flex-flow: row wrap;
+         justify-content: center;
+         gap: 50px;
+         label {
+            font-weight: bold;
+         }
+         .value {
+            display: flex;
+            flex-flow: row nowrap;
+            gap: 10px;
+         }
       }
    }
 
@@ -391,7 +300,7 @@ const createMetadataClosed = (() => {
       align-items: flex-end;
       width: 70%;
       margin: 0 auto;
-      gap: 10px;
+      gap: 5px;
       .search-info {
          flex-grow: 1;
          display: flex;
@@ -402,16 +311,6 @@ const createMetadataClosed = (() => {
             flex-flow: row nowrap;
             gap: 10px;
          }
-      }
-
-      select {
-         margin: 0;
-         width: max-content;
-      }
-      .search-ctl-group {
-         display: flex;
-         flex-flow: row nowrap;
-         gap: 10px;
       }
    }
 }
