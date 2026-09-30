@@ -3,18 +3,6 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
-/* GLOBAL FOCUS STYLE */
-/* *,
-::before,
-::after {
-  @apply outline-offset-2 outline-blue-300;
-}
-
-*:focus-visible,
-*:has(> a:focus-visible) {
-  outline-style: dotted;
-} */
-
  /* 
     values here: https://tailwindcss.com/docs/theme#default-theme-variable-reference
     stuff like colors, fonts, fine sizing, spacing, radius
@@ -41,7 +29,6 @@
   --color-brand-red: #EF3F6B;       
   --color-brand-red-A: #DF1E43;     
   --color-brand-red-B: #B30000; 
-  --color-brand-emergency: var( --uvalib-red-emergency );
 
   --color-brand-grey-200: #F1F1F1;
   --color-brand-grey-100: #DADADA;
@@ -72,13 +59,30 @@
   --ui-primary: var( --color-brand-blue-100 );
   --ui-secondary: var( --uvalib-grey-lightest);
   --ui-success: var(--color-brand-green-dark);
-  --ui-error: var( --color-brand-red-B);
+  --ui-error: var(--color-brand-red-A);
 
   --ui-text-dimmed: var(--color-brand-grey);
   --ui-text-muted: var(--color-brand-grey-A);
   --ui-text-toned: var(--color-brand-grey-A);
   --ui-text: var(--color-black);
   --ui-text-highlighted: var(--ui-color-neutral-900);
+}
+
+/* 
+   these are custom class names that define common groups of tailwind classes 
+   allows reuse of classnames that will all respond glibal theme changes in spacing, color, etc
+*/
+.row-right {
+    @apply flex flex-row flex-nowrap gap-4 justify-end;
+}
+.row-left {
+    @apply flex flex-row flex-nowrap gap-4 justify-start;
+}
+.column {
+    @apply flex flex-col gap-4;
+}
+.column-close {
+    @apply flex flex-col gap-2.5;
 }
 
 

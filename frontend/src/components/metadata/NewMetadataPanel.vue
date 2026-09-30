@@ -1,24 +1,29 @@
 <template>
-   <UForm :schema="schema" :state="state" class="flex flex-col gap-4" @submit="createMetadata" id="create-metadata">
+   <UForm :schema="schema" :state="state" class="flex flex-col gap-4" @submit="createMetadata">
       <UCard title="General Information">
-         <div class="section">
+         <div class="column-close">
             <UFormField label="Metadata Type" name="type">
                <USelect v-model="state.type" :items="metadataTypes" placeholder="Select metadata type" class="w-full" @update:modelValue="typeChanged" />
             </UFormField>
             <template v-if="state.type == 'SirsiMetadata'">
-               <div class="split">
-                  <UFormField name="catkey" label="Catalog Key">
-                     <UInput v-model="state.catalogKey" />  
-                  </UFormField>
-                  <UFormField name="barcode" label="Barcode">
-                     <UInput v-model="state.barcode"/>  
-                  </UFormField>
-                  <UButton @click="sirsiLookup()" size="sm" label="Lookup" color="secondary" 
-                     :disabled="metadataStore.sirsiMatch.searching" :loading="metadataStore.sirsiMatch.searching"
-                  />
+               <div class="flex flex-col gap-1">
+                  <div class="text-sm">Enter a catalog key and/or barcode then click Lookup to validate it</div>
+                  <div class="row-left">
+                     <UFormField name="catalogKey" label="Catalog Key" :required="true">
+                        <UInput v-model="state.catalogKey" />  
+                     </UFormField>
+                     <UFormField name="barcode" label="Barcode" :required="true">
+                        <UInput v-model="state.barcode"/>  
+                     </UFormField>
+                     <div class="flex flex-row flex-nowrap gap-2 pt-5.25 items-start">
+                        <UButton @click="sirsiLookup()" size="sm" label="Lookup" color="secondary" 
+                           :disabled="metadataStore.sirsiMatch.searching" :loading="metadataStore.sirsiMatch.searching"
+                        />
+                        <UButton @click="clearSirsiInfo" size="sm" label="Clear" color="secondary"/>
+                     </div>
+                  </div>
+                  <div class="validation" v-if="metadataStore.sirsiMatch.error">{{ metadataStore.sirsiMatch.error }}</div>
                </div>
-               <div class="validation" v-if="needsValidation">Lookup a new match for changes in barcode or catalog key</div>
-               <div class="validation" v-if="metadataStore.sirsiMatch.error">{{ metadataStore.sirsiMatch.error }}</div>
                <div>
                   <dl>
                      <DataDisplay label="Title" :value="state.title" blankValue="Unknown"/>
@@ -49,7 +54,7 @@
                      <li class="note">/repositories/3/resources/811</li>
                   </ul>
                </div>
-               <div class="split">
+               <div class="row-left">
                   <UFormField name="externalURI" label="External URI" :required="true" class="grow">   
                      <div class="flex flex-row gap-4">
                         <UInput v-model="state.externalURI"  @update:modelValue="needsValidation=true" class="w-full"/>  
@@ -65,7 +70,7 @@
                </dl>
             </template>
             <template v-if="state.type">
-               <div class="split">
+               <div class="row-left">
                   <UFormField name="isCollection" label="Collection" class="grow">   
                      <USelect v-model="state.isCollection"  :items="yesNo" class="w-full"/>   
                   </UFormField>
@@ -76,7 +81,7 @@
                      <USelect v-model="state.manuscript" :items="yesNo" class="w-full"/>   
                   </UFormField>
                </div>
-               <div class="split">
+               <div class="row-left">
                   <UFormField name="ocrHint" label="OCR Hint" class="grow">   
                       <USelect v-model="state.ocrHint" :items="ocrHints" class="w-full" placeholder="Select a hint"/>   
                   </UFormField>
@@ -89,8 +94,8 @@
          </div>
       </UCard>
       <UCard v-if="state.type && state.type != 'ExternalMetadata'" title="Digital Library Information">
-         <div class="section">
-            <div class="split" v-if="props.collection == false">
+         <div class="column-close">
+            <div class="row-left" v-if="props.collection == false">
                <UFormField name="collectionID" label="Collection ID" class="grow">   
                   <UInput v-model="state.collectionID" class="w-full" />   
                </UFormField>
@@ -98,7 +103,7 @@
                   <USelect v-model="state.collectionFacet" :items="collectionFacets" placeholder="Select a facet" class="w-full" />   
                </UFormField>
             </div>
-            <div class="split">
+            <div class="row-left">
                <UFormField name="inDPLA" label="In DPLA" class="grow">   
                   <USelect v-model="state.inDPLA" :items="yesNo" class="w-full" />   
                </UFormField>
@@ -116,10 +121,9 @@
             </div>
          </div>
       </UCard>
-      <div class="acts">
-         {{ needsValidation }}
+      <div class="row-right">
          <UButton @click="cancelCreate" label="Cancel" color="secondary"/>
-         <UButton :label="createLabel" type="submit" :disabled="needsValidation"/> 
+         <UButton :label="createLabel" type="submit" /> 
       </div>
    </UForm>
 </template>
@@ -131,16 +135,24 @@ import { useSystemStore } from "@/stores/system"
 import { useMetadataStore } from "@/stores/metadata"
 import * as yup from 'yup'
 
-const schema = yup.object().shape({
+const schema = yup.object({
    type: yup.string().required('Metadata type is required'),
    title: yup.string().required('Title is required'),
-   callNumber:  yup.number().when('type', {
+   callNumber:  yup.string().when('type', {
       is: (value) => value == 'SirsiMetadata',
       then: (schema) => schema.required("Call number is required"),
    }),
+   catalogKey:  yup.string().when('type', {
+      is: (value) => value == 'SirsiMetadata',
+      then: (schema) => schema.required("CatKey is required"),
+   }),
+   barcode:  yup.string().when('type', {
+      is: (value) => value == 'SirsiMetadata',
+      then: (schema) => schema.required("Barcode is required"),
+   }),
    availabilityPolicy:  yup.number().when('type', {
       is: (value) => value == 'SirsiMetadata',
-      then: (schema) => schema.min(1).required("Availability policy is required"),
+      then: (schema) => schema.min(1).required("Availability is required"),
    }),
    useRight:  yup.number().when('type', {
       is: (value) => value == 'SirsiMetadata',
@@ -152,7 +164,7 @@ const schema = yup.object().shape({
    })
 })
 
-// this indicates that extURI, barcode or catkey have changed and need to be validated
+// this indicates that extURI has changed and need to be validated
 const needsValidation = ref(false) 
 
 // form state
@@ -284,7 +296,7 @@ const typeChanged = (() => {
    const updatedType = state.value.type
    resetData()
    state.value.type = updatedType
-   if ( state.value.type == 'ExternalMetadata' || state.value.type=='SirsiMetadata') {
+   if ( state.value.type == 'ExternalMetadata') {
       needsValidation.value = true
    }
 })
@@ -300,10 +312,18 @@ const validateASMetadata = ( async () => {
    }
 })
 
+const clearSirsiInfo = (() => {
+   state.value.title = ""
+   state.value.callNumber = ""
+   state.value.author = ""
+   state.value.catalogKey = ""
+   state.value.barcode = ""
+   metadataStore.sirsiMatch.error = ""
+})
+
 const sirsiLookup = (async () => {
    await metadataStore.sirsiLookup(state.value.barcode, state.value.catalogKey)
    if ( metadataStore.sirsiMatch.error == "") {
-      needsValidation.value = false
       state.value.title = metadataStore.sirsiMatch.title
       state.value.callNumber = metadataStore.sirsiMatch.callNumber
       state.value.author = metadataStore.sirsiMatch.creatorName
@@ -317,25 +337,14 @@ const cancelCreate = (() => {
 })
 
 const createMetadata = (async () => {
-   await metadataStore.create( values )
+   await metadataStore.create( state.value )
    emit("created")
 })
 </script>
 
 <style lang="scss" scoped>
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   gap: 10px;
-   justify-content: flex-end;
-}
-.section {
-   display: flex;
-   flex-direction: column;
-   gap: 10px;
-   .validation {
-      color: var(--uvalib-red-emergency);
-   }
+.validation {
+   color: var(--uvalib-red-dark);
 }
 dl {
    margin: 0;
@@ -365,14 +374,7 @@ ul {
    p {
       margin: 10px 0 0 0;
       padding: 0;
-      font-size: 0.9em;;
+      font-size: 0.9em;
    }
-}
-.split {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: flex-end;
-   gap: 10px;
 }
 </style>
