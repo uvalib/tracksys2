@@ -69,6 +69,8 @@ func (svc *serviceContext) lookupSirsiMetadata(c *gin.Context) {
 	}
 	resp, err := svc.doSirsiLookup(catKey, barcode)
 	if err != nil {
+		log.Printf("WARNING: sirsi lookup failed: %s", err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -131,6 +133,10 @@ func (svc *serviceContext) doSirsiLookup(catKey, barcode string) (*sirsiResponse
 	jErr := json.Unmarshal(respStr, &solr)
 	if jErr != nil {
 		return nil, jErr
+	}
+	if solr.Response.NumFound == 0 {
+		log.Printf("INFO: no sirsi records found for catkey [%s] / barcode [%s]", catKey, barcode)
+		return nil, fmt.Errorf("no matching metadata records found")
 	}
 	rawMarc := []byte(solr.Response.Docs[0].FullRecord)
 
