@@ -1,7 +1,7 @@
 <template>
    <h2>
       <span>Home</span>
-      <div class="acts" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
+      <div class="row-right gap-2!" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
          <CreateAgencyModal v-if="userStore.isAdmin" />
          <CreateCollectionFacetModal v-if="userStore.isAdmin" />
          <CreateMetadataModal />
@@ -50,7 +50,7 @@
          <div class="text-search">
             <USelect v-model="selectedScope" :items="scopes"  />
             <div class="search-info">
-               <div class="search-help">
+               <div class="row-left">
                   <SearchIndexPopover />
                   <SearchHelpPopover />
                </div>
@@ -61,17 +61,18 @@
             <UButton v-if="searchStore.searched || searchStore.similarSearch == true" label="Reset Search" color="secondary" @click="resetSearch"/>
          </div>
 
-         <div class="image-search" v-if="userStore.isAdmin">
-            <label>Search for similar images</label>
-            <p class="hint">Set a similarity threshold, select a search image then click 'Search Images'</p>
-            <div class="labels">
-               <span>More Similar</span>
-               <span>Less Similar</span>
+         <UCard v-if="userStore.isAdmin" title="Search for similar images" class="w-fit mx-auto! my-5!">
+            <div class="image-search">
+               <p class="hint">Set a similarity threshold, select a search image then click 'Search Images'</p>
+               <div class="labels">
+                  <span>More Similar</span>
+                  <span>Less Similar</span>
+               </div>
+               <USlider class="w-full" :min="5" :max="20" v-model="searchStore.distance" @change="slideChanged"/>
+               <UFileUpload accept="image/*" label="Drop your image here" v-model="lookupImage" @change="uploadImageChanged"/>
+               <UButton color="secondary" size="sm" label="Search Images" @click="startImageUpload" :disabled="!lookupImage"/>
             </div>
-            <USlider class="w-full" :min="5" :max="20" v-model="searchStore.distance" @change="slideChanged"/>
-            <UFileUpload accept="image/*" label="Drop your image here" v-model="lookupImage" @change="uploadImageChanged"/>
-            <UButton color="secondary" size="sm" label="Search Images" @click="startImageUpload" :disabled="!lookupImage"/>
-         </div>
+         </UCard>
 
          <template v-if="systemStore.working == false">
             <SearchResults v-if="searchStore.searched" />
@@ -102,8 +103,6 @@ const router = useRouter()
 const dashboard = useDashboardStore()
 const userStore = useUserStore()
 const systemStore = useSystemStore()
-
-const showCreateMetadata = ref(false)
 
 const selectedScope = ref("all")
 const newQuery = ref("")
@@ -239,15 +238,8 @@ const createOrder = (() => {
 
 <style scoped lang="scss">
 .home {
-   margin-top: 0px;
-   padding-bottom: 50px;
-   min-height:600px;
    .image-search {
       width: 275px;
-      margin: 25px auto 0 auto;
-      border: 1px solid var(--uvalib-grey-light);
-      padding: 15px;
-      border-radius: 5px;
       display: flex;
       flex-direction: column;
       gap: 15px;
@@ -272,7 +264,7 @@ const createOrder = (() => {
       gap: 5px;
       padding: 10px 0;
       border-bottom: 1px solid var(--uvalib-grey-light);
-      margin-bottom: 25px;
+      margin-bottom: 15px;
       background: #f8f8f8;
       .row {
          display: flex;
@@ -290,9 +282,6 @@ const createOrder = (() => {
       }
    }
 
-   p.error {
-      color: var(--uvalib-red-emergency);
-   }
    div.text-search {
       display: flex;
       flex-flow: row nowrap;
@@ -300,39 +289,13 @@ const createOrder = (() => {
       align-items: flex-end;
       width: 70%;
       margin: 0 auto;
-      gap: 5px;
+      gap: 10px;
       .search-info {
          flex-grow: 1;
          display: flex;
          flex-direction: column;
-         gap: 5px;
-         .search-help {
-            display: flex;
-            flex-flow: row nowrap;
-            gap: 10px;
-         }
+         gap: 15px;
       }
    }
-}
-div.agency {
-   label {
-      display: block;
-      margin: 10px 0 5px 0;
-   }
-   textarea {
-      width: 100%;
-      border-color: var(--uvalib-grey-light);
-      border-radius: 5px;
-      font-family: "franklin-gothic-urw", arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      color: var(--color-primary-text);
-      padding: 5px 10px;
-   }
-}
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   gap: 10px;
 }
 </style>
