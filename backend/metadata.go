@@ -511,7 +511,7 @@ func (svc *serviceContext) updateMetadata(c *gin.Context) {
 
 	checkProjects := false
 	if md.Type == "SirsiMetadata" {
-		checkProjects = (md.Title != req.Title || *md.CallNumber != req.CallNumber)
+		checkProjects = (md.Title != req.Title || (md.CallNumber != nil && *md.CallNumber != req.CallNumber))
 		md.Barcode = &req.Barcode
 		md.CallNumber = &req.CallNumber
 		md.CatalogKey = &req.CatalogKey
