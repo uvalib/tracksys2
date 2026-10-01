@@ -81,7 +81,7 @@
                <FormField id="inhathi" label="In HathiTrust">
                   <Select id="inhathi" v-model="inHathiTrust" :options="yesNo" optionLabel="label" optionValue="value" :disabled="submittedToHathiTrust"/>   
                </FormField>
-               <FormField id="availpolicy" label="Availability Policy" :error="errors.lastName" :required="true">
+               <FormField id="availpolicy" label="Availability Policy" :error="errors.availabilityPolicy" :required="true">
                   <Select id="availpolicy" v-model="availabilityPolicy" 
                      :options="availabilityPolicies" optionLabel="label" optionValue="value"  placeholder="Select a policy"
                   />   
@@ -120,7 +120,7 @@ import * as yup from 'yup'
 import FormField from '@/components/FormField.vue'
 import Message from 'primevue/message'
 
-const schema = yup.object().shape({
+const schema = yup.object({
    title: yup.string().required('Title is required'),
    availabilityPolicy:  yup.number().when('type', {
       is: (value) => value == 'SirsiMetadata',
