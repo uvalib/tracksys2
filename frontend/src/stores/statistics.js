@@ -1,12 +1,8 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
-import dayjs from 'dayjs'
 
 export const useStatsStore = defineStore('stats', {
 	state: () => ({
-		dateRangeType: "before",
-		startDate: new Date(),
-		endDate: null,
 		imageStats: {
 			total: 0,
 			DL: 0,
@@ -76,18 +72,26 @@ export const useStatsStore = defineStore('stats', {
          })
 		},
 
-		getAllStats(force) {
+		getAllStats(force, rangeType, startDate, endDate ) {
 			if (this.storageStats.total == 0 || force == true) {
-				this.getImageSats()
-				this.getStorageSats()
-				this.getMetadataSats()
-				this.getArchiveSats()
+				let dateParam = ""
+				if (rangeType == "before") {
+					dateParam = `BEFORE ${startDate}`
+				} else if (rangeType == "after") {
+					dateParam = `AFTER ${startDate}`
+				} else {
+					dateParam = `${startDate} TO ${endDate}`
+				}
+
+				this.getImageSats(dateParam)
+				this.getMetadataSats(dateParam)
+				this.getArchiveSats(dateParam)
 				this.getPublishedSats()
+				this.getStorageSats()
 			}
 		},
 
-		getImageSats() {
-			let dateParam = getDateParam(this.dateRangeType, this.startDate, this.endDate)
+		getImageSats(dateParam) {
 			let url = "/api/stats/images"
 			if (dateParam != "") {
 				url += "?date="+encodeURIComponent(dateParam)
@@ -134,8 +138,7 @@ export const useStatsStore = defineStore('stats', {
          })
 		},
 
-		getMetadataSats() {
-			let dateParam = getDateParam(this.dateRangeType, this.startDate, this.endDate)
+		getMetadataSats(dateParam) {
 			let url = "/api/stats/metadata"
 			if (dateParam != "") {
 				url += "?date="+encodeURIComponent(dateParam)
@@ -160,8 +163,7 @@ export const useStatsStore = defineStore('stats', {
          })
 		},
 
-		getArchiveSats() {
-			let dateParam = getDateParam(this.dateRangeType, this.startDate, this.endDate)
+		getArchiveSats(dateParam) {
 			let url = "/api/stats/archive"
 			if (dateParam != "") {
 				url += "?date="+encodeURIComponent(dateParam)
@@ -181,15 +183,3 @@ export const useStatsStore = defineStore('stats', {
 		},
 	}
 })
-
-function getDateParam(rangeType, startDate, endDate) {
-	let dateParam = ""
-	if (rangeType == "before") {
-		dateParam = `BEFORE ${dayjs(startDate).format("YYYY-MM-DD")}`
-	} else if (rangeType == "after") {
-		dateParam = `AFTER ${dayjs(startDate).format("YYYY-MM-DD")}`
-	} else {
-		dateParam = `${dayjs(startDate).format("YYYY-MM-DD")} TO ${dayjs(endDate).format("YYYY-MM-DD")}`
-	}
-	return dateParam
-}

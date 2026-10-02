@@ -4,16 +4,13 @@
       <WaitSpinner/>
    </div>
    <div v-else class="report">
-      <div class="control-bar">
+      <div class="row-right items-center">
          <label>Year:</label>
-         <select v-model="auditStore.targetYear">
-            <option v-for="w in auditStore.auditYears" :value="w.value" :key="`wf${w.value}`">{{w.label}}</option>
-         </select>
-         <DPGButton severity="secondary" @click="auditStore.getAuditReport()" label="Generate Report"/>
+         <USelect v-model="auditStore.targetYear" :items="auditStore.auditYears"/>
+         <UButton color="secondary" @click="auditStore.getAuditReport()" label="Generate Report"/>
       </div>
 
-
-      <Chart type="bar" :data="auditStore" :options="options" style="max-height:800px;      "/>
+      <BarChart :data="auditStore" :options="options" style="max-height:800px;" />
 
       <div class="total">
          <label>Total Audited:</label><span class="total">{{auditStore.totalAudited}}</span>
@@ -26,7 +23,7 @@
 import { onMounted, ref } from 'vue'
 import WaitSpinner from "@/components/WaitSpinner.vue"
 import { useAuditStore } from '@/stores/audit'
-import Chart from 'primevue/chart'
+import BarChart from "./BarChart.vue"
 
 const auditStore = useAuditStore()
 
@@ -59,16 +56,6 @@ onMounted( () => {
 }
 .report {
    margin: 10px 50px;
-   .control-bar {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-end;
-      align-items: anchor-center;
-      gap: 10px;
-      select {
-         width: 100px;
-      }
-   }
    .total {
       text-align: center;
       margin: 20px 0;

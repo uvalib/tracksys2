@@ -1,13 +1,13 @@
 <template>
    <h2>Patron Deliveries</h2>
-   <div class="report">
-      <Chart type="line" :data="statsStore.deliveries" :options="options"/>
+   <div class="p-4">
+      <WaitSpinner v-if="statsStore.deliveries.loading"/>
+      <LineChart v-else :data="statsStore.deliveries" :options="options"/>
       <p class="error" v-if="statsStore.deliveries.error">{{statsStore.deliveries.error}}</p>
-      <div class="controls">
-         <span class="year-picker">
-            <label>Year:<input v-model="tgtYear"></label>
-         </span>
-         <button @click="loadStats">Generate</button>
+      <div class="row-right items-center p-4">
+         <label>Year:</label>
+         <UInput v-model="tgtYear" />
+         <UButton color="secondary" @click="loadStats" label="Generate" />
       </div>
    </div>
 </template>
@@ -15,27 +15,22 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import {useStatsStore} from '@/stores/statistics'
-import WaitSpinner from '@/components/WaitSpinner.vue'
-import Chart from 'primevue/chart'
+import LineChart from "./LineChart.vue"
+import WaitSpinner from "@/components/WaitSpinner.vue"
 
 const tgtYear = ref( new Date().getFullYear() )
 const statsStore = useStatsStore()
 
 const options = ref({
    responsive: true,
-   plugins: {
-      legend: {
-         position: 'top',
-      },
-   },
 })
 
-const loadStats = (() => {
+const loadStats = ( () => {
    statsStore.getPatronDeliveries(tgtYear.value)
 })
 
 onMounted( () => {
-   statsStore.getPatronDeliveries(tgtYear.value)
+   loadStats()
 })
 </script>
 
@@ -47,25 +42,4 @@ h3 {
    text-align: left;
    border-bottom: 1px solid var(--uvalib-grey-light);
 }
-.wait-wrap {
-   padding: 20px 10px;
-}
-
-.report {
-      padding: 10px;
-      .controls {
-         border-top: 1px solid var(--uvalib-grey-lightest);
-         display: flex;
-         flex-flow: row wrap;
-         justify-content: flex-end;
-         padding-top: 15px;
-         margin-top: 5px;
-         input {
-            margin: 0 10px;
-            width: 85px;
-            color: var(--uvalib-text);
-            text-align: center;
-         }
-      }
-   }
 </style>

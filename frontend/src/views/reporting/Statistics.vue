@@ -1,17 +1,13 @@
 <template>
    <h2>Statistics</h2>
    <div class="date-range">
-      <div class="date-picker">
+      <div class="row-left items-center">
          <label>From:</label>
-         <select v-model="statsStore.dateRangeType" @change="modeChanged">
-            <option value="before">BEFORE</option>
-            <option value="after">AFTER</option>
-            <option value="between">BETWEEN</option>
-         </select>
-         <DatePicker v-model="statsStore.startDate" showIcon :showOnFocus="false" dateFormat="yy-mm-dd"/>
-         <DatePicker v-if="statsStore.dateRangeType == 'between'" v-model="statsStore.endDate" showIcon :showOnFocus="false" dateFormat="yy-mm-dd"/>
+         <USelect v-model="rangeType" @change="modeChanged" :items="rangeTypes" />
+         <UInputDate v-if="rangeType != 'between'" v-model="dates.start" variant="soft"/>
+         <UInputDate v-else range v-model="dates" variant="soft" separator-icon="i-lucide-arrow-right"/>
       </div>
-      <DPGButton @click="getAllClicked" label="Get All Statistics"/>
+      <UButton @click="getAllClicked" label="Get All Statistics"/>
    </div>
    <div class="stats">
       <div class="column">
@@ -20,7 +16,7 @@
          <ArchiveStats />
       </div>
       <div class="column">
-            <MetadataStats />
+         <MetadataStats />
       </div>
    </div>
    <div class="stats">
@@ -70,8 +66,8 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
-import DatePicker from 'primevue/datepicker'
+import { onMounted, shallowRef, ref } from 'vue'
+import { today, getLocalTimeZone } from '@internationalized/date'
 import {useStatsStore} from '@/stores/statistics'
 import ImageStats from '@/components/stats/ImageStats.vue'
 import StorageStats from '@/components/stats/StorageStats.vue'
@@ -81,19 +77,33 @@ import WaitSpinner from "@/components/WaitSpinner.vue"
 
 const statsStore = useStatsStore()
 
+const rangeTypes = [
+   {label: "BEFORE", value: "before"},
+   {label: "AFTER", value: "after"},
+   {label: "BETWEEN", value: "between"}
+]
+
+const rangeType = ref("before")
+const dates = shallowRef({
+  start: today( getLocalTimeZone() ),
+  end: today( getLocalTimeZone() ).add({months: 3}) 
+})
+
 onMounted( () => {
-   statsStore.getAllStats(false)
+   statsStore.getAllStats(false, rangeType.value, dates.value.start.toString(), dates.value.end.toString())
 })
 
 const modeChanged = (() => {
-   if ( statsStore.dateRangeType == "between") {
-      statsStore.endDate = new Date()
-      statsStore.endDate =  statsStore.endDate.setMonth(statsStore.startDate.getMonth() + 3)
+   console.log("MODE CHANGED")
+   if ( rangeType.value == "between") {
+      dates.value.end = dates.value.start.add({months: 3}) 
+   } else {
+      dates.value.end = null
    }
 })
 
 function getAllClicked() {
-   statsStore.getAllStats(true)
+   statsStore.getAllStats(true, rangeType.value, dates.value.start.toString(), dates.value.end.toString()) 
 }
 </script>
 
@@ -105,16 +115,6 @@ function getAllClicked() {
    padding: 10px 15px;
    border-bottom: 1px solid var(--uvalib-grey-light);
    border-top: 1px solid var(--uvalib-grey-light);
-   .date-picker {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-start;
-      align-items: anchor-center;
-      gap: 5px;
-      .p-datepicker {
-         width: 300px;
-      }
-   }
 }
 .stats {
    margin: 10px;
