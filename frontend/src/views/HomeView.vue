@@ -61,22 +61,8 @@
             <UButton v-if="searchStore.searched || searchStore.similarSearch == true" label="Reset Search" color="secondary" @click="resetSearch"/>
          </div>
 
-         <UCard v-if="userStore.isAdmin" title="Search for similar images" class="w-fit mx-auto! my-5!">
-            <div class="image-search">
-               <p class="hint">Set a similarity threshold, select a search image then click 'Search Images'</p>
-               <div class="labels">
-                  <span>More Similar</span>
-                  <span>Less Similar</span>
-               </div>
-               <USlider class="w-full" :min="5" :max="20" v-model="searchStore.distance" @change="slideChanged"/>
-               <UFileUpload accept="image/*" label="Drop your image here" v-model="lookupImage" @change="uploadImageChanged"/>
-               <UButton color="secondary" size="sm" label="Search Images" @click="startImageUpload" :disabled="!lookupImage"/>
-            </div>
-         </UCard>
-
          <template v-if="systemStore.working == false">
             <SearchResults v-if="searchStore.searched" />
-            <SimilarImages v-if="searchStore.similarSearch" />
          </template>
       </div>
    </div>
@@ -90,7 +76,6 @@ import { useSystemStore } from '../stores/system'
 import SearchIndexPopover from '@/components/SearchIndexPopover.vue'
 import SearchHelpPopover from '@/components/SearchHelpPopover.vue'
 import SearchResults from '@/components/results/SearchResults.vue'
-import SimilarImages from '@/components/results/SimilarImages.vue'
 import CreateAgencyModal from '@/components/CreateAgencyModal.vue'
 import CreateCollectionFacetModal from '@/components/CreateCollectionFacetModal.vue'
 import { ref, computed, onBeforeMount } from 'vue'
@@ -106,7 +91,6 @@ const systemStore = useSystemStore()
 
 const selectedScope = ref("all")
 const newQuery = ref("")
-const lookupImage = ref()
 
 const scopes = computed( () => {
    return [
@@ -171,18 +155,6 @@ onBeforeMount( () => {
    }
 })
 
-const slideChanged = ( () => {
-   if (searchStore.similarSearch == true && searchStore.searchPHash !== 0) {
-      searchStore.imageSearch()
-   }
-})
-const uploadImageChanged = (() => {
-   searchStore.resetImageSearch()
-})
-const startImageUpload = ( async () => {
-   searchStore.uploadSearchImage( lookupImage.value )
-})
-
 const resetSearch = (() => {
    searchStore.resetSearch()
    selectedScope.value = "all"
@@ -238,26 +210,6 @@ const createOrder = (() => {
 
 <style scoped lang="scss">
 .home {
-   .image-search {
-      width: 275px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      align-items: center;
-      label {
-         font-weight: bold;
-      }
-      .hint {
-         font-size: 0.8em;
-      }
-      .labels {
-         width: 100%;
-         font-size: 0.85em;
-         display: flex;
-         flex-flow: row nowrap;
-         justify-content: space-between;
-      }
-   }
    .stats {
       display: flex;
       flex-direction: column;

@@ -26,7 +26,6 @@ function signinClick() {
 
 <style scoped lang="scss">
 .signedout {
-   padding: 25px;
    text-align: center;
    .message {
       margin-top: 40px;

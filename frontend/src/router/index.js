@@ -31,6 +31,11 @@ const router = createRouter({
          name: 'hathitrust',
          component: () => import('../views/HathiTrustSubmissions.vue')
       },
+       {
+         path: '/imagesearch',
+         name: 'imagesearch',
+         component: () => import('../views/ImageSearch.vue')
+      },
       {
          path: '/jobs',
          name: 'jobs',

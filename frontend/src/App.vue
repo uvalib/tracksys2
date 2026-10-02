@@ -57,6 +57,18 @@ const toaster = { duration: 5000, position: "top-center" }
 
 const configuring = ref(true)
 const menuItems = computed(()=> {
+   let misc = {
+      label: "Miscellaneous", children: [
+         {label: "ArchivesSpace Reviews", to: "/archivesspace"},
+         {label: "HathiTrust Submissions", to: "/hathitrust"},
+         {label: "Master File Audit", to: "/audit-report"},
+         {label: "Customers", to: "/customers"},
+         {label: "Staff Members", to: "/staff"},
+      ]
+   }
+   if (userStore.isAdmin) {
+      misc.children.push({label: "Search Images", to: "/imagesearch"})
+   }
    return [ 
       {label: "Home", onSelect: () => homeClicked()}, 
       {label: "Orders", to: "/orders"},  
@@ -74,13 +86,7 @@ const menuItems = computed(()=> {
          {label: "Statistics", to: "/statistics"},
          {label: "Patron Deliveries", to: "/deliveries"},
       ]},
-      {label: "Miscellaneous", children: [
-         {label: "ArchivesSpace Reviews", to: "/archivesspace"},
-         {label: "HathiTrust Submissions", to: "/hathitrust"},
-         {label: "Master File Audit", to: "/audit-report"},
-         {label: "Customers", to: "/customers"},
-         {label: "Staff Members", to: "/staff"},
-      ]},
+      misc,
       {label: userStore.signedInUser, children: [
          {label: "Sign Out", icon: 'i-lucide-log-out',  onSelect: () => signout()}    
       ]},
