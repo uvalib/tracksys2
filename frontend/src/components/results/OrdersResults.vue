@@ -1,5 +1,26 @@
 <template>
-   <DataTable :value="searchStore.orders.hits" ref="orderHitsTable" dataKey="id"
+   <div class="row-right p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: headerHeight}">
+      <div>{{ filters }}</div>
+      <UPagination color="neutral" variant="ghost"
+         v-model:page="searchStore.orders.currPage" :items-per-page="searchStore.orders.limit" 
+         :total="searchStore.orders.total" @update:page="pageChanged"
+      />
+      <USelect v-model="searchStore.orders.limit" :items="[15,30,100]" @change="perPageChanged" />
+   </div>
+   <UTable :data="searchStore.orders.hits" :columns="columns">
+      <template #id-cell="{ row }">
+         <router-link :to="`/orders/${row.original.id}`">{{row.original.id}}</router-link>
+      </template>
+      <template #status-header>
+         <FilterPopover label="Status" @clear="clearFilter('status')" @apply="filterApplied()">
+            <USelect v-model="filters.status.value" :items="orderStatuses" placeholder="Select a status" />
+         </FilterPopover>
+      </template>
+      <template #status-cell="{ row }">
+         <span :class="`status ${row.original.status}`">{{displayStatus(row.original.status)}}</span>
+      </template>
+   </UTable>
+   <!-- <DataTable :value="searchStore.orders.hits" ref="orderHitsTable" dataKey="id"
       stripedRows showGridlines size="small" v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
       :lazy="true" :paginator="true" @page="onPage($event)"
       :rows="searchStore.orders.limit" :totalRecords="searchStore.orders.total"
@@ -16,7 +37,7 @@
       </template>
       <Column field="id" header="ID">
          <template #body="slotProps">
-            <router-link :to="`/orders/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
+            <router-link :to="`/orders/${row.original.id}`">{{row.original.id}}</router-link>
          </template>
       </Column>
       <Column field="status" header="Status" class="nowrap" filterField="status" :showFilterMatchModes="false" >
@@ -24,7 +45,7 @@
             <Select v-model="filterModel.value" :options="orderStatuses" optionLabel="name" optionValue="code" placeholder="Select a status" />
          </template>
          <template #body="slotProps">
-            <span :class="`status ${slotProps.data.status}`">{{displayStatus(slotProps.data.status)}}</span>
+            <span :class="`status ${row.original.status}`">{{displayStatus(row.original.status)}}</span>
          </template>
       </Column>
       <Column field="customer" header="Customer" class="nowrap" filterField="customer" :showFilterMatchModes="false">
@@ -52,7 +73,7 @@
             <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
          </template>
       </Column>
-   </DataTable>
+   </DataTable> -->
 </template>
 
 <script setup>
@@ -64,9 +85,8 @@ import Column from 'primevue/column'
 import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
-import { usePinnable } from '@/composables/pin'
-
-usePinnable("p-datatable-paginator-top")
+import FilterPopover from './FilterPopover.vue'
+import { filter } from '@primeuix/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -74,22 +94,64 @@ const searchStore = useSearchStore()
 
 const orderHitsTable = ref()
 
-const filters = ref( {
-   'status': {value: null, matchMode: FilterMatchMode.EQUALS},
-   'customer': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'agency': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'staff_notes': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'special_instructions': {value: null, matchMode: FilterMatchMode.CONTAINS},
+// you cannot custruct tailwind class values dynamically, so you  cant do `top-${hdr.clientHeight}`. 
+// Instead use this to bind an inline style 'top' param to stick the controls below the header
+const headerHeight = computed(() => {
+   let hdr = document.getElementById('uva-header')
+   return `${hdr.clientHeight}px`
 })
 
+const columns = [
+   {
+      accessorKey: 'id',
+      header: 'ID'
+   },
+   {
+      accessorKey: 'status',
+      header: 'Status'
+   },  
+   {
+      accessorKey: 'customer',
+      header: 'Customer'
+   }, 
+   {
+      accessorKey: 'agency',
+      header: 'Agency'
+   }, 
+   {
+      accessorKey: 'title',
+      header: 'Order Title'
+   }, 
+   {
+      accessorKey: 'staff_notes',
+      header: 'Staff Notes'
+   },
+   {
+      accessorKey: 'special_instructions',
+      header: 'Special Instructions'
+   },
+]
+
+const filters = ref({
+   status: {value: null, mode: "equals"}
+})
+
+// const filters = ref( {
+//    'status': {value: null, matchMode: FilterMatchMode.EQUALS},
+//    'customer': {value: null, matchMode: FilterMatchMode.CONTAINS},
+//    'agency': {value: null, matchMode: FilterMatchMode.CONTAINS},
+//    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
+//    'staff_notes': {value: null, matchMode: FilterMatchMode.CONTAINS},
+//    'special_instructions': {value: null, matchMode: FilterMatchMode.CONTAINS},
+// })
+
 const orderStatuses = ref([
-   {name: "Requested", code: "requested"},
-   {name: "Approved", code: "approved"},
-   {name: "Await Fee", code: "await_fee"},
-   {name: "Completed", code: "completed"},
-   {name: "Canceled", code: "canceled"},
-   {name: "Deferred", code: "deferred"},
+   {label: "Requested", value: "requested"},
+   {label: "Approved", value: "approved"},
+   {label: "Await Fee", value: "await_fee"},
+   {label: "Completed", value: "completed"},
+   {label: "Canceled", value: "canceled"},
+   {label: "Deferred", value: "deferred"},
 ])
 
 const hasFilter = computed(() => {
@@ -123,11 +185,16 @@ function clearFilters() {
    searchStore.executeSearch("orders")
 }
 
-function onFilter(event) {
+const clearFilter = ((name) => {
+   filters.value[name].value = null 
+   filterApplied()
+}) 
+
+const filterApplied =(() => {
    searchStore.orders.filters = []
-   Object.entries(event.filters).forEach(([key, data]) => {
+   Object.entries(filters.value).forEach(([filterName, data]) => {
       if (data.value && data.value != "") {
-         searchStore.orders.filters.push({field: key, match: data.matchMode, value: data.value})
+         searchStore.orders.filters.push({field: filterName, match: data.mode, value: data.value})
       }
    })
    let query = Object.assign({}, route.query)
@@ -138,13 +205,18 @@ function onFilter(event) {
    }
    router.push({query})
    searchStore.executeSearch("orders")
-}
+})
 
-function onPage(event) {
-   searchStore.orders.start = event.first
-   searchStore.orders.limit = event.rows
+const perPageChanged = (() => {
+   console.log("new page size "+searchStore.orders.limit)
+   searchStore.orders.currPage = 1
+   pageChanged()
+})
+const pageChanged = (() => {
+   searchStore.orders.start = (searchStore.orders.currPage-1) * searchStore.orders.limit
+   console.log("new start: "+searchStore.orders.start)
    searchStore.executeSearch("orders")
-}
+})
 
 </script>
 

@@ -34,6 +34,7 @@ export const useSearchStore = defineStore('search', {
          filters: []
       },
       orders: {
+         currPage: 1,
          start: 0,
          limit: 15,
          scroll: "",
