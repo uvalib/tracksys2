@@ -1,8 +1,8 @@
 <template>
 <UPopover v-model:open="open">
-   <UButton variant="link" class="text-black" trailing-icon="i-lucide-funnel" :label="props.label" />
+   <UButton variant="link" class="text-black" :trailing-icon="icon" :label="props.label" />
    <template #content>
-      <div class="p-2 column-close">
+      <div class="p-4 column-close">
          <slot></slot>
          <div class="row-right">
             <UButton color="secondary" label="Clear" size="xs" @click="clearClicked"/>
@@ -14,7 +14,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const open = ref(false)
 
@@ -23,7 +23,16 @@ const props = defineProps({
    label: {
       type: String,
       required: true
+   },
+   applied: {
+      type: Boolean,
+      default: false
    }
+})
+
+const icon = computed(() => {
+   if ( props.applied) return  'i-lucide-funnel-plus'
+   return "i-lucide-funnel"
 })
 
 const applyClicked = (() => {

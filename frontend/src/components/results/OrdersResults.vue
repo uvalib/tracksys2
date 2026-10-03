@@ -1,6 +1,5 @@
 <template>
    <div class="row-right p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: headerHeight}">
-      <div>{{ filters }}</div>
       <UPagination color="neutral" variant="ghost"
          v-model:page="searchStore.orders.currPage" :items-per-page="searchStore.orders.limit" 
          :total="searchStore.orders.total" @update:page="pageChanged"
@@ -12,81 +11,49 @@
          <router-link :to="`/orders/${row.original.id}`">{{row.original.id}}</router-link>
       </template>
       <template #status-header>
-         <FilterPopover label="Status" @clear="clearFilter('status')" @apply="filterApplied()">
+         <FilterPopover label="Status" :applied="filterApplied('status')" @clear="clearFilter('status')" @apply="applyFilter()">
             <USelect v-model="filters.status.value" :items="orderStatuses" placeholder="Select a status" />
          </FilterPopover>
       </template>
       <template #status-cell="{ row }">
          <span :class="`status ${row.original.status}`">{{displayStatus(row.original.status)}}</span>
       </template>
-   </UTable>
-   <!-- <DataTable :value="searchStore.orders.hits" ref="orderHitsTable" dataKey="id"
-      stripedRows showGridlines size="small" v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="true" @page="onPage($event)"
-      :rows="searchStore.orders.limit" :totalRecords="searchStore.orders.total"
-      paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      :rowsPerPageOptions="[15,30,100]" :first="searchStore.orders.start"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"  paginatorPosition="top"
-   >
-      <template #empty><h3>No matching orders found</h3></template>
-      <template #paginatorstart>
-         <div class="acts">
-            <DPGButton label="Download Results CSV" severity="secondary" @click="downloadCSV" v-if="searchStore.orders.total>0" />
-            <DPGButton v-if="hasFilter" label="Clear All Filters" severity="secondary" @click="clearFilters"/>
-         </div>
+      <template #customer-header>
+         <FilterPopover label="Customer"  :applied="filterApplied('customer')" @clear="clearFilter('customer')" @apply="applyFilter()">
+            <UInput v-model="filters.customer.value" placeholder="Customer name..." />
+         </FilterPopover>
       </template>
-      <Column field="id" header="ID">
-         <template #body="slotProps">
-            <router-link :to="`/orders/${row.original.id}`">{{row.original.id}}</router-link>
-         </template>
-      </Column>
-      <Column field="status" header="Status" class="nowrap" filterField="status" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <Select v-model="filterModel.value" :options="orderStatuses" optionLabel="name" optionValue="code" placeholder="Select a status" />
-         </template>
-         <template #body="slotProps">
-            <span :class="`status ${row.original.status}`">{{displayStatus(row.original.status)}}</span>
-         </template>
-      </Column>
-      <Column field="customer" header="Customer" class="nowrap" filterField="customer" :showFilterMatchModes="false">
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Customer"/>
-         </template>
-      </Column>
-      <Column field="agency" header="Agency" class="nowrap"  filterField="agency" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Agency name"/>
-         </template>
-      </Column>
-      <Column field="title" header="Order Title" filterField="title" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
-         </template>
-      </Column>
-      <Column field="staff_notes" header="Staff Notes" filterField="staff_notes" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Notes"/>
-         </template>
-      </Column>
-      <Column field="special_instructions" header="Special Instructions" filterField="special_instructions" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
-         </template>
-      </Column>
-   </DataTable> -->
+      <template #agency-header>
+         <FilterPopover label="Agency"  :applied="filterApplied('agency')" @clear="clearFilter('agency')" @apply="applyFilter()">
+            <UInput v-model="filters.agency.value" placeholder="Agency name..." />
+         </FilterPopover>
+      </template>
+      <template #title-header>
+         <FilterPopover label="Title"  :applied="filterApplied('title')" @clear="clearFilter('title')" @apply="applyFilter()">
+            <UInput v-model="filters.title.value" placeholder="Title..." />
+         </FilterPopover>
+      </template>
+      <template #title-cell="{ row }">
+         <div class="max-width: 150px; white-space: break-spaces;">{{ row.original.title   }}</div>
+      </template>
+      <template #staff_notes-header>
+         <FilterPopover label="Staff Notes"  :applied="filterApplied('staff_notes')" @clear="clearFilter('staff_notes')" @apply="applyFilter()">
+            <UInput v-model="filters.staff_notes.value" placeholder="Staff notes..." />
+         </FilterPopover>
+      </template>
+      <template #special_instructions-header>
+         <FilterPopover label="Special Instructions" :applied="filterApplied('special_instructions')" @clear="clearFilter('special_instructions')" @apply="applyFilter()">
+            <UInput v-model="filters.special_instructions.value" placeholder="Special instructions..." />
+         </FilterPopover>
+      </template>
+   </UTable>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { FilterMatchMode } from '@primevue/core/api'
 import { useSearchStore } from '../../stores/search'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Select from 'primevue/select'
-import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
 import FilterPopover from './FilterPopover.vue'
-import { filter } from '@primeuix/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -108,42 +75,68 @@ const columns = [
    },
    {
       accessorKey: 'status',
-      header: 'Status'
+      header: 'Status',
+      meta: {
+         class: {
+            td: 'w-fit'
+         }
+      }
    },  
    {
       accessorKey: 'customer',
-      header: 'Customer'
+      header: 'Customer',
+      meta: {
+         class: {
+            td: 'w-fit'
+         }
+      }
    }, 
    {
       accessorKey: 'agency',
-      header: 'Agency'
+      header: 'Agency',
+      meta: {
+         class: {
+            td: 'w-1/8 whitespace-break-spaces'
+         }
+      }
    }, 
    {
       accessorKey: 'title',
-      header: 'Order Title'
+      header: 'Order Title',
+      meta: {
+         class: {
+            td: 'w-1/4 whitespace-break-spaces'
+         }
+      }
    }, 
    {
       accessorKey: 'staff_notes',
-      header: 'Staff Notes'
+      header: 'Staff Notes',
+      meta: {
+         class: {
+            td: 'w-1/4 whitespace-break-spaces'
+         }
+      }
    },
    {
       accessorKey: 'special_instructions',
-      header: 'Special Instructions'
+      header: 'Special Instructions',
+      meta: {
+         class: {
+            td: 'w-1/4 whitespace-break-spaces'
+         }
+      }
    },
 ]
 
 const filters = ref({
-   status: {value: null, mode: "equals"}
+   status: {value: null, mode: "equals"},
+   customer: {value: null, mode: "contains"},
+   agency: {value: null, mode: "contains"},
+   title: {value: null, mode: "contains"},
+   staff_notes: {value: null, mode: "contains"},
+   special_instructions: {value: null, mode: "contains"},
 })
-
-// const filters = ref( {
-//    'status': {value: null, matchMode: FilterMatchMode.EQUALS},
-//    'customer': {value: null, matchMode: FilterMatchMode.CONTAINS},
-//    'agency': {value: null, matchMode: FilterMatchMode.CONTAINS},
-//    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
-//    'staff_notes': {value: null, matchMode: FilterMatchMode.CONTAINS},
-//    'special_instructions': {value: null, matchMode: FilterMatchMode.CONTAINS},
-// })
 
 const orderStatuses = ref([
    {label: "Requested", value: "requested"},
@@ -185,12 +178,15 @@ function clearFilters() {
    searchStore.executeSearch("orders")
 }
 
+const filterApplied = ((name) => {
+   return filters.value[name].value != null 
+})
 const clearFilter = ((name) => {
    filters.value[name].value = null 
-   filterApplied()
+   applyFilter()
 }) 
 
-const filterApplied =(() => {
+const applyFilter =(() => {
    searchStore.orders.filters = []
    Object.entries(filters.value).forEach(([filterName, data]) => {
       if (data.value && data.value != "") {
