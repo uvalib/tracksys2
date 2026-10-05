@@ -78,6 +78,9 @@
 .row-left {
     @apply flex flex-row flex-nowrap gap-4 justify-start;
 }
+.row-between {
+    @apply flex flex-row flex-nowrap justify-between;
+}
 .column {
     @apply flex flex-col gap-4;
 }

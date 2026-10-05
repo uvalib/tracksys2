@@ -267,6 +267,47 @@ export const useSearchStore = defineStore('search', {
          })
       },
 
+      downloadCSV( data, columns ) {
+         let target = null 
+         if ( data == "orders" ) {
+            target = this.orders.hits
+         } else if  ( data == "metadata" ) {
+            target = this.metadata.hits
+         } else if  ( data == "masterfiles" ) {
+            target = this.masterFiles.hits
+         } else if  ( data == "components" ) {
+            target = this.components.hits
+         } else if  ( data == "units" ) {
+            target = this.units.hits
+         }
+
+         // columns is an array of objects that defines the table columns
+         // extract the data necessary to generate the CSV export: 
+         //    column name and order of data fields
+         const header = columns.map( c => `"${c.header}"`)
+         const sequence = columns.map( c => c.accessorKey )
+
+         let csv = "data:text/csv;charset=utf-8,"
+         csv += (header.join(",")+"\n")
+         target.forEach( r => {
+            sequence.forEach( fieldName => {
+               let val = `${r[fieldName]}`
+               val = val.replaceAll("\"", "'")
+               csv += `"${val}",`
+            })
+            csv += "\n"
+         })
+
+         // create a link for the data and download it
+         var encodedUri = encodeURI(csv)
+         var link = document.createElement("a")
+         link.setAttribute("href", encodedUri)
+         link.setAttribute("download", "oders.csv")
+         document.body.appendChild(link)
+         link.click()
+         document.body.removeChild(link)
+      },
+
       setActiveView( viewName ) {
          this.view = viewName
       }

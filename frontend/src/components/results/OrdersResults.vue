@@ -1,10 +1,16 @@
 <template>
-   <div class="row-right p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: headerHeight}">
-      <UPagination color="neutral" variant="ghost"
-         v-model:page="searchStore.orders.currPage" :items-per-page="searchStore.orders.limit" 
-         :total="searchStore.orders.total" @update:page="pageChanged"
-      />
-      <USelect v-model="searchStore.orders.limit" :items="[15,30,100]" @change="perPageChanged" />
+   <div class="row-between p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: headerHeight}">
+      <div class="row-left gap-2!">
+         <UButton color="secondary" label="Download Results CSV" @click="downloadCSV"/>
+         <UButton v-if="hasFilter" color="secondary" label="Clear All Filters" @click="clearFilters"/>
+      </div>
+      <div class="row-right">
+         <UPagination color="neutral" variant="ghost"
+            v-model:page="searchStore.orders.currPage" :items-per-page="searchStore.orders.limit" 
+            :total="searchStore.orders.total" @update:page="pageChanged"
+         />
+         <USelect v-model="searchStore.orders.limit" :items="[15,30,100]" @change="perPageChanged" />
+      </div>
    </div>
    <UTable :data="searchStore.orders.hits" :columns="columns">
       <template #id-cell="{ row }">
@@ -58,8 +64,6 @@ import FilterPopover from './FilterPopover.vue'
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
-
-const orderHitsTable = ref()
 
 // you cannot custruct tailwind class values dynamically, so you  cant do `top-${hdr.clientHeight}`. 
 // Instead use this to bind an inline style 'top' param to stick the controls below the header
@@ -158,25 +162,32 @@ onMounted(() =>{
    })
 })
 
-function downloadCSV() {
-   orderHitsTable.value.exportCSV()
-}
+const downloadCSV = (() => {
+   searchStore.downloadCSV('orders', columns )
+})
 
-function displayStatus( id) {
+const displayStatus = (( id ) => {
    if (id == "await_fee") {
       return "Await Fee"
    }
    return id.charAt(0).toUpperCase() + id.slice(1)
-}
+})
 
-function clearFilters() {
-   Object.values(filters.value).forEach( fv => fv.value = null )
+const clearFilters = (() => {
+   filters.value = {
+      status: {value: null, mode: "equals"},
+      customer: {value: null, mode: "contains"},
+      agency: {value: null, mode: "contains"},
+      title: {value: null, mode: "contains"},
+      staff_notes: {value: null, mode: "contains"},
+      special_instructions: {value: null, mode: "contains"},
+   }
    searchStore.orders.filters = []
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
    searchStore.executeSearch("orders")
-}
+})
 
 const filterApplied = ((name) => {
    return filters.value[name].value != null 
@@ -217,11 +228,4 @@ const pageChanged = (() => {
 </script>
 
 <style scoped lang="scss">
-.acts{
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: center;
-   gap: 10px;
-}
 </style>
