@@ -1,125 +1,173 @@
 <template>
-   <DataTable :value="searchStore.metadata.hits" ref="metadataTable" dataKey="id"
-      stripedRows showGridlines v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="true" @page="onMetadataPage($event)" size="small"
-      :rows="searchStore.metadata.limit" :totalRecords="searchStore.metadata.total"
-      paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      :rowsPerPageOptions="[15,30,100]" :first="searchStore.metadata.start"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"   paginatorPosition="top"
-   >
-      <template #empty><h3>No matching metadata records found</h3></template>
-      <template #paginatorstart>
-         <div class="acts">
-            <DPGButton label="Download Results CSV" severity="secondary" @click="downloadCSV" v-if="searchStore.metadata.total>0" />
-            <DPGButton v-if="hasFilter" label="Clear All Filters" severity="secondary" @click="clearFilters"/>
-         </div>
+   <div class="row-between p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: headerHeight}">
+      <div class="row-left gap-2!">
+         <UButton color="secondary" label="Download Results CSV" @click="downloadCSV"/>
+         <UButton v-if="hasFilter" color="secondary" label="Clear All Filters" @click="clearFilters"/>
+      </div>
+      <div class="row-right">
+         <UPagination color="neutral" variant="ghost"
+            v-model:page="searchStore.metadata.currPage" :items-per-page="searchStore.metadata.limit" 
+            :total="searchStore.metadata.total" @update:page="pageChanged"
+         />
+         <USelect v-model="searchStore.metadata.limit" :items="[15,30,100]" @change="perPageChanged" />
+      </div>
+   </div>
+   <UTable :data="searchStore.metadata.hits" :columns="columns">
+      <template #id-cell="{ row }">
+         <router-link :to="`/metadata/${row.original.id}`">{{row.original.id}}</router-link>
       </template>
-      <Column field="id" header="ID">
-         <template #body="slotProps">
-            <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
-         </template>
-      </Column>
-      <Column field="pid" header="PID" class="nowrap">
-         <template #body="slotProps">
-            <div>{{slotProps.data.pid}}</div>
-            <div v-if="slotProps.data.virgoURL && slotProps.data.type=='XmlMetadata'"><a :href="slotProps.data.virgoURL" target="_blank">VIRGO</a></div>
-         </template>
-      </Column>
-      <Column field="system_name" header="Type" filterField="system_name" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <Select v-model="filterModel.value" :options="mdTypes" optionLabel="name" optionValue="code" placeholder="Select a type" />
-         </template>
-      </Column>
-      <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
-         </template>
-      </Column>
-      <Column field="creator_name" header="Creator Name" filterField="creator_name" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Creator name"/>
-         </template>
-      </Column>
-      <Column field="barcode" header="Barcode" class="nowrap" filterField="barcode" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Barcode"/>
-         </template>
-      </Column>
-      <Column field="call_number" header="Call Number" class="nowrap" filterField="call_number" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Call number"/>
-         </template>
-      </Column>
-      <Column field="catalog_key" header="Catalog Key" class="nowrap" filterField="catalog_key" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Catalog key"/>
-         </template>
-         <template #body="slotProps">
-            <div>{{slotProps.data.catalog_key}}</div>
-            <div v-if="slotProps.data.virgo_url && slotProps.data.catalog_key"><a :href="slotProps.data.virgo_url" target="_blank">VIRGO</a></div>
-         </template>
-      </Column>
-      <Column field="virgo" header="Virgo" class="nowrap" filterField="virgo" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <Select v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
-         </template>
-         <template #body="slotProps">
-            <span v-if="slotProps.data.virgo">Yes</span>
-            <span v-else>No</span>
-         </template>
-      </Column>
-      <Column field="dpla" header="DPLA" class="nowrap" filterField="dpla" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <Select v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
-         </template>
-         <template #body="slotProps">
-            <span v-if="slotProps.data.dpla">Yes</span>
-            <span v-else>No</span>
-         </template>
-      </Column>
-      <Column field="hathitrust" header="HathiTrust" class="nowrap" filterField="hathitrust" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <Select v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
-         </template>
-         <template #body="slotProps">
-            <span v-if="slotProps.data.hathitrust">Yes</span>
-            <span v-else>No</span>
-         </template>
-      </Column>
-   </DataTable>
+      <template #system_name-header>
+         <FilterPopover label="Type" :applied="filterApplied('system_name')" @clear="clearFilter('system_name')" @apply="applyFilter()">
+            <USelect v-model="filters.system_name.value" :items="mdTypes" placeholder="Select a type" />
+         </FilterPopover>
+      </template>
+      <template #title-header>
+         <FilterPopover label="Title"  :applied="filterApplied('title')" @clear="clearFilter('title')" @apply="applyFilter()">
+            <UInput v-model="filters.title.value" placeholder="Title..." />
+         </FilterPopover>
+      </template>
+      <template #creator_name-header>
+         <FilterPopover label="Creator Name"  :applied="filterApplied('creator_name')" @clear="clearFilter('creator_name')" @apply="applyFilter()">
+            <UInput v-model="filters.creator_name.value" placeholder="Creator name..." />
+         </FilterPopover>
+      </template>
+      <template #barcode-header>
+         <FilterPopover label="Barcode"  :applied="filterApplied('barcode')" @clear="clearFilter('barcode')" @apply="applyFilter()">
+            <UInput v-model="filters.barcode.value" placeholder="Barcode..." />
+         </FilterPopover>
+      </template>
+      <template #call_number-header>
+         <FilterPopover label="Call Number"  :applied="filterApplied('call_number')" @clear="clearFilter('call_number')" @apply="applyFilter()">
+            <UInput v-model="filters.call_number.value" placeholder="Call Number..." />
+         </FilterPopover>
+      </template>
+      <template #catalog_key-header>
+         <FilterPopover label="Catalog Key"  :applied="filterApplied('catalog_key')" @clear="clearFilter('catalog_key')" @apply="applyFilter()">
+            <UInput v-model="filters.catalog_key.value" placeholder="Catalog Key..." />
+         </FilterPopover>
+      </template>
+      <template #catalog_key-cell="{ row }">
+         <div>{{row.original.catalog_key}}</div>
+         <div v-if="row.original.virgo_url && row.original.catalog_key"><a :href="row.original.virgo_url" target="_blank">VIRGO</a></div>
+      </template>
+      <template #virgo-cell="{ row }">
+         <span v-if="row.original.virgo">Yes</span>
+         <span v-else>No</span>
+      </template>
+      <template #virgo-header>
+         <FilterPopover label="Virgo" :applied="filterApplied('virgo')" @clear="clearFilter('virgo')" @apply="applyFilter()">
+            <USelect v-model="filters.virgo.value" :items="yesNo" placeholder="Select a value" />
+         </FilterPopover>
+      </template>
+      <template #dpla-cell="{ row }">
+         <span v-if="row.original.dpla">Yes</span>
+         <span v-else>No</span>
+      </template>
+      <template #dpla-header>
+         <FilterPopover label="DPLA" :applied="filterApplied('dpla')" @clear="clearFilter('dpla')" @apply="applyFilter()">
+            <USelect v-model="filters.dpla.value" :items="yesNo" placeholder="Select a value" />
+         </FilterPopover>
+      </template>
+      <template #hathitrust-cell="{ row }">
+         <span v-if="row.original.hathitrust">Yes</span>
+         <span v-else>No</span>
+      </template>
+      <template #hathitrust-header>
+         <FilterPopover label="HathiTrust" :applied="filterApplied('hathitrust')" @clear="clearFilter('hathitrust')" @apply="applyFilter()">
+            <USelect v-model="filters.hathitrust.value" :items="yesNo" placeholder="Select a value" />
+         </FilterPopover>
+      </template>
+   </UTable>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useSearchStore } from '../../stores/search'
 import { useSystemStore } from '../../stores/system'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Select from 'primevue/select'
-import InputText from 'primevue/inputtext'
-import { FilterMatchMode } from '@primevue/core/api'
 import { useRoute, useRouter } from 'vue-router'
-import { usePinnable } from '@/composables/pin'
-
-usePinnable("p-datatable-paginator-top")
 
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
 const system = useSystemStore()
 
-const metadataTable = ref()
+const headerHeight = computed(() => {
+   let hdr = document.getElementById('uva-header')
+   return `${hdr.clientHeight}px`
+})
 
-const filters = ref( {
-    'system_name': {value: null, matchMode: FilterMatchMode.EQUALS},
-    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
-    'creator_name': {value: null, matchMode: FilterMatchMode.CONTAINS},
-    'barcode': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
-    'call_number': {value: null, matchMode: FilterMatchMode.CONTAINS},
-    'catalog_key': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
-    'virgo': {value: null, matchMode: FilterMatchMode.EQUALS},
-    'dpla': {value: null, matchMode: FilterMatchMode.EQUALS},
-    'hathitrust': {value: null, matchMode: FilterMatchMode.EQUALS}
+const columns = [
+   {
+      accessorKey: 'id',
+      header: 'ID'
+   },
+   {
+      accessorKey: 'pid',
+      header: 'PID'
+   },
+   {
+      accessorKey: 'system_name',
+      header: 'Type',
+      meta: {
+         class: {
+            td: 'w-fit'
+         }
+      }
+   },
+   {
+      accessorKey: 'title',
+      header: 'Title',
+       meta: {
+         class: {
+            td: 'w-1/6 whitespace-break-spaces'
+         }
+      }
+   },
+   {
+      accessorKey: 'creator_name',
+      header: 'Creator Name',
+       meta: {
+         class: {
+            td: 'w-1/8 whitespace-break-spaces'
+         }
+      }
+   },
+   {
+      accessorKey: 'barcode',
+      header: 'Barcode'
+   },
+   {
+      accessorKey: 'call_number',
+      header: 'Call Number'
+   },
+   {
+      accessorKey: 'catalog_key',
+      header: 'Catalog Key'
+   },
+   {
+      accessorKey: 'virgo',
+      header: 'Virgo'
+   },
+   {
+      accessorKey: 'dpla',
+      header: 'DPLA'
+   },
+   {
+      accessorKey: 'hathitrust',
+      header: 'HathiTrust'
+   },
+]
+
+const filters = ref({
+   system_name: {value: null, mode: "equals"},
+   title: {value: null, mode: "contains"},
+   creator_name: {value: null, mode: "contains"},
+   barcode: {value: null, mode: "startsWith"},
+   call_number: {value: null, mode: "startsWith"},
+   catalog_key: {value: null, mode: "startsWith"},
+   virgo: {value: null, mode: "equals"},
+   dpla: {value: null, mode: "equals"},
+   hathitrust: {value: null, mode: "equals"}
 })
 
 const yesNo = computed(() => {
@@ -130,10 +178,10 @@ const yesNo = computed(() => {
 })
 const mdTypes = computed(() => {
    let out = []
-   out.push({name: "Sirsi", code: "SirsiMetadata"})
-   out.push({name: "XML", code: "XmlMetadata"})
+   out.push({label: "Sirsi", value: "SirsiMetadata"})
+   out.push({label: "XML", value: "XmlMetadata"})
    system.externalSystems.forEach( es => {
-      out.push({name: es.name, code: es.name})
+      out.push({label: es.name, value: es.name})
    })
    return out
 })
@@ -148,30 +196,42 @@ onMounted(() =>{
    })
 })
 
-function downloadCSV() {
-   metadataTable.value.exportCSV()
-}
+const downloadCSV = (() => {
+   searchStore.downloadCSV('metadata', columns )
+})
 
-function clearFilters() {
-   Object.values(filters.value).forEach( fv => fv.value = null )
+const clearFilters = (() => {
+   filters.value = {
+      system_name: {value: null, mode: "equals"},
+      title: {value: null, mode: "contains"},
+      creator_name: {value: null, mode: "contains"},
+      barcode: {value: null, mode: "startsWith"},
+      call_number: {value: null, mode: "startsWith"},
+      catalog_key: {value: null, mode: "startsWith"},
+      virgo: {value: null, mode: "equals"},
+      dpla: {value: null, mode: "equals"},
+      hathitrust: {value: null, mode: "equals"}
+   }
    searchStore.metadata.filters = []
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
    searchStore.executeSearch("metadata")
-}
+})
 
-function onMetadataPage(event) {
-   searchStore.metadata.start = event.first
-   searchStore.metadata.limit = event.rows
-   searchStore.executeSearch("metadata")
-}
+const filterApplied = ((name) => {
+   return filters.value[name].value != null 
+})
+const clearFilter = ((name) => {
+   filters.value[name].value = null 
+   applyFilter()
+}) 
 
-function onFilter(event) {
+const applyFilter =(() => {
    searchStore.metadata.filters = []
-   Object.entries(event.filters).forEach(([key, data]) => {
+   Object.entries(filters.value).forEach(([filterName, data]) => {
       if (data.value && data.value != "") {
-         searchStore.metadata.filters.push({field: key, match: data.matchMode, value: data.value})
+         searchStore.metadata.filters.push({field: filterName, match: data.mode, value: data.value})
       }
    })
    let query = Object.assign({}, route.query)
@@ -182,16 +242,18 @@ function onFilter(event) {
    }
    router.push({query})
    searchStore.executeSearch("metadata")
-}
+})
+
+const perPageChanged = (() => {
+   searchStore.metadata.currPage = 1
+   pageChanged()
+})
+const pageChanged = (() => {
+   searchStore.metadata.start = (searchStore.metadata.currPage-1) * searchStore.metadata.limit
+   searchStore.executeSearch("metadata")
+})
 
 </script>
 
 <style scoped lang="scss">
-.acts{
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: center;
-   gap: 10px;
-}
 </style>

@@ -27,11 +27,11 @@ const router = useRouter()
 
 const tabs = computed(() => {
    let out = []
-   out.push( { label: `Orders (${searchStore.orders.total}) hits`, slot: 'orders', disabled: searchStore.orders.total == 0 } )
-   out.push( { label: `Metadata (${searchStore.metadata.total}) hits`, slot: 'metadata', disabled: searchStore.metadata.total == 0 } )
-   out.push( { label: `Master Files (${searchStore.masterFiles.total}) hits`, slot: 'masterfiles', disabled: searchStore.masterFiles.total == 0 } )
-   out.push( { label: `Components (${searchStore.components.total}) hits`, slot: 'components', disabled: searchStore.components.total == 0 } )
-   out.push( { label: `Units (${searchStore.units.total}) hits`, slot: 'units', disabled: searchStore.units.total == 0 } )
+   out.push( { label: `Orders (${searchStore.orders.total} hits)`, slot: 'orders', disabled: searchStore.orders.total == 0 } )
+   out.push( { label: `Metadata (${searchStore.metadata.total} hits)`, slot: 'metadata', disabled: searchStore.metadata.total == 0 } )
+   out.push( { label: `Master Files (${searchStore.masterFiles.total} hits)`, slot: 'masterfiles', disabled: searchStore.masterFiles.total == 0 } )
+   out.push( { label: `Components (${searchStore.components.total} hits)`, slot: 'components', disabled: searchStore.components.total == 0 } )
+   out.push( { label: `Units (${searchStore.units.total} hits)`, slot: 'units', disabled: searchStore.units.total == 0 } )
    return out
 })
 

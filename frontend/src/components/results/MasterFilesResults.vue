@@ -1,93 +1,164 @@
 <template>
-   <DataTable :value="searchStore.masterFiles.hits" ref="masterFileHitsTable" dataKey="id"
-      stripedRows showGridlines size="small" :rowStyle="rowStyle"
-      v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="true" @page="onPage($event)" paginatorPosition="top"
-      :rows="searchStore.masterFiles.limit" :totalRecords="searchStore.masterFiles.total"
-      paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      :rowsPerPageOptions="[15,30,100]" :first="searchStore.masterFiles.start"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"
-   >
-      <template #empty><h3>No matching master files found</h3></template>
-      <template #paginatorstart>
-         <div class="acts">
-            <DPGButton label="Download Results CSV" severity="secondary" @click="downloadCSV" v-if="searchStore.masterFiles.total>0" />
-            <DPGButton v-if="hasFilter" label="Clear All Filters" severity="secondary" @click="clearFilters"/>
-         </div>
+   <div class="row-between p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: headerHeight}">
+      <div class="row-left gap-2!">
+         <UButton color="secondary" label="Download Results CSV" @click="downloadCSV"/>
+         <UButton v-if="hasFilter" color="secondary" label="Clear All Filters" @click="clearFilters"/>
+      </div>
+      <div class="row-right">
+         <UPagination color="neutral" variant="ghost"
+            v-model:page="searchStore.masterFiles.currPage" :items-per-page="searchStore.masterFiles.limit" 
+            :total="searchStore.masterFiles.total" @update:page="pageChanged"
+         />
+         <USelect v-model="searchStore.masterFiles.limit" :items="[15,30,100]" @change="perPageChanged" />
+      </div>
+   </div>
+   <UTable :data="searchStore.masterFiles.hits" :columns="columns">
+      <template #id-cell="{ row }">
+         <router-link :to="`/masterfiles/${row.original.id}`">{{row.original.id}}</router-link>
       </template>
-      <Column field="id" header="ID">
-         <template #body="slotProps">
-            <router-link :to="`/masterfiles/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
-         </template>
-      </Column>
-      <Column field="pid" header="PID" class="nowrap" />
-      <Column field="unit_id" header="Unit" class="nowrap" >
-         <template #body="slotProps">
-            <router-link :to="`/units/${slotProps.data.unit_id}`">{{slotProps.data.unit_id}}</router-link>
-         </template>
-      </Column>
-      <Column field="is_clone" header="Clone" class="nowrap" filterField="is_clone" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <Select v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a value" />
-         </template>
-         <template #body="slotProps">
-            <span v-if="slotProps.data.is_clone > 0">Yes</span>
-            <span v-else>No</span>
-         </template>
-      </Column>
-     <Column field="call_number" header="Call Number" class="nowrap" filterField="call_number" :showFilterMatchModes="false">
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Call Number"/>
-         </template>
-         <template #body="slotProps">
-            <router-link :to="`/metadata/${slotProps.data.metadata_id}`">{{slotProps.data.call_number}}</router-link>
-         </template>
-      </Column>
-      <Column field="filename" header="Filename"/>
-      <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
-         </template>
-      </Column>
-      <Column field="description" header="Description" filterField="description" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Description"/>
-         </template>
-      </Column>
-      <Column field="thumbnail_url" header="Thumb">
-         <template #body="slotProps">
-            <a :href="slotProps.data.image_url" target="_blank">
-               <img :src="slotProps.data.thumbnail_url" />
-            </a>
-         </template>
-      </Column>
-   </DataTable>
+      <template #unit_id-cell="{ row }">
+         <router-link :to="`/units/${row.original.id}`">{{row.original.unit_id}}</router-link>
+      </template>
+      <template #is_clone-header>
+         <FilterPopover label="Clone" :applied="filterApplied('is_clone')" @clear="clearFilter('is_clone')" @apply="applyFilter()">
+            <USelect v-model="filters.is_clone.value" :items="yesNo" placeholder="Select a type" />
+         </FilterPopover>
+      </template>
+      <template #is_clone-cell="{ row }">
+         <span v-if="row.original.is_clone > 0">Yes</span>
+         <span v-else>No</span>
+      </template>
+      <template #call_number-header>
+         <FilterPopover label="Call Number"  :applied="filterApplied('call_number')" @clear="clearFilter('call_number')" @apply="applyFilter()">
+            <UInput v-model="filters.call_number.value" placeholder="Call Number..." />
+         </FilterPopover>
+      </template>
+      <template #call_number-cell="{ row }">
+         <router-link :to="`/metadata/${row.original.metadata_id}`">{{row.original.call_number}}</router-link>
+      </template>
+      <template #title-header>
+         <FilterPopover label="Title"  :applied="filterApplied('title')" @clear="clearFilter('title')" @apply="applyFilter()">
+            <UInput v-model="filters.title.value" placeholder="Title..." />
+         </FilterPopover>
+      </template>
+      <template #description-header>
+         <FilterPopover label="Description"  :applied="filterApplied('description')" @clear="clearFilter('description')" @apply="applyFilter()">
+            <UInput v-model="filters.description.value" placeholder="Description..." />
+         </FilterPopover>
+      </template>
+      <template #thumbnail_url-cell="{ row }">
+         <a :href="row.original.image_url" target="_blank">
+            <img :src="row.original.thumbnail_url" />
+         </a>
+      </template>
+   </UTable>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useSearchStore } from '../../stores/search'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import { FilterMatchMode } from '@primevue/core/api'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
 import { useRoute, useRouter } from 'vue-router'
-import { usePinnable } from '@/composables/pin'
-
-usePinnable("p-datatable-paginator-top")
 
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
 
-const masterFileHitsTable = ref()
+const headerHeight = computed(() => {
+   let hdr = document.getElementById('uva-header')
+   return `${hdr.clientHeight}px`
+})
 
-const filters = ref( {
-   'is_clone': {value: null, matchMode: FilterMatchMode.EQUALS},
-   'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'description': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'call_number': {value: null, matchMode: FilterMatchMode.CONTAINS},
+const columns = [
+   {
+      accessorKey: 'id',
+      header: 'ID',
+      meta: {
+         class: {
+            td: 'w-fit'
+         }
+      }
+   },
+   {
+      accessorKey: 'pid',
+      header: 'PID',
+      meta: {
+         class: {
+            td: 'w-fit'
+         }
+      }
+   },
+   {
+      accessorKey: 'unit_id',
+      header: 'Unit',
+      meta: {
+         class: {
+            td: 'w-fit'
+         }
+      }
+      
+   },
+   {
+      accessorKey: 'is_clone',
+      header: 'Clone',
+      meta: {
+         class: {
+            td: 'w-fit'
+         }
+      }
+      
+   },
+   {
+      accessorKey: 'call_number',
+      header: 'Call Number',
+      meta: {
+         class: {
+            td: 'w-fit'
+         }
+      }
+   },
+   {
+      accessorKey: 'filename',
+      header: 'Filename',
+      meta: {
+         class: {
+            td: 'w-fit'
+         }
+      }
+   },
+   {
+      accessorKey: 'title',
+      header: 'Title',
+      meta: {
+         class: {
+            td: 'w-1/5 whitespace-break-spaces'
+         }
+      }
+   },
+   {
+      accessorKey: 'description',
+      header: 'Description',
+      meta: {
+         class: {
+            td: 'w-1/5 whitespace-break-spaces'
+         }
+      }
+   },
+   {
+      accessorKey: 'thumbnail_url',
+      header: 'Thumb',
+      meta: {
+         class: {
+            td: 'w-fit'
+         }
+      }
+   },
+]
+
+const filters = ref({
+   is_clone: {value: null, mode: "equals"},
+   title: {value: null, mode: "contains"},
+   description: {value: null, mode: "contains"},
+   call_number: {value: null, mode: "startsWith"},
 })
 
 const yesNo = computed(() => {
@@ -96,12 +167,6 @@ const yesNo = computed(() => {
    out.push( {label: "Yes", value: "true"} )
    return out
 })
-
-const rowStyle = (data) => {
-    if (data.originalID) {
-        return { background: '#f5f5f5' };
-    }
-}
 
 const hasFilter = computed(() => {
    let idx = Object.values(filters.value).findIndex( fv => fv.value && fv.value != "")
@@ -114,49 +179,58 @@ onMounted(() =>{
    })
 })
 
-function downloadCSV() {
-   masterFileHitsTable.value.exportCSV()
-}
+const downloadCSV = (() => {
+   searchStore.downloadCSV('mastefiles', columns )
+})
 
-function clearFilters() {
-   Object.values(filters.value).forEach( fv => fv.value = null )
+const clearFilters = (() => {
+   filters.value = {
+      is_clone: {value: null, mode: "equals"},
+      title: {value: null, mode: "contains"},
+      description: {value: null, mode: "contains"},
+      call_number: {value: null, mode: "startsWith"},
+   }
    searchStore.masterFiles.filters = []
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
    searchStore.executeSearch("masterfiles")
-}
+})
 
-function onFilter(event) {
+const filterApplied = ((name) => {
+   return filters.value[name].value != null 
+})
+const clearFilter = ((name) => {
+   filters.value[name].value = null 
+   applyFilter()
+}) 
+
+const applyFilter =(() => {
    searchStore.masterFiles.filters = []
-   Object.entries(event.filters).forEach(([key, data]) => {
+   Object.entries(filters.value).forEach(([filterName, data]) => {
       if (data.value && data.value != "") {
-         searchStore.masterFiles.filters.push({field: key, match: data.matchMode, value: data.value})
+         searchStore.masterFiles.filters.push({field: filterName, match: data.mode, value: data.value})
       }
    })
    let query = Object.assign({}, route.query)
+   query.filters = searchStore.filtersAsQueryParam("masterfiles")
    delete query.filters
    if ( searchStore.masterFiles.filters.length > 0) {
       query.filters = searchStore.filtersAsQueryParam("masterfiles")
    }
    router.push({query})
    searchStore.executeSearch("masterfiles")
-}
+})
 
-function onPage(event) {
-   searchStore.masterFiles.start = event.first
-   searchStore.masterFiles.limit = event.rows
+const perPageChanged = (() => {
+   searchStore.masterFiles.currPage = 1
+   pageChanged()
+})
+const pageChanged = (() => {
+   searchStore.masterFiles.start = (searchStore.masterFiles.currPage-1) * searchStore.masterFiles.limit
    searchStore.executeSearch("masterfiles")
-}
-
+})
 </script>
 
 <style scoped lang="scss">
-.acts{
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: center;
-   gap: 10px;
-}
 </style>

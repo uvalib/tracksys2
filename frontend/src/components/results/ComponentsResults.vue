@@ -1,74 +1,113 @@
 <template>
-   <DataTable :value="searchStore.components.hits" ref="componentHitsTable" dataKey="id"
-      stripedRows showGridlines size="small"
-      v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="true" @page="onPage($event)" paginatorPosition="top"
-      :rows="searchStore.components.limit" :totalRecords="searchStore.components.total"
-      paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      :rowsPerPageOptions="[15,30,100]" :first="searchStore.components.start"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"
-   >
-      <template #empty><h3>No matching components found</h3></template>
-      <template #paginatorstart>
-         <div class="acts">
-            <DPGButton label="Download Results CSV" severity="secondary" @click="downloadCSV" v-if="searchStore.components.total>0" />
-            <DPGButton v-if="hasFilter" label="Clear All Filters" severity="secondary" @click="clearFilters"/>
-         </div>
+   <div class="row-between p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: headerHeight}">
+      <div class="row-left gap-2!">
+         <UButton color="secondary" label="Download Results CSV" @click="downloadCSV"/>
+         <UButton v-if="hasFilter" color="secondary" label="Clear All Filters" @click="clearFilters"/>
+      </div>
+      <div class="row-right">
+         <UPagination color="neutral" variant="ghost"
+            v-model:page="searchStore.components.currPage" :items-per-page="searchStore.components.limit" 
+            :total="searchStore.components.total" @update:page="pageChanged"
+         />
+         <USelect v-model="searchStore.components.limit" :items="[15,30,100]" @change="perPageChanged" />
+      </div>
+   </div>
+   <UTable :data="searchStore.components.hits" :columns="columns">
+      <template #id-cell="{ row }">
+         <router-link :to="`/components/${row.original.id}`">{{row.original.id}}</router-link>
       </template>
-      <Column field="id" header="ID">
-         <template #body="slotProps">
-            <router-link :to="`/components/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
-         </template>
-      </Column>
-      <Column field="pid" header="PID" class="nowrap"/>
-      <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
-         </template>
-      </Column>
-      <Column field="label" header="Label" filterField="label" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Label"/>
-         </template>
-      </Column>
-      <Column field="description" header="Content Description" filterField="description" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Description"/>
-         </template>
-      </Column>
-      <Column field="date" header="Date" class="nowrap" filterField="date" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Date"/>
-         </template>
-      </Column>
-      <Column field="finding_aid" header="EAD ID" />
-      <Column field="mf_cnt" header="Master Files"/>
-   </DataTable>
+      <template #title-header>
+         <FilterPopover label="Title"  :applied="filterApplied('title')" @clear="clearFilter('title')" @apply="applyFilter()">
+            <UInput v-model="filters.title.value" placeholder="Title..." />
+         </FilterPopover>
+      </template>
+      <template #label-header>
+         <FilterPopover label="Label"  :applied="filterApplied('label')" @clear="clearFilter('label')" @apply="applyFilter()">
+            <UInput v-model="filters.label.value" placeholder="Label..." />
+         </FilterPopover>
+      </template>
+      <template #description-header>
+         <FilterPopover label="Content Description"  :applied="filterApplied('description')" @clear="clearFilter('description')" @apply="applyFilter()">
+            <UInput v-model="filters.description.value" placeholder="Description..." />
+         </FilterPopover>
+      </template>
+      <template #date-header>
+         <FilterPopover label="Date"  :applied="filterApplied('date')" @clear="clearFilter('date')" @apply="applyFilter()">
+            <UInput v-model="filters.date.value" placeholder="Date..." />
+         </FilterPopover>
+      </template>
+   </UTable>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { FilterMatchMode } from '@primevue/core/api'
 import { useSearchStore } from '../../stores/search'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
-import { usePinnable } from '@/composables/pin'
-
-usePinnable("p-datatable-paginator-top")
 
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
 
-const componentHitsTable = ref()
+const headerHeight = computed(() => {
+   let hdr = document.getElementById('uva-header')
+   return `${hdr.clientHeight}px`
+})
 
-const filters = ref( {
-   'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'label': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'description': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'date': {value: null, matchMode: FilterMatchMode.CONTAINS},
+const columns = [
+   {
+      accessorKey: 'id',
+      header: 'ID'
+   },
+   {
+      accessorKey: 'pid',
+      header: 'PID'
+   },
+   {
+      accessorKey: 'title',
+      header: 'Title',
+       meta: {
+         class: {
+            td: 'w-1/6 whitespace-break-spaces'
+         }
+      }
+   },
+   {
+      accessorKey: 'label',
+      header: 'Label',
+       meta: {
+         class: {
+            td: 'w-1/6 whitespace-break-spaces'
+         }
+      }
+   },
+   {
+      accessorKey: 'description',
+      header: 'Content Description',
+       meta: {
+         class: {
+            td: 'w-1/6 whitespace-break-spaces'
+         }
+      }
+   },
+   {
+      accessorKey: 'date',
+      header: 'Date'
+   },
+   {
+      accessorKey: 'ead_id',
+      header: 'EAD ID'
+   },
+   {
+      accessorKey: 'mf_cnt',
+      header: 'Master Files'
+   },
+]
+
+const filters = ref({
+   title: {value: null, mode: "contains"},
+   label: {value: null, mode: "contains"},
+   description: {value: null, mode: "contains"},
+   date: {value: null, mode: "contains"},
 })
 
 const hasFilter = computed(() => {
@@ -82,24 +121,37 @@ onMounted(() =>{
    })
 })
 
-function downloadCSV() {
-   componentHitsTable.value.exportCSV()
-}
+const downloadCSV = (() => {
+   searchStore.downloadCSV('components', columns )
+})
 
-function clearFilters() {
-   Object.values(filters.value).forEach( fv => fv.value = null )
+const clearFilters = (() => {
+   filters.value = {
+      title: {value: null, mode: "contains"},
+      label: {value: null, mode: "contains"},
+      description: {value: null, mode: "contains"},
+      date: {value: null, mode: "contains"},
+   }
    searchStore.components.filters = []
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
    searchStore.executeSearch("components")
-}
+})
 
-function onFilter(event) {
+const filterApplied = ((name) => {
+   return filters.value[name].value != null 
+})
+const clearFilter = ((name) => {
+   filters.value[name].value = null 
+   applyFilter()
+}) 
+
+const applyFilter =(() => {
    searchStore.components.filters = []
-   Object.entries(event.filters).forEach(([key, data]) => {
+   Object.entries(filters.value).forEach(([filterName, data]) => {
       if (data.value && data.value != "") {
-         searchStore.components.filters.push({field: key, match: data.matchMode, value: data.value})
+         searchStore.components.filters.push({field: filterName, match: data.mode, value: data.value})
       }
    })
    let query = Object.assign({}, route.query)
@@ -110,21 +162,18 @@ function onFilter(event) {
    }
    router.push({query})
    searchStore.executeSearch("components")
-}
+})
 
-function onPage(event) {
-   searchStore.components.start = event.first
-   searchStore.components.limit = event.rows
+const perPageChanged = (() => {
+   searchStore.components.currPage = 1
+   pageChanged()
+})
+const pageChanged = (() => {
+   searchStore.components.start = (searchStore.components.currPage-1) * searchStore.components.limit
    searchStore.executeSearch("components")
-}
+})
+
 </script>
 
 <style scoped lang="scss">
-.acts{
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: center;
-   gap: 10px;
-}
 </style>

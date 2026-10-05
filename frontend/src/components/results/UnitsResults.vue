@@ -1,97 +1,111 @@
 <template>
-   <DataTable :value="searchStore.units.hits" ref="unittHitsTable" dataKey="id"
-      stripedRows showGridlines size="small"
-      v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="true" @page="onPage($event)" paginatorPosition="top"
-      :rows="searchStore.units.limit" :totalRecords="searchStore.units.total"
-      paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      :rowsPerPageOptions="[15,30,100]" :first="searchStore.units.start"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"
-   >
-      <template #empty><h3>No matching units found</h3></template>
-      <template #paginatorstart>
-         <div class="acts">
-            <DPGButton label="Download Results CSV" severity="secondary" @click="downloadCSV" v-if="searchStore.units.total>0" />
-            <DPGButton v-if="hasFilter" label="Clear All Filters" severity="secondary" @click="clearFilters"/>
-         </div>
+   <div class="row-between p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: headerHeight}">
+      <div class="row-left gap-2!">
+         <UButton color="secondary" label="Download Results CSV" @click="downloadCSV"/>
+         <UButton v-if="hasFilter" color="secondary" label="Clear All Filters" @click="clearFilters"/>
+      </div>
+      <div class="row-right">
+         <UPagination color="neutral" variant="ghost"
+            v-model:page="searchStore.units.currPage" :items-per-page="searchStore.units.limit" 
+            :total="searchStore.units.total" @update:page="pageChanged"
+         />
+         <USelect v-model="searchStore.units.limit" :items="[15,30,100]" @change="perPageChanged" />
+      </div>
+   </div>
+   <UTable :data="searchStore.units.hits" :columns="columns">
+      <template #id-cell="{ row }">
+         <router-link :to="`/units/${row.original.id}`">{{row.original.id}}</router-link>
       </template>
-      <Column field="id" header="ID">
-         <template #body="slotProps">
-            <router-link :to="`/units/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
-         </template>
-      </Column>
-      <Column field="status" header="Status" class="nowrap" filterField="status" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <Select v-model="filterModel.value" :options="unitStatuses" optionLabel="name" optionValue="code" placeholder="Select a status" />
-         </template>
-         <template #body="slotProps">
-            <span :class="`status ${slotProps.data.status}`">{{displayStatus(slotProps.data.status)}}</span>
-         </template>
-      </Column>
-      <Column field="staff_notes" header="Staff Notes" filterField="staff_notes" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Notes"/>
-         </template>
-         <template #body="slotProps">
-            <span v-if="slotProps.data.staff_notes">{{ slotProps.data.staff_notes }}</span>
-            <span v-else class="none">N/A</span>
-         </template>
-      </Column>
-      <Column field="special_instructions" header="Special Instructions" filterField="special_instructions" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Instructions"/>
-         </template>
-         <template #body="slotProps">
-            <span v-if="slotProps.data.special_instructions">{{ slotProps.data.special_instructions }}</span>
-            <span v-else class="none">N/A</span>
-         </template>
-      </Column>
-      <Column field="date_dl_deliverables_ready" header="DL Deliverable Date" class="nowrap">
-         <template #body="slotProps">
-            <span v-if="slotProps.data.date_dl_deliverables_ready">{{ $formatDate(slotProps.data.date_dl_deliverables_ready) }}</span>
-            <span v-else class="none">N/A</span>
-         </template>
-      </Column>
-      <Column field="date_patron_deliverables_ready" header="Patron Deliverable Date" class="nowrap">
-         <template #body="slotProps">
-            <span v-if="slotProps.data.date_patron_deliverables_ready">{{ $formatDate(slotProps.data.date_patron_deliverables_ready) }}</span>
-            <span v-else class="none">N/A</span>
-         </template>
-      </Column>
-   </DataTable>
+      <template #status-header>
+         <FilterPopover label="Status" :applied="filterApplied('status')" @clear="clearFilter('status')" @apply="applyFilter()">
+            <USelect v-model="filters.status.value" :items="unitStatuses" placeholder="Select a status" />
+         </FilterPopover>
+      </template>
+      <template #status-cell="{ row }">
+         <span :class="`status ${row.original.status}`">{{displayStatus(row.original.status)}}</span>
+      </template>
+      <template #staff_notes-header>
+         <FilterPopover label="Staff Notes"  :applied="filterApplied('staff_notes')" @clear="clearFilter('staff_notes')" @apply="applyFilter()">
+            <UInput v-model="filters.staff_notes.value" placeholder="Staff notes..." />
+         </FilterPopover>
+      </template>
+      <template #special_instructions-header>
+         <FilterPopover label="Special Instructions"  :applied="filterApplied('special_instructions')" @clear="clearFilter('special_instructions')" @apply="applyFilter()">
+            <UInput v-model="filters.special_instructions.value" placeholder="Instructions..." />
+         </FilterPopover>
+      </template>
+      <template #date_dl_deliverables_ready-cell="{ row }">
+         <span>{{ $formatDate(row.original.date_dl_deliverables_ready) }}</span>  
+      </template>
+      <template #date_patron_deliverables_ready-cell="{ row }">
+         <span>{{ $formatDate(row.original.date_patron_deliverables_ready) }}</span>  
+      </template>
+   </UTable>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { FilterMatchMode } from '@primevue/core/api'
 import { useSearchStore } from '../../stores/search'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
 import { useRoute, useRouter } from 'vue-router'
-import { usePinnable } from '@/composables/pin'
-
-usePinnable("p-datatable-paginator-top")
 
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
 
-const unittHitsTable = ref()
+const headerHeight = computed(() => {
+   let hdr = document.getElementById('uva-header')
+   return `${hdr.clientHeight}px`
+})
 
-const filters = ref( {
-   'status': {value: null, matchMode: FilterMatchMode.EQUALS},
-   'staff_notes': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'special_instructions': {value: null, matchMode: FilterMatchMode.CONTAINS},
+const columns = [
+   {
+      accessorKey: 'id',
+      header: 'ID'
+   },
+   {
+      accessorKey: 'status',
+      header: 'Status'
+   },
+   {
+      accessorKey: 'staff_notes',
+      header: 'Staff Notes',
+      meta: {
+         class: {
+            td: 'w-1/3 whitespace-break-spaces'
+         }
+      }
+   },
+   {
+      accessorKey: 'special_instructions',
+      header: 'Special Instructions',
+      meta: {
+         class: {
+            td: 'w-1/3 whitespace-break-spaces'
+         }
+      }
+   },
+   {
+      accessorKey: 'date_dl_deliverables_ready',
+      header: 'DL Deliverable Date'
+   },
+   {
+      accessorKey: 'date_patron_deliverables_ready',
+      header: 'Patron Deliverable Date'
+   },
+]
+
+const filters = ref({
+   status: {value: null, mode: "equals"},
+   staff_notes: {value: null, mode: "contains"},
+   special_instructions: {value: null, mode: "contains"},
 })
 
 const unitStatuses = ref([
-   {name: "Approved", code: "approved"},
-   {name: "Unapproved", code: "unapproved"},
-   {name: "Canceled", code: "canceled"},
-   {name: "Done", code: "done"},
-   {name: "Error", code: "error"},
+   {label: "Approved", value: "approved"},
+   {label: "Unapproved", value: "unapproved"},
+   {label: "Canceled", value: "canceled"},
+   {label: "Done", value: "done"},
+   {label: "Error", value: "error"},
 ])
 
 const hasFilter = computed(() => {
@@ -113,11 +127,21 @@ const displayStatus = ((id) => {
 })
 
 const downloadCSV = (() => {
-   unittHitsTable.value.exportCSV()
+   searchStore.downloadCSV('units', columns )
 })
 
 const clearFilters = (() => {
-   Object.values(filters.value).forEach( fv => fv.value = null )
+   filters.value = {
+      system_name: {value: null, mode: "equals"},
+      title: {value: null, mode: "contains"},
+      creator_name: {value: null, mode: "contains"},
+      barcode: {value: null, mode: "startsWith"},
+      call_number: {value: null, mode: "startsWith"},
+      catalog_key: {value: null, mode: "startsWith"},
+      virgo: {value: null, mode: "equals"},
+      dpla: {value: null, mode: "equals"},
+      hathitrust: {value: null, mode: "equals"}
+   }
    searchStore.units.filters = []
    let query = Object.assign({}, route.query)
    delete query.filters
@@ -125,11 +149,19 @@ const clearFilters = (() => {
    searchStore.executeSearch("units")
 })
 
-const onFilter = ((event) => {
+const filterApplied = ((name) => {
+   return filters.value[name].value != null 
+})
+const clearFilter = ((name) => {
+   filters.value[name].value = null 
+   applyFilter()
+}) 
+
+const applyFilter =(() => {
    searchStore.units.filters = []
-   Object.entries(event.filters).forEach(([key, data]) => {
+   Object.entries(filters.value).forEach(([filterName, data]) => {
       if (data.value && data.value != "") {
-         searchStore.units.filters.push({field: key, match: data.matchMode, value: data.value})
+         searchStore.units.filters.push({field: filterName, match: data.mode, value: data.value})
       }
    })
    let query = Object.assign({}, route.query)
@@ -142,19 +174,16 @@ const onFilter = ((event) => {
    searchStore.executeSearch("units")
 })
 
-const onPage = ((event) => {
-   searchStore.units.start = event.first
-   searchStore.units.limit = event.rows
+const perPageChanged = (() => {
+   searchStore.units.currPage = 1
+   pageChanged()
+})
+const pageChanged = (() => {
+   searchStore.units.start = (searchStore.units.currPage-1) * searchStore.units.limit
    searchStore.executeSearch("units")
 })
+
 </script>
 
 <style scoped lang="scss">
-.acts{
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: center;
-   gap: 10px;
-}
 </style>
