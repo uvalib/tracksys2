@@ -8,6 +8,7 @@ export const useJobsStore = defineStore('jobs', {
       totalJobs: 0,
       details: {status: "",  error: "", associatedObject:"", events: []},
       searchOpts: {
+         currPage: 1,
          start: 0,
          limit: 30,
          query: ""

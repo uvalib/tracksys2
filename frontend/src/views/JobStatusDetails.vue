@@ -1,26 +1,25 @@
 <template>
-   <h2>
-      <span>Job {{route.params.id}} Processing Log</span>
-      <div class="actions">
-         <DPGButton v-if="jobsStore.details.status=='running'"
-            label="Watch status" @click="tailLog" :disabled="tailIntervalID > -1" />
-         <DPGButton v-else label="Jump to end" @click="jumpToEnd" />
-         <DPGButton label="Delete" @click="deleteJobLog" />
-      </div>
-   </h2>
+   <h2>Job {{route.params.id}} Processing Log</h2>
    <div class="status">
       <template v-if="jobsStore.details.error">
-         <b class="error">FAILED:</b><span>{{jobsStore.details.error}}</span>
+         <b class="error">FAILED:</b><span>{{ jobsStore.details.error }}</span>
       </template>
-      <b class="finished" v-else-if="jobsStore.details.status=='finished'">FINISHED</b>
-       <b class="running" v-else>RUNNING...</b>
-       <span>
+      <b class="finished" v-else-if="jobsStore.details.status == 'finished'">FINISHED</b>
+      <b class="running" v-else>RUNNING...</b>
+      <span>
          <label>Associated Object:</label>
-         <router-link v-if="getAssociatedObjectLink(jobsStore.details.associatedObject)" :to="getAssociatedObjectLink(jobsStore.details.associatedObject)">
-            {{jobsStore.details.associatedObject}}
+         <router-link v-if="getAssociatedObjectLink(jobsStore.details.associatedObject)"
+            :to="getAssociatedObjectLink(jobsStore.details.associatedObject)">
+            {{ jobsStore.details.associatedObject }}
          </router-link>
          <span v-else></span>
-       </span>
+      </span>
+      <div class="row-right gap-2!">
+         <UButton v-if="jobsStore.details.status=='running'" color="secondary"
+            label="Watch status" @click="tailLog" :disabled="tailIntervalID > -1" />
+         <UButton v-else label="Jump to end" @click="jumpToEnd" color="secondary"/>
+         <UButton label="Delete" @click="deleteJobLog" color="error" />
+      </div>
    </div>
    <div class="log">
       <div class="scroller">
@@ -39,13 +38,12 @@
 import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { useJobsStore } from '@/stores/jobs'
 import { useRoute, useRouter } from 'vue-router'
-import { useConfirm } from "primevue/useconfirm"
+import { useConfirm } from "@/composables/useConfirm"
 import { useDateFormat } from '@vueuse/core'
 
 const route = useRoute()
 const router = useRouter()
 const jobsStore = useJobsStore()
-const confirm = useConfirm()
 
 const tailIntervalID = ref(-1)
 
@@ -95,23 +93,12 @@ const jumpToEnd = (() => {
    lines[lines.length-1].scrollIntoView()
 })
 
-const deleteJobLog = (() => {
-   confirm.require({
-      message: 'Are you sure you want delete this job log? All data will be lost. This cannot be reversed.',
-      header: 'Confirm Delete Job Log',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Delete'
-      },
-      accept: async () => {
-         await jobsStore.deleteJobs([ parseInt(route.params.id,10) ])
-         router.push("/jobs")
-      }
-   })
+const deleteJobLog = ( async () => {
+   const msg = `Are you sure you want delete this job log? All data will be lost. This cannot be reversed.`
+   const resp = await useConfirm("Confirm Delete", msg, "Delete")
+   if (resp) {
+      jobsStore.deleteJobs( [iparseInt(route.params.id,10)] )
+   } 
 })
 </script>
 

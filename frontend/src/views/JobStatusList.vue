@@ -1,117 +1,157 @@
 <template>
    <h2>Job Statuses</h2>
-   <div class="job-status">
-      <DataTable :value="jobsStore.jobs" ref="jobsTable" dataKey="id"
-         stripedRows showGridlines responsiveLayout="scroll"
-         :lazy="true" :paginator="true" @page="onPage($event)" :rowClass="rowClass"
-         :rows="jobsStore.searchOpts.limit" :totalRecords="jobsStore.totalJobs"
-         v-model:selection="selectedJobs" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
-         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         :rowsPerPageOptions="[10,30,100]" :first="jobsStore.searchOpts.start" paginatorPosition="top"
-         currentPageReportTemplate="{first} - {last} of {totalRecords}"
-      >
-         <template #paginatorstart>
-            <DPGButton label="Delete selected" :disabled="selectedJobs.length == 0"  severity="secondary" @click="deletAllClicked"/>
-         </template>
-         <template #paginatorend>
-            <IconField iconPosition="left">
-               <InputIcon class="pi pi-search" />
-               <InputText v-model="jobsStore.searchOpts.query" placeholder="Search Job Status" @input="queryJobs()"/>
-            </IconField>
-         </template>
-         <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
-         <Column field="name" header="Job Type"></Column>
-         <Column field="associatedObject" header="Associated Object">
-            <template #body="slotProps">
-               <template v-if="getAssociatedObjectLink(slotProps.data.associatedObject)">
-                  <router-link :to="getAssociatedObjectLink(slotProps.data.associatedObject)">{{slotProps.data.associatedObject}}</router-link>
-               </template>
-               <template v-else>
-                  {{slotProps.data.associatedObject}}
-               </template>
-            </template>
-         </Column>
-         <Column field="status" header="Status"></Column>
-         <Column field="warnings" header="Warnings"></Column>
-         <Column field="startedAt" header="Started">
-            <template #body="slotProps">{{ $formatDateTime(slotProps.data.startedAt) }}</template>
-         </Column>
-         <Column field="finishedAt" header="Finished">
-            <template #body="slotProps">
-               <span v-if="slotProps.data.finishedAt">{{ $formatDateTime(slotProps.data.finishedAt) }}</span>
-               <span v-else>N/A</span>
-            </template>
-         </Column>
-         <Column header="" class="row-acts">
-            <template #body="slotProps">
-               <router-link :to="`/jobs/${slotProps.data.id}`">View</router-link>
-               <span class="sep">|</span>
-               <DPGButton label="Delete"  class="p-button-text" @click="deleteJob(slotProps.data.id)"/>
-            </template>
-         </Column>
-      </DataTable>
+
+   <div class="row-between p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: headerHeight}">
+      <UButton label="Delete selected" :disabled="selectedJobs.length == 0"  color="secondary" @click="deletAllClicked"/>
+      <div class="row-left">
+         <UPagination color="neutral" variant="ghost"
+            v-model:page="jobsStore.searchOpts.currPage" :items-per-page="jobsStore.searchOpts.limit" 
+            :total="jobsStore.totalJobs" @update:page="pageChanged"
+         />
+         <USelect v-model="jobsStore.searchOpts.limit" :items="[15,30,100]" @change="perPageChanged" />
+      </div>
+      <UInput v-model="jobsStore.searchOpts.query" placeholder="Search Job Status" @update:modelValue="queryJobs"/>
    </div>
+
+   <UTable :data="jobsStore.jobs" :columns="columns" :meta="meta" v-if="jobsStore.jobs.length > 0">
+      <template #select-header="">
+         <UCheckbox size="xl" :modelValue="allCheckboxValue" @update:modelValue="toggleAll"/>
+      </template>
+      <template #select-cell="{ row }">
+         <UCheckbox size="xl" :modelValue="selectedJobs.includes(row.original.id)" @update:modelValue="toggleJobSelected(row.original)"/>
+      </template>
+      <template #associatedObject-cell="{ row }">
+         <template v-if="getAssociatedObjectLink(row.original.associatedObject)">
+            <router-link :to="getAssociatedObjectLink(row.original.associatedObject)">{{row.original.associatedObject}}</router-link>
+         </template>
+         <template v-else>
+            {{ row.original.associatedObject }}
+         </template>
+      </template>
+      <template #startedAt-cell="{ row }">
+         {{ $formatDateTime(row.original.startedAt) }}
+      </template>
+      <template #finishedAt-cell="{ row }">
+         {{ $formatDateTime(row.original.finishedAt) }}
+      </template>
+      <template #actions-cell="{ row }">
+         <div class="row-right gap-2!">
+            <UButton :to="`/jobs/${row.original.id}`"  icon="i-lucide-eye"  label="View" class="text-white!" size="xs"/>
+            <UButton label="Delete" color="error" icon="i-lucide-trash" size="xs" @click="deleteJob(row.original.id)"/>
+         </div>
+      </template>
+   </UTable>
 </template>
 
 <script setup>
-import { onMounted, ref} from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useJobsStore } from '@/stores/jobs'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
-import InputText from 'primevue/inputtext'
-import { useConfirm } from "primevue/useconfirm"
-import { usePinnable } from '@/composables/pin'
-
-usePinnable("p-datatable-paginator-top")
+import { useConfirm } from "@/composables/useConfirm"
 
 const jobsStore = useJobsStore()
-const confirm = useConfirm()
 
 const selectedJobs = ref([])
-const selectAll = ref(false)
+
+
+const columns = [
+    {
+      accessorKey: 'select'
+   },
+   {
+      accessorKey: 'name',
+      header: 'Job Type'
+   },
+   {
+      accessorKey: 'associatedObject',
+      header: 'Associated Object'
+   },
+   {
+      accessorKey: 'status',
+      header: 'Status'
+   },
+   {
+      accessorKey: 'warnings',
+      header: 'Warnings'
+   },
+   {
+      accessorKey: 'startedAt',
+      header: 'Started'
+   },
+   {
+      accessorKey: 'finishedAt',
+      header: 'Finished'
+   },
+   {
+      accessorKey: 'actions',
+      header: 'Actions'
+   }
+]
+
+const meta = {
+  class: {
+    tr: (row) => {
+      if (row.original.status === 'failure') {
+        return 'bg-red-600/25'
+      } 
+      if (row.original.status === 'running') {
+        return 'bg-sky-600/20'
+      }
+      return ''
+    }
+  }
+}
+
+const allCheckboxValue = computed( () => {
+   if (allJobsSelected.value) return true
+   if ( someJobsSelected.value ) return "indeterminate"
+   return false
+})
+const allJobsSelected = computed(() =>{
+   return selectedJobs.value.length == jobsStore.searchOpts.limit
+})
+const someJobsSelected = computed(() =>{
+   return selectedJobs.value.length > 0
+})
+const toggleAll = (() => {
+   if ( selectedJobs.value.length < jobsStore.searchOpts.limit ) {
+      selectedJobs.value = jobsStore.jobs.map( js => js.id)
+   } else {
+      selectedJobs.value = []   
+   }
+})
+const toggleJobSelected = ((js) => {
+   const idx = selectedJobs.value.indexOf(j => j.id == js.id) 
+   if ( idx > -1 ) {
+      selectedJobs.value.slice(idx,1)
+   } else {
+      selectedJobs.value.push(js.id)
+   }
+
+})
+
+const headerHeight = computed(() => {
+   let hdr = document.getElementById('uva-header')
+   return `${hdr.clientHeight}px`
+})
 
 const queryJobs = (() => {
    jobsStore.getJobs(false)
 })
 
-const deletAllClicked = (() => {
-   confirm.require({
-      message: 'Are you sure you want delete the selected job status records? All data will be lost. This cannot be reversed.',
-      header: 'Confirm Delete All',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Delete All'
-      },
-      accept: () => {
-         let payload = []
-         selectedJobs.value.forEach( j => payload.push(j.id))
-         jobsStore.deleteJobs( payload )
-      }
-   })
+const deletAllClicked = (async () => {
+   const msg = 'Are you sure you want delete the selected job status records? All data will be lost. This cannot be reversed.'
+   const resp = await useConfirm("Confirm Delete All", msg, "Delete")
+   if (resp) {
+      jobsStore.deleteJobs( selectedJobs.value )
+   } 
 })
 
-const deleteJob = ((id) => {
-   confirm.require({
-      message: 'Are you sure you want delete this job status?',
-      header: 'Confirm Delete',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Delete'
-      },
-      accept: () => {
-         jobsStore.deleteJobs( [id] )
-      }
-   })
+const deleteJob = (async (id) => {
+   const msg = `Are you sure you want delete this job status?`
+   const resp = await useConfirm("Confirm Delete", msg, "Delete")
+   if (resp) {
+      jobsStore.deleteJobs( [id] )
+   } 
 })
 
 const getAssociatedObjectLink = (( objName ) => {
@@ -135,22 +175,12 @@ const getAssociatedObjectLink = (( objName ) => {
    return ""
 })
 
-const rowClass = ((rowData) => {
-   if (rowData.status ==  "failure"){
-      return "error-row"
-   }
-   if (rowData.status ==  "running"){
-      return "running-row"
-   }
-   if (rowData.status ==  "warn"){
-      return "warn-row"
-   }
-   return ""
+const perPageChanged = (() => {
+   jobsStore.searchOpts.currPage = 1
+   pageChanged()
 })
-
-const onPage = ((event) => {
-   jobsStore.searchOpts.start = event.first
-   jobsStore.searchOpts.limit = event.rows
+const pageChanged = (() => {
+   jobsStore.searchOpts.start  = (jobsStore.searchOpts.currPage-1) * jobsStore.searchOpts.limit
    jobsStore.getJobs()
 })
 
@@ -212,32 +242,32 @@ onMounted(() => {
          };
       }
    }
-   :deep(.error-row) {
-      background-color: #944 !important;
-      color: #fff;
-      a {
-         color: #fff !important;
-      }
-      .row-acts {
-         a, button.p-button-text {
-            color: #fff !important;
-         }
-      }
-      &:hover {
-         background-color: #a44 !important;
-      }
-   }
-   :deep(tr.p-highlight.error-row) {
-      color: white !important;
-   }
-   :deep(.running-row)  {
-      background-color: var(--uvalib-blue-alt-light) !important;
-      &:hover {
-         background-color: #def !important;
-      }
-   }
-   :deep(.warn-row)  {
-      background-color: var(--uvalib-yellow-light) !important;
-   }
+   // :deep(.error-row) {
+   //    background-color: #944 !important;
+   //    color: #fff;
+   //    a {
+   //       color: #fff !important;
+   //    }
+   //    .row-acts {
+   //       a, button.p-button-text {
+   //          color: #fff !important;
+   //       }
+   //    }
+   //    &:hover {
+   //       background-color: #a44 !important;
+   //    }
+   // }
+   // :deep(tr.p-highlight.error-row) {
+   //    color: white !important;
+   // }
+   // :deep(.running-row)  {
+   //    background-color: var(--uvalib-blue-alt-light) !important;
+   //    &:hover {
+   //       background-color: #def !important;
+   //    }
+   // }
+   // :deep(.warn-row)  {
+   //    background-color: var(--uvalib-yellow-light) !important;
+   // }
 }
 </style>
