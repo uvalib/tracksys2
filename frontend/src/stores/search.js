@@ -10,6 +10,7 @@ export const useSearchStore = defineStore('search', {
       unitValid: false,
       view: "",               // name of the view for below. used in client query params
       components: {
+         currPage: 1,
          start: 0,
          limit: 15,
          scroll: "",
@@ -18,6 +19,7 @@ export const useSearchStore = defineStore('search', {
          filters: []
       },
       masterFiles: {
+         currPage: 1,
          start: 0,
          limit: 15,
          scroll: "",
@@ -26,6 +28,7 @@ export const useSearchStore = defineStore('search', {
          filters: []
       },
       metadata: {
+         currPage: 1,
          start: 0,
          limit: 15,
          scroll: "",
@@ -43,6 +46,7 @@ export const useSearchStore = defineStore('search', {
          filters: []
       },
       units: {
+         currPage: 1,
          start: 0,
          limit: 15,
          scroll: "",
