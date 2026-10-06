@@ -85,7 +85,7 @@ function clearFilters() {
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
-   searchStore.resetSearch("orders")
+   searchStore.resetSearch("components")
    searchStore.executeSearch("components")
 }
 
@@ -103,7 +103,7 @@ function onFilter(event) {
       query.filters = searchStore.filtersAsQueryParam("components")
    }
    router.push({query})
-   searchStore.resetSearch("orders")
+   searchStore.resetSearch("components")
    searchStore.executeSearch("components")
 }
 
