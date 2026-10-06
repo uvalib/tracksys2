@@ -1,19 +1,11 @@
 <template>
-   <DataTable :value="searchStore.metadata.hits" ref="metadataTable" dataKey="id"
+   <ResultsToolbar :count="searchStore.metadata.hits.length" :total="searchStore.metadata.total" :hasFilter="hasFilter"
+      @more="loadMore" @csv="downloadCSV" @clear-filter="clearFilters"
+   />
+   <DataTable :value="searchStore.metadata.hits" ref="metadataTable" dataKey="id" :lazy="true" 
       stripedRows showGridlines v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="true" @page="onMetadataPage($event)" size="small"
-      :rows="searchStore.metadata.limit" :totalRecords="searchStore.metadata.total"
-      paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      :rowsPerPageOptions="[15,30,100]" :first="searchStore.metadata.start"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"   paginatorPosition="top"
-   >
+     >
       <template #empty><h3>No matching metadata records found</h3></template>
-      <template #paginatorstart>
-         <div class="acts">
-            <DPGButton label="Download Results CSV" severity="secondary" @click="downloadCSV" v-if="searchStore.metadata.total>0" />
-            <DPGButton v-if="hasFilter" label="Clear All Filters" severity="secondary" @click="clearFilters"/>
-         </div>
-      </template>
       <Column field="id" header="ID">
          <template #body="slotProps">
             <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
@@ -100,8 +92,9 @@ import InputText from 'primevue/inputtext'
 import { FilterMatchMode } from '@primevue/core/api'
 import { useRoute, useRouter } from 'vue-router'
 import { usePinnable } from '@/composables/pin'
+import ResultsToolbar from './ResultsToolbar.vue'
 
-usePinnable("p-datatable-paginator-top")
+usePinnable("results-toolbar")
 
 const route = useRoute()
 const router = useRouter()
@@ -158,12 +151,11 @@ function clearFilters() {
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
+   searchStore.resetSearch("metadata")
    searchStore.executeSearch("metadata")
 }
 
-function onMetadataPage(event) {
-   searchStore.metadata.start = event.first
-   searchStore.metadata.limit = event.rows
+function loadMore(event) {
    searchStore.executeSearch("metadata")
 }
 
@@ -181,17 +173,11 @@ function onFilter(event) {
       query.filters = searchStore.filtersAsQueryParam("metadata")
    }
    router.push({query})
+   searchStore.resetSearch("metadata")
    searchStore.executeSearch("metadata")
 }
 
 </script>
 
 <style scoped lang="scss">
-.acts{
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: center;
-   gap: 10px;
-}
 </style>

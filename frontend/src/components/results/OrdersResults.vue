@@ -1,19 +1,11 @@
 <template>
-   <DataTable :value="searchStore.orders.hits" ref="orderHitsTable" dataKey="id"
+   <ResultsToolbar :count="searchStore.orders.hits.length" :total="searchStore.orders.total" :hasFilter="hasFilter"
+      @more="loadMore" @csv="downloadCSV" @clear-filter="clearFilters"
+   />
+   <DataTable :value="searchStore.orders.hits" ref="orderHitsTable" dataKey="id" :lazy="true" 
       stripedRows showGridlines size="small" v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="true" @page="onPage($event)"
-      :rows="searchStore.orders.limit" :totalRecords="searchStore.orders.total"
-      paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      :rowsPerPageOptions="[15,30,100]" :first="searchStore.orders.start"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"  paginatorPosition="top"
    >
       <template #empty><h3>No matching orders found</h3></template>
-      <template #paginatorstart>
-         <div class="acts">
-            <DPGButton label="Download Results CSV" severity="secondary" @click="downloadCSV" v-if="searchStore.orders.total>0" />
-            <DPGButton v-if="hasFilter" label="Clear All Filters" severity="secondary" @click="clearFilters"/>
-         </div>
-      </template>
       <Column field="id" header="ID">
          <template #body="slotProps">
             <router-link :to="`/orders/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
@@ -65,8 +57,9 @@ import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
 import { usePinnable } from '@/composables/pin'
+import ResultsToolbar from './ResultsToolbar.vue'
 
-usePinnable("p-datatable-paginator-top")
+usePinnable("results-toolbar")
 
 const route = useRoute()
 const router = useRouter()
@@ -120,6 +113,7 @@ function clearFilters() {
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
+   searchStore.resetSearch("orders")
    searchStore.executeSearch("orders")
 }
 
@@ -137,23 +131,15 @@ function onFilter(event) {
       query.filters = searchStore.filtersAsQueryParam("orders")
    }
    router.push({query})
+   searchStore.resetSearch("orders")
    searchStore.executeSearch("orders")
 }
 
-function onPage(event) {
-   searchStore.orders.start = event.first
-   searchStore.orders.limit = event.rows
+function loadMore() {
    searchStore.executeSearch("orders")
 }
 
 </script>
 
 <style scoped lang="scss">
-.acts{
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: center;
-   gap: 10px;
-}
 </style>

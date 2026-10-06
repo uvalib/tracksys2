@@ -1,12 +1,9 @@
 <template>
+   <ResultsToolbar :count="searchStore.units.hits.length" :total="searchStore.units.total" :hasFilter="hasFilter"
+      @more="loadMore" @csv="downloadCSV" @clear-filter="clearFilters"
+   />
    <DataTable :value="searchStore.units.hits" ref="unittHitsTable" dataKey="id"
-      stripedRows showGridlines size="small"
-      v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="true" @page="onPage($event)" paginatorPosition="top"
-      :rows="searchStore.units.limit" :totalRecords="searchStore.units.total"
-      paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      :rowsPerPageOptions="[15,30,100]" :first="searchStore.units.start"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"
+      stripedRows showGridlines size="small" :lazy="true" 
    >
       <template #empty><h3>No matching units found</h3></template>
       <template #paginatorstart>
@@ -71,8 +68,9 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import { useRoute, useRouter } from 'vue-router'
 import { usePinnable } from '@/composables/pin'
+import ResultsToolbar from './ResultsToolbar.vue'
 
-usePinnable("p-datatable-paginator-top")
+usePinnable("results-toolbar")
 
 const route = useRoute()
 const router = useRouter()
@@ -122,6 +120,7 @@ const clearFilters = (() => {
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
+   searchStore.resetSearch("units")
    searchStore.executeSearch("units")
 })
 
@@ -139,22 +138,14 @@ const onFilter = ((event) => {
       query.filters = searchStore.filtersAsQueryParam("units")
    }
    router.push({query})
+   searchStore.resetSearch("units")
    searchStore.executeSearch("units")
 })
 
-const onPage = ((event) => {
-   searchStore.units.start = event.first
-   searchStore.units.limit = event.rows
+const loadMore = (() => {
    searchStore.executeSearch("units")
 })
 </script>
 
 <style scoped lang="scss">
-.acts{
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: center;
-   gap: 10px;
-}
 </style>

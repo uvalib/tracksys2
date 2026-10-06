@@ -132,11 +132,11 @@ type searchFilter struct {
 }
 
 type searchContext struct {
-	Query      string
-	Filter     *searchFilter
-	StartIndex int
-	PageSize   int
-	Scroll     string
+	Query  string
+	Filter *searchFilter
+	// StartIndex int
+	PageSize int
+	Scroll   string
 }
 
 type searchChannel struct {
@@ -156,10 +156,9 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		return
 	}
 
-	sc.StartIndex, _ = strconv.Atoi(c.Query("start"))
 	sc.PageSize, _ = strconv.Atoi(c.Query("limit"))
 	if sc.PageSize == 0 {
-		sc.PageSize = 15
+		sc.PageSize = 30
 	}
 
 	sc.Filter = svc.initFilter(c.Query("filters"))
@@ -173,7 +172,7 @@ func (svc *serviceContext) searchRequest(c *gin.Context) {
 		sc.Query = strings.ReplaceAll(q, "tsb-", "tsb:")
 	}
 
-	log.Printf("INFO: search %s for [%s] starting from %d limit %d", tgtScope, sc.Query, sc.StartIndex, sc.PageSize)
+	log.Printf("INFO: search %s for [%s] with limit %d", tgtScope, sc.Query, sc.PageSize)
 
 	// query each type of object individually and await for all responses
 	log.Printf("INFO: issue search requests...")
@@ -278,7 +277,7 @@ func (svc *serviceContext) initFilter(filterStr string) *searchFilter {
 func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan searchChannel) {
 	resp := masterFileResp{Hits: make([]masterFileHit, 0)}
 
-	newQ := newQuery("masterfiles", sc, int32(sc.StartIndex), int32(sc.PageSize), sc.Scroll)
+	newQ := newQuery("masterfiles", sc, int32(sc.PageSize), sc.Scroll)
 	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
 	if err != nil {
 		log.Printf("ERROR: masterfiles search failed: %s", err.Error())
@@ -311,7 +310,7 @@ func (svc *serviceContext) queryMasterFiles(sc *searchContext, channel chan sear
 func (svc *serviceContext) queryUnits(sc *searchContext, channel chan searchChannel) {
 	resp := unitResp{Hits: make([]unitHit, 0)}
 
-	newQ := newQuery("units", sc, int32(sc.StartIndex), int32(sc.PageSize), sc.Scroll)
+	newQ := newQuery("units", sc, int32(sc.PageSize), sc.Scroll)
 	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
 	if err != nil {
 		log.Printf("ERROR: units search failed: %s", err.Error())
@@ -339,7 +338,7 @@ func (svc *serviceContext) queryUnits(sc *searchContext, channel chan searchChan
 	channel <- searchChannel{Type: "units", Results: resp}
 }
 
-func newQuery(table string, sc *searchContext, offset, limit int32, scrollToken string) *manticore.SearchRequest {
+func newQuery(table string, sc *searchContext, limit int32, scrollToken string) *manticore.SearchRequest {
 	searchRequest := manticore.NewSearchRequest()
 	searchRequest.SetTable(table)
 	searchRequest.SetLimit(limit)
@@ -351,7 +350,7 @@ func newQuery(table string, sc *searchContext, offset, limit int32, scrollToken 
 	} else {
 		searchRequest.SetSort(parsed)
 	}
-	if offset == 0 {
+	if scrollToken == "" {
 		opts := map[string]any{"scroll": true}
 		searchRequest.SetOptions(opts)
 	} else {
@@ -417,7 +416,7 @@ func newQuery(table string, sc *searchContext, offset, limit int32, scrollToken 
 
 func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchChannel) {
 	resp := metadataResp{Hits: make([]metadataHit, 0)}
-	newQ := newQuery("metadata", sc, int32(sc.StartIndex), int32(sc.PageSize), sc.Scroll)
+	newQ := newQuery("metadata", sc, int32(sc.PageSize), sc.Scroll)
 	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
 	if err != nil {
 		log.Printf("ERROR: metadata search failed: %s", err.Error())
@@ -453,7 +452,7 @@ func (svc *serviceContext) queryMetadata(sc *searchContext, channel chan searchC
 
 func (svc *serviceContext) queryOrders(sc *searchContext, channel chan searchChannel) {
 	resp := orderResp{Hits: make([]orderHit, 0)}
-	newQ := newQuery("orders", sc, int32(sc.StartIndex), int32(sc.PageSize), sc.Scroll)
+	newQ := newQuery("orders", sc, int32(sc.PageSize), sc.Scroll)
 	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
 	if err != nil {
 		log.Printf("ERROR: orders search failed: %s", err.Error())
@@ -482,7 +481,7 @@ func (svc *serviceContext) queryOrders(sc *searchContext, channel chan searchCha
 
 func (svc *serviceContext) queryComponents(sc *searchContext, channel chan searchChannel) {
 	resp := componentResp{Hits: make([]componentHit, 0)}
-	newQ := newQuery("components", sc, int32(sc.StartIndex), int32(sc.PageSize), sc.Scroll)
+	newQ := newQuery("components", sc, int32(sc.PageSize), sc.Scroll)
 	mResp, _, err := svc.Index.Search(context.Background()).SearchRequest(*newQ).Execute()
 	if err != nil {
 		log.Printf("ERROR: components search failed: %s", err.Error())

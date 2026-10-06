@@ -1,20 +1,12 @@
 <template>
+   <ResultsToolbar :count="searchStore.masterFiles.hits.length" :total="searchStore.masterFiles.total" :hasFilter="hasFilter"
+      @more="loadMore" @csv="downloadCSV" @clear-filter="clearFilters"
+   />
    <DataTable :value="searchStore.masterFiles.hits" ref="masterFileHitsTable" dataKey="id"
-      stripedRows showGridlines size="small" :rowStyle="rowStyle"
+      stripedRows showGridlines size="small" :rowStyle="rowStyle" :lazy="true" 
       v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-      :lazy="true" :paginator="true" @page="onPage($event)" paginatorPosition="top"
-      :rows="searchStore.masterFiles.limit" :totalRecords="searchStore.masterFiles.total"
-      paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      :rowsPerPageOptions="[15,30,100]" :first="searchStore.masterFiles.start"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"
    >
       <template #empty><h3>No matching master files found</h3></template>
-      <template #paginatorstart>
-         <div class="acts">
-            <DPGButton label="Download Results CSV" severity="secondary" @click="downloadCSV" v-if="searchStore.masterFiles.total>0" />
-            <DPGButton v-if="hasFilter" label="Clear All Filters" severity="secondary" @click="clearFilters"/>
-         </div>
-      </template>
       <Column field="id" header="ID">
          <template #body="slotProps">
             <router-link :to="`/masterfiles/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
@@ -74,8 +66,9 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import { useRoute, useRouter } from 'vue-router'
 import { usePinnable } from '@/composables/pin'
+import ResultsToolbar from './ResultsToolbar.vue'
 
-usePinnable("p-datatable-paginator-top")
+usePinnable("results-toolbar")
 
 const route = useRoute()
 const router = useRouter()
@@ -124,6 +117,7 @@ function clearFilters() {
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
+   searchStore.resetSearch("masterfiles")
    searchStore.executeSearch("masterfiles")
 }
 
@@ -140,23 +134,15 @@ function onFilter(event) {
       query.filters = searchStore.filtersAsQueryParam("masterfiles")
    }
    router.push({query})
+   searchStore.resetSearch("masterfiles")
    searchStore.executeSearch("masterfiles")
 }
 
-function onPage(event) {
-   searchStore.masterFiles.start = event.first
-   searchStore.masterFiles.limit = event.rows
+function loadMore() {
    searchStore.executeSearch("masterfiles")
 }
 
 </script>
 
 <style scoped lang="scss">
-.acts{
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: center;
-   gap: 10px;
-}
 </style>
