@@ -8,6 +8,7 @@ export const useOrdersStore = defineStore('orders', {
       orders: [],
       total: 0,
       searchOpts: {
+         currPage: 1,
          start: 0,
          limit: 30,
          filters: [],
