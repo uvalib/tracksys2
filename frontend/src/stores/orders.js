@@ -184,6 +184,12 @@ export const useOrdersStore = defineStore('orders', {
       }
    },
 	actions: {
+      resetSearch() {
+         this.searchOpts.currPage = 1
+         this.searchOpts.start = 0
+         this.orders = []
+         this.total = 0
+      },
       async getOrders() {
          const system = useSystemStore()
          system.working = true

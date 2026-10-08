@@ -1,5 +1,5 @@
 <template>
-   <div class="row-between p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: headerHeight}">
+   <div class="row-between p-2 sticky z-50 bg-white border-b border-brand-grey-100" :style="{top: headerHeight}">
       <div class="row-left gap-2!">
          <UButton color="secondary" label="Download Results CSV" @click="downloadCSV"/>
          <UButton v-if="hasFilter" color="secondary" label="Clear All Filters" @click="clearFilters"/>

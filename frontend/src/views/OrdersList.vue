@@ -60,7 +60,7 @@
          <span class="fee" v-else-if="row.original.fee !== undefined">${{parseFloat(row.original.fee).toFixed(2)}}</span>
       </template>
       <template #customer-header>
-         <FilterPopover label="Customer"  :applied="isFilterApplied('customer')" @clear="clearFilter('customer')" @apply="getOrders()">
+         <FilterPopover label="Customer"  :applied="isFilterApplied('customer')" @clear="clearFilter('customer')" @apply="applyFilters">
             <UInput v-model="columnFilters.customer.value" placeholder="Last name..." />
          </FilterPopover>
       </template>
@@ -69,7 +69,7 @@
          <div class="dimmed" v-if="row.original.customer.academicStatus">({{row.original.customer.academicStatus.name}})</div>
       </template>
       <template #agency-header>
-         <FilterPopover label="Agency" :applied="isFilterApplied('agency')" @clear="clearFilter('agency')" @apply="getOrders()">
+         <FilterPopover label="Agency" :applied="isFilterApplied('agency')" @clear="clearFilter('agency')" @apply="applyFilters">
             <UInput v-model="columnFilters.agency.value" placeholder="Agency name..." />
          </FilterPopover>
       </template>
@@ -77,7 +77,7 @@
          <div v-if="row.original.agency">{{ row.original.agency.name }}</div>
       </template>
       <template #processor-header>
-         <FilterPopover label="Processor" :applied="isFilterApplied('processor')" @clear="clearFilter('processor')" @apply="getOrders()">
+         <FilterPopover label="Processor" :applied="isFilterApplied('processor')" @clear="clearFilter('processor')" @apply="applyFilters">
             <UInput v-model="columnFilters.processor.value" placeholder="Last name..." />
          </FilterPopover>
       </template>
@@ -196,6 +196,7 @@ const sortClicked = (async (column) => {
    if (isSorted === "asc") {
       ordersStore.searchOpts.sortOrder = "desc"   
    }
+   ordersStore.resetSearch()
    await getOrders( )
    column.toggleSorting(column.getIsSorted() === 'asc')
 })
@@ -278,13 +279,17 @@ const getOrders = (async () => {
    setQueryParams()
    await ordersStore.getOrders()
 })
-
 const isFilterApplied = ((name) => {
    return columnFilters.value[name].value != null 
 })
 const clearFilter = ((name) => {
    columnFilters.value[name].value = null 
+   ordersStore.resetSearch()
    getOrders()
+})
+const applyFilters = (() => {
+   ordersStore.resetSearch()
+   getOrders()  
 })
 
 const perPageChanged = (() => {
