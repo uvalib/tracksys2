@@ -61,7 +61,7 @@
       </template>
       <template #customer-header>
          <FilterPopover label="Customer"  :applied="isFilterApplied('customer')" @clear="clearFilter('customer')" @apply="applyFilters">
-            <UInput v-model="columnFilters.customer.value" placeholder="Last name..." />
+            <UInput v-model="filters.customer.value" placeholder="Last name..." />
          </FilterPopover>
       </template>
       <template #customer-cell="{ row }">
@@ -70,7 +70,7 @@
       </template>
       <template #agency-header>
          <FilterPopover label="Agency" :applied="isFilterApplied('agency')" @clear="clearFilter('agency')" @apply="applyFilters">
-            <UInput v-model="columnFilters.agency.value" placeholder="Agency name..." />
+            <UInput v-model="filters.agency.value" placeholder="Agency name..." />
          </FilterPopover>
       </template>
       <template #agency-cell="{ row }">
@@ -78,7 +78,7 @@
       </template>
       <template #processor-header>
          <FilterPopover label="Processor" :applied="isFilterApplied('processor')" @clear="clearFilter('processor')" @apply="applyFilters">
-            <UInput v-model="columnFilters.processor.value" placeholder="Last name..." />
+            <UInput v-model="filters.processor.value" placeholder="Last name..." />
          </FilterPopover>
       </template>
       <template #processor-cell="{ row }">
@@ -171,7 +171,7 @@ const statuses = ref([
    {label: "Ready for Delivery", value: "ready"}
 ])
 
-const columnFilters = ref({
+const filters = ref({
    customer: {value: null, mode: "contains"},
    processor: {value: null, mode: "contains"},
    agency: {value: null, mode: "contains"},
@@ -214,11 +214,11 @@ onBeforeMount( () => {
          if ( bits[0] == "status") {
             statusFilter.value = bits[2]
          } else if ( bits[0] == "customer") {
-            columnFilters.value.customer.value = bits[2]
+            filters.value.customer.value = bits[2]
          } else if ( bits[0] == "processor") {
-            columnFilters.value.processor.value = bits[2]
+            filters.value.processor.value = bits[2]
          } else if ( bits[0] == "agency") {
-            columnFilters.value.agency.value = bits[2]
+            filters.value.agency.value = bits[2]
          }
       })
    }
@@ -271,7 +271,7 @@ const setQueryParams = (() => {
 
 const getOrders = (async () => {
    ordersStore.searchOpts.filters = [{field: "status", value: statusFilter.value, match: 'equals'}]
-   Object.entries(columnFilters.value).forEach(([key, data]) => {
+   Object.entries(filters.value).forEach(([key, data]) => {
       if (data.value && data.value != "") {
          ordersStore.searchOpts.filters.push({field: key, match: data.mode, value: data.value})
       }
@@ -280,10 +280,10 @@ const getOrders = (async () => {
    await ordersStore.getOrders()
 })
 const isFilterApplied = ((name) => {
-   return columnFilters.value[name].value != null 
+   return filters.value[name].value != null 
 })
 const clearFilter = ((name) => {
-   columnFilters.value[name].value = null 
+   filters.value[name].value = null 
    ordersStore.resetSearch()
    getOrders()
 })
