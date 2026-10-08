@@ -267,7 +267,7 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 		return
 	}
 
-	filterQ := svc.DB.Table("orders").Joins("inner join customers c on c.id=orders.customer_id").
+	filterQ := svc.DB.Debug().Table("orders").Joins("inner join customers c on c.id=orders.customer_id").
 		Joins("left outer join staff_members p on p.id = processor_id").
 		Joins("left outer join agencies a on a.id = orders.agency_id")
 	dateNow := time.Now().Format("2006-01-02")
@@ -316,7 +316,7 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 		case "customer":
 			filterQ = filterQ.Where("c.last_name like ?", fmt.Sprintf("%s%%", tgtVal))
 		case "agency":
-			filterQ = filterQ.Where("orders.agency_id = ?", tgtVal)
+			filterQ = filterQ.Where("a.name like ?", fmt.Sprintf("%s%%", tgtVal))
 		case "processor":
 			filterQ = filterQ.Where("p.last_name like ?", fmt.Sprintf("%s%%", tgtVal))
 		}

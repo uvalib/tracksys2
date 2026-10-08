@@ -1,6 +1,8 @@
 <template>
 <UPopover v-model:open="open">
-   <UButton variant="link" class="text-black" :trailing-icon="icon" :label="props.label" />
+   <UButton variant="link" class="text-black" :trailing-icon="icon" :label="props.label" :truncate="false">
+      <span>{{ props.label }}</span>
+   </UButton>
    <template #content>
       <div class="p-4 column-close">
          <slot></slot>
@@ -27,7 +29,7 @@ const props = defineProps({
    applied: {
       type: Boolean,
       default: false
-   }
+   },
 })
 
 const icon = computed(() => {

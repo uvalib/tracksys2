@@ -200,7 +200,8 @@ export default defineConfig({
             table: {
                slots: {
                   tbody: '[&>tr]:data-[selectable=true]:hover:bg-brand-blue-alt-300/30',
-                  td: "text-start",
+                  td: "text-start whitespace-normal!",
+                  th: "text-start whitespace-normal!",
                   tr: "data-[selected=true]:bg-brand-blue-alt-300/60 data-[selected=true]:hover:bg-brand-blue-alt-300/70!"
                }
             },

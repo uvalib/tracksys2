@@ -184,7 +184,7 @@ export const useOrdersStore = defineStore('orders', {
       }
    },
 	actions: {
-      getOrders() {
+      async getOrders() {
          const system = useSystemStore()
          system.working = true
          let so = this.searchOpts
@@ -195,7 +195,7 @@ export const useOrdersStore = defineStore('orders', {
          if ( this.ownerID > -1) {
             url += `&owner=${this.ownerID}`
          }
-         axios.get( url ).then(response => {
+         return axios.get( url ).then(response => {
             this.orders = []
             response.data.orders.forEach( js => {
                js.dateDue = js.dateDue.split("T")[0]

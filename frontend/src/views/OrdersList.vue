@@ -1,6 +1,6 @@
 <template>
    <h2>Orders</h2>
-   <div class="row-between p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: headerHeight}">
+   <div class="row-between p-2 sticky z-50 bg-white border-b border-brand-grey-100" :style="{top: headerHeight}">
       <UButton v-if="(userStore.isAdmin || userStore.isSupervisor)" color="secondary" label="Create Order" @click="createOrder()"/>
       <div class="row-right">
          <UPagination color="neutral" variant="ghost"
@@ -12,7 +12,7 @@
       <div class="row-left items-center">
          <div class="row-left gap-2! items-center">
             <label for="orders-filter">Filter:</label>
-            <USelect id="orders-filter" v-model="statusFilter" @change="getOrders" :items="filters" />
+            <USelect id="orders-filter" v-model="statusFilter" @change="getOrders" :items="statuses" />
          </div>
          <div class="row-left gap-2! items-center">
             <label>Assigned to me:</label>
@@ -21,12 +21,39 @@
          <UInput v-model="ordersStore.searchOpts.query" placeholder="Search Job Status" @update:modelValue="queryOrders"/>
       </div>
    </div>
-    <UTable :data="ordersStore.orders" :columns="columns">
+    <UTable :data="ordersStore.orders" :columns="columns" v-model:sorting="sorting" >
+      <template #id-header="{ column }">
+         <UButton color="neutral" variant="ghost" label="ID" :icon="sortIcon(column)"  @click="sortClicked(column)"/>
+      </template>
       <template #id-cell="{ row }">
          <router-link :to="`/orders/${row.original.id}`">{{row.original.id}}</router-link>
       </template>
       <template #status-cell="{ row }">
          <span :class="`status ${row.original.status}`">{{displayStatus(row.original.status)}}</span>
+      </template>
+      <template #dateSubmitted-header="{ column }">
+         <UButton color="neutral" variant="ghost" :icon="sortIcon(column)" @click="sortClicked(column)"> 
+            <span class="text-start">Request Submitted</span>
+         </UButton>
+      </template>
+      <template #dateDue-header="{ column }">
+         <UButton color="neutral" variant="ghost" :icon="sortIcon(column)"  @click="sortClicked(column)">
+            <span class="text-start">Date Due</span>
+         </UButton>
+      </template>
+      <template #title-header="{ column }">
+         <UButton color="neutral" variant="ghost" label="Title" :icon="sortIcon(column)"  @click="sortClicked(column)"/>
+      </template>
+      <template #unitCount-header="{ column }">
+         <UButton color="neutral" variant="ghost" label="Units" :icon="sortIcon(column)"  @click="sortClicked(column)"/>
+      </template>
+      <template #masterFileCount-header="{ column }">
+         <UButton color="neutral" variant="ghost" :icon="sortIcon(column)"  @click="sortClicked(column)">
+            <span class="text-start">Master Files</span>
+         </UButton>
+      </template>
+      <template #fee-header="{ column }">
+         <UButton color="neutral" variant="ghost" label="Fee" :icon="sortIcon(column)"  @click="sortClicked(column)"/>
       </template>
       <template #fee-cell="{ row }">
          <span class="fee-waived" v-if="row.original.feeWaived">Waived</span>
@@ -44,7 +71,6 @@
       <template #agency-header>
          <FilterPopover label="Agency" :applied="isFilterApplied('agency')" @clear="clearFilter('agency')" @apply="getOrders()">
             <UInput v-model="columnFilters.agency.value" placeholder="Agency name..." />
-            <!-- FIXME THIS DOES NOT WORK, BUT IT DOES ON THE ORDER RESULTS -->
          </FilterPopover>
       </template>
       <template #agency-cell="{ row }">
@@ -59,18 +85,6 @@
          <span v-if="row.original.processor">{{row.original.processor.lastName}}, {{row.original.processor.firstName}}</span>
       </template>
     </UTable>
-      <!-- <DataTable :value="ordersStore.orders" ref="ordersTable" dataKey="id"
-         stripedRows showGridlines responsiveLayout="scroll"
-         :sortField="ordersStore.searchOpts.sortField" :sortOrder="sortOrder" @sort="onSort($event)"
-         :lazy="true"
-         v-model:filters="columnFilters" filterDisplay="menu" @filter="getOrders()"
-      >
-         <Column field="agency.name" header="Agency" filterField="agency" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <Select v-model="filterModel.value" :options="systemStore.agencies" optionLabel="name" optionValue="id" placeholder="Select agency" />
-            </template>
-         </Column>
-         -->
 </template>
 
 <script setup>
@@ -78,9 +92,7 @@ import { onBeforeMount, onMounted, ref, computed } from 'vue'
 import { useOrdersStore } from '@/stores/orders'
 import { useUserStore } from '@/stores/user'
 import { useRoute, useRouter } from 'vue-router'
-import { useSystemStore } from '@/stores/system'
 
-const systemStore = useSystemStore()
 const route = useRoute()
 const router = useRouter()
 const ordersStore = useOrdersStore()
@@ -90,10 +102,17 @@ const headerHeight = computed(() => {
    let hdr = document.getElementById('uva-header')
    return `${hdr.clientHeight}px`
 })
+
+const sorting = ref([
+  {
+    id: 'id',
+    desc: true
+  }
+])
 const columns = [
    {
       accessorKey: 'id',
-      header: 'ID'
+      header: 'ID',
    },
    {
       accessorKey: 'status',
@@ -101,41 +120,31 @@ const columns = [
    },
    {
       accessorKey: 'dateSubmitted',
-      header: 'Request Submitted'
+      header: 'Request Submitted',
    },
    {
       accessorKey: 'dateDue',
-      header: 'Date Due'
+      header: 'Date Due',
    },
    {
       accessorKey: 'title',
       header: 'Title',
-       meta: {
-         class: {
-            td: 'w-1/8 whitespace-break-spaces'
-         }
-      }
    },
    {
       accessorKey: 'specialInstructions',
       header: 'Special Instructions',
-      meta: {
-         class: {
-            td: 'w-1/8 whitespace-break-spaces'
-         }
-      }
    },
    {
       accessorKey: 'unitCount',
-      header: 'Units'
+      header: 'Units',
    },
    {
       accessorKey: 'masterFileCount',
-      header: 'Master Files'
+      header: 'Master Files',
    },
    {
       accessorKey: 'fee',
-      header: 'Fee'
+      header: 'Fee',
    },
    {
       accessorKey: 'customer',
@@ -151,7 +160,7 @@ const columns = [
    },
 ]
 
-const filters = ref([
+const statuses = ref([
    {label: "Active", value: "active"},
    {label: "Await Approval", value: "await"},
    {label: "Deferred", value: "deferred"},
@@ -171,11 +180,24 @@ const columnFilters = ref({
 const statusFilter = ref("active")
 const assignedToMe = ref(false)
 
-const sortOrder = computed(() => {
-   if (ordersStore.searchOpts.sortOrder == "desc") {
-      return -1
+const sortIcon = ((column) => {
+   const isSorted = column.getIsSorted()
+   if (isSorted) {
+      if (isSorted === 'asc') return 'i-lucide-arrow-up-narrow-wide'
+      return 'i-lucide-arrow-down-wide-narrow'
    }
-   return 1
+   return 'i-lucide-arrow-up-down'
+})
+const sortClicked = (async (column) => {
+   const isSorted = column.getIsSorted()
+   console.log(isSorted)
+   ordersStore.searchOpts.sortField = column.id
+   ordersStore.searchOpts.sortOrder = "asc"
+   if (isSorted === "asc") {
+      ordersStore.searchOpts.sortOrder = "desc"   
+   }
+   await getOrders( )
+   column.toggleSorting(column.getIsSorted() === 'asc')
 })
 
 onBeforeMount( () => {
@@ -246,7 +268,7 @@ const setQueryParams = (() => {
    router.push({query})
 })
 
-const getOrders = (() => {
+const getOrders = (async () => {
    ordersStore.searchOpts.filters = [{field: "status", value: statusFilter.value, match: 'equals'}]
    Object.entries(columnFilters.value).forEach(([key, data]) => {
       if (data.value && data.value != "") {
@@ -254,7 +276,7 @@ const getOrders = (() => {
       }
    })
    setQueryParams()
-   ordersStore.getOrders()
+   await ordersStore.getOrders()
 })
 
 const isFilterApplied = ((name) => {
@@ -273,50 +295,9 @@ const pageChanged = (() => {
    ordersStore.searchOpts.start = (ordersStore.searchOpts.currPage-1) * ordersStore.searchOpts.limit
    ordersStore.getOrders()
 })
-
-
-const onSort = ((event) => {
-   ordersStore.searchOpts.sortField = event.sortField
-   ordersStore.searchOpts.sortOrder = "asc"
-   if (event.sortOrder == -1) {
-      ordersStore.searchOpts.sortOrder = "desc"
-   }
-   getOrders( )
-})
 </script>
 
 <style scoped lang="scss">
-// :deep(td.nowrap) {
-//    white-space: nowrap;
-// }
-// .orders {
-//    min-height: 600px;
-//    text-align: left;
-//    padding: 0;
-
-//    .filters {
-//       display: flex;
-//       flex-flow: row nowrap;
-//       justify-content: flex-end;
-//       align-items: center;
-//       gap: 10px;
-//    }
-//    .left-pad {
-//       margin-left: 10px;
-//    }
-//    .right-pad {
-//       margin-right: 10px;
-//    }
-
-//    span.fee-waived {
-//       background: var(--uvalib-blue-alt);
-//       padding: 3px 10px;
-//       border-radius: 5px;
-//       color: white;
-//       font-weight: normal;
-//    }
-
-// }
 span.fee-waived {
    background: var(--uvalib-blue-alt);
    padding: 3px 10px;

@@ -72,6 +72,9 @@
    these are custom class names that define common groups of tailwind classes 
    allows reuse of classnames that will all respond glibal theme changes in spacing, color, etc
 */
+.sort-btn {
+    @apply flex flex-row flex-nowrap gap-1 justify-start items-center;
+}
 .row-right {
     @apply flex flex-row flex-nowrap gap-4 justify-end;
 }
