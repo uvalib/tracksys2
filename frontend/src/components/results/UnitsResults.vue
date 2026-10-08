@@ -1,23 +1,14 @@
 <template>
-   <div class="row-between p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: headerHeight}">
-      <div class="row-left gap-2!">
-         <UButton color="secondary" label="Download Results CSV" @click="downloadCSV"/>
-         <UButton v-if="hasFilter" color="secondary" label="Clear All Filters" @click="clearFilters"/>
-      </div>
-      <div class="row-right">
-         <UPagination color="neutral" variant="ghost"
-            v-model:page="searchStore.units.currPage" :items-per-page="searchStore.units.limit" 
-            :total="searchStore.units.total" @update:page="pageChanged"
-         />
-         <USelect v-model="searchStore.units.limit" :items="[15,30,100]" @change="perPageChanged" />
-      </div>
-   </div>
+   <ResultsToolbar :count="searchStore.units.hits.length" :total="searchStore.units.total" :hasFilter="hasFilter"
+      @more="loadMore" @csv="downloadCSV" @clear-filter="clearFilters"
+   />
    <UTable :data="searchStore.units.hits" :columns="columns">
       <template #id-cell="{ row }">
          <router-link :to="`/units/${row.original.id}`">{{row.original.id}}</router-link>
       </template>
       <template #status-header>
-         <FilterPopover label="Status" :applied="filterApplied('status')" @clear="clearFilter('status')" @apply="applyFilter()">
+         <FilterPopover label="Status" :applied="isFilterApplied('status')" @clear="clearFilter('status')" @apply="applyFilter()">
+            console.log("is filter apploed "+name)
             <USelect v-model="filters.status.value" :items="unitStatuses" placeholder="Select a status" />
          </FilterPopover>
       </template>
@@ -25,12 +16,14 @@
          <span :class="`status ${row.original.status}`">{{displayStatus(row.original.status)}}</span>
       </template>
       <template #staff_notes-header>
-         <FilterPopover label="Staff Notes"  :applied="filterApplied('staff_notes')" @clear="clearFilter('staff_notes')" @apply="applyFilter()">
+         <FilterPopover label="Staff Notes"  :applied="isFilterApplied('staff_notes')" @clear="clearFilter('staff_notes')" @apply="applyFilter()">
+            console.log("is filter apploed "+name)
             <UInput v-model="filters.staff_notes.value" placeholder="Staff notes..." />
          </FilterPopover>
       </template>
       <template #special_instructions-header>
-         <FilterPopover label="Special Instructions"  :applied="filterApplied('special_instructions')" @clear="clearFilter('special_instructions')" @apply="applyFilter()">
+         <FilterPopover label="Special Instructions"  :applied="isFilterApplied('special_instructions')" @clear="clearFilter('special_instructions')" @apply="applyFilter()">
+            console.log("is filter apploed "+name)
             <UInput v-model="filters.special_instructions.value" placeholder="Instructions..." />
          </FilterPopover>
       </template>
@@ -47,15 +40,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useSearchStore } from '../../stores/search'
 import { useRoute, useRouter } from 'vue-router'
+import ResultsToolbar from './ResultsToolbar.vue'
 
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
-
-const headerHeight = computed(() => {
-   let hdr = document.getElementById('uva-header')
-   return `${hdr.clientHeight}px`
-})
 
 const columns = [
    {
@@ -132,24 +121,19 @@ const downloadCSV = (() => {
 
 const clearFilters = (() => {
    filters.value = {
-      system_name: {value: null, mode: "equals"},
-      title: {value: null, mode: "contains"},
-      creator_name: {value: null, mode: "contains"},
-      barcode: {value: null, mode: "startsWith"},
-      call_number: {value: null, mode: "startsWith"},
-      catalog_key: {value: null, mode: "startsWith"},
-      virgo: {value: null, mode: "equals"},
-      dpla: {value: null, mode: "equals"},
-      hathitrust: {value: null, mode: "equals"}
+      status: {value: null, mode: "equals"},
+      staff_notes: {value: null, mode: "contains"},
+      special_instructions: {value: null, mode: "contains"},
    }
    searchStore.units.filters = []
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
+   searchStore.resetSearch("units")
    searchStore.executeSearch("units")
 })
 
-const filterApplied = ((name) => {
+const isFilterApplied = ((name) => {
    return filters.value[name].value != null 
 })
 const clearFilter = ((name) => {
@@ -171,15 +155,11 @@ const applyFilter =(() => {
       query.filters = searchStore.filtersAsQueryParam("units")
    }
    router.push({query})
+   searchStore.resetSearch("units")
    searchStore.executeSearch("units")
 })
 
-const perPageChanged = (() => {
-   searchStore.units.currPage = 1
-   pageChanged()
-})
-const pageChanged = (() => {
-   searchStore.units.start = (searchStore.units.currPage-1) * searchStore.units.limit
+const loadMore = (() => {
    searchStore.executeSearch("units")
 })
 

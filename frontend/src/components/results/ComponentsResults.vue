@@ -1,17 +1,7 @@
 <template>
-   <div class="row-between p-2 sticky z-50 bg-white border-b border-brand-grey-100" :style="{top: headerHeight}">
-      <div class="row-left gap-2!">
-         <UButton color="secondary" label="Download Results CSV" @click="downloadCSV"/>
-         <UButton v-if="hasFilter" color="secondary" label="Clear All Filters" @click="clearFilters"/>
-      </div>
-      <div class="row-right">
-         <UPagination color="neutral" variant="ghost"
-            v-model:page="searchStore.components.currPage" :items-per-page="searchStore.components.limit" 
-            :total="searchStore.components.total" @update:page="pageChanged"
-         />
-         <USelect v-model="searchStore.components.limit" :items="[15,30,100]" @change="perPageChanged" />
-      </div>
-   </div>
+   <ResultsToolbar :count="searchStore.components.hits.length" :total="searchStore.components.total" :hasFilter="hasFilter"
+      @more="loadMore" @csv="downloadCSV" @clear-filter="clearFilters"
+   />
    <UTable :data="searchStore.components.hits" :columns="columns">
       <template #id-cell="{ row }">
          <router-link :to="`/components/${row.original.id}`">{{row.original.id}}</router-link>
@@ -43,15 +33,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useSearchStore } from '../../stores/search'
 import { useRoute, useRouter } from 'vue-router'
+import ResultsToolbar from './ResultsToolbar.vue'
 
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
-
-const headerHeight = computed(() => {
-   let hdr = document.getElementById('uva-header')
-   return `${hdr.clientHeight}px`
-})
 
 const columns = [
    {
@@ -136,6 +122,7 @@ const clearFilters = (() => {
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
+   searchStore.resetSearch("components")
    searchStore.executeSearch("components")
 })
 
@@ -161,15 +148,11 @@ const applyFilter =(() => {
       query.filters = searchStore.filtersAsQueryParam("components")
    }
    router.push({query})
+   searchStore.resetSearch("components")
    searchStore.executeSearch("components")
 })
 
-const perPageChanged = (() => {
-   searchStore.components.currPage = 1
-   pageChanged()
-})
-const pageChanged = (() => {
-   searchStore.components.start = (searchStore.components.currPage-1) * searchStore.components.limit
+const loadMore = (() => {
    searchStore.executeSearch("components")
 })
 

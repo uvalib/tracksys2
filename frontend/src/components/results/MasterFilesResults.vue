@@ -1,17 +1,7 @@
 <template>
-   <div class="row-between p-2 sticky z-50 bg-white border-b border-brand-grey-100" :style="{top: headerHeight}">
-      <div class="row-left gap-2!">
-         <UButton color="secondary" label="Download Results CSV" @click="downloadCSV"/>
-         <UButton v-if="hasFilter" color="secondary" label="Clear All Filters" @click="clearFilters"/>
-      </div>
-      <div class="row-right">
-         <UPagination color="neutral" variant="ghost"
-            v-model:page="searchStore.masterFiles.currPage" :items-per-page="searchStore.masterFiles.limit" 
-            :total="searchStore.masterFiles.total" @update:page="pageChanged"
-         />
-         <USelect v-model="searchStore.masterFiles.limit" :items="[15,30,100]" @change="perPageChanged" />
-      </div>
-   </div>
+   <ResultsToolbar :count="searchStore.masterFiles.hits.length" :total="searchStore.masterFiles.total" :hasFilter="hasFilter"
+      @more="loadMore" @csv="downloadCSV" @clear-filter="clearFilters"
+   />
    <UTable :data="searchStore.masterFiles.hits" :columns="columns">
       <template #id-cell="{ row }">
          <router-link :to="`/masterfiles/${row.original.id}`">{{row.original.id}}</router-link>
@@ -20,7 +10,7 @@
          <router-link :to="`/units/${row.original.id}`">{{row.original.unit_id}}</router-link>
       </template>
       <template #is_clone-header>
-         <FilterPopover label="Clone" :applied="filterApplied('is_clone')" @clear="clearFilter('is_clone')" @apply="applyFilter()">
+         <FilterPopover label="Clone" :applied="isFilterApplied('is_clone')" @clear="clearFilter('is_clone')" @apply="applyFilter()">
             <USelect v-model="filters.is_clone.value" :items="yesNo" placeholder="Select a type" />
          </FilterPopover>
       </template>
@@ -29,7 +19,7 @@
          <span v-else>No</span>
       </template>
       <template #call_number-header>
-         <FilterPopover label="Call Number"  :applied="filterApplied('call_number')" @clear="clearFilter('call_number')" @apply="applyFilter()">
+         <FilterPopover label="Call Number"  :applied="isFilterApplied('call_number')" @clear="clearFilter('call_number')" @apply="applyFilter()">
             <UInput v-model="filters.call_number.value" placeholder="Call Number..." />
          </FilterPopover>
       </template>
@@ -37,12 +27,12 @@
          <router-link :to="`/metadata/${row.original.metadata_id}`">{{row.original.call_number}}</router-link>
       </template>
       <template #title-header>
-         <FilterPopover label="Title"  :applied="filterApplied('title')" @clear="clearFilter('title')" @apply="applyFilter()">
+         <FilterPopover label="Title"  :applied="isFilterApplied('title')" @clear="clearFilter('title')" @apply="applyFilter()">
             <UInput v-model="filters.title.value" placeholder="Title..." />
          </FilterPopover>
       </template>
       <template #description-header>
-         <FilterPopover label="Description"  :applied="filterApplied('description')" @clear="clearFilter('description')" @apply="applyFilter()">
+         <FilterPopover label="Description"  :applied="isFilterApplied('description')" @clear="clearFilter('description')" @apply="applyFilter()">
             <UInput v-model="filters.description.value" placeholder="Description..." />
          </FilterPopover>
       </template>
@@ -58,15 +48,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useSearchStore } from '../../stores/search'
 import { useRoute, useRouter } from 'vue-router'
+import ResultsToolbar from './ResultsToolbar.vue'
 
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
-
-const headerHeight = computed(() => {
-   let hdr = document.getElementById('uva-header')
-   return `${hdr.clientHeight}px`
-})
 
 const columns = [
    {
@@ -194,10 +180,11 @@ const clearFilters = (() => {
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
+   searchStore.resetSearch("masterfiles")
    searchStore.executeSearch("masterfiles")
 })
 
-const filterApplied = ((name) => {
+const isFilterApplied = ((name) => {
    return filters.value[name].value != null 
 })
 const clearFilter = ((name) => {
@@ -219,15 +206,11 @@ const applyFilter =(() => {
       query.filters = searchStore.filtersAsQueryParam("masterfiles")
    }
    router.push({query})
+   searchStore.resetSearch("masterfiles")
    searchStore.executeSearch("masterfiles")
 })
 
-const perPageChanged = (() => {
-   searchStore.masterFiles.currPage = 1
-   pageChanged()
-})
-const pageChanged = (() => {
-   searchStore.masterFiles.start = (searchStore.masterFiles.currPage-1) * searchStore.masterFiles.limit
+const loadMore = (() => {
    searchStore.executeSearch("masterfiles")
 })
 </script>

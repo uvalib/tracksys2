@@ -1,17 +1,7 @@
 <template>
-   <div class="row-between p-2 sticky z-50 bg-white border-b border-brand-grey-100" :style="{top: headerHeight}">
-      <div class="row-left gap-2!">
-         <UButton color="secondary" label="Download Results CSV" @click="downloadCSV"/>
-         <UButton v-if="hasFilter" color="secondary" label="Clear All Filters" @click="clearFilters"/>
-      </div>
-      <div class="row-right">
-         <UPagination color="neutral" variant="ghost"
-            v-model:page="searchStore.orders.currPage" :items-per-page="searchStore.orders.limit" 
-            :total="searchStore.orders.total" @update:page="pageChanged"
-         />
-         <USelect v-model="searchStore.orders.limit" :items="[15,30,100]" @change="perPageChanged" />
-      </div>
-   </div>
+   <ResultsToolbar :count="searchStore.orders.hits.length" :total="searchStore.orders.total" :hasFilter="hasFilter"
+      @more="loadMore" @csv="downloadCSV" @clear-filter="clearFilters"
+   />
    <UTable :data="searchStore.orders.hits" :columns="columns">
       <template #id-cell="{ row }">
          <router-link :to="`/orders/${row.original.id}`">{{row.original.id}}</router-link>
@@ -60,17 +50,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useSearchStore } from '../../stores/search'
 import { useRoute, useRouter } from 'vue-router'
 import FilterPopover from './FilterPopover.vue'
+import ResultsToolbar from './ResultsToolbar.vue'
 
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
-
-// you cannot custruct tailwind class values dynamically, so you  cant do `top-${hdr.clientHeight}`. 
-// Instead use this to bind an inline style 'top' param to stick the controls below the header
-const headerHeight = computed(() => {
-   let hdr = document.getElementById('uva-header')
-   return `${hdr.clientHeight}px`
-})
 
 const columns = [
    {
@@ -186,6 +170,7 @@ const clearFilters = (() => {
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
+   searchStore.resetSearch("orders")
    searchStore.executeSearch("orders")
 })
 
@@ -211,17 +196,11 @@ const applyFilter =(() => {
       query.filters = searchStore.filtersAsQueryParam("orders")
    }
    router.push({query})
+   searchStore.resetSearch("orders")
    searchStore.executeSearch("orders")
 })
 
-const perPageChanged = (() => {
-   console.log("new page size "+searchStore.orders.limit)
-   searchStore.orders.currPage = 1
-   pageChanged()
-})
-const pageChanged = (() => {
-   searchStore.orders.start = (searchStore.orders.currPage-1) * searchStore.orders.limit
-   console.log("new start: "+searchStore.orders.start)
+const loadMore = (() => {
    searchStore.executeSearch("orders")
 })
 

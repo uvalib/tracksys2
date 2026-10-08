@@ -1,17 +1,7 @@
 <template>
-   <div class="row-between p-2 sticky z-50 bg-white border-b border-brand-grey-100" :style="{top: headerHeight}">
-      <div class="row-left gap-2!">
-         <UButton color="secondary" label="Download Results CSV" @click="downloadCSV"/>
-         <UButton v-if="hasFilter" color="secondary" label="Clear All Filters" @click="clearFilters"/>
-      </div>
-      <div class="row-right">
-         <UPagination color="neutral" variant="ghost"
-            v-model:page="searchStore.metadata.currPage" :items-per-page="searchStore.metadata.limit" 
-            :total="searchStore.metadata.total" @update:page="pageChanged"
-         />
-         <USelect v-model="searchStore.metadata.limit" :items="[15,30,100]" @change="perPageChanged" />
-      </div>
-   </div>
+   <ResultsToolbar :count="searchStore.metadata.hits.length" :total="searchStore.metadata.total" :hasFilter="hasFilter"
+      @more="loadMore" @csv="downloadCSV" @clear-filter="clearFilters"
+   />
    <UTable :data="searchStore.metadata.hits" :columns="columns">
       <template #id-cell="{ row }">
          <router-link :to="`/metadata/${row.original.id}`">{{row.original.id}}</router-link>
@@ -77,7 +67,7 @@
             <USelect v-model="filters.hathitrust.value" :items="yesNo" placeholder="Select a value" />
          </FilterPopover>
       </template>
-   </UTable>
+   </UTable>   
 </template>
 
 <script setup>
@@ -85,16 +75,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useSearchStore } from '../../stores/search'
 import { useSystemStore } from '../../stores/system'
 import { useRoute, useRouter } from 'vue-router'
+import ResultsToolbar from './ResultsToolbar.vue'
 
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
 const system = useSystemStore()
-
-const headerHeight = computed(() => {
-   let hdr = document.getElementById('uva-header')
-   return `${hdr.clientHeight}px`
-})
 
 const columns = [
    {
@@ -216,6 +202,7 @@ const clearFilters = (() => {
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
+   searchStore.resetSearch("metadata")
    searchStore.executeSearch("metadata")
 })
 
@@ -226,6 +213,9 @@ const clearFilter = ((name) => {
    filters.value[name].value = null 
    applyFilter()
 }) 
+const loadMore = (() => {
+   searchStore.executeSearch("metadata")
+})
 
 const applyFilter =(() => {
    searchStore.metadata.filters = []
@@ -241,6 +231,7 @@ const applyFilter =(() => {
       query.filters = searchStore.filtersAsQueryParam("metadata")
    }
    router.push({query})
+   searchStore.resetSearch("metadata")
    searchStore.executeSearch("metadata")
 })
 
