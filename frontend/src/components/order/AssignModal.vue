@@ -1,27 +1,27 @@
 <template>
-   <DPGButton @click="show" label="Assign Order Processor" severity="secondary"/>
-   <Dialog v-model:visible="isOpen" :modal="true" header="Assign Order Processor">
-      <div class="candidate-scroller">
-         <div class="val" v-for="(c,idx) in staffStore.staff" :key="c.id" :class="{selected: idx == selectedIdx}"
-            @click="selectProcessor(idx)"
-         >
-            <span class="candidate">{{c.lastName}}, {{c.firstName}}</span> ({{c.computingID}})
+   <UModal v-model:open="isOpen" :modal="true" :dismissible="false" :close="false" title="Assign Order Processor">
+      <UButton @click="show" label="Assign Order Processor" color="secondary"/>
+      <template  #body>
+         <div class="candidate-scroller">
+            <div class="val" v-for="(c,idx) in staffStore.staff" :key="c.id" :class="{selected: idx == selectedIdx}"
+               @click="selectProcessor(idx)"
+            >
+               <span class="candidate">{{c.lastName}}, {{c.firstName}}</span> ({{c.computingID}})
+            </div>
          </div>
-      </div>
-      <p class="error">{{error}}</p>
-      <template #footer>
-         <DPGButton @click="hide" label="Cancel" severity="secondary"/>
-         <span class="spacer"></span>
-         <DPGButton @click="assignClicked" label="Assign"/>
+         <p class="error">{{error}}</p>
       </template>
-   </Dialog>
+      <template #footer>
+         <UButton @click="hide" label="Cancel" color="secondary"/>
+         <UButton @click="assignClicked" label="Assign"/>
+      </template>
+   </UModal>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useOrdersStore } from '@/stores/orders'
 import { useStaffStore } from '@/stores/staff'
-import Dialog from 'primevue/dialog'
 
 const ordersStore = useOrdersStore()
 const staffStore = useStaffStore()

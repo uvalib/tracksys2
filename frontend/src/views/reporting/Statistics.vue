@@ -94,7 +94,6 @@ onMounted( () => {
 })
 
 const modeChanged = (() => {
-   console.log("MODE CHANGED")
    if ( rangeType.value == "between") {
       dates.value.end = dates.value.start.add({months: 3}) 
    } else {

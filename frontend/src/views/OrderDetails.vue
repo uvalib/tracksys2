@@ -1,19 +1,19 @@
 <template>
    <h2>
       <span>Order {{route.params.id}}</span>
-      <div class="actions" v-if="(user.isAdmin || user.isSupervisor)" >
-         <DPGButton label="HathiTrust Metadata Accepted" class="edit" @click="hathiTrustMetadataAccepted" v-if="canAcceptHathiTrustMetadata"/>
-         <DPGButton label="Submit HathiTrust Packages" class="edit" @click="submitHathiTrustPackage" v-if="canSubmitHathiTrustPackage"/>
-         <DPGButton label="Package for HathiTrust" class="edit" @click="packageForHathiTrust" v-if="canPackageHathiTrust"/>
+      <div class="row-right gap-2" v-if="(user.isAdmin || user.isSupervisor)" >
+         <UButton label="HathiTrust Metadata Accepted" @click="hathiTrustMetadataAccepted" v-if="canAcceptHathiTrustMetadata"/>
+         <UButton label="Submit HathiTrust Packages" @click="submitHathiTrustPackage" v-if="canSubmitHathiTrustPackage"/>
+         <UButton label="Package for HathiTrust" @click="packageForHathiTrust" v-if="canPackageHathiTrust"/>
          <HathiTrustMetadataDialog @submit="submitHathiTrustMetadata" :order="detail.id" v-if="canSubmitHathiTrustMetadata"/>
-         <DPGButton label="Flag for HathiTrust" class="edit" @click="flagForHathiTrust" v-if="canFlagForHathiTrust"/>
-         <DPGButton label="Delete" class="edit" @click="deleteOrder()" v-if="canDelete"/>
-         <DPGButton label="Edit" class="edit" @click="editOrder()"/>
+         <UButton label="Flag for HathiTrust" @click="flagForHathiTrust" v-if="canFlagForHathiTrust"/>
+         <UButton label="Delete" @click="deleteOrder()" v-if="canDelete"/>
+         <UButton label="Edit" @click="editOrder()"/>
       </div>
    </h2>
-   <div class="details">
-      <div class="left">
-         <Panel header="General Information">
+   <div class="row-left gap-4 pt-8 px-8">
+      <div class="column flex-1">
+         <UCard title="General Information" class="w-full">
             <dl>
                <DataDisplay label="Status" :value="detail.status">
                   <div class="status">
@@ -21,41 +21,10 @@
                   </div>
                </DataDisplay>
                <DataDisplay v-if="detail.status=='completed'" label="Date Completed" :value="$formatDate(detail.dateCompleted)"/>
-               <DataDisplay v-if="detail.customer" label="Customer" :value="customerInfo">
-                  <div class="customer">
-                     <span class="name" aria-haspopup="true" aria-controls="events-panel" @click="toggleCustomer">{{customerInfo}}</span>
-                  </div>
+               <DataDisplay v-if="detail.customer" label="Customer" value="placeholder">
+                  <CustomerPopover :customer="detail.customer" />
                </DataDisplay>
                <DataDisplay v-else label="Customer" value=""/>
-               <Popover ref="customer">
-                  <Tabs value="customer" :lazy="true">
-                     <TabList>
-                        <Tab value="customer">Customer</Tab>
-                        <Tab  v-for="(a,idx) in detail.customer.addresses" :value="`address${idx}`">{{ addressHeader(idx) }}</Tab>
-                     </TabList>
-                     <TabPanels>
-                        <TabPanel value="customer">
-                           <dl>
-                              <DataDisplay label="Last Name" :value="detail.customer.lastName"></DataDisplay>
-                              <DataDisplay label="First Name" :value="detail.customer.firstName"></DataDisplay>
-                              <DataDisplay label="Email" :value="detail.customer.email"></DataDisplay>
-                              <DataDisplay label="Academic Status" :value="detail.customer.academicStatus.name"></DataDisplay>
-                           </dl>
-                        </TabPanel>
-                        <TabPanel v-for="(a,idx) in detail.customer.addresses"  :value="`address${idx}`" >
-                           <dl>
-                              <DataDisplay label="Address 1" :value="a.address1"></DataDisplay>
-                              <DataDisplay v-if="a.address2" label="Address 2" :value="a.address2"></DataDisplay>
-                              <DataDisplay v-if="a.city" label="City" :value="a.city"></DataDisplay>
-                              <DataDisplay v-if="a.state" label="State" :value="a.state"></DataDisplay>
-                              <DataDisplay v-if="a.zip"  label="Zip" :value="a.zip"></DataDisplay>
-                              <DataDisplay v-if="a.phone" label="Phone" :value="a.phone"></DataDisplay>
-                           </dl>
-                        </TabPanel>
-                     </TabPanels>
-                  </Tabs>
-               </Popover>
-
                <DataDisplay v-if="detail.agency" label="Agency" :value="detail.agency.name"/>
                <DataDisplay v-else label="Agency" value=""/>
                <DataDisplay label="Title" :value="detail.title"/>
@@ -65,8 +34,8 @@
                   <span>{{ detail.processor.firstName }} {{ detail.processor.lastName }}</span>
                </DataDisplay>
             </dl>
-         </Panel>
-         <Panel class="messages" header="Messages" v-if="hasMessages">
+         </UCard>
+         <UCard class="messages w-full" title="Messages" v-if="hasMessages" >
             <div class="msg" v-if="detail.status== 'requested'">Order is not yet approved. Units must be added and approved before order can be approved.</div>
             <div class="msg" v-if="detail.status== 'deferred'">Order has been deferred.</div>
             <div class="msg" v-if="detail.customer.academicStatusID==1 && !detail.fee && !detail.feeWaived">Either enter a fee, defer or cancel this order.</div>
@@ -75,9 +44,9 @@
                <div class="msg" v-if="ordersStore.isFeePaid == false">Fee payment information must be added to the invoice.</div>
                <div class="msg" v-if="ordersStore.hasUnitsBeingPrepared">You must approve or cancel units in this order.</div>
             </template>
-         </Panel>
+         </UCard>
       </div>
-      <Panel header="Workflow">
+      <UCard title="Workflow"  class="flex-1">
          <dl>
             <DataDisplay label="Date Submitted" :value="$formatDate(detail.dateSubmitted)"/>
             <DataDisplay label="Date Due" :value="$formatDate(detail.dateDue)"/>
@@ -97,44 +66,44 @@
          </dl>
          <div class="acts-wrap" v-if="user.isAdmin || user.isSupervisor">
             <div class="actions" v-if="detail.status != 'completed'">
-               <DPGButton label="Claim for Processing" severity="secondary" @click="claimOrder()" :disabled="isProcessor"/>
+               <UButton label="Claim for Processing" color="secondary" @click="claimOrder()" :disabled="isProcessor"/>
                <AssignModal />
             </div>
             <div class="actions" v-if="detail.status == 'await_fee'">
                <SendEmailDialog mode="fee" />
-               <DPGButton label="Customer Declines Fee" severity="secondary" @click="declineFeeClicked()"/>
-               <DPGButton label="Customer Paid Fee" severity="secondary" :disabled="isPaidDisabled"  @click="payFeeClicked()"/>
+               <UButton label="Customer Declines Fee" color="secondary" @click="declineFeeClicked()"/>
+               <UButton label="Customer Paid Fee" color="secondary" :disabled="isPaidDisabled"  @click="payFeeClicked()"/>
             </div>
             <template v-else>
                <div class="actions" v-if="detail.status != 'completed' && detail.status != 'canceled'">
-                  <DPGButton v-if="canWaiveFee" label="Waive Fee" severity="secondary" @click="waiveFeeClicked()"/>
-                  <DPGButton v-if="isExternalCustomer && detail.feeWaived == false" label="Send Fee Estimate" severity="secondary"
+                  <UButton v-if="canWaiveFee" label="Waive Fee" color="secondary" @click="waiveFeeClicked()"/>
+                  <UButton v-if="isExternalCustomer && detail.feeWaived == false" label="Send Fee Estimate" color="secondary"
                      :disabled="isSendFeeDisabled" @click="sendFeeEstimateCllicked()"/>
-                  <DPGButton v-if="detail.status == 'deferred'" label="Resume Order" severity="secondary" @click="resumeOrderClicked()"/>
-                  <DPGButton v-else label="Defer Order" severity="secondary" @click="deferOrderClicked()"/>
-                  <DPGButton label="Approve Order" severity="secondary" :disabled="isApproveDisabled" @click="approveOrderClicked()"/>
-                  <DPGButton label="Cancel Order" severity="secondary" @click="cancelOrderClicked()"/>
-                  <DPGButton label="Complete Order" severity="secondary" :disabled="isCompleteOrderDisabled" @click="completeOrderClicked()"/>
+                  <UButton v-if="detail.status == 'deferred'" label="Resume Order" color="secondary" @click="resumeOrderClicked()"/>
+                  <UButton v-else label="Defer Order" color="secondary" @click="deferOrderClicked()"/>
+                  <UButton label="Approve Order" color="secondary" :disabled="isApproveDisabled" @click="approveOrderClicked()"/>
+                  <UButton label="Cancel Order" color="secondary" @click="cancelOrderClicked()"/>
+                  <UButton label="Complete Order" color="secondary" :disabled="isCompleteOrderDisabled" @click="completeOrderClicked()"/>
                </div>
             </template>
             <div class="actions" v-if="(detail.status == 'approved' || detail.status == 'completed') && ordersStore.hasPatronDeliverables && detail.email" >
-               <DPGButton label="View Customer Email" severity="secondary" @click="viewEmailClicked()" :style="{marginLeft:0}"/>
-               <DPGButton label="Recreate Email" severity="secondary" @click="recreateEmailClicked()" />
+               <UButton label="View Customer Email" color="secondary" @click="viewEmailClicked()" :style="{marginLeft:0}"/>
+               <UButton label="Recreate Email" color="secondary" @click="recreateEmailClicked()" />
                <SendEmailDialog mode="order" />
             </div>
             <div class="actions" v-if="ordersStore.hasPatronDeliverables && (detail.status == 'approved' || detail.status == 'completed')">
-               <DPGButton v-if="!detail.email" label="Check Order Completeness" severity="secondary" @click="checkOrderComplete()" />
-               <DPGButton v-if="detail.email" label="View Order Summary" severity="secondary" @click="viewSummaryClicked()" />
-               <DPGButton v-if="detail.email" label="Recreate Order Summary" severity="secondary" @click="recreateSummaryClicked()" />
+               <UButton v-if="!detail.email" label="Check Order Completeness" color="secondary" @click="checkOrderComplete()" />
+               <UButton v-if="detail.email" label="View Order Summary" color="secondary" @click="viewSummaryClicked()" />
+               <UButton v-if="detail.email" label="Recreate Order Summary" color="secondary" @click="recreateSummaryClicked()" />
             </div>
             <div class="actions" v-if="(detail.invoice || detail.fee) && !detail.feeWaived">
-               <DPGButton v-if="detail.invoice" label="View Invoice" severity="secondary" @click="viewInvoiceClicked()"/>
+               <InvoiceDialog  v-if="detail.invoice" />
             </div>
          </div>
-      </Panel>
+      </UCard>
    </div>
    <div class="details" v-if="ordersStore.items.length> 0">
-      <Panel header="Order Details">
+      <UCard title="Order Details" class="w-full">
          <p>The following is all of the raw data submitted by the patron. Use it to create units or discard it. Once all units have been created and the order approved, this data will be deleted.</p>
          <dl class="item-intended-use">
             <DataDisplay label="Intended Use" :value="ordersStore.items[0].intendedUse.name"/>
@@ -156,42 +125,34 @@
                   <DataDisplay v-if="item.description" label="Description" :value="item.description"/>
                </dl>
                <div class="item-acts">
-                  <DPGButton label="Discard" autofocus severity="secondary" @click="discardItem(item)"/>
+                  <UButton label="Discard" autofocus color="secondary" @click="discardItem(item)"/>
                   <AddUnitDialog label="Create Unit" :item="item" />
                </div>
             </div>
          </div>
-      </Panel>
+      </UCard>
    </div>
    <div class="details" v-if="systemStore.working==false" >
-      <Panel header="Units" class="units">
+      <UCard title="Units" class="w-full">
          <RelatedUnits :orderID="detail.id" :units="ordersStore.units" :hathiTrust="canUpdateHathiTrust" :canAdd="canAddUnit"/>
-      </Panel>
+      </UCard>
    </div>
    <Dialog v-model:visible="showEmail" :modal="true" header="Customer Email" @hide="emailClosed()" :style="{width: '650px'}">
       <div v-html="detail.email" class="email"></div>
       <template #footer>
-         <DPGButton label="OK" autofocus severity="secondary" @click="emailClosed()"/>
+         <UButton label="OK" autofocus color="secondary" @click="emailClosed()"/>
       </template>
    </Dialog>
-   <InvoiceDialog />
 </template>
 
 <script setup>
 import Dialog from 'primevue/dialog'
-import Popover from 'primevue/popover'
-import Tabs from 'primevue/tabs'
-import TabList from 'primevue/tablist'
-import Tab from 'primevue/tab'
-import TabPanels from 'primevue/tabpanels'
-import TabPanel from 'primevue/tabpanel'
 import { onBeforeMount, ref, computed } from 'vue'
 import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useOrdersStore } from '@/stores/orders'
 import { useUserStore } from '@/stores/user'
 import { useCustomersStore } from '@/stores/customers'
-import Panel from 'primevue/panel'
 import DataDisplay from '../components/DataDisplay.vue'
 import { storeToRefs } from 'pinia'
 import InvoiceDialog from '@/components/order/InvoiceDialog.vue'
@@ -200,10 +161,10 @@ import Divider from 'primevue/divider'
 import SendEmailDialog from '../components/order/SendEmailDialog.vue'
 import AddUnitDialog from '../components/order/AddUnitDialog.vue'
 import HathiTrustMetadataDialog from '../components/order/HathiTrustMetadataDialog.vue'
-import { useConfirm } from "primevue/useconfirm"
+import { useConfirm } from "@/composables/useConfirm"
 import AssignModal from '../components/order/AssignModal.vue'
+import CustomerPopover from '../components/order/CustomerPopover.vue'
 
-const confirm = useConfirm()
 const route = useRoute()
 const router = useRouter()
 const systemStore = useSystemStore()
@@ -218,14 +179,6 @@ const customer = ref(null)
 
 const canUpdateHathiTrust = computed( () => {
    return user.isAdmin &&  ordersStore.hathiTrustMetadataCount > 0
-})
-
-const customerInfo = computed(() => {
-   let cust = `${ordersStore.detail.customer.lastName}, ${ordersStore.detail.customer.firstName}`
-   if (ordersStore.detail.customer.academicStatus.id != 0) {
-      cust += ` (${ordersStore.detail.customer.academicStatus.name})`
-   }
-   return cust
 })
 
 const canFlagForHathiTrust = computed( () => {
@@ -323,39 +276,19 @@ onBeforeMount( async () => {
    await customerStore.getCustomers()
 })
 
-const flagForHathiTrust = (() => {
-   confirm.require({
-      message: 'Are you sure you want flag all digital collection building units in this order for inclusion in HathiTrust?',
-      header: 'Confirm HathiTrust Inclusion',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Include'
-      },
-      accept: () => {
-         ordersStore.flagForHathiTrust( user.computeID )
-      }
-   })
+const flagForHathiTrust = (async () => {
+   const msg = `Are you sure you want flag all digital collection building units in this order for inclusion in HathiTrust?`
+   const resp = await useConfirm("Confirm HathiTrust Inclusion", msg, "Include")
+   if (resp) {
+      ordersStore.flagForHathiTrust( user.computeID )
+   } 
 })
-const packageForHathiTrust = (() => {
-    confirm.require({
-      message: 'Are you sure you want package all units in this order for submission to HathiTrust?',
-      header: 'Confirm HathiTrust Package',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Include'
-      },
-      accept: () => {
-         ordersStore.packageForHathiTrust( user.computeID )
-      }
-   })
+const packageForHathiTrust = (async () => {
+   const msg = `Are you sure you want package all units in this order for submission to HathiTrust?`
+   const resp = await useConfirm("Confirm HathiTrust Package", msg, "Package")
+   if (resp) {
+      ordersStore.packageForHathiTrust( user.computeID )
+   } 
 })
 const submitHathiTrustPackage = (() => {
    ordersStore.submitHathiTrustPackage( user.computeID )  
@@ -367,36 +300,17 @@ const submitHathiTrustMetadata = (( info ) => {
    ordersStore.submitHathiTrustMetadata( user.computeID, info.mode, info.name )
 })
 
-const deleteOrder = (() => {
-   confirm.require({
-      message: 'Are you sure you want delete this order? All data will be lost. This cannot be reversed.',
-      header: 'Confirm Delete Order',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Delete'
-      },
-      accept: async () => {
-         await ordersStore.deleteOrder()
-         router.push("/orders")
-      }
-   })
+const deleteOrder = (async () => {
+   const msg = `Are you sure you want delete this order? All data will be lost. This cannot be reversed.`
+   const resp = await useConfirm("Confirm Delete Order", msg, "Delete")
+   if (resp) {
+      await ordersStore.deleteOrder()
+      router.push("/orders")
+   } 
 })
 
 const editOrder = (() => {
    router.push(`/orders/${route.params.id}/edit`)
-})
-
-const toggleCustomer = ((e) => {
-   customer.value.toggle(e)
-})
-
-const addressHeader = ((idx) => {
-   if ( idx == 0) return "Primary Address"
-   return "Billing Address"
 })
 
 const recreateEmailClicked = (() => {
@@ -435,45 +349,20 @@ const emailClosed = (() => {
    showEmail.value = false
 })
 
-const viewInvoiceClicked = (() => {
-    ordersStore.editInvoice = false
-    ordersStore.showInvoice = true
+const discardItem = (async (item) => {
+   const msg = `Are you sure you want discard this item? All data will be lost. This cannot be reversed.`
+   const resp = await useConfirm("Confirm Discard", msg, "Discard")
+   if (resp) {
+        await ordersStore.discardItem(item.id)
+   } 
 })
 
-const discardItem = ((item) => {
-   confirm.require({
-      message: 'Are you sure you want delete this item? All data will be lost. This cannot be reversed.',
-      header: 'Confirm Delete Item',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Delete'
-      },
-      accept: async () => {
-         await ordersStore.discardItem(item.id)
-      }
-   })
-})
-
-const waiveFeeClicked = ( () => {
-   confirm.require({
-      message: 'Waive the fee for this order? This cannot be reversed.',
-      header: 'Confirm Fee Waive',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Waive Fee'
-      },
-      accept: async () => {
-         await ordersStore.waiveFee( user.computeID )
-      }
-   })
+const waiveFeeClicked = ( async () => {
+   const msg = `Waive the fee for this order? This cannot be reversed.`
+   const resp = await useConfirm("Confirm Fee Waive", msg, "Waive Fee")
+   if (resp) {
+       await ordersStore.waiveFee( user.computeID )
+   } 
 })
 
 const sendFeeEstimateCllicked = (() => {
@@ -492,22 +381,12 @@ const approveOrderClicked = (() => {
    ordersStore.approveOrder( user.computeID )
 })
 
-const cancelOrderClicked = (() => {
-   confirm.require({
-      message: 'Are you sure you want cancel this order? All related units and projects will be canceled. This cannot be reversed.',
-      header: 'Confirm Cancel Order',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Delete'
-      },
-      accept: async () => {
-         await ordersStore.cancelOrder( user.computeID )
-      }
-   })
+const cancelOrderClicked = (async () => {
+   const msg = `Are you sure you want cancel this order? All related units and projects will be canceled. This cannot be reversed.`
+   const resp = await useConfirm("Confirm Cancel Order", msg, "Cancel Order")
+   if (resp) {
+       await ordersStore.cancelOrder( user.computeID )
+   } 
 })
 
 const completeOrderClicked = (() => {
@@ -526,35 +405,20 @@ const checkOrderComplete = (() => {
    ordersStore.checkOrderComplete()
 })
 
-const claimOrder = (() => {
-   confirm.require({
-      message: 'Are you sure you want claim this order for processing?',
-      header: 'Confirm Claim Order',
-      icon: 'pi pi-question-circle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Claim'
-      },
-      accept: async () => {
-         ordersStore.setProcessor( user.ID )
-      }
-   })
+const claimOrder = (async () => {
+   const msg = `Are you sure you want claim this order for processing?`
+   const resp = await useConfirm("Confirm Claim Order", msg, "Claim")
+   if (resp) {
+      ordersStore.setProcessor( user.ID )
+   } 
 })
 
 </script>
 
 <style scoped lang="scss">
-:deep(dl.item-intended-use) {
+dl.item-intended-use {
    dd {
       margin: 0 0 5px 0 !important;
-   }
-}
-div.p-panel.p-component.units {
-   :deep(div.p-panel-content) {
-      padding-top: 0 !important;
    }
 }
 div.item {
@@ -581,7 +445,7 @@ div.item {
    }
 }
 .details {
-   padding: 0 25px 10px 25px;
+   padding: 20px 20px 0 20px;
    display: flex;
    flex-flow: row wrap;
    justify-content: flex-start;
@@ -615,39 +479,22 @@ div.item {
          }
       }
    }
+}
 
-   div.left {
-      margin: 0 10px 10px 10px;
-      flex: 45%;
-      text-align: left;
-      div.p-panel.messages {
-         margin-top: 25px;
-      }
-      .msg {
-         margin: 5px 0;
-         font-size: 0.9em;
-      }
-   }
-   :deep(div.p-panel) {
-      margin: 10px;
-      flex: 45%;
-      text-align: left;
-   }
-   .acts-wrap {
-      border-top: 1px solid var(--uvalib-grey-light);
-      padding-top: 15px;
-      .actions {
-         padding: 5px 0;
-         font-size: 0.8em;
-         display: flex;
-         flex-flow: row wrap;
-         justify-content: flex-start;
-         gap: 5px;
-      }
+.acts-wrap {
+   border-top: 1px solid var(--uvalib-grey-light);
+   padding-top: 15px;
+   .actions {
+      padding: 5px 0;
+      font-size: 0.8em;
+      display: flex;
+      flex-flow: row wrap;
+      justify-content: flex-start;
+      gap: 5px;
    }
 }
 
-:deep(dl) {
+dl {
    margin: 0;
    display: inline-grid;
    grid-template-columns: max-content 1fr;

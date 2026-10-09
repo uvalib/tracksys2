@@ -1,82 +1,93 @@
 <template>
-   <Dialog v-model:visible="ordersStore.showInvoice" :modal="true" header="Invoice" @show="invoiceOpened"
-      @hide="invoiceClosed" :style="{width: '650px'}" :closable="false">
-      <div v-if="ordersStore.editInvoice == false">
-         <Panel header="Date Information" :style="{marginBottom: '20px'}">
-            <dl>
-               <DataDisplay label="Date Invoice" :value="$formatDate(detail.invoice.invoiceDate)"/>
-               <DataDisplay label="Date Fee Paid" :value="$formatDate(detail.invoice.dateFeePaid)"/>
-               <DataDisplay label="Date Fee Declined" :value="$formatDate(detail.invoice.dateFeeDeclined)"/>
-            </dl>
-         </Panel>
-         <Panel header="Billing Information">
-            <dl>
-               <DataDisplay label="Fee Amount Paid" :value="formatFee(detail.invoice.feeAmountPaid)"/>
-               <DataDisplay label="Transmittal/Confirmation Number" :value="detail.invoice.transmittalNumber"/>
-               <DataDisplay label="Notes" :value="detail.invoice.notes"/>
-            </dl>
-         </Panel>
-      </div>
-      <form v-else @submit="submitChanges">
-         <div class="split">
-            
-            <FormField id="feepaid" label="Fee Amount Paid" >
-               <InputNumber id="feepaid" v-model="feeAmountPaid" mode="currency" currency="USD" locale="en-US"/>   
-            </FormField>
-            <FormField id="paiddate" label="Date Fee Paid">
-               <DatePicker id="paiddate" v-model="dateFeePaid" showIcon dateFormat="yy-mm-dd" updateModelType="string"/>   
-            </FormField>
+   <UModal v-model:open="isOpen" :modal="true" :dismissible="false" :close="false" title="Invoice">
+      <UButton label="View Invoice" color="secondary" @click="viewInvoiceClicked()"/>
+      <template #body>
+         <div v-if="editInvoice == false" class="column">
+            <UCard title="Date Information">
+               <dl>
+                  <DataDisplay label="Date Invoice" :value="$formatDate(detail.invoice.invoiceDate)"/>
+                  <DataDisplay label="Date Fee Paid" :value="$formatDate(detail.invoice.dateFeePaid)"/>
+                  <DataDisplay label="Date Fee Declined" :value="$formatDate(detail.invoice.dateFeeDeclined)"/>
+               </dl>
+            </UCard>
+            <UCard title="Billing Information">
+               <dl>
+                  <DataDisplay label="Fee Amount Paid" :value="formatFee(detail.invoice.feeAmountPaid)"/>
+                  <DataDisplay label="Transmittal/Confirmation Number" :value="detail.invoice.transmittalNumber"/>
+                  <DataDisplay label="Notes" :value="detail.invoice.notes"/>
+               </dl>
+            </UCard>
          </div>
-         <div class="split">
-            <FormField id="declinedate" label="Date Fee Declined">
-               <DatePicker id="declinedate" v-model="dateFeeDeclined" showIcon dateFormat="yy-mm-dd" updateModelType="string"/>   
-            </FormField>
-            <FormField id="confnum" label="Transmittal/Confirmation Number" >
-               <InputText id="confnum" v-model="transmittalNumber" />   
-            </FormField>
-         </div>
-         <FormField id="notes" label="Notes" >
-            <Textarea id="notes" v-model="notes" rows="5" />   
-         </FormField>
-         <div class="acts">
-            <DPGButton label="Cancel" severity="secondary" @click="invoiceClosed"/>
-            <DPGButton label="Save" type="submit" />
-         </div>
-      </form>
-      <template #footer v-if="ordersStore.editInvoice == false">
-         <DPGButton label="Edit" autofocus severity="secondary" @click="editInvoice()"/>
-         <DPGButton label="OK" autofocus severity="secondary" @click="invoiceClosed"/>
+         <UForm v-else :state="state" class="column" @submit="submitChanges">
+            <div class="row-left gap-4">
+               <UFormField name="feeAmountPaid" label="Fee Amount Paid" class="grow">   
+                  <UInputNumber v-model="state.feeAmountPaid" class="w-full" :step="0.01" :increment="false" :decrement="false"
+                     :format-options="{style: 'currency',currency: 'USD'}" />
+               </UFormField>
+               <UFormField name="dateFeePaid" label="Date Fee Paid" class="grow">   
+                  <UInputDate v-model="state.dateFeePaid" class="w-full"  />
+               </UFormField>
+            </div>
+            <div class="row-left gap-4">
+               <UFormField name="dateFeeDeclined" label="Date Fee Declined" class="grow">   
+                  <UInputDate v-model="state.dateFeeDeclined" class="w-full"  />
+               </UFormField>
+               <UFormField name="transmittalNumber" label="Transmittal/Confirmation Number" class="grow">   
+                  <UInput v-model="state.transmittalNumber" class="w-full"/>
+               </UFormField>
+            </div>
+           <UFormField name="notes" label="Notes" class="grow">   
+               <UTextarea v-model="state.notes" class="w-full"/>
+            </UFormField>
+            <div class="row-right gap-2">
+               <UButton label="Cancel" color="secondary" @click="editInvoice = false"/>
+               <UButton label="Save" type="submit" />
+            </div>
+         </UForm>
       </template>
-   </Dialog>
+      <template #footer v-if="editInvoice == false">
+         <UButton label="Edit" color="secondary" @click="editInvoiceClicked"/>
+         <UButton label="Close" color="secondary" @click="invoiceClosed"/>
+      </template>
+   </UModal>
 </template>
 
 <script setup>
-import Dialog from 'primevue/dialog'
+import { ref } from 'vue'
 import { useOrdersStore } from '@/stores/orders'
 import DataDisplay from '@/components/DataDisplay.vue'
-import Panel from 'primevue/panel'
-import { useDateFormat } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { useForm } from 'vee-validate'
-import FormField from '@/components/FormField.vue'
-import Textarea from 'primevue/textarea'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import DatePicker from 'primevue/datepicker'
+import { parseDate } from '@internationalized/date'
 
 const ordersStore = useOrdersStore()
 const { detail } = storeToRefs(ordersStore)
 
-const { resetForm, handleSubmit, defineField } = useForm({})
+const isOpen = ref(false)
+const editInvoice = ref(false)
 
-const [dateFeePaid] = defineField('dateFeePaid')
-const [dateFeeDeclined] = defineField('dateFeeDeclined')
-const [feeAmountPaid] = defineField('feeAmountPaid')
-const [transmittalNumber] = defineField('transmittalNumber')
-const [notes] = defineField('notes')
+const state = ref({
+   dateFeePaid: null,
+   dateFeeDeclined: null,
+   feeAmountPaid: 0,
+   transmittalNumber: "",
+   notes: "",
+})
 
-const submitChanges = handleSubmit(values => {
-   ordersStore.updateInvoice( values )
+const submitChanges = (async () => {
+   const update = {
+      dateFeePaid: "",
+      dateFeeDeclined: "",
+      feeAmountPaid: state.value.feeAmountPaid,
+      transmittalNumber: state.value.transmittalNumber,
+      notes: state.value.notes,
+   }
+   if ( state.value.dateFeePaid ) {
+      update.dateFeePaid = state.value.dateFeePaid.toString()  
+   }
+   if ( state.value.dateFeeDeclined ) {
+      update.dateFeeDeclined = state.value.dateFeeDeclined.toString()  
+   }
+   await ordersStore.updateInvoice( update )
    ordersStore.showInvoice = false
 })
 
@@ -87,54 +98,44 @@ const formatFee = ( (fee) => {
    return ""
 })
 
-const invoiceOpened = (() => {
-   if (ordersStore.editInvoice) {
-      updateEditData()
-   }
+const viewInvoiceClicked = (() => {
+    editInvoice.value = false
+    isOpen.value = true
 })
 
-const editInvoice = (() => {
-   ordersStore.editInvoice = true
+const editInvoiceClicked = (() => {
+   editInvoice.value = true
    updateEditData()
 })
 
 const updateEditData = (() => {
-   let val = {
-      dateFeePaid: "",
-      dateFeeDeclined: "",
+   state.value = {
+      dateFeePaid: null,
+      dateFeeDeclined: null,
       feeAmountPaid: 0,
       transmittalNumber: "",
       notes: "",
    }
    if ( ordersStore.detail.invoice ) {
       if (ordersStore.detail.invoice.dateFeePaid) {
-         val.dateFeePaid = useDateFormat(ordersStore.detail.invoice.dateFeePaid, "YYYY-MM-DD").value
+         state.value.dateFeePaid = parseDate(ordersStore.detail.invoice.dateFeePaid.split("T")[0])
       }
       if (ordersStore.detail.invoice.dateFeeDeclined) {
-         val.dateFeeDeclined = useDateFormat(ordersStore.detail.invoice.dateFeeDeclined, "YYYY-MM-DD").value
+         state.value.dateFeeDeclined = parseDate(ordersStore.detail.invoice.dateFeeDeclined.split("T")[0])
       }
-      val.feeAmountPaid = ordersStore.detail.invoice.feeAmountPaid
-      val.transmittalNumber = ordersStore.detail.invoice.transmittalNumber
-      val.notes = ordersStore.detail.invoice.notes
+      state.value.feeAmountPaid = parseFloat(ordersStore.detail.invoice.feeAmountPaid)
+      state.value.transmittalNumber = ordersStore.detail.invoice.transmittalNumber
+      state.value.notes = ordersStore.detail.invoice.notes
    }
-   resetForm({values: val})
 })
 
 const invoiceClosed = (() => {
-   ordersStore.showInvoice = false
+   isOpen.value = false
 })
 </script>
 
 <style scoped lang="scss">
-.split {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: baseline;
-   gap: 20px;
-}
-
-:deep(dl) {
+dl {
    margin: 10px 30px 0 30px;
    display: inline-grid;
    grid-template-columns: max-content 2fr;
