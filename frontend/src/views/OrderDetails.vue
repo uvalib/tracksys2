@@ -87,7 +87,7 @@
                </div>
             </template>
             <div class="actions" v-if="(detail.status == 'approved' || detail.status == 'completed') && ordersStore.hasPatronDeliverables && detail.email" >
-               <UButton label="View Customer Email" color="secondary" @click="viewEmailClicked()" :style="{marginLeft:0}"/>
+               <CustomerEmailModal :message="detail.email" />
                <UButton label="Recreate Email" color="secondary" @click="recreateEmailClicked()" />
                <SendEmailDialog mode="order" />
             </div>
@@ -137,12 +137,6 @@
          <RelatedUnits :orderID="detail.id" :units="ordersStore.units" :hathiTrust="canUpdateHathiTrust" :canAdd="canAddUnit"/>
       </UCard>
    </div>
-   <Dialog v-model:visible="showEmail" :modal="true" header="Customer Email" @hide="emailClosed()" :style="{width: '650px'}">
-      <div v-html="detail.email" class="email"></div>
-      <template #footer>
-         <UButton label="OK" autofocus color="secondary" @click="emailClosed()"/>
-      </template>
-   </Dialog>
 </template>
 
 <script setup>
@@ -164,6 +158,7 @@ import HathiTrustMetadataDialog from '../components/order/HathiTrustMetadataDial
 import { useConfirm } from "@/composables/useConfirm"
 import AssignModal from '../components/order/AssignModal.vue'
 import CustomerPopover from '../components/order/CustomerPopover.vue'
+import CustomerEmailModal from '../components/order/CustomerEmailModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -173,9 +168,6 @@ const user = useUserStore()
 const customerStore = useCustomersStore()
 
 const { detail } = storeToRefs(ordersStore)
-
-const showEmail = ref(false)
-const customer = ref(null)
 
 const canUpdateHathiTrust = computed( () => {
    return user.isAdmin &&  ordersStore.hathiTrustMetadataCount > 0
@@ -339,14 +331,6 @@ const displayStatus = ((id) => {
       return "Await Fee"
    }
    return id.charAt(0).toUpperCase() + id.slice(1)
-})
-
-const viewEmailClicked = (() => {
-   showEmail.value = true
-})
-
-const emailClosed = (() => {
-   showEmail.value = false
 })
 
 const discardItem = (async (item) => {
@@ -517,9 +501,5 @@ dl {
       white-space: break-spaces;
       margin-inline-start: 5px;
    }
-}
-div.email {
-   padding: 10px;
-   font-size: 0.85em;
 }
 </style>
