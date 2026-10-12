@@ -1,91 +1,83 @@
 <template>
-   <DPGButton @click="show" :label="props.label" severity="secondary" />
-   <Dialog v-model:visible="isOpen" :modal="true" :header="title" :style="{width: '750px'}" position="top" >
-      <form v-if="mode=='unit'" @submit="createUnit">
-         <Panel header="Unit Metadata">
-            <div class="lookup">
-               <InputText v-model="metadataSearch"  @keydown.stop.prevent.enter="lookupMetadata" fluid/>
-               <DPGButton @click="lookupMetadata" label="Lookup" severity="secondary" :loading="metadataStore.working" loadingIcon="pi pi-spin pi-spinner"/>
-               <DPGButton @click="createMetadata" label="Create" severity="secondary"/>
-            </div>
-            <Message v-if="errors.metadataID" severity="error" size="small" variant="simple">{{ errors.metadataID }}</Message>
-            <template v-if="searched">
-               <div class="hits">
-                  <div class="scroller">
-                     <DataTable :value="metadataStore.searchHits" ref="metadataHitsTable" dataKey="id"
-                        stripedRows showGridlines size="small"
-                        @update:selection="metadataSelected" v-model:selection="selectedMetadata" selectionMode="single"
-                        :lazy="false" :paginator="false" :rows="30" removableSort
-                     >
-                        <template #empty>No matching metadata records</template>
-                        <Column field="pid" header="PID" :sortable="true"/>
-                        <Column field="type" header="Type" :sortable="true"/>
-                        <Column field="title" header="title" :sortable="true"/>
-                        <Column field="callNumber" header="Call Number" :sortable="true"/>
-                        <Column field="barcode" header="Barcode" :sortable="true"/>
-                     </DataTable>
+   <UModal v-model:open="isOpen" :modal="true" :dismissible="false" :title="title">
+      <UButton @click="show" :label="props.label" color="secondary"/>
+      <template  #body>
+         <UForm v-if="mode=='unit'" :schema="schema"  :state="state" class="flex flex-col gap-4" @submit="createUnit" ref="form">
+            <UCard title="Unit Metadata">
+               <UFormField name="metadataID" :required="true">
+                  <div class="row-left gap-2!">
+                     <UInput v-model="metadataSearch"  @keydown.stop.prevent.enter="lookupMetadata" class="flex-1"  />
+                     <UButton @click="lookupMetadata" label="Lookup" color="secondary" :loading="metadataStore.working" size="sm"/>
+                     <UButton @click="createMetadata" label="Create" color="secondary" size="sm"/>
                   </div>
+               </UFormField>
+               <div class="scroller">
+                  <UTable :data="metadataStore.searchHits" :columns="columns" :ui="{ td: 'text-xs!' }" v-model:sorting="sorting"
+                     v-model:row-selection="rowSelection" :rowSelectionOptions="{enableMultiRowSelection: false}" @select="metadataSelected" 
+                     v-model:column-visibility="hideCheckbox" 
+                  >
+                     <template #pid-header="{ column }">
+                        <UButton size="xs" color="neutral" variant="ghost" label="PID" :icon="sortIcon(column)" @click="column.toggleSorting(column.getIsSorted() === 'asc')"/>
+                     </template>
+                     <template #title-header="{ column }">
+                        <UButton size="xs" color="neutral" variant="ghost" label="Title" :icon="sortIcon(column)" @click="column.toggleSorting(column.getIsSorted() === 'asc')"/>
+                     </template>
+                     <template #call_number-header="{ column }">
+                        <UButton size="xs" color="neutral" variant="ghost" :icon="sortIcon(column)" @click="column.toggleSorting(column.getIsSorted() === 'asc')">
+                           <span class="text-start">Call Number</span>
+                        </UButton>
+                     </template>
+                     <template #barcode-header="{ column }">
+                        <UButton size="xs" color="neutral" variant="ghost" label="Barcode" :icon="sortIcon(column)" @click="column.toggleSorting(column.getIsSorted() === 'asc')"/>
+                     </template>
+                  </UTable>
                </div>
-            </template>
-            <div v-else class="hint">
-               Find or create a metadata record for the new unit.
+            </UCard>
+            <UCard title="Digitization Information">
+               <div class="column-close">
+                  <UFormField name="intendedUseID" label="Intended Use" :required="true">
+                     <USelect v-model="state.intendedUseID"  :items="intendedUses" placeholder="Select an intended use" class="w-full" />   
+                  </UFormField>
+                  <UFormField name="sourceURL" label="Source URL">
+                     <UInput v-model="state.sourceURL"  class="w-full" />   
+                  </UFormField>
+                  <UFormField name="specialInstructions" label="Special Instructions">
+                     <UTextarea v-model="state.specialInstructions"  class="w-full" />   
+                  </UFormField>
+                  <UFormField name="staffNotes" label="Staff Notes">
+                     <UTextarea v-model="state.staffNotes"  class="w-full" />   
+                  </UFormField>
+                  <label class="row-left gap-2! items-center">
+                     <UCheckbox size="lg" v-model="state.completeScan" />
+                     <span>Complete Scan</span>
+                  </label>
+                  <label class="row-left gap-2! items-center">
+                     <UCheckbox size="lg" v-model="state.throwAway" />
+                     <span>Throw Away</span>
+                  </label>
+                  <label class="row-left gap-2! items-center">
+                     <UCheckbox size="lg" v-model="state.includeInDL" />
+                     <span>Include in Virgo</span>
+                  </label>
+               </div>
+            </UCard>
+            <div class="row-right gap_2!">
+               <UButton @click="isOpen=false" label="Cancel" color="secondary"/>
+               <UButton label="Add Unit" type="submit" />
             </div>
-         </Panel>
-         <Panel header="Digitization Information">
-            <FormField id="intendeduse" label="Intended Use" :error="errors.intendedUseID" :required="true">
-               <Select id="intendeduse" v-model="intendedUseID"  :options="intendedUses" optionLabel="label" optionValue="value" placeholder="Select an intended use" />   
-            </FormField>
-            <FormField id="srcurl" label="Source URL">
-               <InputText id="srcurl" v-model="sourceURL" type="text" />   
-            </FormField>
-            <FormField id="specialinst" label="Special Instructions">
-               <Textarea id="specialinst" v-model="specialInstructions" rows="3"/>   
-            </FormField>
-            <FormField id="staffnotes" label="Staff Notes">
-               <Textarea id="staffnotes" v-model="staffNotes" rows="3"/>   
-            </FormField>
-            <div class="opts">
-               <div class="checkbox">
-                  <input type="checkbox" v-model="completeScan"/>
-                  <span class="label">Complete Scan</span>
-               </div>
-               <div class="checkbox">
-                  <input type="checkbox" v-model="throwAway"/>
-                  <span class="label">Throw Away</span>
-               </div>
-               <div class="checkbox">
-                  <input type="checkbox" v-model="includeInDL"/>
-                  <span class="label">Include in Virgo</span>
-               </div>
-            </div>
-         </Panel>
-         <div class="acts">
-            <DPGButton @click="isOpen=false" label="Cancel" severity="secondary"/>
-            <DPGButton label="Add Unit" type="submit" />
-         </div>
-      </form>
-      <NewMetadataPanel v-else @canceled="metadataCreateCanceled" @created="metadataCreated" />
-   </Dialog>
+         </UForm>
+         <NewMetadataPanel v-else @canceled="metadataCreateCanceled" @created="metadataCreated" />
+      </template>
+   </UModal>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import Dialog from 'primevue/dialog'
-import Panel from 'primevue/panel'
 import { useSystemStore } from '@/stores/system'
 import { useMetadataStore } from '@/stores/metadata'
 import { useOrdersStore } from '@/stores/orders'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import NewMetadataPanel from '@/components/metadata/NewMetadataPanel.vue'
-
-import { useForm } from 'vee-validate'
 import * as yup from 'yup'
-import FormField from '@/components/FormField.vue'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
-import Message from 'primevue/message'
 
 const props = defineProps({
    label: {
@@ -98,6 +90,27 @@ const props = defineProps({
    },
 })
 
+const columns = [
+   {
+      accessorKey: 'pid',
+      header: 'PID'
+   },
+   {
+      accessorKey: 'title',
+      header: 'Title'
+   },
+   {
+      accessorKey: 'call_number',
+      header: 'Call Number'
+   },
+   {
+      accessorKey: 'barcode',
+      header: 'Barcode'
+   },
+]
+const sorting = ref([])
+
+
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
 const ordersStore = useOrdersStore()
@@ -107,26 +120,33 @@ const mode = ref("unit")
 const searched = ref(false)
 const metadataSearch = ref("")
 const selectedMetadata = ref()
+const form = ref()
 
-const { errors, handleSubmit, defineField, resetForm, setValues} = useForm({
-  validationSchema: yup.object().shape({
-      metadataID: yup.number().min(1, "Metadata ID is required"),
-      intendedUseID: yup.number().min(1,'Intended use is required'),
-   })
+const schema = yup.object({
+   metadataID: yup.number().min(1, "Metadata ID is required"),
+   intendedUseID: yup.number().min(1,'Intended use is required'),
 })
 
-const [intendedUseID] = defineField('intendedUseID')
-const [sourceURL] = defineField('sourceURL')
-const [specialInstructions] = defineField('specialInstructions')
-const [staffNotes] = defineField('staffNotes')
-const [completeScan] = defineField('completeScan')
-const [throwAway] = defineField('throwAway')
-const [includeInDL] = defineField('includeInDL')
+const state = ref({
+   itemID: null,
+   metadataID: null,
+   intendedUseID: null,
+   sourceURL: "",
+   specialInstructions: "",
+   staffNotes: "",
+   completeScan: false,
+   throwAway: false,
+   includeInDL: false
+})
+
+const rowSelection = ref({})
+const hideCheckbox = ref({select: false})
 
 const title = computed(() => {
    if (mode.value == "unit") return "Add Unit"
    return "Create Metadata"
 })
+
 const intendedUses = computed(() => {
    let out = []
    systemStore.intendedUses.forEach( a => {
@@ -145,10 +165,24 @@ const intendedUses = computed(() => {
    return out
 })
 
-const metadataSelected = ( (e) => {
-   if (e) {
-      setValues({metadataID: e.id})
+const sortIcon = ((column) => {
+   const isSorted = column.getIsSorted()
+   if (isSorted) {
+      if (isSorted === 'asc') return 'i-lucide-arrow-up-narrow-wide'
+      return 'i-lucide-arrow-down-wide-narrow'
    }
+   return 'i-lucide-arrow-up-down'
+})
+
+const metadataSelected = (( _e, row) => {
+   const selID = row.original.id 
+   if (state.value.metadataID == selID) {
+      state.value.metadataID = null   
+   } else {
+      state.value.metadataID = selID       
+   }
+   row.toggleSelected(!row.getIsSelected())
+   form.value.validate({name: 'metadataID'})
 })
 
 const createMetadata = (() => {
@@ -173,8 +207,8 @@ const lookupMetadata = ( async () => {
    searched.value = true
 })
 
-const createUnit = handleSubmit( async (values) => {
-   await ordersStore.addUnit(values)
+const createUnit = (async () => {
+   await ordersStore.addUnit(state.value)
    if (systemStore.error == "") {
       isOpen.value = false
    }
@@ -187,16 +221,16 @@ const show = (() => {
    selectedMetadata.value = null
    metadataStore.resetSearch()
 
-   let val = {
+   state.value = {
       itemID: 0,
       metadataID: 0,
-      intendedUseID: 0,
+      intendedUseID: null,
       sourceURL: "",
       specialInstructions: "",
       staffNotes: "",
       completeScan: false,
       throwAway: false,
-      includeInDL: false,
+      includeInDL: false
    }
 
    if (props.item) {
@@ -219,43 +253,26 @@ const show = (() => {
       if (props.item.description && props.item.description != "") {
          si += `\nDescription: ${props.item.description}`
       }
-      val.itemID = props.item.id
-      val.specialInstructions = si
-      val.sourceURL = props.item.sourceURL
-      val.intendedUseID = props.item.intendedUse.id
+      state.itemID = props.item.id
+      state.specialInstructions = si
+      state.sourceURL = props.item.sourceURL
+      state.intendedUseID = props.item.intendedUse.id
       lookupMetadata()
    }
-    resetForm({values: val })
 })
 
 </script>
 
 <style lang="scss" scoped>
-div.p-panel {
-   div.lookup {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-start;
-      align-items: stretch;
-      gap: 10px;
-      margin-top: 20px;
-   }
    div.no-results {
       margin: 15px 0 0 0;
       font-size: 1.2em;
       font-weight: 600;
       text-align: center;
    }
-   div.hits {
-      .scroller {
-         max-height: 250px;
-         overflow-y: scroll;
-      }
+   .scroller {
+      max-height: 250px;
+      overflow-y: scroll;
+      font-size: 0.8em;
    }
-}
-:deep(.p-panel-content) {
-   display: flex;
-   flex-direction: column;
-   gap: 15px;
-}
 </style>

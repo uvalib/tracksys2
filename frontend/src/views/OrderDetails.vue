@@ -124,7 +124,7 @@
                   <DataDisplay v-if="item.sourceURL" label="Web Link" :value="item.sourceURL"/>
                   <DataDisplay v-if="item.description" label="Description" :value="item.description"/>
                </dl>
-               <div class="item-acts">
+               <div class="row-right gap-2!">
                   <UButton label="Discard" autofocus color="secondary" @click="discardItem(item)"/>
                   <AddUnitDialog label="Create Unit" :item="item" />
                </div>
@@ -140,8 +140,7 @@
 </template>
 
 <script setup>
-import Dialog from 'primevue/dialog'
-import { onBeforeMount, ref, computed } from 'vue'
+import { onBeforeMount, computed } from 'vue'
 import { useRoute, onBeforeRouteUpdate, useRouter } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useOrdersStore } from '@/stores/orders'
@@ -406,26 +405,20 @@ dl.item-intended-use {
    }
 }
 div.item {
-   margin: 15px;
    padding: 10px;
    border: 1px solid var(--uvalib-grey-light);
    border-radius: 5px;
    position: relative;
+   dl {
+      margin: 0 10px !important;
+   }
+  
    i.used {
       font-size: 1.25em;
       position: absolute;
       color: var(--uvalib-green-dark);
       top: 10px;
       left: 10px;
-   }
-   .item-acts {
-      font-size: 0.8em;
-      margin: 10px;
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-end;
-      align-items: flex-start;
-      gap: 10px;
    }
 }
 .details {
