@@ -1,6 +1,6 @@
 <template>
    <h2>Orders</h2>
-   <div class="row-between p-2 sticky z-50 bg-white border-b border-brand-grey-100" :style="{top: headerHeight}">
+   <div class="row-between p-2 sticky z-50 bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
       <UButton v-if="(userStore.isAdmin || userStore.isSupervisor)" color="secondary" label="Create Order" @click="createOrder()"/>
       <div class="row-right">
          <UPagination color="neutral" variant="ghost"
@@ -88,20 +88,17 @@
 </template>
 
 <script setup>
-import { onBeforeMount, onMounted, ref, computed } from 'vue'
+import { onBeforeMount, onMounted, ref } from 'vue'
 import { useOrdersStore } from '@/stores/orders'
 import { useUserStore } from '@/stores/user'
+import { useSystemStore } from '@/stores/system'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
 const ordersStore = useOrdersStore()
 const userStore = useUserStore()
-
-const headerHeight = computed(() => {
-   let hdr = document.getElementById('uva-header')
-   return `${hdr.clientHeight}px`
-})
+const system = useSystemStore()
 
 const sorting = ref([
   {

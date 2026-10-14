@@ -44,7 +44,7 @@ import WaitSpinner from "@/components/WaitSpinner.vue"
 import { useSystemStore } from "@/stores/system"
 import { useUserStore } from "@/stores/user"
 import { useSearchStore } from "@/stores/search"
-import { onBeforeMount, watch, ref, computed } from 'vue'
+import { onBeforeMount, onMounted, nextTick, watch, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const systemStore = useSystemStore()
@@ -88,7 +88,7 @@ const menuItems = computed(()=> {
       ]},
       misc,
       {label: userStore.signedInUser, children: [
-         {label: "Sign Out", icon: 'i-lucide-log-out',  onSelect: () => signout()}    
+         {label: "Sign Out", icon: 'i-lucide-log-out',  onSelect: () => signOut()}    
       ]},
    ]
 })
@@ -121,6 +121,13 @@ onBeforeMount( async () => {
    document.title = `Tracksys`
    await systemStore.getConfig()
    configuring.value = false
+})
+
+onMounted(() => {
+   nextTick(() => {
+      let hdr = document.getElementById('uva-header')
+      systemStore.headerHeight = `${hdr.clientHeight}px`
+   })
 })
 
 </script>

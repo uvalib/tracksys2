@@ -21,6 +21,7 @@ export const useSystemStore = defineStore('system', {
       ocrHints: [],
       ocrLanguageHints: [],
       useRights: [],
+      headerHeight: "",
       toast: {
          error: false,
          summary: "",

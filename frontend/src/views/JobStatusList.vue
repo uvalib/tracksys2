@@ -1,7 +1,7 @@
 <template>
    <h2>Job Statuses</h2>
 
-   <div class="row-between p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: headerHeight}">
+   <div class="row-between p-2 sticky z-50 bg-white border-b-1 border-brand-grey-100" :style="{top: system.headerHeight}">
       <UButton label="Delete selected" :disabled="selectedJobs.length == 0"  color="secondary" @click="deletAllClicked"/>
       <div class="row-left">
          <UPagination color="neutral" variant="ghost"
@@ -46,8 +46,10 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue'
 import { useJobsStore } from '@/stores/jobs'
+import { useSystemStore } from '@/stores/jobs'
 import { useConfirm } from "@/composables/useConfirm"
 
+const system = useSystemStore()
 const jobsStore = useJobsStore()
 
 const selectedJobs = ref([])
@@ -127,11 +129,6 @@ const toggleJobSelected = ((js) => {
       selectedJobs.value.push(js.id)
    }
 
-})
-
-const headerHeight = computed(() => {
-   let hdr = document.getElementById('uva-header')
-   return `${hdr.clientHeight}px`
 })
 
 const queryJobs = (() => {
