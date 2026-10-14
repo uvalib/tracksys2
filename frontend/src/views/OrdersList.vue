@@ -21,7 +21,7 @@
          <UInput v-model="ordersStore.searchOpts.query" placeholder="Search Job Status" @update:modelValue="queryOrders"/>
       </div>
    </div>
-    <UTable :data="ordersStore.orders" :columns="columns" v-model:sorting="sorting" >
+    <UTable :data="ordersStore.orders" :columns="columns" v-model:sorting="sorting" sticky class="h-[calc(100vh-185px)]" >
       <template #id-header="{ column }">
          <UButton color="neutral" variant="ghost" label="ID" :icon="sortIcon(column)"  @click="sortClicked(column)"/>
       </template>
@@ -93,6 +93,7 @@ import { useOrdersStore } from '@/stores/orders'
 import { useUserStore } from '@/stores/user'
 import { useSystemStore } from '@/stores/system'
 import { useRoute, useRouter } from 'vue-router'
+import FilterPopover from '@/components/FilterPopover.vue'
 
 const route = useRoute()
 const router = useRouter()

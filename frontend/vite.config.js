@@ -97,6 +97,19 @@ export default defineConfig({
                   }
                }
             },
+            inputDate: {
+               base: '!border-none !ring-brand-grey-100',
+               compoundVariants: [
+                  {
+                     color: 'primary',
+                     variant: [
+                        'outline',
+                        'subtle'
+                     ],
+                     class: 'outline-brand-grey-100 has-focus-visible:outline-offset-2 has-focus-visible:ring-brand-grey-100'
+                  },
+               ]
+            },
             inputNumber: {
                slots: {
                   base: '!border-none !ring-brand-grey-100 focus:outline-offset-2 focus:outline-brand-blue-alt-100'

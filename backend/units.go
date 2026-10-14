@@ -56,9 +56,7 @@ type unit struct {
 	StaffNotes                  string       `json:"staffNotes"`
 	DateArchived                *time.Time   `json:"dateArchived"`
 	DatePatronDeliverablesReady *time.Time   `json:"datePatronDeliverablesReady"`
-	PatronDateString            string       `json:"patronDateString,omitempty"`
 	DateDLDeliverablesReady     *time.Time   `gorm:"column:date_dl_deliverables_ready" json:"dateDLDeliverablesReady"`
-	DLDateString                string       `json:"dlDateString,omitempty"`
 	CreatedAt                   time.Time    `json:"-"`
 	UpdatedAt                   time.Time    `json:"-"`
 	ProjectID                   int64        `gorm:"-" json:"projectID,omitempty"`

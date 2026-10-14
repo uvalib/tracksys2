@@ -399,11 +399,6 @@ const claimOrder = (async () => {
 </script>
 
 <style scoped lang="scss">
-dl.item-intended-use {
-   dd {
-      margin: 0 0 5px 0 !important;
-   }
-}
 div.item {
    padding: 10px;
    border: 1px solid var(--uvalib-grey-light);
@@ -434,27 +429,6 @@ div.item {
    }
    p {
       margin: 5px;
-   }
-
-   dl {
-      margin-bottom: 10px !important;
-   }
-
-   div.customer, div.status {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-start;
-      align-items: center;
-      .name {
-         color: var(--uvalib-blue-alt-dark);
-         font-weight: 500;
-         text-decoration: none;
-         display: inline-block;
-         cursor: pointer;
-         &:hover {
-            text-decoration: underline;
-         }
-      }
    }
 }
 

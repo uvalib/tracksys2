@@ -45,11 +45,17 @@
             <UInput v-model="pendingFilter" placeholder="Date..." />
          </FilterPopover>
       </template>
-      <template #dlDateString-header="{ column }">
-         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied('dlDateString')" @opened="filterOpened(column)"
+      <template #datePatronDeliverablesReady-cell="{ row }">
+         <span v-if="row.original.datePatronDeliverablesReady">{{ toCalendarDate(parseAbsolute(row.original.datePatronDeliverablesReady)).toString() }}</span>
+      </template>
+      <template #dateDLDeliverablesReady-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied('dateDLDeliverablesReady')" @opened="filterOpened(column)"
             @clear="clearFilter(column)" @apply="applyFilter(column)">
             <UInput v-model="pendingFilter" placeholder="Date..." />
          </FilterPopover>
+      </template>
+      <template #dateDLDeliverablesReady-cell="{ row }">
+         <span v-if="row.original.dateDLDeliverablesReady">{{ toCalendarDate(parseAbsolute(row.original.dateDLDeliverablesReady)).toString() }}</span>
       </template>
       <template #reorder-header="{ column }">
          <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied('reorder')" @opened="filterOpened(column)"
@@ -64,7 +70,9 @@
 import { ref, computed } from 'vue'
 import AddUnitDialog from '@/components/order/AddUnitDialog.vue'
 import HathiTrustUpdateDialog from '@/components/HathiTrustUpdateDialog.vue'
+import FilterPopover from '@/components/FilterPopover.vue'
 import { useSystemStore } from '@/stores/system'
+import { toCalendarDate, parseAbsolute } from '@internationalized/date'
 
 const props = defineProps({
    orderID: {
@@ -115,11 +123,11 @@ const columns = [
       header: 'Intended Use',
    },
    {
-      accessorKey: 'patronDateString',
+      accessorKey: 'datePatronDeliverablesReady',
       header: 'Date Patron Deliverables Ready',
    },
    {
-      accessorKey: 'dlDateString',
+      accessorKey: 'dateDLDeliverablesReady',
       header: 'Date DL Deliverables Ready',
    },
    {

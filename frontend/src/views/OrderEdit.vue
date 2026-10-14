@@ -3,46 +3,41 @@
       <span v-if="route.params.id">Order {{route.params.id}}</span>
       <span v-else>New Order</span>
    </h2>
-   <div class="edit-form">
-      <form @submit="submitChanges">
-         <div class="split">
-            <FormField id="ostatus" label="Status" :error="errors.status" :required="true">
-               <Select id="ostatus" v-model="status"  :options="orderStatuses" optionLabel="label" optionValue="value" />   
-            </FormField>
-            <FormField id="datedue" label="Date Due" :error="errors.dateDue" :required="true">
-               <DatePicker id="datedue" v-model="dateDue" showIcon dateFormat="yy-mm-dd" updateModelType="string"/>   
-            </FormField>
-         </div>
-         <FormField id="otitle" label="Order Title">
-            <InputText id="otitle" v-model="title" type="text"/>   
-         </FormField>
-         <FormField id="instruct" label="Special Instructions">
-            <Textarea id="instruct" v-model="specialInstructions" rows="5"/>   
-         </FormField>
-         <FormField id="notes" label="Staff Notes">
-            <Textarea id="notes" v-model="staffNotes" rows="5"/>   
-         </FormField>
-         <FormField  v-if="isFeeRequired" id="fee" label="Fee">
-            <InputNumber id="fee" v-model="fee" mode="currency" currency="USD" locale="en-US"/>   
-         </FormField>
-         <div class="split">
-             <FormField id="agency" label="Agency">
-               <Select id="agency" v-model="agencyID" filter placeholder="Select an agency"
-                  :options="agencies" optionLabel="label" optionValue="value" 
-               />   
-            </FormField>
-            <FormField id="customer" label="Customer" :error="errors.customerID" :required="true">
-               <Select id="customer" v-model="customerID" filter 
-                  :options="customers" optionLabel="label" optionValue="value" placeholder="Select a customer"
-               />   
-            </FormField>
-         </div>
-         <div class="acts">
-            <DPGButton label="Cancel" severity="secondary" @click="cancelEdit()"/>
-            <DPGButton label="Save" type="submit" />
-         </div>
-      </form>
-   </div>
+   <UForm :schema="schema" :state="state" class="column w-full max-w-150 mx-auto! mt-10!" @submit="submitChanges">
+      <div class="row-between gap-4">
+         <UFormField name="status" label="Status" class="grow">   
+            <USelect v-model="state.status" :items="orderStatuses" class="w-full"/>   
+         </UFormField>
+         <UFormField label="Date Due" :required="true" class="grow">   
+            <DatePicker v-model="state.dateDue" class="w-full"/>   
+         </UFormField>
+      </div>
+      <UFormField name="title" label="Title" class="grow">   
+         <UInput  v-model="state.title" class="w-full"/>    
+      </UFormField>
+      <UFormField name="specialInstructions" label="Special Instructions" class="grow">   
+         <UTextarea v-model="state.specialInstructions" class="w-full"/>    
+      </UFormField>
+      <UFormField name="staffNotes" label="Staff Notes" class="grow">   
+         <UTextarea v-model="state.staffNotes" class="w-full"/>    
+      </UFormField>
+      <UFormField  v-if="isFeeRequired" name="fee" label="Fee" class="grow">   
+         <UInputNumber v-model="state.fee" class="w-full" :step="0.01" :increment="false" :decrement="false"
+            :format-options="{style: 'currency',currency: 'USD'}" />
+      </UFormField>
+      <div class="row-between gap-4">
+         <UFormField name="agencyID" label="Agency" class="grow">   
+            <USelect v-model="state.agencyID" :items="agencies" class="w-full" placeholder="Select an agency..."/>   
+         </UFormField>   
+         <UFormField name="customerID" label="Customer" class="grow">   
+            <USelect v-model="state.customerID" :items="customers" class="w-full" placeholder="Select a customer..."/>   
+         </UFormField>  
+      </div>
+      <div class="row-right gap-2!">
+         <UButton label="Cancel" color="secondary" @click="cancelEdit()"/>
+         <UButton label="Save" type="submit" />
+      </div>
+   </UForm>
 </template>
 
 <script setup>
@@ -51,23 +46,10 @@ import { useOrdersStore } from '@/stores/orders'
 import { useSystemStore } from '@/stores/system'
 import { useCustomersStore } from '@/stores/customers'
 import { onMounted, ref, computed } from 'vue'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import DatePicker from 'primevue/datepicker'
-import { useDateFormat } from '@vueuse/core'
+import DatePicker from '@/components/DatePicker.vue'
+import { toCalendarDate, parseAbsolute } from '@internationalized/date'
 
-import { useForm } from 'vee-validate'
 import * as yup from 'yup'
-import FormField from '@/components/FormField.vue'
-
-const schema = yup.object().shape({
-   status: yup.string().required('Status is required'),
-   dateDue: yup.string().required('Due date is required'),
-   customerID: yup.number().min(1, "Customer is required"),
-})
-const { errors, resetForm, handleSubmit, defineField } = useForm({ validationSchema: schema })
 
 const route = useRoute()
 const router = useRouter()
@@ -75,14 +57,22 @@ const ordersStore = useOrdersStore()
 const systemStore = useSystemStore()
 const customersStore = useCustomersStore()
 
-const [status] = defineField('status')
-const [dateDue] = defineField('dateDue')
-const [title] = defineField('title')
-const [specialInstructions] = defineField('specialInstructions')
-const [staffNotes] = defineField('staffNotes')
-const [fee] = defineField('fee')
-const [agencyID] = defineField('agencyID')
-const [customerID] = defineField('customerID')
+const schema = yup.object({
+   status: yup.string().required('Status is required'),
+   dateDue: yup.string().required('Due date is required'),
+   customerID: yup.number().min(1, "Customer is required"),
+})
+
+const state = ref({
+   status: "",
+   dateDue: null,
+   title: "",
+   specialInstructions: "",
+   staffNotes: "",
+   fee: 0.0,
+   agencyID: null,
+   customerID: null,
+})
 
 const newOrder = ref(false)
 
@@ -119,7 +109,6 @@ const orderStatuses = computed(() => {
    return out
 })
 
-
 onMounted( async () =>{
    let orderID = route.params.id
    if (orderID) {
@@ -134,32 +123,29 @@ onMounted( async () =>{
 
    await customersStore.getCustomers()
 
-   let val = {
+   state.value = {
       status: ordersStore.detail.status,
-      dateDue: "",
+      dateDue: null,
       title: ordersStore.detail.title,
       specialInstructions: ordersStore.detail.specialInstructions,
       staffNotes: ordersStore.detail.staffNotes,
       fee: 0.0,
-      agencyID: 0,
-      customerID: 0,
+      agencyID: null,
+      customerID: null,
       feeRequired: isFeeRequired.value,
    }
    if (ordersStore.detail.fee && !ordersStore.detail.feeWaived ) {
-      val.fee = parseFloat(ordersStore.detail.fee).toFixed(2)
+      state.value.fee = parseFloat(ordersStore.detail.fee).toFixed(2)
    }
    if (ordersStore.detail.agency) {
-      val.agencyID = ordersStore.detail.agency.id
+      state.value.agencyID = ordersStore.detail.agency.id
    } 
    if (ordersStore.detail.customer) {
-      val.customerID = ordersStore.detail.customer.id
+      state.value.customerID = ordersStore.detail.customer.id
    } 
    if (ordersStore.detail.dateDue != "") {
-      val.dateDue = useDateFormat(ordersStore.detail.dateDue, "YYYY-MM-DD").value
+      state.value.dateDue = toCalendarDate( parseAbsolute(ordersStore.detail.dateDue) )
    } 
-
-   useDateFormat(ordersStore.detail.dateDue, "YYYY-MM-DD").value
-   resetForm({values: val})
 })
 
 const cancelEdit = (() => {
@@ -170,15 +156,27 @@ const cancelEdit = (() => {
    }
 })
 
-const submitChanges = handleSubmit( async (values) => {
+const submitChanges = (async () => {
+   const data = {
+      status: state.value.status,
+      dateDue: state.value.dateDue.toString(),
+      title: state.value.title,
+      specialInstructions: state.value.specialInstructions,
+      staffNotes: state.value.staffNotes,
+      fee: state.value.fee,
+      agencyID: state.value.agencyID,
+      customerID: state.value.customerID,
+   }
+
    if ( newOrder.value == true) {
-      await ordersStore.createOrder( values )
+      await ordersStore.createOrder( data )
    } else {
-      await ordersStore.submitEdit( values )
+      await ordersStore.submitEdit( data )
    }
    if (systemStore.showError == false) {
       router.push(`/orders/${ordersStore.detail.id}`)
    }
+   console.log(data)
 })
 
 </script>

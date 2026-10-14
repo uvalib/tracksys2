@@ -76,6 +76,7 @@ import { useSearchStore } from '../../stores/search'
 import { useSystemStore } from '../../stores/system'
 import { useRoute, useRouter } from 'vue-router'
 import ResultsToolbar from './ResultsToolbar.vue'
+import FilterPopover from '@/components/FilterPopover.vue'
 
 const route = useRoute()
 const router = useRouter()

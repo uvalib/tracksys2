@@ -49,7 +49,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useSearchStore } from '../../stores/search'
 import { useRoute, useRouter } from 'vue-router'
-import FilterPopover from './FilterPopover.vue'
+import FilterPopover from '@/components/FilterPopover.vue'
 import ResultsToolbar from './ResultsToolbar.vue'
 
 const route = useRoute()
