@@ -1,81 +1,70 @@
 <template>
-   <DataTable :value="props.units" ref="relatedUnitsTable" dataKey="id"
-      stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-      :lazy="false" :paginator="true" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort
-      paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"
-      v-model:filters="filters" filterDisplay="menu" paginatorPosition="top"
-   >
-      <template #empty><h3>No units found</h3></template>
-      <template #paginatorstart>
-         <div class="unit-acts">
-            <HathiTrustUpdateDialog v-if="props.hathiTrust" :orderID="props.orderID" />
-            <AddUnitDialog v-if="props.canAdd"/>
-            <DPGButton label="Download Units CSV" severity="secondary" @click="downloadCSV" />
-         </div>
+   <div class="row-between bg-white border-b border-t border-brand-grey-100 py-3 px-2 items-center">
+      <div class="row-between gap-2">
+         <HathiTrustUpdateDialog :orderID="props.orderID" v-if="props.hathiTrust" />
+         <AddUnitDialog v-if="props.canAdd"/>
+         <UButton label="Download Units CSV" color="secondary" @click="downloadCSV" />
+      </div>
+      <span>{{  table?.tableApi?.getFilteredRowModel().rows.length }} Units</span>
+   </div>
+   <UTable ref="table" :data="props.units" :columns="columns" v-model:column-filters="filters" v-model:sorting="sorting" sticky virtualize class="h-150">
+      <template #id-cell="{ row }">
+         <router-link :to="`/units/${row.original.id}`">{{row.original.id}}</router-link>
       </template>
-      <Column field="id" header="ID" :sortable="true">
-         <template #body="slotProps">
-            <router-link :to="`/units/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
-         </template>
-      </Column>
-      <Column field="metadata.title" header="Title" :sortable="true" v-if="showMetadata">
-         <template #body="slotProps">
-            <router-link v-if="slotProps.data.metadata" :to="`/metadata/${slotProps.data.metadataID}`">{{slotProps.data.metadata.title}}</router-link>
-            <span v-else class="empty">N/A</span>
-         </template>
-      </Column>
-      <Column field="status" header="Status" filterField="status" :showFilterMatchModes="false">
-         <template #filter="{filterModel}">
-            <Select v-model="filterModel.value" :options="statusValues" optionLabel="label" optionValue="value" placeholder="Select a status" />
-         </template>
-      </Column>
-      <Column field="metadata.callNumber" header="Call Number" v-if="showMetadata" class="nowrap" />
-      <Column field="intendedUse.name" header="Intended Use" filterField="intendedUse.id" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <Select v-model="filterModel.value" :options="systemStore.intendedUses" optionLabel="name" optionValue="id" placeholder="Select an intended use" />
-         </template>
-      </Column>
-      <Column field="datePatronDeliverablesReady"  header="Date Patron Deliverables Ready" :sortable="true">
-         <template #body="slotProps">
-            <span v-if="slotProps.data.datePatronDeliverablesReady">
-               {{$formatDate(slotProps.data.datePatronDeliverablesReady)}}
-            </span>
-            <span v-else class="empty">N/A</span>
-         </template>
-      </Column>
-      <Column field="dateDLDeliverablesReady" header="Date DL Deliverables Ready" :sortable="true">
-         <template #body="slotProps">
-            <span v-if="slotProps.data.dateDLDeliverablesReady">
-               {{$formatDate(slotProps.data.dateDLDeliverablesReady)}}
-            </span>
-            <span v-else class="empty">N/A</span>
-         </template>
-      </Column>
-      <Column field="reorder" header="Reorder?" filterField="reorder" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <Select v-model="filterModel.value" :options="yesNo" optionLabel="label" optionValue="value" placeholder="Select a reorder status" />
-         </template>
-         <template #body="slotProps">
-            {{$formatBool(slotProps.data.reorder)}}
-         </template>
-      </Column>
-      <Column field="masterFilesCount" header="Master Files Count" :sortable="true"/>
-   </DataTable>
+      <template #title-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied('title')" @opened="filterOpened(column)"
+            @clear="clearFilter(column)" @apply="applyFilter(column)">
+            <UInput v-model="pendingFilter" placeholder="Title..." />
+         </FilterPopover>
+      </template>
+      <template #title-cell="{ row }">
+         <router-link v-if="row.original.metadata" :to="`/metadata/${row.original.metadataID}`">{{row.original.metadata.title}}</router-link>
+         <span v-else class="empty">N/A</span>
+      </template>
+      <template #status-header="{column}">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied('status')" @opened="filterOpened(column)"
+            @clear="clearFilter(column)" @apply="applyFilter(column)">
+            <USelect v-model="pendingFilter" :items="statusValues" placeholder="Status..." />
+         </FilterPopover>
+      </template>
+      <template #callNumber-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied('callNumber')" @opened="filterOpened(column)"
+            @clear="clearFilter(column)" @apply="applyFilter(column)">
+            <UInput v-model="pendingFilter" placeholder="Call Number..." />
+         </FilterPopover>
+      </template>
+      <template #intendedUse-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied('intendedUse')" @opened="filterOpened(column)"
+            @clear="clearFilter(column)" @apply="applyFilter(column)">
+            <USelect v-model="pendingFilter" :items="system.intendedUses" labelKey="name" valueKey="name" placeholder="Intended use..." />
+         </FilterPopover>
+      </template>
+      <template #datePatronDeliverablesReady-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied('datePatronDeliverablesReady')" @opened="filterOpened(column)"
+            @clear="clearFilter(column)" @apply="applyFilter(column)">
+            <UInput v-model="pendingFilter" placeholder="Date..." />
+         </FilterPopover>
+      </template>
+      <template #dlDateString-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied('dlDateString')" @opened="filterOpened(column)"
+            @clear="clearFilter(column)" @apply="applyFilter(column)">
+            <UInput v-model="pendingFilter" placeholder="Date..." />
+         </FilterPopover>
+      </template>
+      <template #reorder-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied('reorder')" @opened="filterOpened(column)"
+            @clear="clearFilter(column)" @apply="applyFilter(column)">
+            <USelect v-model="pendingFilter" :items="yesNo" placeholder="Select a value..." />
+         </FilterPopover>
+      </template>
+   </UTable>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { FilterMatchMode } from '@primevue/core/api'
-import Select from 'primevue/select'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import AddUnitDialog from '@/components/order/AddUnitDialog.vue'
 import HathiTrustUpdateDialog from '@/components/HathiTrustUpdateDialog.vue'
 import { useSystemStore } from '@/stores/system'
-import { usePinnable } from '@/composables/pin'
-
-usePinnable("p-datatable-paginator-top")
 
 const props = defineProps({
    orderID: {
@@ -100,12 +89,67 @@ const props = defineProps({
    },
 })
 
-const systemStore = useSystemStore()
-const relatedUnitsTable = ref()
-const filters = ref( {
-   'status': {value: null, matchMode: FilterMatchMode.EQUALS},
-   'intendedUse.id': {value: null, matchMode: FilterMatchMode.EQUALS},
-   'reorder': {value: null, matchMode: FilterMatchMode.EQUALS},
+const columns = [
+   {
+      accessorKey: 'id',
+      header: 'ID',
+   },
+   {
+      accessorKey: 'metadata.title',
+      id: 'title',
+      header: 'Title',
+      enableSorting: true,
+   },
+   {
+      accessorKey: 'status',
+      header: 'Status',
+   },
+   {
+      accessorKey: 'metadata.callNumber',
+      id: 'callNumber',
+      header: 'Call Number',
+   },
+   {
+      id: 'intendedUse',
+      accessorKey: 'intendedUse.name',
+      header: 'Intended Use',
+   },
+   {
+      accessorKey: 'patronDateString',
+      header: 'Date Patron Deliverables Ready',
+   },
+   {
+      accessorKey: 'dlDateString',
+      header: 'Date DL Deliverables Ready',
+   },
+   {
+      accessorKey: 'reorder',
+      header: 'Reorder?',
+   },
+   {
+      accessorKey: 'masterFilesCount',
+      header: 'Master Files Count',
+   },
+]
+
+const system = useSystemStore()
+
+const table = ref()
+const sorting = ref([])
+const filters = ref([])
+const pendingFilter = ref()
+
+const isFilterApplied = ((name) => {
+   return filters.value.findIndex( f => f.id == name) > -1
+})
+const filterOpened = ((column) => {
+   pendingFilter.value = column.getFilterValue()  
+})
+const clearFilter = ((column) => {
+   column.setFilterValue(null)
+})
+const applyFilter = ((column) => {
+   column.setFilterValue(pendingFilter.value)
 })
 
 const statusValues = computed(() => {
@@ -126,17 +170,38 @@ const yesNo = computed(() => {
 })
 
 const downloadCSV = (() => {
-   relatedUnitsTable.value.exportCSV()
+   const header = columns.map( c => `"${c.header}"`)
+   const fields = columns.map( c => c.accessorKey )
+
+   let csv = "data:text/csv;charset=utf-8,"
+   csv += (header.join(",")+"\n")
+   props.units.forEach( r => {
+      fields.forEach( fieldName => {
+         let val = ""
+         if (fieldName.includes(".")) {
+            let bits = fieldName.split(".")
+            let child = r[bits[0]]
+            val = child[bits[1]]
+         } else {
+            val = `${r[fieldName]}`
+         }
+         val = val.replaceAll("\"", "'")
+         csv += `"${val}",`
+      })
+      csv += "\n"
+   })
+
+   // create a link for the data and download it
+   var encodedUri = encodeURI(csv)
+   var link = document.createElement("a")
+   link.setAttribute("href", encodedUri)
+   link.setAttribute("download", "units.csv")
+   document.body.appendChild(link)
+   link.click()
+   document.body.removeChild(link)
 })
 
 </script>
 
 <style scoped lang="scss">
-   .unit-acts{
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-start;
-      align-items: center;
-      gap: 10px;
-   }
 </style>

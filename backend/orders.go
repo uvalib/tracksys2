@@ -205,7 +205,7 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 
 	type oResp struct {
 		Order *order      `json:"order"`
-		Units []unit      `json:"units"`
+		Units []*unit     `json:"units"`
 		Items []orderItem `json:"items"`
 	}
 	out := oResp{Order: oDetail}
@@ -216,6 +216,14 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 		Select("units.*", mfCnt).Find(&out.Units).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get units for order %s: %s", oID, err.Error())
+	}
+	for _, u := range out.Units {
+		if u.DateDLDeliverablesReady != nil {
+			u.DLDateString = u.DateDLDeliverablesReady.Format("2006-01-02")
+		}
+		if u.DatePatronDeliverablesReady != nil {
+			u.PatronDateString = u.DatePatronDeliverablesReady.Format("2006-01-02")
+		}
 	}
 	err = svc.DB.Where("order_id=?", oID).Preload("IntendedUse").Find(&out.Items).Error
 	if err != nil {

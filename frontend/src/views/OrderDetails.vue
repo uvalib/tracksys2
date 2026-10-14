@@ -132,7 +132,7 @@
          </div>
       </UCard>
    </div>
-   <div class="details" v-if="systemStore.working==false" >
+   <div class="details" v-if="systemStore.working==false"style="margin-bottom: 60px;" >
       <UCard title="Units" class="w-full">
          <RelatedUnits :orderID="detail.id" :units="ordersStore.units" :hathiTrust="canUpdateHathiTrust" :canAdd="canAddUnit"/>
       </UCard>

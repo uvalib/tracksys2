@@ -1,7 +1,7 @@
 <template>
 <UPopover v-model:open="open">
-   <UButton variant="link" class="text-black" :trailing-icon="icon" :label="props.label" :truncate="false">
-      <span>{{ props.label }}</span>
+   <UButton variant="link" class="text-black" :trailing-icon="icon" :label="props.label" @click="emit('opened')">
+      <span class="text-left">{{ props.label }}</span>
    </UButton>
    <template #content>
       <div class="p-4 column-close">
@@ -20,7 +20,7 @@ import { ref, computed } from 'vue'
 
 const open = ref(false)
 
-const emit = defineEmits( ['clear', 'apply'])
+const emit = defineEmits( ['opened', 'clear', 'apply'])
 const props = defineProps({
    label: {
       type: String,
@@ -33,7 +33,7 @@ const props = defineProps({
 })
 
 const icon = computed(() => {
-   if ( props.applied) return  'i-lucide-funnel-plus'
+   if ( props.applied) return  'lucide-extended:funnel-filled'
    return "i-lucide-funnel"
 })
 
