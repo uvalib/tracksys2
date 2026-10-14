@@ -27,10 +27,10 @@
       </UFormField>
       <div class="row-between gap-4">
          <UFormField name="agencyID" label="Agency" class="grow">   
-            <USelect v-model="state.agencyID" :items="agencies" class="w-full" placeholder="Select an agency..."/>   
+            <USelectMenu v-model="state.agencyID" :items="agencies" class="w-full" value-key="value" placeholder="Select an agency..." virtualize/>   
          </UFormField>   
          <UFormField name="customerID" label="Customer" class="grow">   
-            <USelect v-model="state.customerID" :items="customers" class="w-full" placeholder="Select a customer..."/>   
+            <USelectMenu v-model="state.customerID" :items="customers" class="w-full" value-key="value"  placeholder="Select a customer..." virtualize/>
          </UFormField>  
       </div>
       <div class="row-right gap-2!">
@@ -135,7 +135,7 @@ onMounted( async () =>{
       feeRequired: isFeeRequired.value,
    }
    if (ordersStore.detail.fee && !ordersStore.detail.feeWaived ) {
-      state.value.fee = parseFloat(ordersStore.detail.fee).toFixed(2)
+      state.value.fee = parseFloat(ordersStore.detail.fee)
    }
    if (ordersStore.detail.agency) {
       state.value.agencyID = ordersStore.detail.agency.id

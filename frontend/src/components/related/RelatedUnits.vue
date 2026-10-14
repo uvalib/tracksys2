@@ -5,7 +5,7 @@
          <AddUnitDialog v-if="props.canAdd"/>
          <UButton label="Download Units CSV" color="secondary" @click="downloadCSV" />
       </div>
-      <span>{{  table?.tableApi?.getFilteredRowModel().rows.length }} Units</span>
+      <span>{{ table?.tableApi?.getFilteredRowModel().rows.length }} Units<span v-if="filters.length > 0"> (filtered)</span></span>
    </div>
    <UTable ref="table" :data="props.units" :columns="columns" v-model:column-filters="filters" v-model:sorting="sorting" sticky virtualize class="h-150">
       <template #id-cell="{ row }">
