@@ -1,7 +1,7 @@
 <template>
    <h2>Staff Members</h2>
 
-   <div class="row-between p-2 sticky z-50 bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
+   <div class="row-between p-2 sticky  bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
       <UButton  v-if="(userStore.isAdmin || userStore.isSupervisor)" label="Add Staff" color="secondary" @click="addStaff" />
       <UInput v-model="filter" placeholder="Search staff..." @update:modelValue="applyFilter"/>
    </div>
