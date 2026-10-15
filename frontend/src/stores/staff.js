@@ -9,7 +9,7 @@ export const useStaffStore = defineStore('staff', {
 	getters: {
 	},
 	actions: {
-      getStaff( queryStr ) {
+      getStaff() {
          const system = useSystemStore()
          system.working = true
          axios.get( '/api/staff' ).then(response => {

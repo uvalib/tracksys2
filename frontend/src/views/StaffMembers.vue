@@ -3,7 +3,7 @@
 
    <div class="row-between p-2 sticky  bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
       <UButton  v-if="(userStore.isAdmin || userStore.isSupervisor)" label="Add Staff" color="secondary" @click="addStaff" />
-      <UInput v-model="filter" placeholder="Search staff..." @update:modelValue="applyFilter"/>
+      <UInput v-model="filter" placeholder="Search staff..."/>
    </div>
    <UTable :data="staffStore.staff" :columns="columns" :meta="meta" v-model:global-filter="filter" 
       sticky virtualize class="h-[calc(100vh-185px)]" 
@@ -57,10 +57,6 @@ const addStaff = (() => {
 
 const edit = ((data) => {   
    staffModal.open({mode: "edit", title: "Edit Staff Member", staff: {...data}})
-})
-
-const applyFilter = (() => {
-   staffStore.getStaff( filter.value )
 })
 
 onMounted(() => {
