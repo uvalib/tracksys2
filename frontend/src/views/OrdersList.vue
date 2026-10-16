@@ -1,6 +1,6 @@
 <template>
    <h2>Orders</h2>
-   <div class="row-between p-2 sticky z-50 bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
+   <div class="row-between p-2 sticky bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
       <UButton v-if="(userStore.isAdmin || userStore.isSupervisor)" color="secondary" label="Create Order" @click="createOrder()"/>
       <div class="row-right">
          <UPagination color="neutral" variant="ghost"
