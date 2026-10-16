@@ -2,12 +2,13 @@
    <h2>Orders</h2>
    <div class="row-between p-2 sticky bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
       <UButton v-if="(userStore.isAdmin || userStore.isSupervisor)" color="secondary" label="Create Order" @click="createOrder()"/>
-      <div class="row-right">
-         <UPagination color="neutral" variant="ghost"
+      <div class="row-right items-center">
+         <UPagination color="neutral" variant="ghost" show-edges
             v-model:page="ordersStore.searchOpts.currPage" :items-per-page="ordersStore.searchOpts.limit" 
             :total="ordersStore.total" @update:page="pageChanged"
          />
          <USelect v-model="ordersStore.searchOpts.limit" :items="[15,30,100]" @change="perPageChanged" />
+         <span>Total Orders: {{ ordersStore.total }}</span>
       </div>
       <div class="row-left items-center">
          <div class="row-left gap-2! items-center">
