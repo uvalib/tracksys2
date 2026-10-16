@@ -84,7 +84,6 @@ const menuItems = computed(()=> {
          {label: "Projects", to: `${systemStore.projectsURL}`, target: "_blank"},
          {label: "Reports", to: `${systemStore.projectsURL}/reports`, target: "_blank"},
          {label: "Statistics", to: "/statistics"},
-         {label: "Patron Deliveries", to: "/deliveries"},
       ]},
       misc,
       {label: userStore.signedInUser, children: [
