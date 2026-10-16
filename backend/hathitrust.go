@@ -61,7 +61,7 @@ func (svc *serviceContext) getHathiTrustSubmissions(c *gin.Context) {
 
 	sortBy := c.Query("by")
 	if sortBy == "" {
-		sortBy = "pid"
+		sortBy = "requested_at"
 	}
 	sortOrder := c.Query("order")
 	if sortOrder == "" {
@@ -70,12 +70,16 @@ func (svc *serviceContext) getHathiTrustSubmissions(c *gin.Context) {
 
 	sortField := fmt.Sprintf("hathitrust_statuses.%s", sortBy)
 	switch sortBy {
-	case "pid":
-		sortField = "Metadata.pid"
-	case "title":
-		sortField = "Metadata.title"
-	case "barcode":
-		sortField = "Metadata.barcode"
+	case "requestedAt":
+		sortField = "requested_at"
+	case "packageCreatedAt":
+		sortField = "package_created_at"
+	case "packageSubmittedAt":
+		sortField = "package_submitted_at"
+	case "metadataSubmittedAt":
+		sortField = "metadata_submitted_at"
+	case "finishedAt":
+		sortField = "finished_at"
 	}
 
 	orderStr := fmt.Sprintf("%s %s", sortField, sortOrder)
@@ -114,20 +118,16 @@ func (svc *serviceContext) getHathiTrustSubmissions(c *gin.Context) {
 	}
 
 	resp := hathiTrustSubmissionsResonse{}
-	err := svc.DB.Table("hathitrust_statuses").Count(&resp.Total).Error
-	if err != nil {
+	searchQ := svc.DB.Joins("Metadata").Order(orderStr).Where("title like ? or barcode like ?", fmt.Sprintf("%%%s%%", queryStr), fmt.Sprintf("%s%%", queryStr))
+	if filterQ != nil {
+		searchQ = searchQ.Where(filterQ)
+	}
+	if err := searchQ.Model(hathitrustStatus{}).Count(&resp.Total).Error; err != nil {
 		log.Printf("ERROR: unable to get hathi submissions count: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	searchQ := svc.DB.Joins("Metadata").Order(orderStr).Offset(startIndex).Limit(pageSize).
-		Where("title like ? or barcode like ?", fmt.Sprintf("%%%s%%", queryStr), fmt.Sprintf("%s%%", queryStr))
-	if filterQ != nil {
-		searchQ = searchQ.Where(filterQ)
-	}
-	err = searchQ.Debug().Find(&resp.Submissions).Error
-	if err != nil {
+	if err := searchQ.Offset(startIndex).Limit(pageSize).Find(&resp.Submissions).Error; err != nil {
 		log.Printf("ERROR: unable to get hathi submissions: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())
 		return

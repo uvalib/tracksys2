@@ -236,15 +236,6 @@ const applyFilter =(() => {
    searchStore.executeSearch("metadata")
 })
 
-const perPageChanged = (() => {
-   searchStore.metadata.currPage = 1
-   pageChanged()
-})
-const pageChanged = (() => {
-   searchStore.metadata.start = (searchStore.metadata.currPage-1) * searchStore.metadata.limit
-   searchStore.executeSearch("metadata")
-})
-
 </script>
 
 <style scoped lang="scss">
