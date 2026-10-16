@@ -46,7 +46,7 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue'
 import { useJobsStore } from '@/stores/jobs'
-import { useSystemStore } from '@/stores/jobs'
+import { useSystemStore } from '@/stores/system'
 import { useConfirm } from "@/composables/useConfirm"
 
 const system = useSystemStore()
