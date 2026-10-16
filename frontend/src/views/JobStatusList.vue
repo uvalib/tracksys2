@@ -1,7 +1,7 @@
 <template>
    <h2>Job Statuses</h2>
 
-   <div class="row-between p-2 sticky z-50 bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
+   <div class="row-between p-2 sticky z-5 bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
       <UButton label="Delete selected" :disabled="selectedJobs.length == 0"  color="secondary" @click="deletAllClicked"/>
       <div class="row-left">
          <UPagination color="neutral" variant="ghost"
