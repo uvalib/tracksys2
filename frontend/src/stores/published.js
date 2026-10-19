@@ -7,10 +7,11 @@ export const usePublishedStore = defineStore('published', {
       records: [],
       total: 0,
       searchOpts: {
+         currPage: 1,
          start: 0,
          limit: 25,
          filters: [],
-      },
+      },   
    }),
    getters: {
       filtersAsQueryParam: state => {
@@ -35,6 +36,12 @@ export const usePublishedStore = defineStore('published', {
             system.setError(e)
             system.working = false
          })
-      }
+      },
+      resetSearch() {
+         this.searchOpts.currPage = 1
+         this.searchOpts.start = 0
+         this.orders = []
+         this.total = 0
+      },
    }
 })

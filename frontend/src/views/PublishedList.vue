@@ -1,106 +1,133 @@
 <template>
    <h2>{{ title }}</h2>
-   <div class="published">
-      <DataTable :value="publishedStore.records" ref="publishedTable" dataKey="id"
-         stripedRows showGridlines responsiveLayout="scroll"
-         :lazy="true" :paginator="true" @page="onPage($event)"  paginatorPosition="top"
-         :rows="publishedStore.searchOpts.limit" :totalRecords="publishedStore.total"
-         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         :rowsPerPageOptions="[25,50,100]" :first="publishedStore.searchOpts.start"
-         currentPageReportTemplate="{first} - {last} of {totalRecords}"
-         v-model:filters="columnFilters" filterDisplay="menu" @filter="onFilter($event)"
-      >
-         <Column field="id" header="ID">
-            <template #body="slotProps">
-               <router-link :to="`/metadata/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
-            </template>
-         </Column>
-         <Column field="pid" header="PID" class="nowrap" />
-         <Column v-if="route.params.type != 'archivesspace'" field="type" header="Type" filterField="type" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <Select v-model="filterModel.value" :options="mdTypes" optionLabel="name" optionValue="code" placeholder="Select a type" />
-            </template>
-            <template #body="slotProps">
-               <div v-if="slotProps.data.type != 'ExternalMetadata'">{{slotProps.data.type}}</div>
-               <div v-else>ArchivesSpace</div>
-            </template>
-         </Column>
-         <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
-            </template>
-         </Column>
-         <Column field="creatorName" header="Creator Name" filterField="creator_name" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <InputText type="text" v-model="filterModel.value" placeholder="Creator name"/>
-            </template>
-            <template #body="slotProps">
-               <span v-if="slotProps.data.creatorName">{{ slotProps.data.creatorName }}</span>
-               <span v-else class="none">N/A</span>
-            </template>
-         </Column>
-         <Column  v-if="route.params.type == 'virgo'" field="barcode" header="Barcode" class="nowrap" filterField="barcode" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <InputText type="text" v-model="filterModel.value" placeholder="Barcode"/>
-            </template>
-            <template #body="slotProps">
-               <span v-if="slotProps.data.barcode">{{ slotProps.data.barcode }}</span>
-               <span v-else class="none">N/A</span>
-            </template>
-         </Column>
-         <Column v-if="route.params.type == 'virgo'" field="callNumber" header="Call Number" class="nowrap" filterField="call_number" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <InputText type="text" v-model="filterModel.value" placeholder="Call number"/>
-            </template>
-            <template #body="slotProps">
-               <span v-if="slotProps.data.callNumber">{{ slotProps.data.callNumber }}</span>
-               <span v-else class="none">N/A</span>
-            </template>
-         </Column>
-         <Column v-if="route.params.type == 'virgo'" field="catalogKey" header="Catalog Key" class="nowrap" filterField="catalog_key" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <InputText type="text" v-model="filterModel.value" placeholder="Catalog key"/>
-            </template>
-            <template #body="slotProps">
-               <span v-if="slotProps.data.catalogKey">{{ slotProps.data.catalogKey }}</span>
-               <span v-else class="none">N/A</span>
-            </template>
-         </Column>
-      </DataTable>
+   <div class="row-between gap-2! items-center sticky bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
+      <span class="px-4">Total: {{ publishedStore.total }}</span>
+      <div class="p-4 flex flex-row flex-nowrap justify-center items-center">
+         <UPagination color="neutral" variant="ghost" show-edges
+            v-model:page="publishedStore.searchOpts.currPage" :items-per-page="publishedStore.searchOpts.limit" 
+            :total="publishedStore.total" @update:page="pageChanged"
+         />
+         <USelect v-model="publishedStore.searchOpts.limit" :items="[25,50,100]" @change="perPageChanged" />
+      </div>
    </div>
+   <UTable :data="publishedStore.records" :columns="columns" sticky class="h-[calc(100vh-185px)]" >
+      <template #pid-cell="{ row }">
+         <router-link :to="`/metadata/${row.original.id}`">{{row.original.pid}}</router-link>
+      </template>
+      <template #type-header="{ column }">
+         <div  v-if="route.params.type == 'archivesspace'">{{ column.columnDef.header }}</div>
+         <FilterPopover v-else :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @opened="filterOpened(column.id)"
+            @clear="clearFilter(column.id)" @apply="setFilter(column.id)">
+            <USelect v-model="pendingFilter" :items="mdTypes" placeholder="Type..." />
+         </FilterPopover>
+      </template>
+      <template #type-cell="{ row }">
+         <div v-if="row.original.type != 'ExternalMetadata'">{{row.original.type}}</div>
+         <div v-else>ArchivesSpace</div>
+      </template>
+      <template #title-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @opened="filterOpened(column.id)"
+            @clear="clearFilter(column.id)" @apply="setFilter(column.id)">
+            <UInput v-model="pendingFilter" :placeholder="`${column.columnDef.header}...`" />
+         </FilterPopover>
+      </template>
+      <template #creatorName-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @opened="filterOpened(column.id)"
+            @clear="clearFilter(column.id)" @apply="setFilter(column.id)">
+            <UInput v-model="pendingFilter" :placeholder="`${column.columnDef.header}...`" />
+         </FilterPopover>
+      </template>
+      <template v-if="route.params.type == 'virgo'" #barcode-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @opened="filterOpened(column.id)"
+            @clear="clearFilter(column.id)" @apply="setFilter(column.id)">
+            <UInput v-model="pendingFilter" :placeholder="`${column.columnDef.header}...`" />
+         </FilterPopover>
+      </template>
+      <template v-if="route.params.type == 'virgo'" #callNumber-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @opened="filterOpened(column.id)"
+            @clear="clearFilter(column.id)" @apply="setFilter(column.id)">
+            <UInput v-model="pendingFilter" :placeholder="`${column.columnDef.header}...`" />
+         </FilterPopover>
+      </template>
+      <template v-if="route.params.type == 'virgo'" #catalogKey-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @opened="filterOpened(column.id)"
+            @clear="clearFilter(column.id)" @apply="setFilter(column.id)">
+            <UInput v-model="pendingFilter" :placeholder="`${column.columnDef.header}...`" />
+         </FilterPopover>
+      </template>
+   </UTable>
 </template>
 
 <script setup>
 import { onBeforeMount, onMounted, ref, computed } from 'vue'
 import { usePublishedStore } from '@/stores/published'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
+import { useSystemStore } from '@/stores/system'
 import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router'
-import { FilterMatchMode } from '@primevue/core/api'
-import { usePinnable } from '@/composables/pin'
-
-usePinnable("p-datatable-paginator-top")
 
 const route = useRoute()
 const router = useRouter()
 const publishedStore = usePublishedStore()
+const system = useSystemStore()
+const pendingFilter = ref()
+const filters = ref([])
 
-const columnFilters = ref( {
-   'type': {value: null, matchMode: FilterMatchMode.EQUALS},
-   'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'creator_name': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'barcode': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
-   'call_number': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
-   'catalog_key': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
+const columns = computed(() => {
+   let out = [
+      { accessorKey: 'pid', header: 'PID'}, { accessorKey: 'type', header: 'Type'},
+      { accessorKey: 'title', header: 'Title'}, { accessorKey: 'creatorName', header: 'Creator Name'}
+   ]
+   if ( route.params.type == 'virgo' ) {
+      out.push( { accessorKey: 'barcode', header: 'Barcode'} )  
+      out.push( { accessorKey: 'callNumber', header: 'Call Number'} )   
+      out.push( { accessorKey: 'catalogKey', header: 'Catalog Key'} )  
+   }
+   return out
+})
+
+const isFilterApplied = ((name) => {
+   return filters.value.findIndex( f => f.id == name) > -1
+})
+const filterOpened = ((name) => {
+   pendingFilter.value = null
+   const existing = filters.value.find( f => f.id == name)
+   if (existing ) {
+      pendingFilter.value = existing.value
+   }
+})
+const clearFilter = ((name) => {
+   const idx = filters.value.findIndex( f => f.id == name) 
+   if ( idx > -1 ) {
+      filters.value.splice(idx,1)
+   }
+   applyFilter()
+})
+const setFilter = ((name) => {    
+   filters.value.push({id: name, value: pendingFilter.value})
+   applyFilter()
+})
+const applyFilter = (() => {    
+   publishedStore.searchOpts.filters = []
+   filters.value.forEach( (filter) => {
+      if ( filter.id == "type") {
+         publishedStore.searchOpts.filters.push({field: filter.id, match: "equals", value: filter.value})
+      } else {
+         publishedStore.searchOpts.filters.push({field: filter.id, match: "contains", value: filter.value})
+      }
+   })
+
+   let query = Object.assign({}, route.query)
+   if ( publishedStore.searchOpts.filters.length > 0 ) {
+      query.filters = publishedStore.filtersAsQueryParam
+   } else {
+      delete query.filters
+   }
+   router.push({query})
+   publishedStore.resetSearch()
+   publishedStore.getRecords(route.params.type)
 })
 
 const mdTypes = computed(() => {
-   let out = []
-   out.push({name: "Sirsi", code: "SirsiMetadata"})
-   out.push({name: "XML", code: "XmlMetadata"})
-   return out
+   return [ {label: "Sirsi", value: "SirsiMetadata"}, {label: "XML", value: "XmlMetadata"} ]
 })
 
 const title = computed(() => {
@@ -121,10 +148,12 @@ onBeforeRouteUpdate( (to) => {
 onBeforeMount( () => {
    publishedStore.searchOpts.filters = []
    if ( route.query.filters ) {
-      let filters = JSON.parse(route.query.filters)
-      filters.forEach( filter => {
+      let parsedFilters = JSON.parse(route.query.filters)
+      filters.value = []
+      parsedFilters.forEach( filter => {
          let bits = filter.split("|")
          publishedStore.searchOpts.filters.push( {field: bits[0], match: bits[1], value: bits[2]} )
+         filters.value.push({id: bits[0], value: bits[2]})
       })
    }
 })
@@ -134,30 +163,14 @@ onMounted(() => {
    document.title = `Published`
 })
 
-const onFilter = ((event) => {
-   publishedStore.searchOpts.filters = []
-   Object.entries(event.filters).forEach(([key, data]) => {
-      if (data.value && data.value != "") {
-         publishedStore.searchOpts.filters.push({field: key, match: data.matchMode, value: data.value})
-      }
-   })
-
-   let query = Object.assign({}, route.query)
-   if ( publishedStore.searchOpts.filters.length > 0 ) {
-      query.filters = publishedStore.filtersAsQueryParam
-   } else {
-      delete query.filters
-   }
-   router.push({query})
+const perPageChanged = (() => {
+   publishedStore.searchOpts.currPage = 1
+   pageChanged()
+})
+const pageChanged = (() => {
+   publishedStore.searchOpts.start = (publishedStore.searchOpts.currPage-1) * publishedStore.searchOpts.limit
    publishedStore.getRecords(route.params.type)
 })
-
-const onPage = ((event) => {
-   publishedStore.searchOpts.start = event.first
-   publishedStore.searchOpts.limit = event.rows
-   publishedStore.getRecords(route.params.type)
-})
-
 </script>
 
 <style scoped lang="scss">

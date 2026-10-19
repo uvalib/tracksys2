@@ -76,7 +76,7 @@ const menuItems = computed(()=> {
       {label: "Published", children: [
          {label: "Virgo", to: "/published/virgo"},    
          {label: "ArchivesSpace", to: "/published/archivesspace"},
-         {label: "DPLA", to: "/published/depla"}
+         {label: "DPLA", to: "/published/dpla"}
       ]},
       {label: "Job Statuses", to: "/jobs"},
       {label: "Digitization", children: [
