@@ -1,162 +1,129 @@
 <template>
    <h2>ArchivesSpace Reviews</h2>
-   <div class="reviews">
-      <DataTable :value="archivesSpace.reviews" ref="asReviewsTable" dataKey="id"
-            stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm" :lazy="false"
-            :resizableColumns="true" paginatorPosition="top"
-            :paginator="true" :rows="15" :rowsPerPageOptions="[15,30,50]" removableSort sortField="submittedAt" :sortOrder="1"
-            paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-            currentPageReportTemplate="{first} - {last} of {totalRecords}"
-            v-model:filters="filter" filterDisplay="menu"
-            :globalFilterFields="['metadata.title']"
-         >
-         <template #paginatorstart >
-         </template>
-         <template #paginatorend>
-            <IconField iconPosition="left">
-               <InputIcon class="pi pi-search" />
-               <InputText v-model="filter['global'].value" placeholder="Search Reviews"/>
-            </IconField>
-         </template>
-         <Column field="metadata.pid" header="PID"  class="nowrap" :sortable="true">
-            <template #body="slotProps">
-               <router-link :to="`/metadata/${slotProps.data.metadata.id}`">
-                  {{ slotProps.data.metadata.pid }}
-               </router-link>
-            </template>
-         </Column>
-         <Column field="metadata.title" header="Title" class="long-text" />
-         <Column field="submittedAt" header="Requested" :sortable="true">
-            <template #body="slotProps">
-               {{$formatDate(slotProps.data.submittedAt)}}
-            </template>
-         </Column>
-         <Column field="submitter" header="Requested By" filterField="submitter.lastName" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <InputText type="text" v-model="filterModel.value" placeholder="Last name"/>
-            </template>
-            <template #body="slotProps">
-               {{slotProps.data.submitter.lastName}}, {{slotProps.data.submitter.firstName}}
-            </template>
-         </Column>
-         <Column field="status" header="Status" filterField="status" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <Select v-model="filterModel.value" :options="statuses" optionLabel="name" optionValue="id" placeholder="Select status" />
-            </template>
-            <template #body="slotProps">
-               <span class="as-status">{{ `${slotProps.data.status[0].toUpperCase()}${slotProps.data.status.slice(1)}` }}</span>
-            </template>
-         </Column>
-         <Column field="notes" header="Notes" >
-            <template #body="slotProps">
-               <DPGButton v-if="slotProps.data.notes"  class="notes" label="Click to View" severity="secondary" @click="notesClicked(slotProps.data)"/>
-               <DPGButton v-else  label="Click to Add" class="notes" severity="secondary" @click="notesClicked(slotProps.data)"/>
-            </template>
-         </Column>
-         <Column field="reviewer" header="Reviewer" filterField="reviewer.lastName" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <InputText type="text" v-model="filterModel.value" placeholder="Last name"/>
-            </template>
-            <template #body="slotProps">
-               <span v-if="slotProps.data.reviewer">
-                  {{slotProps.data.reviewer.lastName}}, {{slotProps.data.reviewer.firstName}}
-               </span>
-               <span v-else class="empty">N/A</span>
-            </template>
-         </Column>
-         <Column field="reviewStartedAt" header="Review" :sortable="true">
-            <template #body="slotProps">
-               <span v-if="slotProps.data.reviewStartedAt">{{$formatDate(slotProps.data.reviewStartedAt)}}</span>
-               <span v-else class="empty">N/A</span>
-            </template>
-         </Column>
-         <Column  header="Acts" class="acts">
-            <template #body="slotProps">
-               <div class="acts">
-                  <DPGButton label="View Images" icon="pi pi-external-link" iconPos="right" severity="secondary" class="first" @click="viewClicked(slotProps.data)"/>
-                  <DPGButton v-if="canReview(slotProps.data)" label="Claim for Review" severity="secondary" @click="reviewClicked(slotProps.data)"/>
-                  <DPGButton v-if="canResubmit(slotProps.data)" label="Resubmit" severity="secondary" @click="resubmitClicked(slotProps.data)"/>
-                  <DPGButton v-if="canCancel(slotProps.data)" label="Cancel Submission" severity="danger" @click="cancelClicked(slotProps.data)"/>
-                  <DPGButton v-if="canPublish(slotProps.data)" label="Reject" severity="danger" @click="rejectClicked(slotProps.data)"/>
-                  <DPGButton v-if="canPublish(slotProps.data)" label="Publish Now" severity="primary" @click="publishClicked(slotProps.data.metadata)"/>
-               </div>
-            </template>
-         </Column>
-      </DataTable>
+   <div class="row-between bg-white border-b border-t border-brand-grey-100 py-3 px-2 items-center">
+      <span>{{ table?.tableApi?.getFilteredRowModel().rows.length }} Reviews<span v-if="filters.length > 0"> (filtered)</span></span>    
    </div>
-   <Dialog v-model:visible="rejectRequested" :modal="true" header="Reject Submission">
-      <div>Reject submission {{ tgtReview.metadata.pid }} - {{ tgtReview.metadata.title }}</div>
-      <label class="reject-note">Please add some notes about the rejection:</label>
-      <textarea v-model="reason" autofocus rows="5" ref="reasontxt" :class="{'invalid': rejectError}"></textarea>
-      <template #footer>
-         <DPGButton label="Cancel" severity="secondary" @click="rejectCanceled()"/>
-         <DPGButton label="Reject" class="reject" severity="danger" @click="rejectSubmitted()"/>
+   <UTable ref="table" :data="archivesSpace.reviews" :columns="columns" v-model:column-filters="filters" v-model:sorting="sorting" sticky virtualize class="h-150">
+      <template #pid-cell="{ row }">
+         <router-link :to="`/metadata/${row.original.metadata.id}`">
+            {{ row.original.metadata.pid }}
+         </router-link>
       </template>
-   </Dialog>
-   <Dialog v-model:visible="showNotes" :modal="true" header="Submission Notes">
-      <div>{{ tgtReview.metadata.pid }} - {{ tgtReview.metadata.title }}</div>
-      <textarea class="notes" v-if="editNote" v-model="newNotes" ref="noteedit" rows="10"></textarea>
-      <div v-else class="note-text">{{ newNotes }}</div>
-      <template #footer>
-         <template v-if="editNote">
-            <DPGButton label="Cancel" severity="secondary" @click="cancelNoteEdit()"/>
-            <DPGButton label="Submit" severity="primary" class="left-margin" @click="submitNoteEdit()"/>
-         </template>
-         <template v-else>
-            <DPGButton label="Edit" severity="primary" @click="editNoteClicked()"/>
-            <DPGButton label="Close" severity="secondary" class="left-margin" @click="closeNotesClicked()"/>
-         </template>
+      <template #submittedAt-cell="{ row }">
+         <span>{{ toCalendarDate(parseAbsolute(row.original.submittedAt)).toString() }}</span>
       </template>
-   </Dialog>
+      <template #submitter-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied('submitter')" @opened="filterOpened(column)"
+            @clear="clearFilter(column)" @apply="applyFilter(column)">
+            <UInput v-model="pendingFilter" placeholder="Submitter..." />
+         </FilterPopover>
+      </template>
+      <template #status-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied('status')" @opened="filterOpened(column)"
+            @clear="clearFilter(column)" @apply="applyFilter(column)">
+            <USelect v-model="pendingFilter" :items="statuses" placeholder="Status..." />
+         </FilterPopover>
+      </template>
+      <template #notes-cell="{ row }">
+         <UButton v-if="row.original.notes" class="notes" size="xs" label="View" color="secondary" @click="notesClicked(row.original)"/>
+         <UButton v-else label="Add" class="notes" size="xs" color="secondary" @click="notesClicked(row.original)"/>   
+      </template>
+      <template #reviewer-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied('reviewer')" @opened="filterOpened(column)"
+            @clear="clearFilter(column)" @apply="applyFilter(column)">
+            <UInput v-model="pendingFilter" placeholder="Reviewer..." />
+         </FilterPopover>
+      </template>
+      <template #reviewStartedAt-cell="{ row }">
+         <span v-if="row.original.reviewStartedAt">
+            {{ toCalendarDate(parseAbsolute(row.original.reviewStartedAt)).toString() }}
+         </span>
+      </template>
+      <template #acts-cell="{ row }">
+         <UDropdownMenu :items="getActions(row.original)">
+            <UButton icon="i-lucide-ellipsis-vertical"
+               color="secondary" aria-label="Actions" 
+            />
+         </UDropdownMenu>
+      </template>
+   </UTable>
 </template>
 
 <script setup>
-import { onMounted, ref, computed, nextTick } from 'vue'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Dialog from 'primevue/dialog'
-import { FilterMatchMode } from '@primevue/core/api'
-import { useConfirm } from "primevue/useconfirm"
-import { usePinnable } from '@/composables/pin'
+import { onMounted, ref } from 'vue'
 import { useArchivesSpaceStore } from '@/stores/archivesspace'
+import NotesModal from '@/components/archivesspace/NotesModal.vue'
+import RejectModal from '@/components/archivesspace/RejectModal.vue'
 import { useUserStore } from '@/stores/user'
 import { useRoute } from 'vue-router'
-
-usePinnable("p-datatable-paginator-top")
+import { toCalendarDate, parseAbsolute } from '@internationalized/date'
+import { useConfirm } from "@/composables/useConfirm"
 
 const archivesSpace = useArchivesSpaceStore()
 const user = useUserStore()
-const confirm = useConfirm()
 const route = useRoute()
+const table = ref()
+const notesModal = useOverlay().create(NotesModal)
+const rejectModal = useOverlay().create(RejectModal)
 
-const tgtReview = ref()
+const pendingFilter = ref()
+const filters = ref([])
+const sorting = ref([])
+const columns = [
+   { accessorKey: 'metadata.pid', id: 'pid', header: 'PID'},
+   { accessorKey: 'metadata.title', id: 'title', header: 'Title'},
+   { accessorKey: 'submittedAt', header: 'Requested'},
+   { 
+      id: 'submitter', 
+      header: 'Requested By',
+      accessorFn: (row) => `${row.submitter.lastName}, ${row.submitter.firstName}`
+   },
+   { accessorKey: 'status', header: 'Status'},
+   { accessorKey: 'notes', header: 'Notes'},
+   { 
+      id: 'reviewer', 
+      header: 'Reviewer',
+      accessorFn: (row) => row.reviewer ? `${row.reviewer.lastName}, ${row.reviewer.firstName}` : ''
+   },
+   { accessorKey: 'reviewStartedAt', header: 'Review'},
+   { accessorKey: 'acts', header: 'Actions'},
+]
 
-const rejectRequested = ref(false)
-const reason = ref("")
-const reasontxt = ref()
-const rejectError = ref(false)
-
-const showNotes = ref(false)
-const newNotes = ref("")
-const editNote = ref(false)
-const noteedit = ref()
-
-const filter = ref( {
-      'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
-      'status': {value: null, matchMode: FilterMatchMode.EQUALS},
-      'submitter.lastName': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
-      'reviewer.lastName': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
+const isFilterApplied = ((name) => {
+   return filters.value.findIndex( f => f.id == name) > -1
 })
-
+const filterOpened = ((column) => {
+   pendingFilter.value = column.getFilterValue()  
+})
+const clearFilter = ((column) => {
+   column.setFilterValue(null)
+})
+const applyFilter = ((column) => {
+   column.setFilterValue(pendingFilter.value)
+})
 const statuses = ref( [
-   {id: "requested", name: "Requested"},
-   {id: "review", name:  "In Review"},
-   {id: "rejected", name:  "Rejected"},
+   {value: "requested", label: "Requested"},
+   {value: "review", label:  "In Review"},
+   {value: "rejected", label:  "Rejected"},
 ])
+
+const getActions = ((item) => {
+   let acts = [ [ { label: 'View', onSelect: () => viewClicked(item) } ] ]
+   if ( canReview(item) ) {
+      acts.push( [ {label: "Claim for review", onSelect: () => reviewClicked(item) } ])
+   }
+   if ( canResubmit(item) ) {
+      acts.push( [ {label: "Resubmit", onSelect: () => resubmitClicked(item) } ])
+   }
+   if ( canCancel(item) ) {
+      acts.push( [ {label: "Cancel Submission", onSelect: () => cancelClicked(item) } ])
+   }
+   if ( canPublish(item) ) {
+      acts.push( [ {label: "Reject", onSelect: () => rejectClicked(item) } ])
+      acts.push( [ {label: "Publish", onSelect: () => publishClicked(item) } ])
+   }
+   return acts  
+})
 
 const canReview = ( (data) => {
    if (data.status == 'requested' ) {
@@ -184,122 +151,46 @@ const canResubmit = ( (data) => {
 
 onMounted(() => {
    if ( route.query.view == "reject" ) {
-      filter.value.status.value = "rejected"
+      filters.value = [ {"id": "status", "value": "rejected" }]
    } else if ( route.query.view == "review" ) {
-      filter.value.status.value = "review"
+      filters.value = [ {"id": "status", "value": "review" }]
    } else if ( route.query.view == "request" ) {
-      filter.value.status.value = "requested"
+      filters.value = [ {"id": "status", "value": "requested" }]
    }
    archivesSpace.getReviews()
    document.title = "ArchivesSpace Reviews"
 })
 
 const notesClicked= ((item) => {
-   tgtReview.value = item
-   showNotes.value = true
-   newNotes.value = item.notes
-   editNote.value = item.notes == ""
+   notesModal.open({item: item})
 })
 
-const editNoteClicked = ( () => {
-   editNote.value = true
-   nextTick( () => {
-      noteedit.value.focus()
-   })
+const reviewClicked = ( async (item) => {
+   const msg = 'Are you sure you want claim this item for review?'
+   const resp = await useConfirm("Confirm Review", msg, "Claim")
+   if (resp) {
+      archivesSpace.claimForReview( item.metadata, user.ID )
+   } 
 })
 
-const closeNotesClicked = ( () => {
-   showNotes.value = false
-   tgtReview.value = null
+const resubmitClicked = ( async (item) => {
+   const msg = 'Are you sure you want resubmit this item for review?'
+   const resp = await useConfirm("Confirm Resubmit", msg, "Resubmit")
+   if (resp) {
+      archivesSpace.resubmit( item.metadata )
+   } 
 })
 
-const cancelNoteEdit = ( () => {
-   editNote.value = false
-   tgtReview.value = null
+const cancelClicked = ( async (item) => {
+   const msg = 'Are you sure you want cancel this submission? All review data will be lost.'
+   const resp = await useConfirm("Confirm Cancel", msg, "Cancel Submission")
+   if (resp) {
+      archivesSpace.cancel( item )
+   } 
 })
 
-const submitNoteEdit = ( async () => {
-   await archivesSpace.updateNotes( tgtReview.value, newNotes.value )
-   editNote.value = false
-   tgtReview.value = null
-   showNotes.value = false
-})
-
-const reviewClicked = ( (item) => {
-   confirm.require({
-      message: 'Are you sure you want claim this item for review?',
-      header: 'Confirm Review',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Claim'
-      },
-      accept: async () => {
-         await archivesSpace.claimForReview( item.metadata, user.ID )
-      }
-   })
-})
-
-const resubmitClicked = ( (item) => {
-   confirm.require({
-      message: 'Are you sure you want resubmit this item for review?',
-      header: 'Confirm Resubmit',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Resubmit'
-      },
-      accept: async () => {
-         await archivesSpace.resubmit( item.metadata )
-      }
-   })
-})
-
-const cancelClicked = ( (item) => {
-   confirm.require({
-      message: 'Are you sure you want cancel this submission? All review data will be lost.',
-      header: 'Confirm Cancel',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Cancel Submission'
-      },
-      accept: async () => {
-         await archivesSpace.cancel( item )
-      }
-   })
-})
-
-const rejectClicked = ( (item) => {
-   rejectRequested.value = true
-   tgtReview.value = item
-   reason.value = ""
-   rejectError.value = false
-})
-
-const rejectCanceled = ( () => {
-   rejectRequested.value = false
-   tgtReview.value = null
-})
-
-const rejectSubmitted = ( async () => {
-   if ( reason.value == "") {
-      reasontxt.value.focus()
-      rejectError.value = true
-   } else {
-      await archivesSpace.reject( user.ID, tgtReview.value.metadata, reason.value )
-      rejectRequested.value = false
-      tgtReview.value = null
-   }
+const rejectClicked = ( async (item) => {
+  rejectModal.open({userID: user.ID, item: item})
 })
 
 const publishClicked = ( (item) => {
@@ -324,65 +215,7 @@ const publishClicked = ( (item) => {
 const viewClicked = ( (item) => {
    window.open(`${archivesSpace.viewerBaseURL}/${item.metadata.pid}?unit=${item.unitID}`, '_blank').focus()
 })
-
 </script>
 
 <style scoped lang="scss">
-.reviews {
-   min-height: 600px;
-   text-align: left;
-   padding: 0 25px;
-   button.clear {
-      margin-left: 10px;
-   }
-   button.notes {
-      font-size: 0.75em;
-      padding: 5px 10px;
-   }
-}
-:deep(.long-text) {
-   white-space: break-spaces !important;
-}
-:deep(div.acts) {
-   width: 130px;
-   display: flex;
-   flex-direction: column;
-   gap: 5px;
-   button {
-      font-size: 0.85em;
-   }
-}
-textarea {
-   width: 100%;
-   border-color: var(--uvalib-grey-light);
-   border-radius: 5px;
-   font-family: "franklin-gothic-urw", arial, sans-serif;
-   -webkit-font-smoothing: antialiased;
-   -moz-osx-font-smoothing: grayscale;
-   color: var(--color-primary-text);
-   padding: 5px 10px;
-}
-div.note-text {
-   height: 250px;
-   overflow-y: scroll;
-   margin-top: 15px;
-   padding: 5px 10px;
-   border: 1px solid var(--uvalib-grey-light);
-   border-radius: 5px;
-   background-color: white;
-}
-textarea.notes {
-   margin-top: 15px;
-}
-textarea.invalid {
-   border-color: var(--uvalib-red);
-   border-width: 2px;
-}
-label.reject-note {
-   margin: 15px 0 10px 0;
-   display: block;
-}
-button.reject, button.left-margin {
-   margin-left: 10px;
-}
 </style>
