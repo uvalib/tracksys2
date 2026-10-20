@@ -1,5 +1,5 @@
 <template>
-   <div class="row-between bg-white border-b border-t border-brand-grey-100 py-3 px-2 items-center">
+   <div class="row-between bg-white border-b border-brand-grey-100 py-3 px-2 items-center">
       <div class="row-between gap-2">
          <HathiTrustUpdateDialog :orderID="props.orderID" v-if="props.hathiTrust" />
          <AddUnitDialog v-if="props.canAdd"/>

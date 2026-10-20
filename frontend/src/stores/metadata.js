@@ -342,7 +342,7 @@ export const useMetadataStore = defineStore('metadata', {
          this.detail.virgoURL = details.virgoURL
          this.detail.apTrustSubmissionID = details.metadata.apTrustSubmissionID
 
-         details.metadata.locations = null
+         this.detail.folders = null
          if ( details.metadata.locations ) {
             this.detail.folders = details.metadata.locations
          }

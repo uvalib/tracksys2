@@ -6,233 +6,222 @@
       </div>
       <div class="row-right gap-2">
          <CollectionAddDialog v-if="canAddToCollection" :metadataID="metadataStore.detail.id" />
-         <DPGButton label="Delete" severity="danger" class="edit" @click="deleteMetadata()" v-if="canDelete"/>
+         <UButton label="Delete" color="error" class="edit" @click="deleteMetadata()" v-if="canDelete"/>
          <template  v-if="metadataStore.detail.type == 'XmlMetadata' && systemStore.working==false">
-            <DPGButton label="Download XML"  @click="downloadXMLClicked()" />
-            <FileUpload mode="basic" name="xml" accept=".xml" :customUpload="true" @uploader="xmlUploader"
-               :auto="true" chooseLabel="Upload XML" uploadIcon="" v-if="userStore.isAdmin || userStore.isSupervisor"/>
+            <UButton label="Download XML"  @click="downloadXMLClicked()" />
+            <XmlUploadModal  v-if="userStore.isAdmin || userStore.isSupervisor" @upload="xmlUploader" />
          </template>
-         <DPGButton label="Edit" @click="editMetadata()"  v-if="canEdit"/>
+         <UButton label="Edit" @click="editMetadata()"  v-if="canEdit"/>
       </div>
    </h2>
-   <div class="details" v-if="systemStore.working==false">
-      <div v-if="metadataStore.detail.thumbURL" class="thumb">
-         <a :href="metadataStore.detail.viewerURL" target="_blank">
-            <img :src="metadataStore.detail.thumbURL" />
-         </a>
-      </div>
-      <div class="column">
-         <Panel header="General Information">
-            <dl>
-               <template v-if="metadataStore.detail.type != 'ExternalMetadata'">
-                  <DataDisplay label="Type" :value="metadataStore.detail.type"/>
-                  <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey" v-if="metadataStore.detail.type == 'SirsiMetadata'" />
-                  <DataDisplay label="Barcode" :value="metadataStore.detail.barcode" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
-                  <DataDisplay label="Call Number" :value="metadataStore.detail.callNumber" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
-                  <DataDisplay label="Title" :value="metadataStore.detail.title"/>
-                  <template  v-if="metadataStore.detail.type == 'SirsiMetadata'">
-                     <DataDisplay label="Creator Name" :value="metadataStore.detail.creatorName"/>
-                     <DataDisplay label="Creator Name Type" :value="metadataStore.detail.creatorNameType"/>
-                     <DataDisplay label="Year" :value="metadataStore.detail.year"/>
-                     <DataDisplay label="Place of Publication" :value="metadataStore.detail.publicationPlace"/>
-                     <DataDisplay label="Location" :value="metadataStore.detail.location"/>
-                     <DataDisplay v-if="metadataStore.detail.folders" label="Folders" :value="metadataStore.detail.folders.length">
-                        <span v-for="(l,idx) in sortedFolders">
-                           <DPGButton class="folder" severity="secondary" icon="pi pi-folder-open" :label="l.folderID" @click="folderClicked(l)" />
-                        </span>
-                     </DataDisplay>
-                  </template>
-                  <DataDisplay v-if="metadataStore.related.collection" label="Collection" :value="metadataStore.related.collection.id">
-                     <router-link :to="`/metadata/${metadataStore.related.collection.id}`">
-                        {{ metadataStore.related.collection.title }}
-                     </router-link>
-                  </DataDisplay>
-               </template>
-
-               <template v-if="externalSystem == 'ArchivesSpace'">
-                  <DataDisplay label="Type" :value="externalSystem"/>
-                  <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
-                     <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
-                        {{metadataStore.detail.externalURI}}
-                        <i class="icon pi pi-external-link"></i>
-                     </a>
-                  </DataDisplay>
-                  <DataDisplay label="Repository" :value="metadataStore.archivesSpace.repo"/>
-                  <DataDisplay label="Collection Title" :value="metadataStore.archivesSpace.collectionTitle"/>
-                  <DataDisplay label="Collection ID" :value="metadataStore.archivesSpace.collectionID"/>
-                  <DataDisplay label="Language" :value="metadataStore.archivesSpace.language"/>
-                  <DataDisplay label="Dates" :value="metadataStore.archivesSpace.dates"/>
-                  <DataDisplay label="Title" :value="metadataStore.detail.title"/>
-                  <DataDisplay label="Level" :value="metadataStore.archivesSpace.level"/>
-                  <DataDisplay label="Created By" :value="metadataStore.archivesSpace.createdBy"/>
-                  <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
-                  <DataDisplay v-if="metadataStore.archivesSpace.publishedAt" label="Published Date" :value="metadataStore.archivesSpace.publishedAt"/>
-                  <template  v-if="metadataStore.related.collection" >
-                     <DataDisplay :spacer="true"/>
-                     <DataDisplay label="TrackSys Collection" :value="metadataStore.related.collection.id">
+   <div class="column gap-4 p-6 flex-1">
+      <div class="row-left gap-6" v-if="systemStore.working==false">
+         <div v-if="metadataStore.detail.thumbURL" class="thumb">
+            <a :href="metadataStore.detail.viewerURL" target="_blank">
+               <img :src="metadataStore.detail.thumbURL" />
+            </a>
+         </div>
+         <div class="column flex-1">
+            <UCard title="General Information" class="w-full">
+               <dl>
+                  <template v-if="metadataStore.detail.type != 'ExternalMetadata'">
+                     <DataDisplay label="Type" :value="metadataStore.detail.type"/>
+                     <DataDisplay label="Catalog Key" :value="metadataStore.detail.catalogKey" v-if="metadataStore.detail.type == 'SirsiMetadata'" />
+                     <DataDisplay label="Barcode" :value="metadataStore.detail.barcode" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
+                     <DataDisplay label="Call Number" :value="metadataStore.detail.callNumber" v-if="metadataStore.detail.type == 'SirsiMetadata'"/>
+                     <DataDisplay label="Title" :value="metadataStore.detail.title"/>
+                     <template  v-if="metadataStore.detail.type == 'SirsiMetadata'">
+                        <DataDisplay label="Creator Name" :value="metadataStore.detail.creatorName"/>
+                        <DataDisplay label="Creator Name Type" :value="metadataStore.detail.creatorNameType"/>
+                        <DataDisplay label="Year" :value="metadataStore.detail.year"/>
+                        <DataDisplay label="Place of Publication" :value="metadataStore.detail.publicationPlace"/>
+                        <DataDisplay label="Location" :value="metadataStore.detail.location"/>
+                        <DataDisplay v-if="metadataStore.detail.folders" label="Folders" :value="metadataStore.detail.folders.length">
+                           <div class="flex flex-row flex-wrap gap-2">
+                              <UButton v-for="l in sortedFolders" color="secondary" size="xs" icon="i-lucide-folder-open" :label="l.folderID" @click="folderClicked(l)" />
+                           </div>
+                        </DataDisplay>
+                     </template>
+                     <DataDisplay v-if="metadataStore.related.collection" label="Collection" :value="metadataStore.related.collection.id">
                         <router-link :to="`/metadata/${metadataStore.related.collection.id}`">
                            {{ metadataStore.related.collection.title }}
                         </router-link>
                      </DataDisplay>
                   </template>
-               </template>
 
-               <template v-if="externalSystem == 'JSTOR Forum'">
-                  <DataDisplay label="Type" :value="externalSystem"/>
-                  <DataDisplay label="Legacy URL" :value="metadataStore.detail.externalURI">
-                     <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
-                        {{metadataStore.detail.externalURI}}
-                        <i class="icon pi pi-external-link"></i>
-                     </a>
-                  </DataDisplay>
-                  <DataDisplay label="Search Link" :value="metadataStore.jstor.searchURL">
-                     <a class="supplemental" :href="`${metadataStore.jstor.searchURL}`" target="_blank">
-                        JSTORForum search
-                        <i class="icon pi pi-external-link"></i>
-                     </a>
-                  </DataDisplay>
-                  <DataDisplay label="Title" :value="metadataStore.detail.title"/>
-               </template>
+                  <template v-if="externalSystem == 'ArchivesSpace'">
+                     <DataDisplay label="Type" :value="externalSystem"/>
+                     <DataDisplay label="URL" :value="metadataStore.detail.externalURI">
+                        <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
+                           {{metadataStore.detail.externalURI}}
+                           <i class="icon pi pi-external-link"></i>
+                        </a>
+                     </DataDisplay>
+                     <DataDisplay label="Repository" :value="metadataStore.archivesSpace.repo"/>
+                     <DataDisplay label="Collection Title" :value="metadataStore.archivesSpace.collectionTitle"/>
+                     <DataDisplay label="Collection ID" :value="metadataStore.archivesSpace.collectionID"/>
+                     <DataDisplay label="Language" :value="metadataStore.archivesSpace.language"/>
+                     <DataDisplay label="Dates" :value="metadataStore.archivesSpace.dates"/>
+                     <DataDisplay label="Title" :value="metadataStore.detail.title"/>
+                     <DataDisplay label="Level" :value="metadataStore.archivesSpace.level"/>
+                     <DataDisplay label="Created By" :value="metadataStore.archivesSpace.createdBy"/>
+                     <DataDisplay label="Create Date" :value="metadataStore.archivesSpace.createDate"/>
+                     <DataDisplay v-if="metadataStore.archivesSpace.publishedAt" label="Published Date" :value="metadataStore.archivesSpace.publishedAt"/>
+                     <template  v-if="metadataStore.related.collection" >
+                        <DataDisplay :spacer="true"/>
+                        <DataDisplay label="TrackSys Collection" :value="metadataStore.related.collection.id">
+                           <router-link :to="`/metadata/${metadataStore.related.collection.id}`">
+                              {{ metadataStore.related.collection.title }}
+                           </router-link>
+                        </DataDisplay>
+                     </template>
+                  </template>
 
-               <template v-if="externalSystem == 'Apollo'">
-                  <DataDisplay label="Type" :value="externalSystem"/>
-                  <DataDisplay label="URL" :value="metadataStore.apollo.itemURL">
-                     <a class="supplemental" :href="metadataStore.apollo.itemURL" target="_blank">
-                        {{metadataStore.apollo.itemURL}}
-                        <i class="icon pi pi-external-link"></i>
-                     </a>
-                  </DataDisplay>
-                  <DataDisplay label="Collection PID" :value="metadataStore.apollo.collectionPID">
-                     <a class="supplemental" :href="metadataStore.apollo.collectionURL" target="_blank">
-                        {{metadataStore.apollo.collectionPID}}
-                        <i class="icon pi pi-external-link"></i>
-                     </a>
-                  </DataDisplay>
-                  <DataDisplay label="Collection Title" :value="metadataStore.apollo.collectionTitle"/>
-                  <DataDisplay label="Collection Barcode" :value="metadataStore.apollo.collectionBarcode"/>
-                  <DataDisplay label="Collection Catalog Key" :value="metadataStore.apollo.collectionCatalogKey"/>
-                  <DataDisplay label="Item PID" :value="metadataStore.apollo.pid"/>
-                  <DataDisplay label="Item Type" :value="metadataStore.apollo.type"/>
-                  <DataDisplay label="Item Title" :value="metadataStore.apollo.title"/>
-               </template>
+                  <template v-if="externalSystem == 'JSTOR Forum'">
+                     <DataDisplay label="Type" :value="externalSystem"/>
+                     <DataDisplay label="Legacy URL" :value="metadataStore.detail.externalURI">
+                        <a class="supplemental" :href="`${metadataStore.detail.externalSystem.publicURL}${metadataStore.detail.externalURI}`" target="_blank">
+                           {{metadataStore.detail.externalURI}}
+                           <i class="icon pi pi-external-link"></i>
+                        </a>
+                     </DataDisplay>
+                     <DataDisplay label="Search Link" :value="metadataStore.jstor.searchURL">
+                        <a class="supplemental" :href="`${metadataStore.jstor.searchURL}`" target="_blank">
+                           JSTORForum search
+                           <i class="icon pi pi-external-link"></i>
+                        </a>
+                     </DataDisplay>
+                     <DataDisplay label="Title" :value="metadataStore.detail.title"/>
+                  </template>
 
-               <DataDisplay :spacer="true"/>
-               <DataDisplay label="Manuscript/Unpublished Item" :value="$formatBool(metadataStore.detail.isManuscript)"/>
-               <DataDisplay label="Personal Item" :value="$formatBool(metadataStore.detail.isPersonalItem)"/>
-               <DataDisplay label="OCR Hint" :value="ocrHint"/>
-               <DataDisplay label="OCR Language Hint" :value="metadataStore.detail.ocrLanguageHint"/>
-            </dl>
+                  <template v-if="externalSystem == 'Apollo'">
+                     <DataDisplay label="Type" :value="externalSystem"/>
+                     <DataDisplay label="URL" :value="metadataStore.apollo.itemURL">
+                        <a class="supplemental" :href="metadataStore.apollo.itemURL" target="_blank">
+                           {{metadataStore.apollo.itemURL}}
+                           <i class="icon pi pi-external-link"></i>
+                        </a>
+                     </DataDisplay>
+                     <DataDisplay label="Collection PID" :value="metadataStore.apollo.collectionPID">
+                        <a class="supplemental" :href="metadataStore.apollo.collectionURL" target="_blank">
+                           {{metadataStore.apollo.collectionPID}}
+                           <i class="icon pi pi-external-link"></i>
+                        </a>
+                     </DataDisplay>
+                     <DataDisplay label="Collection Title" :value="metadataStore.apollo.collectionTitle"/>
+                     <DataDisplay label="Collection Barcode" :value="metadataStore.apollo.collectionBarcode"/>
+                     <DataDisplay label="Collection Catalog Key" :value="metadataStore.apollo.collectionCatalogKey"/>
+                     <DataDisplay label="Item PID" :value="metadataStore.apollo.pid"/>
+                     <DataDisplay label="Item Type" :value="metadataStore.apollo.type"/>
+                     <DataDisplay label="Item Title" :value="metadataStore.apollo.title"/>
+                  </template>
 
-            <template v-if="externalSystem == 'ArchivesSpace'">
-               <div v-if="metadataStore.hasMasterFiles == false"  class="as-toolbar">
-                  <p>Not published to ArchivesSpace - no master files.</p>
-               </div>
-               <div v-else-if="metadataStore.asReviewInProgress" class="as-review">
-                  ArchivesSpace review has been requested.
-               </div>
-               <div v-else-if="metadataStore.archivesSpace.publishedAt" class="as-toolbar">
-                  <DPGButton label="Unpublish" class="as-publish" @click="unpublishAS()" :loading="publishing"/>
-               </div>
-               <div v-else class="as-toolbar">
-                  <DPGButton label="Publish now" class="as-publish" @click="publishToAS()" :loading="publishing"/>
-                  <DPGButton label="Submit for review" class="as-publish" @click="submitForASReview()" :loading="publishing"/>
-               </div>
-               <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
-            </template>
-         </Panel>
-      </div>
-      <div class="column">
-         <Panel header="Digital Library Information">
-            <dl>
-               <DataDisplay label="PID" :value="metadataStore.detail.pid"/>
-               <DataDisplay label="Virgo" :value="$formatBool(metadataStore.detail.inDL)">
-                  <a v-if="metadataStore.detail.inDL" class="virgo no-pad" :href="metadataStore.detail.virgoURL" target="_blank">Yes<i class="icon pi pi-external-link"></i></a>
-                  <span v-else>No</span>
-               </DataDisplay>
-               <DataDisplay label="DPLA" :value="$formatBool(metadataStore.detail.inDPLA)"/>
-               <DataDisplay label="HathiTrust" :value="$formatBool(metadataStore.detail.inHathiTrust)">
-                  <div class="hathi" v-if="metadataStore.detail.inHathiTrust" @click="showHathiDialog = true">
-                     <span>Yes</span>
-                     <i class="icon fas fa-info-circle" aria-label="HathiTrust status"></i>
-                  </div>
-                  <span v-else>No</span>
-               </DataDisplay>
-               <DataDisplay  v-if="metadataStore.detail.apTrustSubmissionID" label="APTrust" :value="metadataStore.detail.apTrustSubmissionID">
-                  <a class="virgo no-pad" 
-                     :href="`${systemStore.apTrustURL}/submissions/${metadataStore.detail.apTrustSubmissionID}`" target="_blank">
-                     Yes<i class="icon pi pi-external-link"></i>
-                  </a>
-               </DataDisplay>
-               <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
-                  <DataDisplay label="Use Right" :value="metadataStore.detail.useRightName">
-                     <a :href="metadataStore.detail.useRightURI" target="_blank" class="supplemental">
-                        {{metadataStore.detail.useRightName}}<i class="icon pi pi-external-link"></i>
-                     </a>
-                  </DataDisplay>
-                  <DataDisplay label="Use Right Statement" :value="metadataStore.detail.useRightStatement"/>
-               </template>
-               <DataDisplay label="Creator Death Date" :value="metadataStore.detail.creatorDeathDate"/>
-               <DataDisplay label="Availability Policy" :value="availabilityPolicy"/>
-               <DataDisplay label="Collection ID" :value="metadataStore.detail.collectionID"/>
-               <DataDisplay label="Collection Facet" :value="metadataStore.detail.collectionFacet"/>
-               <DataDisplay v-if="metadataStore.detail.supplementalURL" label="Supplemental System" :value="metadataStore.detail.supplementalURL">
-                  <a :href="metadataStore.detail.supplementalURL" target="_blank" class="supplemental">
-                     {{metadataStore.detail.supplementalSystem}}<i class="icon pi pi-external-link"></i>
-                  </a>
-               </DataDisplay>
-               <template v-if="metadataStore.canPublishToVirgo && metadataStore.detail.dateDLIngest">
                   <DataDisplay :spacer="true"/>
-                  <DataDisplay label="Virgo Ingest" :value="$formatDateTime(metadataStore.detail.dateDLIngest)"/>
-                  <DataDisplay label="Virgo Update" :value="$formatDateTime(metadataStore.detail.dateDLUpdate)"/>
+                  <DataDisplay label="Manuscript/Unpublished Item" :value="$formatBool(metadataStore.detail.isManuscript)"/>
+                  <DataDisplay label="Personal Item" :value="$formatBool(metadataStore.detail.isPersonalItem)"/>
+                  <DataDisplay label="OCR Hint" :value="ocrHint"/>
+                  <DataDisplay label="OCR Language Hint" :value="metadataStore.detail.ocrLanguageHint"/>
+               </dl>
+
+               <template v-if="externalSystem == 'ArchivesSpace'">
+                  <div v-if="metadataStore.hasMasterFiles == false"  class="as-toolbar">
+                     <p>Not published to ArchivesSpace - no master files.</p>
+                  </div>
+                  <div v-else-if="metadataStore.asReviewInProgress" class="as-review">
+                     ArchivesSpace review has been requested.
+                  </div>
+                  <div v-else-if="metadataStore.archivesSpace.publishedAt" class="as-toolbar">
+                     <UButton label="Unpublish" class="as-publish" @click="unpublishAS()" :loading="publishing"/>
+                  </div>
+                  <div v-else class="as-toolbar">
+                     <UButton label="Publish now" class="as-publish" @click="publishToAS()" :loading="publishing"/>
+                     <UButton label="Submit for review" class="as-publish" @click="submitForASReview()" :loading="publishing"/>
+                  </div>
+                  <p class="error" v-if="metadataStore.archivesSpace.error">{{metadataStore.archivesSpace.error}}</p>
                </template>
-            </dl>
-            <div class="metadata-acts">
-               <DPGButton v-if="canSubmitAPTrust" label="Submit to APTrust" severity="secondary" @click="apTrustSubmitClicked" 
-                  :disabled="metadataStore.detail.apTrustSubmissionPending" :loading="metadataStore.detail.apTrustSubmissionPending"/>
-               <DPGButton v-if="metadataStore.canPublishToVirgo" label="Publish to Virgo" autofocus severity="secondary" @click="publishVirgoClicked()" :loading="publishing"/>
-            </div>
-         </Panel>
+            </UCard>
+         </div>
+         <div class="column flex-1" >
+            <UCard title="Digital Library Information" class="w-full">
+               <dl>
+                  <DataDisplay label="PID" :value="metadataStore.detail.pid"/>
+                  <DataDisplay label="Virgo" :value="$formatBool(metadataStore.detail.inDL)">
+                     <a v-if="metadataStore.detail.inDL" class="virgo no-pad" :href="metadataStore.detail.virgoURL" target="_blank">Yes<i class="icon pi pi-external-link"></i></a>
+                     <span v-else>No</span>
+                  </DataDisplay>
+                  <DataDisplay label="DPLA" :value="$formatBool(metadataStore.detail.inDPLA)"/>
+                  <DataDisplay label="HathiTrust" :value="$formatBool(metadataStore.detail.inHathiTrust)">
+                     <div class="hathi" v-if="metadataStore.detail.inHathiTrust" @click="showHathiDialog = true">
+                        <span>Yes</span>
+                        <i class="icon fas fa-info-circle" aria-label="HathiTrust status"></i>
+                     </div>
+                     <span v-else>No</span>
+                  </DataDisplay>
+                  <DataDisplay  v-if="metadataStore.detail.apTrustSubmissionID" label="APTrust" :value="metadataStore.detail.apTrustSubmissionID">
+                     <a class="virgo no-pad" 
+                        :href="`${systemStore.apTrustURL}/submissions/${metadataStore.detail.apTrustSubmissionID}`" target="_blank">
+                        Yes<i class="icon pi pi-external-link"></i>
+                     </a>
+                  </DataDisplay>
+                  <template v-if="metadataStore.detail.type == 'SirsiMetadata'">
+                     <DataDisplay label="Use Right" :value="metadataStore.detail.useRightName">
+                        <a :href="metadataStore.detail.useRightURI" target="_blank" class="supplemental">
+                           {{metadataStore.detail.useRightName}}
+                        </a>
+                     </DataDisplay>
+                     <DataDisplay label="Use Right Statement" :value="metadataStore.detail.useRightStatement"/>
+                  </template>
+                  <DataDisplay label="Creator Death Date" :value="metadataStore.detail.creatorDeathDate"/>
+                  <DataDisplay label="Availability Policy" :value="availabilityPolicy"/>
+                  <DataDisplay label="Collection ID" :value="metadataStore.detail.collectionID"/>
+                  <DataDisplay label="Collection Facet" :value="metadataStore.detail.collectionFacet"/>
+                  <DataDisplay v-if="metadataStore.detail.supplementalURL" label="Supplemental System" :value="metadataStore.detail.supplementalURL">
+                     <a :href="metadataStore.detail.supplementalURL" target="_blank" class="supplemental">
+                        {{metadataStore.detail.supplementalSystem}}<i class="icon pi pi-external-link"></i>
+                     </a>
+                  </DataDisplay>
+                  <template v-if="metadataStore.canPublishToVirgo && metadataStore.detail.dateDLIngest">
+                     <DataDisplay :spacer="true"/>
+                     <DataDisplay label="Virgo Ingest" :value="$formatDateTime(metadataStore.detail.dateDLIngest)"/>
+                     <DataDisplay label="Virgo Update" :value="$formatDateTime(metadataStore.detail.dateDLUpdate)"/>
+                  </template>
+               </dl>
+               <div class="metadata-acts">
+                  <UButton v-if="canSubmitAPTrust" label="Submit to APTrust" color="secondary" @click="apTrustSubmitClicked" 
+                     :disabled="metadataStore.detail.apTrustSubmissionPending" :loading="metadataStore.detail.apTrustSubmissionPending"/>
+                  <UButton v-if="metadataStore.canPublishToVirgo" label="Publish to Virgo" autofocus color="secondary" @click="publishVirgoClicked()" :loading="publishing"/>
+               </div>
+            </UCard>
+         </div>
+      </div>
+
+      <UAccordion v-if="metadataStore.detail.type=='XmlMetadata'" class="w-full"
+         :items="[{label: 'XML Metadata', content: metadataStore.detail.xmlMetadata}]">
+         <template #content="{ item }">
+            <pre class="border-l border-r border-b border-brand-grey-100 p-4">{{item.content}}</pre>
+         </template>
+      </UAccordion>
+
+      <div class="row-left gap-4  flex-1">
+         <UCard title="Related Information" class="w-full">
+            <UTabs :items="relatedTabs" variant="link"  >
+               <template #collection>
+                  <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
+                  <CollectionRecords v-else :collectionID="metadataStore.detail.id"/>
+               </template>
+               <template #orders>
+                  <RelatedOrders :orders="metadataStore.related.orders" />
+               </template>
+               <template #units>
+                  <RelatedUnits :units="metadataStore.related.units" :showMetadata="false"/>  
+               </template>
+               <template #masterfiles>
+                  <RelatedMasterFiles :masterFiles="metadataStore.related.masterFiles" />  
+               </template>
+            </UTabs>
+         </UCard>
       </div>
    </div>
-   <template v-if="systemStore.working==false">
-      <div class="more-detail">
-         <Accordion value="none" v-if="metadataStore.detail.type=='XmlMetadata'">
-            <AccordionPanel value="xml">
-               <AccordionHeader>XML Metadata</AccordionHeader>
-               <AccordionContent>
-                  <pre class="xml">{{metadataStore.detail.xmlMetadata}}</pre>
-               </AccordionContent>
-            </AccordionPanel>
-         </Accordion>
-      </div>
-      <div class="details">
-         <Panel header="Related Information">
-            <Tabs :value="startTab" :lazy="true">
-               <TabList>
-                  <Tab value="collection" v-if="metadataStore.detail.isCollection">Collection Members</Tab>
-                  <Tab value="orders"  v-if="metadataStore.detail.isCollection==false">Orders</Tab>
-                  <Tab value="units">Units</Tab>
-                  <Tab value="masterfiles" v-if="metadataStore.related.masterFiles.length > 0">Master Files</Tab>
-               </TabList>
-               <TabPanels>
-                  <TabPanel value="collection" v-if="metadataStore.detail.isCollection">
-                     <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
-                     <CollectionRecords v-else :collectionID="metadataStore.detail.id"/>
-                  </TabPanel>
-                  <TabPanel value="orders" v-if="metadataStore.detail.isCollection==false">
-                     <RelatedOrders :orders="metadataStore.related.orders" />
-                  </TabPanel>
-                  <TabPanel value="units">
-                     <RelatedUnits :units="metadataStore.related.units" :showMetadata="false"/>
-                  </TabPanel>
-                  <TabPanel v-if="metadataStore.related.masterFiles.length > 0" value="masterfiles">
-                     <RelatedMasterFiles :masterFiles="metadataStore.related.masterFiles" />
-                  </TabPanel>
-               </TabPanels>
-            </Tabs>
-         </Panel>
-      </div>
-   </template>
    <HathiTrustDialog v-if="showHathiDialog == true" @closed="showHathiDialog=false" />
    <LocationUnitsDialog v-if="showLocUnitsDialog == true" :folder="targetFolder" @closed="showLocUnitsDialog=false" @unit="unitPicked"/>
 </template>
@@ -244,29 +233,18 @@ import { useSystemStore } from '@/stores/system'
 import { useMetadataStore } from '@/stores/metadata'
 import { useUserStore } from '@/stores/user'
 import { useCollectionsStore } from '@/stores/collections'
-import Panel from 'primevue/panel'
-import Accordion from 'primevue/accordion';
-import AccordionPanel from 'primevue/accordionpanel'
-import AccordionHeader from 'primevue/accordionheader'
-import AccordionContent from 'primevue/accordioncontent'
 import DataDisplay from '../components/DataDisplay.vue'
-import Tabs from 'primevue/tabs'
-import TabList from 'primevue/tablist'
-import Tab from 'primevue/tab'
-import TabPanels from 'primevue/tabpanels'
-import TabPanel from 'primevue/tabpanel'
 import RelatedOrders from '@/components/related/RelatedOrders.vue'
 import RelatedUnits from '@/components/related/RelatedUnits.vue'
 import RelatedMasterFiles from '@/components/related/RelatedMasterFiles.vue'
-import FileUpload from 'primevue/fileupload'
-import { useConfirm } from "primevue/useconfirm"
+import { useConfirm } from "@/composables/useConfirm"
 import CollectionRecords from '@/components/related/CollectionRecords.vue'
 import HathiTrustDialog from '@/components/metadata/HathiTrustDialog.vue'
 import CollectionAddDialog from '@/components/metadata/CollectionAddDialog.vue'
 import LocationUnitsDialog from '@/components/metadata/LocationUnitsDialog.vue'
 import WaitSpinner from '@/components/WaitSpinner.vue'
+import XmlUploadModal from '@/components/metadata/XmlUploadModal.vue'
 
-const confirm = useConfirm()
 const route = useRoute()
 const router = useRouter()
 const systemStore = useSystemStore()
@@ -279,10 +257,18 @@ const showHathiDialog = ref(false)
 const showLocUnitsDialog = ref(false)
 const targetFolder = ref("")
 
-const startTab = computed( () => {
-   if ( metadataStore.detail.isCollection ) return "collection"
-   if ( metadataStore.related.units.length > 0  ) return "units"
-   return "orders"
+const relatedTabs = computed( () => {
+   let out = []
+   if (metadataStore.detail.isCollection) {
+      out.push({ label: 'Collection Members', slot: 'collection' })
+   } else {
+      out.push({ label: 'Orders', slot: 'orders' })
+   }
+   out.push({ label: 'Units', slot: 'units' })
+   if ( metadataStore.related.masterFiles.length > 0 ) {
+      out.push({ label: 'Master files', slot: 'masterfiles' })   
+   }
+   return out
 })
 
 const canSubmitAPTrust = computed(() => {
@@ -385,22 +371,12 @@ const unitPicked = ((unitID) => {
    router.push("/units/"+unitID)
 })
 
-const deleteMetadata = (() => {
-   confirm.require({
-      message: 'Are you sure you want delete this metadata? All data will be lost. This cannot be reversed.',
-      header: 'Confirm Delete Metadata',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Delete'
-      },
-      accept: async () => {
-         await metadataStore.deleteMetadata()
-      }
-   })
+const deleteMetadata = (async () => {
+   const msg = 'Are you sure you want delete this metadata? All data will be lost. This cannot be reversed.'
+   const resp = await useConfirm("Confirm Delete Metadata", msg, "Delete")
+   if (resp) {
+      metadataStore.deleteMetadata()
+   } 
 })
 
 const editMetadata = (() => {
@@ -417,26 +393,16 @@ const downloadXMLClicked = (() => {
    window.URL.revokeObjectURL(fileURL)
 })
 
-const xmlUploader = (( event ) => {
-   metadataStore.uploadXML( event.files[0] )
+const xmlUploader = (( uploadFile ) => {
+   metadataStore.uploadXML( uploadFile )
 })
 
-const apTrustSubmitClicked = (() => {
-   confirm.require({
-      message: 'Are you sure you want to submit this metadata record to APTrust?',
-      header: 'Confirm APTrust Submission',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Submit'
-      },
-      accept: async () => {
-         metadataStore.apTrustSubmit()  
-      }
-   })
+const apTrustSubmitClicked = (async () => {
+   const msg = 'Are you sure you want to submit this metadata record to APTrust?'
+   const resp = await useConfirm("Confirm APTrust Submission", msg, "Submit")
+   if (resp) {
+      metadataStore.apTrustSubmit()
+   } 
 })
 
 const publishVirgoClicked = (async () => {
@@ -449,26 +415,16 @@ const publishVirgoClicked = (async () => {
 })
 
 const unpublishAS = ( async () => {
-   confirm.require({
-      message: 'Are you sure you want remove this item from ArchivesSpace? After this, the digitial content will no longer be publicly visible.',
-      header: 'Confirm Unpublish',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Unpublish'
-      },
-      accept: async () => {
-         publishing.value = true
-         await metadataStore.unpublishFromArchivesSpace()
-         publishing.value = false
-         if (systemStore.error == "") {
-            systemStore.toastMessage('Unpublish Success', 'This item has successfully been removed from ArchivesSpace')
-         }
+   const msg = 'Are you sure you want remove this item from ArchivesSpace? After this, the digitial content will no longer be publicly visible.'
+   const resp = await useConfirm("Confirm Unpublish", msg, "Unpublish")
+   if (resp) {
+      publishing.value = true
+      await metadataStore.unpublishFromArchivesSpace()
+      publishing.value = false
+      if (systemStore.error == "") {
+         systemStore.toastMessage('Unpublish Success', 'This item has successfully been removed from ArchivesSpace')
       }
-   })
+   }
 })
 
 const publishToAS = ( async () => {
@@ -513,83 +469,61 @@ const submitForASReview = ( async () => {
    }
 }
 
-.details {
-   padding:  0 25px 10px 25px;
-   display: flex;
-   flex-flow: row wrap;
-   justify-content: flex-start;
-
-   .column {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      flex: 1;
+div.hathi {
+   color: var(--uvalib-brand-blue-light);
+   cursor: pointer;
+   font-weight: bold;
+   i {
+      font-size: 1.2em;
    }
-
-   div.hathi {
-      color: var(--uvalib-brand-blue-light);
-      cursor: pointer;
-      font-weight: bold;
-      i {
-         font-size: 1.2em;
-      }
-      &:hover {
-         text-decoration: underline;
-      }
+   &:hover {
+      text-decoration: underline;
    }
-   .as-review {
+}
+.as-review {
+   text-align: center;
+   margin: 25px 0 10px 0;
+   font-weight: bold;
+}
+.as-toolbar {
+   text-align: right;
+   p {
       text-align: center;
-      margin: 25px 0 10px 0;
       font-weight: bold;
+      margin: 10px 0 0 0;
    }
-   .as-toolbar {
-      text-align: right;
-      p {
-         text-align: center;
-         font-weight: bold;
-         margin: 10px 0 0 0;
-      }
-      button.as-publish {
-         font-size: 0.85em;
-         padding: 5px 15px;
-         margin-right: 10px;
-      }
-   }
-   a.virgo, a.supplemental {
-      display: inline-block;
-      margin-left: 10px;
-   }
-   a.virgo.no-pad {
-      margin-left: 0
-   }
-   a.supplemental {
-      margin-left: 0px;
-   }
-   :deep(div.p-panel) {
-      margin: 10px;
-      flex: 40%;
-      text-align: left;
-   }
-   .thumb {
-      margin: 10px;
-   }
-   button.folder {
+   button.as-publish {
       font-size: 0.85em;
-      margin: 2px 4px;
-      padding: 3px 8px;
+      padding: 5px 15px;
+      margin-right: 10px;
    }
-   p.error {
-      color: var(--uvalib-red-emergency);
-      text-align: center;
-      padding: 0;
-      margin: 15px 0 0 0;
-   }
-   .metadata-acts {
-      padding: 15px 0 0 0;
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-end;
-      gap: 10px;
-   }
+}
+a.virgo, a.supplemental {
+   display: inline-block;
+   margin-left: 10px;
+}
+a.virgo.no-pad {
+   margin-left: 0
+}
+a.supplemental {
+   margin-left: 0px;
+}
+button.folder {
+   font-size: 0.85em;
+   margin: 2px 4px;
+   padding: 3px 8px;
+}
+p.error {
+   color: var(--uvalib-red-emergency);
+   text-align: center;
+   padding: 0;
+   margin: 15px 0 0 0;
+}
+.metadata-acts {
+   padding: 15px 0 0 0;
+   display: flex;
+   flex-flow: row nowrap;
+   justify-content: flex-end;
+   gap: 10px;
 }
 </style>
