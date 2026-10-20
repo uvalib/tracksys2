@@ -14,7 +14,7 @@
          </router-link>
          <span v-else></span>
       </span>
-      <div class="row-right gap-2!">
+      <div class="row-right gap-2">
          <UButton v-if="jobsStore.details.status=='running'" color="secondary"
             label="Watch status" @click="tailLog" :disabled="tailIntervalID > -1" />
          <UButton v-else label="Jump to end" @click="jumpToEnd" color="secondary"/>

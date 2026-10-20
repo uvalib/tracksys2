@@ -4,7 +4,7 @@
          <span v-if="metadataStore.detail.isCollection" class="collection-tag">Collection</span>
          <span>Metadata {{route.params.id}}</span>
       </div>
-      <div class="actions">
+      <div class="row-right gap-2">
          <CollectionAddDialog v-if="canAddToCollection" :metadataID="metadataStore.detail.id" />
          <DPGButton label="Delete" severity="danger" class="edit" @click="deleteMetadata()" v-if="canDelete"/>
          <template  v-if="metadataStore.detail.type == 'XmlMetadata' && systemStore.working==false">

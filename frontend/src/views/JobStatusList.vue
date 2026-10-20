@@ -35,7 +35,7 @@
          {{ $formatDateTime(row.original.finishedAt) }}
       </template>
       <template #actions-cell="{ row }">
-         <div class="row-right gap-2!">
+         <div class="row-right gap-2">
             <UButton :to="`/jobs/${row.original.id}`"  icon="i-lucide-eye"  label="View" class="text-white!" size="xs"/>
             <UButton label="Delete" color="error" icon="i-lucide-trash" size="xs" @click="deleteJob(row.original.id)"/>
          </div>

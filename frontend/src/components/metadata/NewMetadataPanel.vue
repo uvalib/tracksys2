@@ -121,7 +121,7 @@
             </div>
          </div>
       </UCard>
-      <div class="row-right">
+      <div class="row-right gap-4">
          <UButton @click="cancelCreate" label="Cancel" color="secondary"/>
          <UButton :label="createLabel" type="submit" /> 
       </div>

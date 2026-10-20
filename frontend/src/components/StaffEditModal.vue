@@ -25,7 +25,7 @@
                <span>All new staff must be added to a group named lb-digiserv. This can be done here: </span>
                <a href="https://mygroups.virginia.edu/groups/" target="_blank">MyGroups</a>
             </div>
-            <div class="row-right gap-2!">
+            <div class="row-right gap-2">
                <UButton label="Cancel" color="secondary" @click="emit('close', false)"/>
                <UButton label="Save" type="submit" /> 
             </div>

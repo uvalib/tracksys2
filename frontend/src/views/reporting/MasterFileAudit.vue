@@ -4,7 +4,7 @@
       <WaitSpinner/>
    </div>
    <div v-else class="report">
-      <div class="row-right items-center">
+      <div class="row-right gap-4">
          <label>Year:</label>
          <USelect v-model="auditStore.targetYear" :items="auditStore.auditYears"/>
          <UButton color="secondary" @click="auditStore.getAuditReport()" label="Generate Report"/>

@@ -76,7 +76,7 @@
     @apply flex flex-row flex-nowrap gap-1 justify-start items-center;
 }
 .row-right {
-    @apply flex flex-row flex-nowrap gap-4 justify-end;
+    @apply flex flex-row flex-nowrap justify-end items-center;
 }
 .row-left {
     @apply flex flex-row flex-nowrap gap-4 justify-start;
@@ -175,7 +175,7 @@ input[type=checkbox] {
    span.status, span.flag {
       border-radius: 5px;
       color: white;
-      padding: 4px 15px 4px 15px;
+      padding: 1px 10px;
       box-sizing: border-box;
       display:inline-block;
       text-align: center;

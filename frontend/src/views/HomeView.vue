@@ -1,7 +1,7 @@
 <template>
    <h2>
       <span>Home</span>
-      <div class="row-right gap-2!" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
+      <div class="row-right gap-2" v-if="(userStore.isAdmin || userStore.isSupervisor)" >
          <CreateAgencyModal v-if="userStore.isAdmin" />
          <CreateCollectionFacetModal v-if="userStore.isAdmin" />
          <CreateMetadataModal />

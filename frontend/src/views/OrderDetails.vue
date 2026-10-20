@@ -124,7 +124,7 @@
                   <DataDisplay v-if="item.sourceURL" label="Web Link" :value="item.sourceURL"/>
                   <DataDisplay v-if="item.description" label="Description" :value="item.description"/>
                </dl>
-               <div class="row-right gap-2!">
+               <div class="row-right gap-2">
                   <UButton label="Discard" autofocus color="secondary" @click="discardItem(item)"/>
                   <AddUnitDialog label="Create Unit" :item="item" />
                </div>

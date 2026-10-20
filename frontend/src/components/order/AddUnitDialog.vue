@@ -61,7 +61,7 @@
                   </label>
                </div>
             </UCard>
-            <div class="row-right gap_2!">
+            <div class="row-right gap_2">
                <UButton @click="isOpen=false" label="Cancel" color="secondary"/>
                <UButton label="Add Unit" type="submit" />
             </div>

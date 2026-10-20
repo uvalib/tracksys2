@@ -6,7 +6,7 @@
    <template #content>
       <div class="p-4 column-close">
          <slot></slot>
-         <div class="row-right">
+         <div class="row-right gap-2">
             <UButton color="secondary" label="Clear" size="xs" @click="clearClicked"/>
             <UButton label="Apply" size="xs" @click="applyClicked"/>
          </div>

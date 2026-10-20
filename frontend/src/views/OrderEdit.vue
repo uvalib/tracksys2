@@ -33,7 +33,7 @@
             <USelectMenu v-model="state.customerID" :items="customers" class="w-full" value-key="value"  placeholder="Select a customer..." virtualize/>
          </UFormField>  
       </div>
-      <div class="row-right gap-2!">
+      <div class="row-right gap-2">
          <UButton label="Cancel" color="secondary" @click="cancelEdit()"/>
          <UButton label="Save" type="submit" />
       </div>
