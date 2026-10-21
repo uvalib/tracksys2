@@ -89,7 +89,7 @@ export const useMetadataStore = defineStore('metadata', {
          masterFiles: [],
          collection: null
       },
-      locationUnits: [],
+      locationUnit: null,
       searchHits: [],
       totalSearchHits: 0,
       sirsiMatch: {
@@ -541,12 +541,17 @@ export const useMetadataStore = defineStore('metadata', {
          })
       },
 
-      async getLocationUnits( loc ) {
-         this.locationUnits = []
+      async getLocationUnit( loc ) {
+         this.locationUnit = null
+         const system = useSystemStore()
          return axios.get( `/api/locations/${loc.id}/units` ).then(response => {
-            this.locationUnits = response.data
+            if ( response.data.length > 1 )  {
+               system.setError("Multiple matchjing units found")
+            } else {
+               this.locationUnit = response.data[0]
+            }
          }).catch( (e) => {
-            const system = useSystemStore()
+            
             system.setError(e)
          })
       }

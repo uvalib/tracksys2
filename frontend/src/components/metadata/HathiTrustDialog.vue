@@ -1,101 +1,96 @@
 <template>
-   <Dialog v-model:visible="showDialog" :style="{width: '550px'}" header="HathiTrust Status" :modal="true" position="top" @hide="emit('closed')">
-      <form id="hathitrust-detail" @submit="submitChanges">
-         <div class="split">
-            <FormField id="drequest" label="Date Requested">
-               <InputText id="drequest" v-model="requestedAt" type="text" :readonly="true"/>   
-            </FormField>
-            <FormField id="dfinish" label="Date Finished">
-               <InputText id="dfinish" v-model="finishedAt" type="date"/>   
-            </FormField>
-         </div>
-        <div class="group">
-            <p class="group-name">Metadata</p>
-            <div class="split">
-               <FormField id="dsubmit" label="Date Submitted">
-                  <InputText id="dsubmit" v-model="metadataSubmittedAt" type="date"/>   
-               </FormField>
-               <FormField id="mdstatus" label="Status">
-                  <InputText id="mdstatus" v-model="metadataStatus" type="text"/>   
-               </FormField>
+   <UModal v-model:open="showDialog" :modal="true" :dismissible="false" :close="false" title="HathiTrustStatus" >
+      <UButton @click="showClicked" label="HathiTrust Status" color="secondary" />
+      <template #body>
+         <UForm :state="state" @submit="submitChanges" class="column gap-4 w-full">
+            <div class="row-left gap-4">
+               <UFormField name="requestedAt" label="Date Requested" class="grow">  
+                  <UInput v-model="state.requestedAt" :readonly="true" variant="outline" class="w-full"/>   
+               </UFormField>
+               <UFormField name="finishedAt" label="Date Finished" class="grow">  
+                  <DatePicker v-model="state.finishedAt" class="w-full"/>   
+               </UFormField>
             </div>
-         </div>
-         <div class="group">
-            <p class="group-name">Package</p>
-            <div class="split">
-               <FormField id="pcreate" label="Date Created">
-                  <InputText id="pcreate" v-model="packageCreatedAt" type="date"/>   
-               </FormField>
-               <FormField id="psubmit" label="Date Submitted">
-                  <InputText id="psubmit" v-model="packageSubmittedAt" type="date"/>   
-               </FormField>
-               <FormField id="pstatus" label="Status">
-                  <InputText id="pstatus" v-model="packageStatus" type="text"/>   
-               </FormField>
+            <UCard title="Metadata" :ui="{body: 'pt-4!'}">
+               <div class="row-left gap-4">
+                  <UFormField name="metadataSubmittedAt" label="Date Submitted" class="grow">  
+                     <DatePicker v-model="state.metadataSubmittedAt" class="w-full"/>   
+                  </UFormField>
+                  <UFormField name="metadataStatus" label="Status" class="grow">  
+                     <USelect v-model="state.metadataStatus" :items='statuses' class="w-full"/>   
+                  </UFormField>
+               </div>
+            </UCard>
+            <UCard title="Package" :ui="{body: 'pt-4!'}">
+               <div class="flex flex-row flex-wrap justify-start gap-4">
+                  <UFormField name="packageCreatedAt" label="Date Created" class="grow">  
+                     <DatePicker v-model="state.packageCreatedAt" class="w-full"/>   
+                  </UFormField>
+                  <UFormField name="packageSubmittedAt" label="Date Submitted" class="grow">  
+                     <DatePicker v-model="state.packageSubmittedAt" class="w-full"/>   
+                  </UFormField>
+                  <UFormField name="packageStatus" label="Status" class="grow">  
+                     <USelect v-model="state.packageStatus" :items='statuses' class="w-full"/>   
+                  </UFormField>
+               </div>
+            </UCard>
+            <div class="row-right gap-2">
+               <UButton @click="closeDialog" label="Cancel" color="secondary"/>
+               <UButton label="Update" type="submit" />  
             </div>
-         </div>
-         <FormField id="htnotes" label="Notes">
-            <Textarea id="htnotes" v-model="notes" autoResize rows="3" /> 
-         </FormField>
-         <Message v-if="metadataStore.error" severity="error" size="small" variant="simple">{{metadataStore.error}}</Message>
-         <div class="acts">
-            <DPGButton @click="closeDialog" label="Cancel" severity="secondary"/>
-            <DPGButton label="Update" type="submit" />
-         </div>
-      </form>
-   </Dialog>
+         </UForm>
+      </template>
+   </UModal>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useMetadataStore } from '@/stores/metadata'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Message from 'primevue/message'
-import { useForm } from 'vee-validate'
-import FormField from '@/components/FormField.vue'
+import DatePicker from '@/components/DatePicker.vue'
+import { toCalendarDate, parseAbsolute } from '@internationalized/date'
 
-const { resetForm, handleSubmit, defineField } = useForm({})
+const state = ref({
+   requestedAt: null,
+   packageCreatedAt: null,
+   packageSubmittedAt: null,
+   packageStatus: "",
+   metadataSubmittedAt: null,
+   metadataStatus: "",
+   finishedAt: null,
+   notes: ""
+})
 
-const [requestedAt] = defineField('requestedAt')
-const [packageCreatedAt] = defineField('packageCreatedAt')
-const [packageSubmittedAt] = defineField('packageSubmittedAt')
-const [packageStatus] = defineField('packageStatus')
-const [metadataSubmittedAt] = defineField('metadataSubmittedAt')
-const [metadataStatus] = defineField('metadataStatus')
-const [finishedAt] = defineField('finishedAt')
-const [notes] = defineField('notes')
+const statuses = ['pending', 'submitted', 'accepted', 'failed']
 
 const metadataStore = useMetadataStore()
 
 const emit = defineEmits( ['closed' ])
 
-const showDialog = ref(true)
+const showDialog = ref(false)
 
-onMounted( () => {
+const showClicked = (() => {
    metadataStore.error = ""
-   resetForm( {
-      values: {
-         requestedAt: cleanDate(metadataStore.hathiTrustStatus.requestedAt),
-         packageCreatedAt: cleanDate(metadataStore.hathiTrustStatus.packageCreatedAt),
-         packageSubmittedAt: cleanDate(metadataStore.hathiTrustStatus.packageSubmittedAt),
-         packageStatus: metadataStore.hathiTrustStatus.packageStatus,
-         metadataSubmittedAt: cleanDate(metadataStore.hathiTrustStatus.metadataSubmittedAt),
-         metadataStatus: metadataStore.hathiTrustStatus.metadataStatus,
-         finishedAt: cleanDate(metadataStore.hathiTrustStatus.finishedAt),
-         notes: metadataStore.hathiTrustStatus.notes,
-      }
-   })
-  
-   showDialog.value = true
-})
-
-const cleanDate = ( (dateStr) => {
-   if (dateStr) {
-      return dateStr.split("T")[0]
+   state.value = {
+      packageStatus: metadataStore.hathiTrustStatus.packageStatus,
+      metadataStatus: metadataStore.hathiTrustStatus.metadataStatus,
+      notes: metadataStore.hathiTrustStatus.notes,
    }
-   return null
+   if ( metadataStore.hathiTrustStatus.requestedAt != null) {
+      state.value.requestedAt = toCalendarDate( parseAbsolute(metadataStore.hathiTrustStatus.requestedAt) )
+   }
+   if ( metadataStore.hathiTrustStatus.metadataSubmittedAt != null) {
+      state.value.metadataSubmittedAt = toCalendarDate( parseAbsolute(metadataStore.hathiTrustStatus.metadataSubmittedAt) )
+   }  
+   if ( metadataStore.hathiTrustStatus.packageCreatedAt != null) {
+      state.value.packageCreatedAt = toCalendarDate( parseAbsolute(metadataStore.hathiTrustStatus.packageCreatedAt) )
+   } 
+   if ( metadataStore.hathiTrustStatus.packageSubmittedAt != null) {
+      state.value.packageSubmittedAt = toCalendarDate( parseAbsolute(metadataStore.hathiTrustStatus.packageSubmittedAt) )
+   } 
+   if ( metadataStore.hathiTrustStatus.finishedAt != null) {
+      state.value.finishedAt = toCalendarDate( parseAbsolute(metadataStore.hathiTrustStatus.finishedAt) )
+   }  
+   showDialog.value = true
 })
 
 const closeDialog = (() => {
@@ -103,8 +98,18 @@ const closeDialog = (() => {
    emit("closed")
 })
 
-const submitChanges = handleSubmit( async (values) => {
-   await metadataStore.updateHathiTrustStatus( values )
+const submitChanges = ( async () => {
+   let update = {
+      requestedAt: state.requestedAt.toString(),
+      packageCreatedAt: state.packageCreatedAt.toString(),
+      packageSubmittedAt: state.packageSubmittedAt.toString(),
+      packageStatus: state.packageStatus,
+      metadataSubmittedAt: state.metadataSubmittedAt.toString(),
+      metadataStatus: state.metadataStatus,
+      finishedAt: state.finishedAt.toString(),
+      notes: state.notes
+   }
+   await metadataStore.updateHathiTrustStatus( update )
    if ( metadataStore.error == "" ) {
       closeDialog()
    }

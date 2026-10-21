@@ -47,16 +47,17 @@ export const useCollectionsStore = defineStore('collections', {
          this.collections.push(rec)
       },
       getCollections() {
-         const system = useSystemStore()
-         system.working = true
+         this.working = true
          this.collections = []
          this.metadataHits = []
          this.totalCollections = 0
+         console.log("GET COLLECTIONS...")
          axios.get( "/api/collections" ).then(response => {
             this.totalCollections = response.data.total
             this.collections = response.data.collections
-            system.working = false
+            this.working = false
          }).catch( e => {
+            const system = useSystemStore()
             system.setError(e)
          })
       },

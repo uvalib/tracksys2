@@ -1,6 +1,6 @@
 <template>
    <div class="row-right bg-white border-b border-brand-grey-100 py-3 px-2 items-center">
-      <span>{{ table?.tableApi?.getFilteredRowModel().rows.length }} Units<span v-if="filters.length > 0"> (filtered)</span></span>
+      <span>{{ table?.tableApi?.getFilteredRowModel().rows.length }} Orders<span v-if="filters.length > 0"> (filtered)</span></span>
    </div>
    <UTable ref="table" :columns="columns" v-model:column-filters="filters"  :data="props.orders" sticky virtualize class="h-150">
       <template #id-cell="{ row }">
