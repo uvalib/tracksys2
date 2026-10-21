@@ -10,6 +10,7 @@ export const useCollectionsStore = defineStore('collections', {
       totalRecords: 0,
       collectionID: -1,
       searchOpts: {
+         currPage: 1,
          start: 0,
          limit: 30,
          query: "",
@@ -109,7 +110,6 @@ export const useCollectionsStore = defineStore('collections', {
          })
       },
       exportCSV() {
-         const system = useSystemStore()
          axios.get(`/api/collections/${this.collectionID}/csv`, null, {responseType: "blob"}).then((response) => {
             const fileURL = window.URL.createObjectURL(new Blob([response.data], { type: 'application/vnd.ms-excel' }))
             const fileLink = document.createElement('a')
@@ -124,7 +124,6 @@ export const useCollectionsStore = defineStore('collections', {
          })
       },
        masterFilesReport() {
-         const system = useSystemStore()
          axios.get(`/api/collections/${this.collectionID}/masterfiles`, null, {responseType: "blob"}).then((response) => {
             const fileURL = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }))
             const fileLink = document.createElement('a')

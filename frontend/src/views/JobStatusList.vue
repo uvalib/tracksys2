@@ -181,24 +181,6 @@ const pageChanged = (() => {
    jobsStore.getJobs()
 })
 
-const onRowSelect = (() => {
-   selectAll.value = selectedJobs.value === jobsStore.searchOpts.limit
-})
-
-const onRowUnselect = (() => {
-   selectAll.value  = false
-})
-
-const onSelectAllChange = ((event) => {
-   selectAll.value = event.checked
-   if (selectAll.value) {
-      selectedJobs.value = jobsStore.jobs
-   }
-   else {
-      selectedJobs.value = []
-   }
-})
-
 onMounted(() => {
    jobsStore.getJobs()
    document.title = `Job Statuses`

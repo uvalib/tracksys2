@@ -1,11 +1,11 @@
 <template>
    <h2>
       <div>
-         <span v-if="metadataStore.detail.isCollection" class="collection-tag">Collection</span>
+         <span v-if="metadataStore.detail.isCollection" class="collection-tag">Collection </span>
          <span>Metadata {{route.params.id}}</span>
       </div>
       <div class="row-right gap-2">
-         <CollectionAddDialog v-if="canAddToCollection" :metadataID="metadataStore.detail.id" />
+         <CollectionAddDialog v-if="canAddToCollection" :metadataID="metadataStore.detail.id"/>
          <UButton label="Delete" color="error" class="edit" @click="deleteMetadata()" v-if="canDelete"/>
          <template  v-if="metadataStore.detail.type == 'XmlMetadata' && systemStore.working==false">
             <UButton label="Download XML"  @click="downloadXMLClicked()" />
@@ -187,7 +187,7 @@
       <UAccordion v-if="metadataStore.detail.type=='XmlMetadata'" class="w-full"
          :items="[{label: 'XML Metadata', content: metadataStore.detail.xmlMetadata}]">
          <template #content="{ item }">
-            <pre class="border-l border-r border-b border-brand-grey-100 p-4">{{item.content}}</pre>
+            <pre class="text-sm border-l border-r border-b border-brand-grey-100 p-4">{{item.content}}</pre>
          </template>
       </UAccordion>
 
