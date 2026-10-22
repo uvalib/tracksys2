@@ -1,58 +1,64 @@
 <template>
-   <DPGButton @click="show" severity="secondary" label="Create Digitization Project" :disabled="createDisabled"/>
-   <Dialog v-model:visible="isOpen" :modal="true" header="Create Digitization Project" :style="{width: '400px'}" :closable="false">
-      <form @submit="createProject">
-         <FormField id="workdlow" label="Workflow" :error="errors.workflowID" :required="true">
-            <Select id="workdlow" v-model="workflowID"  :options="workflows" optionLabel="label" optionValue="value" placeholder="Select a workflow" />   
-         </FormField>
-         <FormField  v-if="workflowID==6" id="containertype" label="Container Tyoe" :error="errors.containerTypeID" :required="true">
-            <Select id="containertype" v-model="containerTypeID"  :options="containerTypes" optionLabel="label" optionValue="value" placeholder="Select a container type" />   
-         </FormField>
-         <FormField id="category" label="Category" :error="errors.categoryID" :required="true">
-            <Select id="category" v-model="categoryID"  :options="categories" optionLabel="label" optionValue="value" placeholder="Select a category" />   
-         </FormField>
-         <FormField id="condition" label="Condition" :error="errors.condition" :required="true">
-            <Select id="condition" v-model="condition"  :options="conditions" optionLabel="label" optionValue="value" placeholder="Select a condition" />   
-         </FormField>
-         <FormField id="notes" label="Notes">
-            <Textarea id="notes" v-model="notes" rows="4"/>   
-         </FormField>
-         <div class="acts">
-            <DPGButton @click="hide" label="Cancel" severity="secondary"/>
-            <DPGButton label="Create Project" type="submit"/>
-         </div>
-      </form>
-   </Dialog>
+   <UModal v-model:open="isOpen" :modal="true" :dismissible="false" :close="false" title="Create Digitization Project">
+      <UButton @click="show()" color="secondary" label="Create Digitization Project" />
+      <template #body>
+         <UForm  :schema="schema" :state="state" class="flex flex-col gap-4" @submit="createProject">
+            <UFormField name="workflowID" label="Workflow" :required="true">
+               <USelect v-model="state.workflowID" :items="workflows" placeholder="Select a workflow..." class="w-full" />   
+            </UFormField>
+            <UFormField  v-if="state.workflowID==6"  name="containerTypeID" label="Container Type" :required="true">
+               <USelect v-model="state.containerTypeID" :items="containerTypes" placeholder="Select a container type..." class="w-full" />   
+            </UFormField>
+            <UFormField name="categoryID" label="Category" :required="true">
+               <USelect v-model="state.categoryID" :items="categories" placeholder="Select a category..." class="w-full" />   
+            </UFormField>
+            <UFormField name="condition" label="Condition" :required="true">
+               <USelect v-model="state.condition" :items="conditions" placeholder="Select a condition..." class="w-full" />   
+            </UFormField>
+            <UFormField name="notes" label="Notes">
+               <UTextarea v-model="state.notes" class="w-full" />   
+            </UFormField>
+            <div class="row-right gap-2">
+               <UButton @click="isOpen = false" label="Cancel" color="secondary"/>
+               <UButton label="Create Project" type="submit" :disabled="createDisabled"/>  
+            </div>
+         </UForm>
+      </template>
+   </UModal>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import Dialog from 'primevue/dialog'
 import { useUnitsStore } from '@/stores/units'
 import { useSystemStore } from '@/stores/system'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
+import { toCalendarDate, parseAbsolute } from '@internationalized/date'
 import axios from 'axios'
-import { useForm } from 'vee-validate'
 import * as yup from 'yup'
-import FormField from '@/components/FormField.vue'
 
-const schema = yup.object().shape({
-      workflowID: yup.number().min(1, 'Workflow is required'),
-      categoryID: yup.number().min(1, 'Category is required'),
-      condition: yup.bool().required("Condition is required"),
-      containerTypeID: yup.number().when('workflowID', {
-         is: (value) => value == 6,
-         then: (schema) => schema.min(1,"Container type is required"),
-      }),
-   })
-const { errors, resetForm, handleSubmit, defineField } = useForm({validationSchema: schema})
+const schema = yup.object({
+   workflowID: yup.number().min(1, 'Workflow is required').required("Workflow is required"),
+   categoryID: yup.number().min(1, 'Category is required').required("Category is required"),
+   condition: yup.bool().required("Condition is required"),
+   containerTypeID: yup.number().when('workflowID', {
+      is: (value) => value == 6,
+      then: (schema) => schema.min(1,"Container type is required").required("Container type is required"),
+   }),
+})
 
-const [workflowID] = defineField('workflowID')
-const [containerTypeID] = defineField('containerTypeID')
-const [categoryID] = defineField('categoryID')
-const [condition] = defineField('condition')
-const [notes] = defineField('notes')
+const state = ref({
+   unitID: null,
+   orderID: null,
+   dateDue: null,
+   title: "",
+   callNumber: "",
+   agencyID: null,
+   customerID: null,
+   workflowID: null,
+   categoryID: null,
+   containerTypeID: null,
+   condition: null,
+   notes: "",
+})
 
 const unitsStore = useUnitsStore()
 const systemStore = useSystemStore()
@@ -80,7 +86,7 @@ const conditions = computed( () => {
    return out
 })
 
-const createProject = handleSubmit( async (values) => {
+const createProject = ( async () => {
    axios.post(`${systemStore.projectsURL}/api/projects/create`, values).then(response => {
       unitsStore.detail.projectID = parseInt(response.data, 10)
       systemStore.toastMessage("Project Created", "A new project has been created for this unit")
@@ -90,29 +96,26 @@ const createProject = handleSubmit( async (values) => {
    })
 })
 
-const hide = (() => {
-   isOpen.value=false
-})
-
 const show = (() => {
-   let vals = {
+   state.value = {
       unitID: unitsStore.detail.id,
       orderID: unitsStore.detail.orderID,
-      dateDue: unitsStore.detail.order.dateDue,
       title: unitsStore.detail.metadata.title,
       callNumber: unitsStore.detail.metadata.callNumber,
-      agencyID: 0,
+      agencyID: null,
       customerID: unitsStore.detail.order.customer.id,
-      workflowID: 1,
-      categoryID: 0,
-      containerTypeID: 0,
+      workflowID: null,
+      categoryID: null,
+      containerTypeID: null,
       condition: null,
       notes: "",
    }
-   if ( unitsStore.detail.order.agency ) {
-       vals.agencyID = unitsStore.detail.order.agency.id
+   if ( unitsStore.detail.order.dateDue ) {
+      state.value.dateDue = toCalendarDate( parseAbsolute(unitsStore.detail.order.dateDue) )
    }
-   resetForm({ values: vals })
+   if ( unitsStore.detail.order.agency ) {
+       state.value.agencyID = unitsStore.detail.order.agency.id
+   }
    
    // load constants from dpg-imaging
    axios.get(`${systemStore.projectsURL}/constants`).then(response => {

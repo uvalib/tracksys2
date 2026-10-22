@@ -14,8 +14,8 @@
          <UButton label="Edit" @click="editMetadata()"  v-if="canEdit"/>
       </div>
    </h2>
-   <div class="column gap-6 p-6 flex-1">
-      <div class="row-left gap-6" v-if="systemStore.working==false">
+   <div class="column gap-6 p-6 flex-1" v-if="systemStore.working==false">
+      <div class="row-left gap-6">
          <div v-if="metadataStore.detail.thumbURL" class="thumb">
             <a :href="metadataStore.detail.viewerURL" target="_blank">
                <img :src="metadataStore.detail.thumbURL" />
