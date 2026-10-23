@@ -12,9 +12,12 @@
          <UButton label="Delete" @click="deleteUnit()" v-if="canDelete"/>
       </div>
    </h2>
-   <div v-if="detail.lastError" class="last-error">
-      <span>Recent Error:</span>
-      <router-link :to="`/jobs/${detail.lastError.jobID}`">{{detail.lastError.error}}</router-link>
+   <div v-if="detail.lastError" class="row-between border-t border-b border-brand-red-B items-center bg-brand-red-100 p-2">
+      <div>
+         <div>Recent Error:</div>
+         <div>{{detail.lastError.error}}</div>
+      </div>
+      <UButton :to="`/jobs/${detail.lastError.jobID}`" size="lg" icon="i-lucide-bug" color="error" class="rounded-full text-white!"/>
    </div>
    <div class="column gap-6 p-6 flex-1" v-if="systemStore.working==false">
       <div class="row-left gap-6">
@@ -380,17 +383,4 @@ const displayStatus = (( id) => {
 </script>
 
 <style scoped lang="scss">
-.last-error {
-   background: var(--uvalib-red-darker);
-   padding: 10px;
-   color: white;
-   span {
-      display: inline-block;
-      font-weight: bold;
-      margin-right: 10px;
-   }
-   a {
-      color: white !important;
-   }
-}
 </style>
