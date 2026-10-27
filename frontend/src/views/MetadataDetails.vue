@@ -204,6 +204,9 @@
                <template #units>
                   <RelatedUnits :units="metadataStore.related.units" :showMetadata="false"/>  
                </template>
+               <template #masterfiles>
+                  <RelatedMasterFiles :masterFiles="metadataStore.related.masterFiles" />  
+               </template>
             </UTabs>
          </UCard>
       </div>
@@ -226,6 +229,7 @@ import HathiTrustDialog from '@/components/metadata/HathiTrustDialog.vue'
 import CollectionAddDialog from '@/components/metadata/CollectionAddDialog.vue'
 import WaitSpinner from '@/components/WaitSpinner.vue'
 import XmlUploadModal from '@/components/metadata/XmlUploadModal.vue'
+import RelatedMasterFiles from '../components/related/RelatedMasterFiles.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -244,6 +248,9 @@ const relatedTabs = computed( () => {
       out.push({ label: 'Orders', slot: 'orders' })
    }
    out.push({ label: 'Units', slot: 'units' })
+   if (metadataStore.related.masterFiles.length > 0) {
+      out.push({ label: 'Master Files', slot: 'masterfiles' })   
+   }
    return out
 })
 
