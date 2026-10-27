@@ -71,7 +71,8 @@ export default defineConfig({
             },
             dropdownMenu: {
                slots: {
-                  item: "hover:bg-brand-blue-alt-300 rounded-md"
+                  item: "hover:bg-brand-blue-alt-300 rounded-md",
+                  label: 'bg-brand-blue-alt rounded-t-sm text-white',
                }
             },
             fieldGroup: {
