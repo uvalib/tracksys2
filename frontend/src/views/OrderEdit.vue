@@ -3,7 +3,7 @@
       <span v-if="route.params.id">Order {{route.params.id}}</span>
       <span v-else>New Order</span>
    </h2>
-   <UForm :schema="schema" :state="state" class="column w-full max-w-150 mx-auto! mt-10!" @submit="submitChanges">
+   <UForm :schema="schema" :state="state" class="column gap-4 w-full max-w-150 mx-auto! mt-10!" @submit="submitChanges">
       <div class="row-between gap-4">
          <UFormField name="status" label="Status" class="grow">   
             <USelect v-model="state.status" :items="orderStatuses" class="w-full"/>   
@@ -33,7 +33,7 @@
             <USelectMenu v-model="state.customerID" :items="customers" class="w-full" value-key="value"  placeholder="Select a customer..." virtualize/>
          </UFormField>  
       </div>
-      <div class="row-right gap-2">
+      <div class="row-right gap-2 pt-4">
          <UButton label="Cancel" color="secondary" @click="cancelEdit()"/>
          <UButton label="Save" type="submit" />
       </div>

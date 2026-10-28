@@ -14,7 +14,7 @@
                <div class="scroller">
                   <UTable :data="metadataStore.searchHits" :columns="columns" :ui="{ td: 'text-xs!' }" v-model:sorting="sorting"
                      v-model:row-selection="rowSelection" :rowSelectionOptions="{enableMultiRowSelection: false}" @select="metadataSelected" 
-                     v-model:column-visibility="hideCheckbox" 
+                     
                   >
                      <template #pid-header="{ column }">
                         <UButton size="xs" color="neutral" variant="ghost" label="PID" :icon="sortIcon(column)" @click="column.toggleSorting(column.getIsSorted() === 'asc')"/>

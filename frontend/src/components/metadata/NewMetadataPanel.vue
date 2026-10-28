@@ -8,7 +8,7 @@
             <template v-if="state.type == 'SirsiMetadata'">
                <div class="flex flex-col gap-1">
                   <div class="text-sm">Enter a catalog key and/or barcode then click Lookup to validate it</div>
-                  <div class="row-left">
+                  <div class="row-left gap-2">
                      <UFormField name="catalogKey" label="Catalog Key" :required="true">
                         <UInput v-model="state.catalogKey" />  
                      </UFormField>
@@ -25,7 +25,7 @@
                   <div class="validation" v-if="metadataStore.sirsiMatch.error">{{ metadataStore.sirsiMatch.error }}</div>
                </div>
                <div>
-                  <dl>
+                  <dl class="text-sm">
                      <DataDisplay label="Title" :value="state.title" blankValue="Unknown"/>
                      <DataDisplay label="Call Number" :value="state.callNumber" blankValue="Unknown"/>
                   </dl>
@@ -54,7 +54,7 @@
                      <li class="note">/repositories/3/resources/811</li>
                   </ul>
                </div>
-               <div class="row-left">
+               <div class="row-left gap-2">
                   <UFormField name="externalURI" label="External URI" :required="true" class="grow">   
                      <div class="flex flex-row gap-4">
                         <UInput v-model="state.externalURI"  @update:modelValue="needsValidation=true" class="w-full"/>  
@@ -70,7 +70,7 @@
                </dl>
             </template>
             <template v-if="state.type">
-               <div class="row-left">
+               <div class="row-left gap-2">
                   <UFormField name="isCollection" label="Collection" class="grow">   
                      <USelect v-model="state.isCollection"  :items="yesNo" class="w-full"/>   
                   </UFormField>
@@ -81,7 +81,7 @@
                      <USelect v-model="state.manuscript" :items="yesNo" class="w-full"/>   
                   </UFormField>
                </div>
-               <div class="row-left">
+               <div class="row-left gap-2">
                   <UFormField name="ocrHint" label="OCR Hint" class="grow">   
                       <USelect v-model="state.ocrHint" :items="ocrHints" class="w-full" placeholder="Select a hint"/>   
                   </UFormField>
@@ -95,7 +95,7 @@
       </UCard>
       <UCard v-if="state.type && state.type != 'ExternalMetadata'" title="Digital Library Information">
          <div class="column-close">
-            <div class="row-left" v-if="props.collection == false">
+            <div class="row-left gap-2" v-if="props.collection == false">
                <UFormField name="collectionID" label="Collection ID" class="grow">   
                   <UInput v-model="state.collectionID" class="w-full" />   
                </UFormField>
@@ -103,7 +103,7 @@
                   <USelect v-model="state.collectionFacet" :items="collectionFacets" placeholder="Select a facet" class="w-full" />   
                </UFormField>
             </div>
-            <div class="row-left">
+            <div class="row-left gap-2">
                <UFormField name="inDPLA" label="In DPLA" class="grow">   
                   <USelect v-model="state.inDPLA" :items="yesNo" class="w-full" />   
                </UFormField>

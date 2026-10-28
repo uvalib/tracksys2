@@ -24,14 +24,14 @@
                         <label>Order ID</label>
                         <div class="item">
                            <span>{{displayOrderID}}</span>
-                           <LookupDialog target="orders" @selected="orderSelected" class="small-button" />
+                           <LookupDialog target="orders" @selected="orderSelected" />
                         </div>
                      </div>
                      <div class="related">
                         <label>Metadata ID</label>
                         <div class="item">
                            <span>{{displayMetadataID}}</span>
-                           <LookupDialog target="metadata" @selected="metadataSelected" :create="true"  class="small-button" />
+                           <LookupDialog target="metadata" @selected="metadataSelected" :create="true"  />
                         </div>
                      </div>
                   </div>

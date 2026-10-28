@@ -1,86 +1,31 @@
 <template>
-   <DPGButton @click="show" severity="secondary" :label="props.label" :disabled="props.disabled" :class="props.class" />
-   <Dialog v-model:visible="isOpen" :modal="true" :header="dialogTitle" style="width: 80%;z-index: 9999" position="top" :maximizable="true" :closable="false">
-      <div class="lookup" v-if="mode=='lookup'">
-         <InputText v-model="query"  @keydown.stop.prevent.enter="lookupRecords" autofocus :placeholder="searchPlaceholder" fluid/>
-         <DPGButton @click="lookupRecords" label="Lookup" severity="secondary"/>
-         <DPGButton @click="createMetadata" label="Create" severity="secondary" v-if="props.create"/>
-      </div>
-      <NewMetadataPanel v-else @canceled="metadataCreateCanceled" @created="metadataCreated" />
-      <template v-if="searched && mode=='lookup'">
-         <div class="hits">
-            <div class="scroller">
-               <DataTable v-if="target=='metadata'" :value="metadataStore.searchHits" ref="metadataHitsTable" dataKey="id"
-                  stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-                  v-model:selection="selectedHit" selectionMode="single"
-                  :lazy="false" :paginator="false" :rows="30" removableSort
-               >
-                  <template #empty>No matching metadata records</template>
-                  <Column field="id" header="ID" :sortable="true"/>
-                  <Column field="pid" header="PID" :sortable="true"/>
-                  <Column field="type" header="Type" :sortable="true"/>
-                  <Column field="title" header="Title" :sortable="true" >
-                     <template #body="slotProps">{{slotProps.data.title}}</template>
-                  </Column>
-                  <Column field="callNumber" header="Call Number" :sortable="true"/>
-                  <Column field="barcode" header="Barcode" :sortable="true"/>
-               </DataTable>
-
-               <DataTable v-if="target=='component'" :value="componentsStore.searchHits" ref="componentHitsTable" dataKey="id"
-                  stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-                  v-model:selection="selectedHit" selectionMode="single"
-                  :lazy="false" :paginator="false" :rows="30" removableSort
-               >
-                  <template #empty>No matching components</template>
-                  <Column field="id" header="ID" :sortable="true"/>
-                  <Column field="pid" header="PID" :sortable="true"/>
-                  <Column field="title" header="Title" :sortable="true" >
-                     <template #body="slotProps">{{slotProps.data.title}}</template>
-                  </Column>
-                  <Column field="label" header="Label" :sortable="true" >
-                     <template #body="slotProps">{{truncateTitle(slotProps.data.label)}}</template>
-                  </Column>
-                  <Column field="date" header="Date" :sortable="false"/>
-                  <Column field="eadID" header="EAD ID" :sortable="false"/>
-                  <Column field="masterFileCount" header="Master Files"/>
-               </DataTable>
-
-               <DataTable v-if="target=='orders'" :value="ordersStore.lookupHits" ref="orderHitsTable" dataKey="id"
-                  stripedRows showGridlines responsiveLayout="scroll" class="p-datatable-sm"
-                  v-model:selection="selectedHit" selectionMode="single"
-                  :lazy="false" :paginator="false" :rows="30" removableSort
-               >
-                  <template #empty>No matching orders</template>
-                  <Column field="id" header="ID" :sortable="true"/>
-                  <Column field="dateDue" header="Date Due" :sortable="true" />
-                  <Column field="title" header="Title" :sortable="true"/>
-                  <Column field="specialInstructions" header="Special Instructions" :sortable="true"/>
-                  <Column field="lastName" header="Customer" class="nowrap" >
-                  <template #body="slotProps">
-                     {{slotProps.data.customer.lastName}}, {{slotProps.data.customer.firstName}}
-                  </template>
-                  </Column>
-                  <Column field="agency.name" header="Agency" />
-               </DataTable>
-            </div>
+   <UModal v-model:open="isOpen" :modal="true" :dismissible="false" :title="dialogTitle">
+      <UButton @click="show()" size="sm" color="secondary" :label="props.label" :disabled="props.disabled"/>
+      <template #body>
+         <div class="row-left gap-2" v-if="mode=='lookup'">
+            <UInput v-model="query"  @keydown.stop.prevent.enter="lookupRecords" :placeholder="searchPlaceholder" class="grow"/>
+            <UButton @click="lookupRecords" label="Lookup" color="secondary"/>
+            <UButton @click="createMetadata" label="Create" color="secondary" v-if="props.create"/>
+         </div>
+         <NewMetadataPanel v-else @canceled="metadataCreateCanceled" @created="metadataCreated" />
+         <div v-if="searched && mode=='lookup'" class="pt-4 max-h-100 overflow-y-scroll text-xs">
+            <UTable :data="lookupResults" :columns="columns" :ui="{th: 'text-xs p-2', td: 'text-xs p-2'}"
+               :rowSelectionOptions="{enableMultiRowSelection: false}" @select="hitSelected" 
+            />
          </div>
       </template>
       <template #footer  v-if="mode=='lookup'">
-         <DPGButton @click="hide" label="Cancel" severity="secondary"/>
-         <DPGButton @click="okClicked" label="Select" :disabled="!selectedHit" />
+         <UButton @click="hide" label="Cancel" color="secondary"/>
+         <UButton @click="okClicked" label="Select" :disabled="!selectedHit" />
       </template>
-   </Dialog>
+   </UModal>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import Dialog from 'primevue/dialog'
 import { useMetadataStore } from '@/stores/metadata'
 import { useOrdersStore } from '@/stores/orders'
 import { useComponentsStore } from '@/stores/components'
-import DataTable from 'primevue/datatable'
-import InputText from 'primevue/inputtext'
-import Column from 'primevue/column'
 import NewMetadataPanel from '@/components/metadata/NewMetadataPanel.vue'
 
 const emit = defineEmits( ['selected', 'selectedObject' ])
@@ -101,10 +46,6 @@ const props = defineProps({
       type: Boolean,
       default: false
    },
-   class: {
-      type: String,
-      default: "wombat"
-   },
 })
 
 const metadataStore = useMetadataStore()
@@ -117,21 +58,62 @@ const searched = ref(false)
 const query = ref("")
 const selectedHit = ref()
 
-function createMetadata() {
+const lookupResults = computed(() => {
+   if ( props.target == "metadata") return metadataStore.searchHits
+   if ( props.target == "component") return componentsStore.searchHits
+   if ( props.target == "orders") return ordersStore.lookupHits
+   return []
+})
+
+const columns = computed(() => {
+   let cols = [ ]
+   if ( props.target == "metadata") {
+      cols.push( {accessorKey: "id", header: "ID"} )
+      cols.push( {accessorKey: "pid", header: "PID"} )
+      cols.push( {accessorKey: "type", header: "Type"} )
+      cols.push( {accessorKey: "title", header: "Title", cell: ({ row }) => `${truncateTitle(row.original.title)}`} )
+      cols.push( {accessorKey: "callNumber", header: "Call Number"} )
+      cols.push( {accessorKey: "barcode", header: "Barcode"} )
+   } else if ( props.target == "component") {
+      cols.push( {accessorKey: "id", header: "ID"} )
+      cols.push( {accessorKey: "pid", header: "PID"} )
+      cols.push( {accessorKey: "title", header: "Title", cell: ({ row }) => `${truncateTitle(row.original.title)}`} )
+      cols.push( {accessorKey: "label", header: "Label", cell: ({ row }) => `${truncateTitle(row.original.label)}`} )
+      cols.push( {accessorKey: "date", header: "Date"} )
+      cols.push( {accessorKey: "eadID", header: "EAD ID"} )
+      cols.push( {accessorKey: "masterFileCount", header: "Master Files"} )
+   } else if ( props.target == "orders") {
+      cols.push( {accessorKey: "id", header: "ID"} )
+      cols.push( {accessorKey: "dateDue", header: "Date Due"} )
+      cols.push( {accessorKey: "title", header: "Title", cell: ({ row }) => `${truncateTitle(row.original.title)}`} )
+      cols.push( {accessorKey: "staff_notes", header: "Staff Notes", cell: ({ row }) => `${truncateTitle(row.original.staff_notes)}`} )
+      cols.push( {accessorKey: "special_instructions", header: "Special Instructions", cell: ({ row }) => `${truncateTitle(row.original.special_instructions)}`} )
+      cols.push( {accessorKey: "customer", header: "Customer"} )
+      cols.push( {accessorKey: "agency", header: "Agency"} )
+   }
+   return cols
+})
+
+const hitSelected = (( _e, row) => {
+   selectedHit.value = row.original
+   row.toggleSelected(!row.getIsSelected())
+})
+
+const createMetadata = (() =>{
    mode.value = "create"
    searched.value = false
    query.value = ""
    selectedHit.value = null
-}
-function metadataCreateCanceled() {
+})
+const metadataCreateCanceled = (() =>{
    mode.value = "lookup"
-}
-function metadataCreated() {
+})
+const metadataCreated = (() =>{
    selectedHit.value = metadataStore.searchHits[0]
    emit("selected", selectedHit.value.id)
    emit("selectedObject", selectedHit.value)
    hide()
-}
+})
 
 const searchPlaceholder = computed(() => {
    if (props.target == "metadata") {
@@ -154,7 +136,7 @@ const dialogTitle = computed(() => {
    return "Order Lookup"
 })
 
-async function lookupRecords() {
+const lookupRecords = ( async () => {
    selectedHit.value = null
    searched.value = false
    if (props.target == "metadata") {
@@ -165,48 +147,31 @@ async function lookupRecords() {
       await ordersStore.lookup( query.value )
    }
    searched.value = true
-}
+})
 
-function truncateTitle(t) {
+const truncateTitle = ((t) => {
    if (t.length < 75) return t
    return t.slice(0,75)+"..."
-}
-function okClicked() {
+})
+
+const okClicked = (() => {
    emit("selected", selectedHit.value.id)
    emit("selectedObject", selectedHit.value)
    hide()
-}
-function hide() {
+})
+
+const hide = (() => {
    isOpen.value=false
-}
-function show() {
+})
+
+const show = (() => {
    isOpen.value = true
    selectedHit.value = null
    searched.value = false
    query.value = ""
    mode.value = "lookup"
-}
+})
 </script>
 
 <style lang="scss" scoped>
-div.lookup {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: baseline;
-   gap: 10px;
-   padding: 10px;
-}
-div.no-results {
-   margin: 15px 0 0 0;
-   font-size: 1.2em;
-   font-weight: 600;
-   text-align: center;
-}
-div.hits {
-   margin-top: 15px;
-   :deep(table.p-datatable-table) {
-      font-size: 0.75em !important;
-   }
-}
 </style>

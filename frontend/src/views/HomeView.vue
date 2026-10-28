@@ -50,7 +50,7 @@
          <div class="text-search">
             <USelect v-model="selectedScope" :items="scopes"  />
             <div class="search-info">
-               <div class="row-left">
+               <div class="row-left gap-2">
                   <SearchIndexPopover />
                   <SearchHelpPopover />
                </div>
