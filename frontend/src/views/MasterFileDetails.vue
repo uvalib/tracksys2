@@ -1,28 +1,26 @@
 <template>
    <h2>
-      <div>
+      <div class="row-left gap-2 items-center">
          <span>Master File {{route.params.id}}</span>
-         <span class="clone" v-if="masterFiles.details.originalID>0">(Cloned from {{ masterFiles.details.originalID }})</span>
+         <span v-if="masterFiles.details.originalID>0" class="text-sm">(Cloned from {{ masterFiles.details.originalID }})</span>
       </div>
-      <div class="actions">
-         <DPGButton label="Previous" @click="prevImage()" v-if="masterFiles.prevID > 0"/>
-         <DPGButton label="Next" @click="nextImage()" v-if="masterFiles.nextID > 0"/>
-         <DPGButton label="Download Image" @click="downloadImage()" v-if="masterFiles.throwAway == false"/>
-         <DPGButton label="Download PDF" @click="downloadPDF()" v-if="masterFiles.details.originalID==0"/>
-         <DPGButton label="Replace" @click="replaceMasterFile()" v-if="masterFiles.details.originalID==0" :loading="masterFiles.replacing"/>
-         <DPGButton label="OCR" @click="masterFiles.ocr()" v-if="masterFiles.isOCRCandidate  && (userStore.isAdmin || userStore.isSupervisor)"/>
-         <DPGButton label="Edit" @click="editMasterFile()"/>
-         <DPGButton label="Republish IIIF" @click="masterFiles.regenerateIIIF()" v-if="userStore.isAdmin && masterFiles.details.originalID==0 && masterFiles.throwAway == false" />
+      <div class="row-right gap-2">
+         <UButton label="Previous" @click="prevImage()" v-if="masterFiles.prevID > 0"/>
+         <UButton label="Next" @click="nextImage()" v-if="masterFiles.nextID > 0"/>
+         <UButton label="Download Image" @click="downloadImage()" v-if="masterFiles.throwAway == false"/>
+         <UButton label="Download PDF" @click="downloadPDF()" v-if="masterFiles.details.originalID==0"/>
+         <UButton label="Replace" @click="replaceMasterFile()" v-if="masterFiles.details.originalID==0" :loading="masterFiles.replacing"/>
+         <UButton label="OCR" @click="masterFiles.ocr()" v-if="masterFiles.isOCRCandidate  && (userStore.isAdmin || userStore.isSupervisor)"/>
+         <UButton label="Edit" @click="editMasterFile()"/>
+         <UButton label="Republish IIIF" @click="masterFiles.regenerateIIIF()" v-if="userStore.isAdmin && masterFiles.details.originalID==0 && masterFiles.throwAway == false" />
       </div>
    </h2>
-   <div class="details" v-if="systemStore.working==false">
-      <div class="thumb">
-         <a :href="masterFiles.viewerURL" target="_blank">
-            <img :src="masterFiles.thumbURL" />
-         </a>
-      </div>
-      <div class="column">
-         <Panel header="General Information">
+   <div class="flex flex-row flex-wrap justify-start gap-6 p-4  text-sm" v-if="systemStore.working==false">
+      <a :href="masterFiles.viewerURL" target="_blank">
+         <img :src="masterFiles.thumbURL" />
+      </a>
+      <div class="column gap-6 flex-1">
+         <UCard title="General Information">
             <dl>
                <DataDisplay label="PID" :value="masterFiles.details.pid" />
                <DataDisplay label="Filename" :value="masterFiles.details.filename" />
@@ -38,16 +36,16 @@
             <div class="tags">
                <TagsDialog />
             </div>
-         </Panel>
-         <Panel header="Location" v-if="location">
+         </UCard>
+         <UCard title="Location" v-if="location">
             <dl>
                <DataDisplay label="Container Type" :value="location.containerType.name"/>
                <DataDisplay label="Container ID" :value="location.containerID"/>
                <DataDisplay v-if="location.containerType.hasFolders" label="Folder" :value="location.folderID"/>
                <DataDisplay label="Notes" :value="location.notes"/>
             </dl>
-         </Panel>
-         <Panel header="Related Information">
+         </UCard>
+         <UCard title="Related Information">
             <dl>
                <template v-if="masterFiles.details.metadata">
                   <DataDisplay  label="Metadata" :value="masterFiles.details.metadata.id">
@@ -73,13 +71,13 @@
                   <router-link :to="`/masterfiles/${masterFiles.details.originalID}`">{{masterFiles.details.originalID}}</router-link>
                </DataDisplay>
             </dl>
-         </Panel>
-         <Panel header="Transcription"  v-if="masterFiles.details.transcription">
+         </UCard>
+         <UCard title="Transcription"  v-if="masterFiles.details.transcription">
             <pre>{{masterFiles.details.transcription}}</pre>
-         </Panel>
+         </UCard>
       </div>
-      <div class="column">
-         <Panel header="Technical Information">
+      <div class="column gap-6 flex-1">
+         <UCard title="Technical Information">
             <dl>
                <DataDisplay label="MD5" :value="masterFiles.details.md5" />
                <DataDisplay label="Filesize" :value="masterFiles.details.filesize" />
@@ -101,8 +99,8 @@
                <DataDisplay label="Focal Length" :value="masterFiles.details.techMetadata.focalLength" />
                <DataDisplay label="Software" :value="masterFiles.details.techMetadata.software" />
             </dl>
-         </Panel>
-         <Panel header="Audit Information" v-if="masterFiles.throwAway == false">
+         </UCard>
+         <UCard title="Audit Information" v-if="masterFiles.throwAway == false">
             <div class="no-audit" v-if="!masterFiles.details.audit">Not Audited</div>
             <dl v-else>
                <DataDisplay label="Audited" :value="$formatDateTime(masterFiles.details.audit.auditedAt)" />
@@ -112,32 +110,30 @@
                <DataDisplay label="IIIF Exists" :value="$formatBool(masterFiles.details.audit.iiifExists)" />
             </dl>
             <div class="audit-toolbar">
-               <DPGButton @click="auditNow" severity="secondary" label="Audit Now"/>
+               <UButton @click="auditNow" severity="secondary" label="Audit Now"/>
             </div>
-         </Panel>
+         </UCard>
       </div>
    </div>
-   <Dialog v-model:visible="pdfStore.downloading" :modal="true" header="Generating PDF" :style="{width: '350px'}">
-      <div class="download">
-         <p>PDF generation in progress...</p>
-         <ProgressBar :value="pdfStore.percent"/>
-      </div>
-   </Dialog>
+
+   <UModal v-model:open="pdfStore.downloading" :modal="true" :dismissible="false" title="Generating PDF">
+      <template #body>
+         <div>PDF generation in progress...</div>
+         <UProgress v-model="pdfStore.percent" status />
+      </template>
+   </UModal>
 </template>
 
 <script setup>
-import { onBeforeMount, computed, ref } from 'vue'
+import { onBeforeMount, computed } from 'vue'
 import { useMasterFilesStore } from '@/stores/masterfiles'
 import { useSystemStore } from '@/stores/system'
 import { useUserStore } from '@/stores/user'
 import { usePDFStore } from '@/stores/pdf'
 import { useRouter, useRoute,onBeforeRouteUpdate } from 'vue-router'
-import Panel from 'primevue/panel'
-import ProgressBar from 'primevue/progressbar'
-import Dialog from 'primevue/dialog'
 import DataDisplay from '../components/DataDisplay.vue'
 import TagsDialog from '../components/masterfile/TagsDialog.vue'
-import { useConfirm } from "primevue/useconfirm"
+import { useConfirm } from "@/composables/useConfirm"
 
 const route = useRoute()
 const router = useRouter()
@@ -145,7 +141,6 @@ const masterFiles = useMasterFilesStore()
 const systemStore = useSystemStore()
 const userStore = useUserStore()
 const pdfStore = usePDFStore()
-const confirm = useConfirm()
 
 const orientationName = computed( () => {
    let names = ["Normal", "Flip Y Axis", "Rotate 90&deg;", "Rotate 180&deg;", "Rotate 270&deg;"]
@@ -185,48 +180,27 @@ const downloadImage = (() => {
    masterFiles.downloadFromArchive( userStore.computeID )
 })
 
-const downloadPDF = (() => {
+const downloadPDF = (async () => {
    if ( masterFiles.hasText == false ) {
       pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], false, false )
    } else {
-      confirm.require({
-         message: `This master file has transcription or OCR text. Include it with the PDF?`,
-         header: 'Include Text',
-         icon: 'pi pi-question-circle',
-         rejectProps: {
-            label: 'No',
-            severity: 'secondary'
-         },
-         acceptProps: {
-            label: 'Include'
-         },
-         accept: () => {
-            pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], false, true )
-         },
-         reject: () => {
-            pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], false, false )
-         }
-      })
+      const msg = 'This master file has transcription or OCR text. Include it with the PDF?'
+      const resp = await useConfirm("Include Text", msg, "Include")
+      if (resp) {
+         pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], false, true )
+      } else {
+         pdfStore.requestPDF( masterFiles.details.unitID, [masterFiles.details.id], false, false )
+      }
    }
 })
 
-const replaceMasterFile = (() => {
+const replaceMasterFile = (async () => {
    let unitDir = `${masterFiles.details.unitID}`.padStart(9, '0')
-   confirm.require({
-      message: `Replace this master file with ./finalization/unit_update/${unitDir}/${masterFiles.details.filename}?`,
-      header: 'Confirm Replace Master File',
-      icon: 'pi pi-question-circle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Replace'
-      },
-      accept: async () => {
-         masterFiles.replace()
-      }
-   })
+   const msg = `Replace this master file with ./finalization/unit_update/${unitDir}/${masterFiles.details.filename}?`
+   const resp = await useConfirm("Confirm Replace Master File", msg, "Replace")
+   if (resp) {
+      masterFiles.replace()
+   } 
 })
 
 const editMasterFile = (() => {
@@ -239,51 +213,11 @@ const auditNow = (() => {
 </script>
 
 <style scoped lang="scss">
-.clone {
-   display: inline-block;
-   margin-left: 10px;
-   font-weight: 199;
-   font-size: 0.9em;
-}
-.tags {
-   font-size: 0.8em;
-   text-align: right;
-}
-.details {
-   padding:  10px;
-   display: flex;
-   flex-flow: row wrap;
-   justify-content: flex-start;
-   align-items: flex-start;
-   .column {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      flex: 1;
-   }
-   :deep(div.p-panel) {
-      margin: 10px;
-      text-align: left;
-   }
-   .thumb {
-      margin: 10px;
-   }
-}
 pre {
    white-space: pre-wrap;
-}
-.download {
-   padding: 5px 15px 15px 15px;
-   p {
-      margin:0 0 15px 0;
-   }
 }
 .no-audit {
    text-align: center;
    font-style: italic;
-}
-.audit-toolbar {
-   text-align: right;
-   font-size: 0.8em;
 }
 </style>
