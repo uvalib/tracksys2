@@ -73,7 +73,7 @@
             </dl>
          </UCard>
          <UCard title="Transcription"  v-if="masterFiles.details.transcription">
-            <pre>{{masterFiles.details.transcription}}</pre>
+            <pre class="text-xs! whitespace-pre-wrap">{{masterFiles.details.transcription}}</pre>
          </UCard>
       </div>
       <div class="column gap-6 flex-1">
@@ -213,9 +213,6 @@ const auditNow = (() => {
 </script>
 
 <style scoped lang="scss">
-pre {
-   white-space: pre-wrap;
-}
 .no-audit {
    text-align: center;
    font-style: italic;
