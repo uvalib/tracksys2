@@ -21,7 +21,7 @@
    </div>
    <div class="column gap-6 p-6 flex-1" v-if="systemStore.working==false">
       <div class="row-left gap-6">
-         <UCard title="General Information" class="flex-1">
+         <UCard title="General Information" class="text-sm flex-1">
             <dl>
                <DataDisplay label="Status" :value="detail.status">
                   <span :class="`status ${detail.status}`">{{displayStatus(detail.status)}}</span>
@@ -39,7 +39,7 @@
                </DataDisplay>
             </dl>
          </UCard>
-         <UCard title="Digitization Information" class="flex-1">
+         <UCard title="Digitization Information" class="text-sm flex-1">
             <dl>
                <template v-if="detail.intendedUse">
                   <DataDisplay label="Intended Use" :value="detail.intendedUse.name"/>
@@ -93,7 +93,7 @@
       </div>
    
       <div class="row-left gap-6" v-if="systemStore.working==false">
-         <UCard title="Related Information" class="flex-1">
+         <UCard title="Related Information" class="text-sm flex-1">
             <dl>
                <DataDisplay v-if="detail.metadata" label="Metadata" :value="detail.metadata.pid">
                   <router-link :to="`/metadata/${detail.metadata.id}`">{{detail.metadata.pid}}: {{detail.metadata.title}}</router-link>
@@ -118,7 +118,7 @@
                </DataDisplay>
             </dl>
          </UCard>
-         <UCard title="Attachments" class="flex-1">
+         <UCard title="Attachments" class="text-sm flex-1">
             <UTable v-if="detail.attachments && detail.attachments.length > 0" :data="detail.attachments" :columns="attachmentCols"> 
                 <template #acts-cell="{ row }">
                   <div class="row-left gap-2">

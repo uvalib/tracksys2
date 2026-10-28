@@ -1,81 +1,60 @@
 <template>
    <h2>Unit {{route.params.id}}</h2>
-   <div class="edit-form">
-      <form @submit="submitChanges">
-         <div class="split">
-            <Panel header="General Information">
-               <FormField id="status" label="Status">
-                  <Select id="status" fluid v-model="status"  :options="unitStatuses" optionLabel="label" optionValue="value" placeholder="Select a status" />   
-               </FormField>
-               <FormField id="srcurl" label="Source URL">
-                  <InputText id="srcurl" v-model="patronSourceURL" type="text" />   
-               </FormField>
-               <FormField id="specialinst" label="Special Instructions">
-                  <Textarea id="specialinst" v-model="specialInstructions" rows="3" fluid/>   
-               </FormField>
-               <FormField id="staffnotes" label="Staff Notes">
-                  <Textarea id="staffnotes" v-model="staffNotes" rows="3" fluid/>   
-               </FormField>
-            </Panel>
-            <div class="column">
-               <Panel header="Related Information">
-                  <div class="split">
-                     <div class="related">
-                        <label>Order ID</label>
-                        <div class="item">
-                           <span>{{displayOrderID}}</span>
-                           <LookupDialog target="orders" @selected="orderSelected" />
-                        </div>
-                     </div>
-                     <div class="related">
-                        <label>Metadata ID</label>
-                        <div class="item">
-                           <span>{{displayMetadataID}}</span>
-                           <LookupDialog target="metadata" @selected="metadataSelected" :create="true"  />
-                        </div>
-                     </div>
-                  </div>
-                  <Message v-if="errors.metadataID" severity="error" size="small" variant="simple">{{ errors.metadataID}}</Message>
-                  <Message v-if="errors.orderID" severity="error" size="small" variant="simple">{{ errors.orderID }}</Message>
-               </Panel>
-               <Panel header="Digitization Information">
-                  <FormField id="intendeduse" label="Intended Use" :error="errors.intendedUseID" :required="true">
-                     <Select id="intendeduse" v-model="intendedUseID"  :options="intendedUses" optionLabel="label" optionValue="value" placeholder="Select an intended use" />   
-                  </FormField>
-                  <div class="checkbox" v-if="unitsStore.canPublishToVirgo">
-                     <input type="checkbox" v-model="includeInDL"/>
-                     <span class="label">Include in Virgo</span>
-                  </div>
-                  <div class="checkbox">
-                     <input type="checkbox" v-model="ocrMasterFiles"/>
-                     <span class="label">OCR Master Files</span>
-                  </div>
-                  <div class="checkbox">
-                     <input type="checkbox" v-model="removeWatermark"/>
-                     <span class="label">Remove Watermark</span>
-                  </div>
-                  <div class="checkbox">
-                     <input type="checkbox" v-model="completeScan"/>
-                     <span class="label">Complete Scan</span>
-                  </div>
-                  <div class="checkbox">
-                     <input type="checkbox" v-model="throwAway"/>
-                     <span class="label">
-                        Throw Away
-                        <span class="note">
-                          (Throw away scans will not be sent to preservation. They are one-time scans made for a single patron.)
-                        </span>
-                     </span>
-                  </div>
-               </Panel>
+   <UForm :schema="schema" :state="state" class="flex flex-col gap-4 w-full max-w-300 mx-auto! mt-10!" @submit="submitChanges">
+      <div class="row-between gap-4">
+         <UCard title="General Information" class="flex-1">
+            <div class="column gap-4">
+               <UFormField name="status" label="Status" class="grow">   
+                  <USelect v-model="state.status" :items="unitStatuses" class="w-full"/>   
+               </UFormField>
+               <UFormField name="patronSourceURL" label="Source URL" class="grow">   
+                  <UInput v-model="state.patronSourceURL" class="w-full"/>   
+               </UFormField>
+               <UFormField name="specialInstructions" label="Special Instructions" class="grow">   
+                  <UTextarea v-model="state.specialInstructions" class="w-full" :rows="4"/>   
+               </UFormField>
+               <UFormField name="staffNotes" label="Staff Notes" class="grow">   
+                  <UTextarea v-model="state.staffNotes" class="w-full" :rows="4"/>   
+               </UFormField>
             </div>
+         </UCard>
+         <div class="column gap-4 flex-1">
+            <UCard title="Related Information">
+               <div class="row-between">
+                  <div class="row-left gap-2 items-end">
+                     <UFormField name="orderID" label="Order ID" :required="true">   
+                        <UInput v-model="state.orderID" :readonly="true"/>   
+                     </UFormField>
+                     <LookupDialog target="orders" @selected="orderSelected" />
+                  </div>
+                  <div class="row-left gap-2 items-end">
+                     <UFormField name="metadataID" label="Metadata ID" :required="true">   
+                        <UInput v-model="state.metadataID" :readonly="true"/>   
+                     </UFormField>  
+                     <LookupDialog target="metadata" @selected="metadataSelected" :create="true"  /> 
+                  </div>
+               </div>
+            </UCard>
+            <UCard title="Digitization Information">
+               <div class="column gap-4">
+                  <UFormField name="intendedUseID" label="Intended Use" class="grow" :required="true">   
+                     <USelect v-model="state.intendedUseID" :items="intendedUses" class="w-full"/>   
+                  </UFormField>  
+                  <UCheckbox label="Include in Virgo" v-model="state.includeInDL" class="w-full" v-if="unitsStore.canPublishToVirgo"/>  
+                  <UCheckbox label="OCR Master Files" v-model="state.ocrMasterFiles" class="w-full"/>  
+                  <UCheckbox label="Remove Watermark" v-model="state.removeWatermark" class="w-full"/>  
+                  <UCheckbox label="Complete Scan" v-model="state.completeScan" class="w-full"/>  
+                  <UCheckbox label="Throw Away" v-model="state.throwAway" class="w-full"/> 
+                  <div class="pl-4 text-sm italic">Throw away scans will not be sent to preservation. They are one-time scans made for a single patron.</div>
+               </div> 
+            </UCard>
          </div>
-         <div class="acts">
-            <DPGButton label="Cancel" severity="secondary" @click="cancelEdit()"/>
-            <DPGButton label="Save" type="submit"/>
-         </div>
-      </form>
-   </div>
+      </div>
+      <div class="row-right gap-2">
+         <UButton label="Cancel" color="secondary" @click="cancelEdit()"/>
+         <UButton label="Save" type="submit"/>
+      </div>
+   </UForm>
 </template>
 
 <script setup>
@@ -83,41 +62,35 @@ import { useRoute, useRouter } from 'vue-router'
 import { onMounted, ref, computed } from 'vue'
 import { useUnitsStore } from '@/stores/units'
 import { useSystemStore } from '@/stores/system'
-import Panel from 'primevue/panel'
-import Select from 'primevue/select'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Message from 'primevue/message'
 import LookupDialog from '@/components/LookupDialog.vue'
-import { useConfirm } from "primevue/useconfirm"
-import { useForm } from 'vee-validate'
+import { useConfirm } from "@/composables/useConfirm"
 import * as yup from 'yup'
-import FormField from '@/components/FormField.vue'
 
-const confirm = useConfirm()
 const route = useRoute()
 const router = useRouter()
 const unitsStore = useUnitsStore()
 const systemStore = useSystemStore()
 
-const { values, errors, resetForm, handleSubmit, defineField, setValues } = useForm({
-  validationSchema: yup.object().shape({
-      orderID: yup.number().min(1, 'OrderID is required'),
-      metadataID: yup.number().min(1, 'MetadataID is required'),
-      intendedUseID: yup.number().min(1,'Intended use is required'),
-   })
+const schema = yup.object({
+   orderID: yup.number().min(1, 'OrderID is required'),
+   metadataID: yup.number().min(1, 'MetadataID is required'),
+   intendedUseID: yup.number().min(1,'Intended use is required'),
 })
 
-const [status] = defineField('status')
-const [patronSourceURL] = defineField('patronSourceURL')
-const [specialInstructions] = defineField('specialInstructions')
-const [staffNotes] = defineField('staffNotes')
-const [intendedUseID] = defineField('intendedUseID')
-const [ocrMasterFiles] = defineField('ocrMasterFiles')
-const [removeWatermark] = defineField('removeWatermark')
-const [includeInDL] = defineField('includeInDL')
-const [throwAway] = defineField('throwAway')
-const [completeScan] = defineField('completeScan')
+const state = ref({
+   metadataID: null,
+   orderID: null,
+   status: "",
+   patronSourceURL: "",
+   specialInstructions: "",
+   staffNotes: "",
+   intendedUseID: null,
+   ocrMasterFiles: false,
+   removeWatermark: false,
+   includeInDL: false,
+   throwAway: false,
+   completeScan: false
+})
 
 const unitStatuses = computed(() => {
    let out = []
@@ -147,26 +120,12 @@ const intendedUses = computed(() => {
    return out
 })
 
-const displayMetadataID = computed( () => {
-   if (values.metadataID) {
-      return values.metadataID
-   }
-   return "None"
-})
-
-const displayOrderID = computed( () => {
-   if (values.orderID) {
-      return values.orderID
-   }
-   return "None"
-})
-
 onMounted( async () =>{
    let unitID = route.params.id
    await unitsStore.getDetails(unitID)
    document.title = `Edit | Unit ${unitID}`
 
-   let vals = {
+   state.value = {
       status: unitsStore.detail.status,
       patronSourceURL: unitsStore.detail.patronSourceURL,
       staffNotes: unitsStore.detail.staffNotes,
@@ -178,51 +137,40 @@ onMounted( async () =>{
       ocrMasterFiles: unitsStore.detail.ocrMasterFiles,
       removeWatermark: unitsStore.detail.removeWatermark,
       includeInDL: unitsStore.detail.includeInDL,
-      intendedUseID: 0,
+      intendedUseID: null,
    }
    if (unitsStore.detail.intendedUse) {
-     vals.intendedUseID =  unitsStore.detail.intendedUse.id
+     state.value.intendedUseID =  unitsStore.detail.intendedUse.id
    }
    if (unitsStore.canPublishToVirgo == false ) {
-      vals.includeInDL = false
+      state.value.includeInDL = false
    }
-   resetForm({values: vals})
 })
 
 const orderSelected = (( newOrderID ) => {
-   setValues({ orderID: newOrderID})
+   state.value.orderID = newOrderID
 })
 
 const metadataSelected = (( newMetadataID ) => {
-   setValues({ metadataID: newMetadataID} )
+   state.value.metadataID = newMetadataID
 })
 
 const cancelEdit = (() => {
    router.push(`/units/${route.params.id}`)
 })
 
-const submitChanges = handleSubmit( async (values) => {
-   if ( values.metadataID != unitsStore.detail.metadataID) {
-      confirm.require({
-         message: "You have changed the metadata record for this unit. All master files will also be updated to use this metadata. Are you sure?",
-         header: 'Confirm Metadata Change',
-         icon: 'pi pi-question-circle',
-         rejectProps: {
-            label: 'Cancel',
-            severity: 'secondary'
-         },
-         acceptProps: {
-            label: 'Update'
-         },
-         accept: async () => {
-            await unitsStore.submitEdit( values )
-            if (systemStore.showError == false) {
-               router.push(`/units/${unitsStore.detail.id}`)
-            }
-         },
-      })
+const submitChanges = ( async () => {
+   if ( state.value.metadataID != unitsStore.detail.metadataID) {
+      const msg = "You have changed the metadata record for this unit. All master files will also be updated to use this metadata. Are you sure?",
+      resp = await useConfirm("Confirm Metadata Change", msg, "Update")
+      if (resp) {
+         await unitsStore.submitEdit( state.value )
+         if (systemStore.showError == false) {
+            router.push(`/units/${unitsStore.detail.id}`)
+         }
+      }
    } else {
-      await unitsStore.submitEdit( values )
+      await unitsStore.submitEdit( state.value )
       if (systemStore.showError == false) {
          router.push(`/units/${unitsStore.detail.id}`)
       }
@@ -230,56 +178,5 @@ const submitChanges = handleSubmit( async (values) => {
 })
 </script>
 
-
 <style lang="scss" scoped>
-.edit-form {
-   width: 80%;
-   margin: 30px auto 0 auto;
-
-   .note {
-      text-align: left;
-      font-size: 0.8em;
-      font-style: italic;
-      padding:0;
-      margin: 0 0 0 5px;
-      display: inline-block
-   }
-
-   .column {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-   }
-
-   .split {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: space-between;
-      gap: 20px;
-      .related {
-         label {
-            display: block;
-            text-align: left;
-         }
-         .item {
-            text-align: left;
-            display: flex;
-            flex-flow: row nowrap;
-            justify-content: flex-start;
-            align-items: center;
-            margin-top: 10px;
-            gap: 10px;
-         }
-      }
-   }
-}
-:deep(.p-panel) {
-   flex-grow: 1;
-   .p-panel-content {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      text-align: left;
-   }
-}
 </style>

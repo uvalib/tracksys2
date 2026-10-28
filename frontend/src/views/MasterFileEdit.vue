@@ -1,7 +1,7 @@
 <template>
    <h2>Master File {{route.params.id}}</h2>
-   <UForm :state="state" class="flex flex-col gap-4 w-full max-w-250 mx-auto! mt-10!" @submit="submitChanges">
-      <div class="row-between gap-4">
+   <UForm :state="state" class="w-full max-w-250 mx-auto! mt-10!" @submit="submitChanges">
+      <div class="row-between gap-4 items-start">
          <UCard title="General Information" class="flex-1">
             <div class="column gap-4">
                <UFormField name="title" label="Title" class="grow">   
