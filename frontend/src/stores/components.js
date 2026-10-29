@@ -63,6 +63,7 @@ export const useComponentsStore = defineStore('components', {
          this.nodes = []
          system.working = true
          this.selectedComponent = parseInt(id,10)
+         console.log("GET TREE") 
          return axios.get( `/api/components/${id}` ).then(response => {
             let component = response.data.component
             let root = {
@@ -77,6 +78,7 @@ export const useComponentsStore = defineStore('components', {
 
             this.nodes = [root]
             this.relatedMasterFiles = []
+            console.log("GET TREE DONE")
             if (response.data.masterFiles) {
                this.relatedMasterFiles = response.data.masterFiles
             }

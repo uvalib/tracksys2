@@ -1,15 +1,15 @@
 <template>
    <h2>{{componentsStore.title}}</h2>
-   <div class="details" v-if="systemStore.working==false">
-      <Panel>
+   <div class="column gap-6 p-6" v-if="systemStore.working==false">
+      <UCard>
          <template #header>
-            <div class="cmp-header">
-               <span class="title">Component Hierarchy</span>
-               <span class="hint">Scroll down to view related master files</span>
-               <DPGButton label="Export JSON" severity="secondary" @click="exportJSON()"/>
+            <div class="row-between items-center">
+               <span>Component Hierarchy</span>
+               <UButton label="Export JSON" color="secondary" @click="exportJSON()"/>
             </div>
          </template>
-         <Tree :value="componentsStore.nodes" :expandedKeys="expandedKeys"
+         <UTree :items="componentsStore.nodes" virtualize class="h-75" :get-key="i => i.key" v-model="selectedItem" v-model:expanded="expandedKeys"/>
+         <!-- <Tree :value="componentsStore.nodes" :expandedKeys="expandedKeys"
             :filter="true" filterMode="lenient" scrollHeight="450px"
             selectionMode="single" v-model:selectionKeys="selectedKey" @node-select="componentSelected"
          >
@@ -28,8 +28,8 @@
                   <DataDisplay label="Master Files" :value="slotProps.node.data.masterFileCount" blankValue="0" />
                </dl>
             </template>
-         </Tree>
-      </Panel>
+         </Tree> -->
+      </UCard>
       <div class="master-files" id="master-files" v-if="selected">
          <MasterFiles />
       </div>
@@ -50,7 +50,9 @@ const route = useRoute()
 const systemStore = useSystemStore()
 const componentsStore = useComponentsStore()
 
-const expandedKeys = ref({})
+const selectedItem = ref()
+
+const expandedKeys = ref([])
 const selectedKey = ref({})
 const selected = ref(false)
 
@@ -62,8 +64,10 @@ onBeforeRouteUpdate(async (to) => {
 
 onBeforeMount( async () => {
    let cID = route.params.id
+   console.log("GET "+cID)
    document.title = componentsStore.title
    await componentsStore.getComponentTree(cID)
+   console.log("SELECED "+componentsStore.selectedComponent)
    if (componentsStore.selectedComponent > -1) {
       expandSelectedComponent( cID )
    }
@@ -93,42 +97,47 @@ const componentSelected = (( tgtComponent ) => {
 })
 
 const expandSelectedComponent = (( cID ) => {
+   expandedKeys.value = []
    let nodes = componentsStore.nodes
    if ( cID != nodes[0].key) {
-      expandedKeys.value[nodes[0].key] = true
+      expandedKeys.value.push( nodes[0].key )
+      console.log("FIND KEY "+cID)
       findNode(nodes[0], cID)
    }
 
    nextTick( () =>{
-      let eleID = `node-${cID}`
-      let componentEle = document.getElementById(eleID)
-      var w = document.getElementsByClassName("p-tree")[0]
-      var elementPosition = componentEle.offsetTop - w.offsetTop - 40
-
-      w.scrollBy({
-         top: elementPosition,
-         behavior: "smooth"
-      })
-      selectedKey.value[cID] = true
-      nextTick( () => selected.value = true )
+      let el = document.querySelector('[aria-selected="true"]')
+      el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
    })
 })
 
 const findNode = (( currNode, tgtKey) => {
-   if ( currNode.key == tgtKey) return true
+   if ( currNode.key == tgtKey) {
+      selectedItem.value = currNode
+      return currNode //true
+   }
 
-   let found = false
+   let found = null //false
    currNode.children.some( n => {
       if (n.key == tgtKey) {
-         found = true
-         expandedKeys.value[currNode.key] = true
+         // found = true
+         found = n
+         selectedItem.value = n
+         expandedKeys.value.push(currNode.key)
       } else {
-         if (findNode(n, tgtKey)) {
-            found = true
-            expandedKeys.value[n.key] = true
+         found = findNode(n, tgtKey)
+         if (found) {
+            selectedItem.value = found
+            expandedKeys.value.push(n.key) 
          }
+         // if (findNode(n, tgtKey)) {
+         //    found = true
+         //    console.log("SEL "+n.key)
+         //    selectedItem.value = n
+         //    expandedKeys.value.push(n.key) 
+         // }
       }
-      return found == true
+      return found != null //found == true
    })
 
    return found
