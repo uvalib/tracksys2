@@ -117,7 +117,7 @@
                <UFormField name="useRight" label="Use Right" :required="true">
                   <USelect v-model="state.useRight" :items="useRights" placeholder="Select a right" class="w-full" />   
                </UFormField>
-               <p>{{ rightStatement }}</p>
+               <div class="text-sm p-3">{{ rightStatement }}</div>
             </div>
          </div>
       </UCard>

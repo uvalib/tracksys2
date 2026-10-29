@@ -67,7 +67,7 @@ const columns = [
    { 
       id: 'agency',
       header: 'Agency',
-      accessorKey: 'agency.name'
+      accessorFn: (row) => row.agency ? row.agency.name : ''
    },
    { accessorKey: 'title', header: 'Order Title' },
    { accessorKey: 'staffNotes', header: 'Staff Notes' },

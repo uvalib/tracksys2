@@ -22,7 +22,7 @@
             </a>
          </div>
          <div class="column flex-1">
-            <UCard title="General Information" class="w-full">
+            <UCard title="General Information" class="w-full text-sm">
                <dl>
                   <template v-if="metadataStore.detail.type != 'ExternalMetadata'">
                      <DataDisplay label="Type" :value="metadataStore.detail.type"/>
@@ -134,7 +134,7 @@
             </UCard>
          </div>
          <div class="column flex-1" >
-            <UCard title="Digital Library Information" class="w-full">
+            <UCard title="Digital Library Information" class="w-full text-sm">
                <dl>
                   <DataDisplay label="PID" :value="metadataStore.detail.pid"/>
                   <DataDisplay label="Virgo" :value="$formatBool(metadataStore.detail.inDL)">
@@ -184,7 +184,7 @@
          </div>
       </div>
 
-      <UAccordion v-if="metadataStore.detail.type=='XmlMetadata'" class="w-full"
+      <UAccordion v-if="metadataStore.detail.type=='XmlMetadata'" class="w-full text-sm"
          :items="[{label: 'XML Metadata', content: metadataStore.detail.xmlMetadata}]">
          <template #content="{ item }">
             <pre class="text-sm border-l border-r border-b border-brand-grey-100 p-4">{{item.content}}</pre>
@@ -192,7 +192,7 @@
       </UAccordion>
 
       <div class="row-left gap-4  flex-1">
-         <UCard title="Related Information" class="w-full">
+         <UCard title="Related Information" class="w-full text-sm">
             <UTabs :items="relatedTabs" variant="link"  >
                <template #collection>
                   <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />

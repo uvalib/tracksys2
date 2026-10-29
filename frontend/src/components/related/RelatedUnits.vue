@@ -119,7 +119,7 @@ const columns = [
    },
    {
       id: 'intendedUse',
-      accessorKey: 'intendedUse.name',
+      accessorFn: (row) => row.intendedUse ? row.intendedUse.name : '',
       header: 'Intended Use',
    },
    {
