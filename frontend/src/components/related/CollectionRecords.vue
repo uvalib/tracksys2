@@ -1,5 +1,5 @@
 <template>
-   <div class="row-between p-2 sticky z-5 bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
+   <div class="row-between p-2 z-5 bg-white border-b border-brand-grey-100">
       <div class="row-left gap-2">
          <CollectionBulkAdd v-if="userStore.isAdmin" />
          <UButton label="Export CSV" size="sm" color="secondary" @click="exportCollectionCSV" :disabled="collectionStore.totalRecords == 0"/>
@@ -16,7 +16,7 @@
       </div>
       <UInput v-model="collectionStore.searchOpts.query" placeholder="Search collection..." @update:modelValue="queryCollection"/>
    </div>
-   <UTable :data="collectionStore.records" :columns="columns" >
+   <UTable :data="collectionStore.records" :columns="columns" sticky virtualize class="h-150">
       <template #id-cell="{ row }">
          <router-link :to="`/metadata/${row.original.id}`">{{row.original.id}}</router-link>
       </template>

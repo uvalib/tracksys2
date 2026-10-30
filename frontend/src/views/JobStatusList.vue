@@ -1,7 +1,7 @@
 <template>
    <h2>Job Statuses</h2>
 
-   <div class="row-between p-2 sticky z-5 bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
+   <div class="row-between p-2 z-5 bg-white border-b border-brand-grey-100">
       <UButton label="Delete selected" :disabled="selectedJobs.length == 0"  color="secondary" @click="deletAllClicked"/>
       <div class="row-left">
          <UPagination color="neutral" variant="ghost"
@@ -13,7 +13,7 @@
       <UInput v-model="jobsStore.searchOpts.query" placeholder="Search Job Status" @update:modelValue="queryJobs"/>
    </div>
 
-   <UTable :data="jobsStore.jobs" :columns="columns" :meta="meta" v-if="jobsStore.jobs.length > 0">
+   <UTable :data="jobsStore.jobs" :columns="columns" :meta="meta" sticky class="h-[calc(100vh-185px)]"  v-if="jobsStore.jobs.length > 0">
       <template #select-header="">
          <UCheckbox size="xl" :modelValue="allCheckboxValue" @update:modelValue="toggleAll"/>
       </template>
@@ -46,10 +46,8 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue'
 import { useJobsStore } from '@/stores/jobs'
-import { useSystemStore } from '@/stores/system'
 import { useConfirm } from "@/composables/useConfirm"
 
-const system = useSystemStore()
 const jobsStore = useJobsStore()
 
 const selectedJobs = ref([])

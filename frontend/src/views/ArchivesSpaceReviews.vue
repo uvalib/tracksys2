@@ -3,7 +3,9 @@
    <div class="row-between bg-white border-b border-t border-brand-grey-100 py-3 px-2 items-center">
       <span>{{ table?.tableApi?.getFilteredRowModel().rows.length }} Reviews<span v-if="filters.length > 0"> (filtered)</span></span>    
    </div>
-   <UTable ref="table" :data="archivesSpace.reviews" :columns="columns" v-model:column-filters="filters" v-model:sorting="sorting" sticky virtualize class="h-150">
+   <UTable ref="table" :data="archivesSpace.reviews" :columns="columns" v-model:column-filters="filters" v-model:sorting="sorting" 
+      sticky virtualize class="h-[calc(100vh-185px)]"
+   >
       <template #pid-cell="{ row }">
          <router-link :to="`/metadata/${row.original.metadata.id}`">
             {{ row.original.metadata.pid }}

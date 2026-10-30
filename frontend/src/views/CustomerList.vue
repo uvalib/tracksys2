@@ -1,6 +1,6 @@
 <template>
    <h2>Customers</h2>
-   <div class="row-between p-2 sticky  bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
+   <div class="row-between p-2 bg-white border-b border-brand-grey-100">
       <UButton v-if="(userStore.isAdmin || userStore.isSupervisor)" label="Add Customer" color="secondary" @click="addCustomer" />
       <UInput v-model="filter" placeholder="Search customers..." />
    </div>
@@ -32,12 +32,10 @@
 import { ref, onBeforeMount } from 'vue'
 import { useCustomersStore } from '@/stores/customers'
 import { useUserStore } from '../stores/user'
-import { useSystemStore } from '../stores/system'
 import CustomerEditModal from '@/components/CustomerEditModal.vue'
 
 const customersStore = useCustomersStore()
 const userStore = useUserStore()
-const system = useSystemStore()
 const customerModal = useOverlay().create(CustomerEditModal)
 
 const filter = ref("")

@@ -1,5 +1,5 @@
 <template>
-   <div class="row-between sticky z-5 bg-white border-b border-brand-grey-100 pt-1 pb-3 px-2 items-center" :style="{top: system.headerHeight}">
+   <div class="row-between z-5 bg-white border-b border-brand-grey-100 pt-1 pb-3 px-2 items-center">
       <div class="row-between gap-2">
          <UButton label="Download Results CSV" color="secondary" @click="emit('csv')" v-if="total>0" />
          <UButton v-if="hasFilter" label="Clear All Filters" color="secondary" @click="emit('clear-filter')"/>
@@ -10,10 +10,6 @@
 </template>
 
 <script setup>
-import { useSystemStore } from '@/stores/system'
-
-const system = useSystemStore()
-
 const emit = defineEmits( ['csv', 'more', 'clear-filter' ])
 const props = defineProps({
    total: {

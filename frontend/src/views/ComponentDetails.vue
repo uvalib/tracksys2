@@ -29,7 +29,7 @@
          </UCard>
       </div>
       <div class="master-files" id="master-files" v-if="selectedItem">
-         <MasterFiles />
+         <MasterFiles :title="selectedItem.label"/>
       </div>
    </div>
 </template>

@@ -1,7 +1,7 @@
 <template>
    <h2>Staff Members</h2>
 
-   <div class="row-between p-2 sticky  bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
+   <div class="row-between p-2 bg-white border-b border-brand-grey-100">
       <UButton  v-if="(userStore.isAdmin || userStore.isSupervisor)" label="Add Staff" color="secondary" @click="addStaff" />
       <UInput v-model="filter" placeholder="Search staff..."/>
    </div>
@@ -18,13 +18,10 @@
 import { onMounted, ref } from 'vue'
 import { useStaffStore } from '@/stores/staff'
 import { useUserStore } from '../stores/user'
-import { useSystemStore } from '../stores/system'
-
 import StaffEditModal from '@/components/StaffEditModal.vue'
 
 const staffStore = useStaffStore()
 const userStore = useUserStore()
-const system = useSystemStore()
 const staffModal = useOverlay().create(StaffEditModal)
 
 const filter = ref("")

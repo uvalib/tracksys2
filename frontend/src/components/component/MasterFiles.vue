@@ -1,5 +1,5 @@
 <template>
-   <Panel header="Related Master Files">
+   <UCard :title="props.title">
       <DataTable :value="component.relatedMasterFiles" ref="componentMasterFilesTable" dataKey="id"
          showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
          :lazy="false" :paginator="true" :alwaysShowPaginator="true" :rows="15"
@@ -41,29 +41,32 @@
             </template>
          </Column>
       </DataTable>
-   </Panel>
-   <Dialog v-model:visible="pdfStore.downloading" :modal="true" header="Generating PDF" :style="{width: '350px'}">
-      <div class="download">
-         <p>PDF generation in progress...</p>
-         <ProgressBar :value="pdfStore.percent"/>
-      </div>
-   </Dialog>
+   </UCard>
+
+   <UModal v-model:open="pdfStore.downloading" :modal="true" :dismissible="false" title="Generating PDF">
+      <template #body>
+         <div>PDF generation in progress...</div>
+         <UProgress v-model="pdfStore.percent" status />
+      </template>
+   </UModal>
 </template>
 
 <script setup>
 import { useComponentsStore } from '@/stores/components'
 import { useUserStore } from '@/stores/user'
 import { usePDFStore } from '@/stores/pdf'
-import Panel from 'primevue/panel'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { ref, computed, watch } from 'vue'
 import LookupDialog from '@/components/LookupDialog.vue'
-import ProgressBar from 'primevue/progressbar'
-import Dialog from 'primevue/dialog'
-import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-datatable-paginator-top")
+const props = defineProps({
+   title: {
+      type: String,
+      required: true
+   },
+})
+
 
 const component = useComponentsStore()
 const userStore = useUserStore()

@@ -1,6 +1,6 @@
 <template>
    <h2>{{ title }}</h2>
-   <div class="row-between gap-2! items-center sticky bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
+   <div class="row-between gap-2! items-center bg-white border-b border-brand-grey-100">
       <span class="px-4">Total: {{ publishedStore.total }}</span>
       <div class="p-4 flex flex-row flex-nowrap justify-center items-center">
          <UPagination color="neutral" variant="ghost" show-edges
@@ -10,7 +10,7 @@
          <USelect v-model="publishedStore.searchOpts.limit" :items="[25,50,100]" @change="perPageChanged" />
       </div>
    </div>
-   <UTable :data="publishedStore.records" :columns="columns" sticky class="h-[calc(100vh-185px)]" >
+   <UTable :data="publishedStore.records" :columns="columns" sticky class="h-[calc(100vh-140px)]" >
       <template #pid-cell="{ row }">
          <router-link :to="`/metadata/${row.original.id}`">{{row.original.pid}}</router-link>
       </template>
@@ -61,13 +61,11 @@
 <script setup>
 import { onBeforeMount, onMounted, ref, computed } from 'vue'
 import { usePublishedStore } from '@/stores/published'
-import { useSystemStore } from '@/stores/system'
 import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
 const publishedStore = usePublishedStore()
-const system = useSystemStore()
 const pendingFilter = ref()
 const filters = ref([])
 

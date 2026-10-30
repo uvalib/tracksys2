@@ -103,7 +103,7 @@ const columns = [
       header: 'ID',
    },
    {
-      accessorKey: 'metadata.title',
+      accessorFn: (row) => row.metadata ? row.metadata.title : '',
       id: 'title',
       header: 'Title',
       enableSorting: true,
@@ -113,7 +113,7 @@ const columns = [
       header: 'Status',
    },
    {
-      accessorKey: 'metadata.callNumber',
+      accessorFn: (row) => row.metadata ? row.metadata.callNumber : '',
       id: 'callNumber',
       header: 'Call Number',
    },

@@ -1,6 +1,6 @@
 <template>
    <h2>Orders</h2>
-   <div class="row-between p-2 sticky bg-white border-b border-brand-grey-100" :style="{top: system.headerHeight}">
+   <div class="row-between p-2 bg-white border-b border-brand-grey-100">
       <UButton v-if="(userStore.isAdmin || userStore.isSupervisor)" color="secondary" label="Create Order" @click="createOrder()"/>
       <div class="row-right gap-4">
          <UPagination color="neutral" variant="ghost" show-edges
@@ -92,7 +92,6 @@
 import { onBeforeMount, onMounted, ref } from 'vue'
 import { useOrdersStore } from '@/stores/orders'
 import { useUserStore } from '@/stores/user'
-import { useSystemStore } from '@/stores/system'
 import { useRoute, useRouter } from 'vue-router'
 import FilterPopover from '@/components/FilterPopover.vue'
 
@@ -100,7 +99,6 @@ const route = useRoute()
 const router = useRouter()
 const ordersStore = useOrdersStore()
 const userStore = useUserStore()
-const system = useSystemStore()
 
 const sorting = ref([
   {

@@ -2,7 +2,7 @@
    <ResultsToolbar :count="searchStore.components.hits.length" :total="searchStore.components.total" :hasFilter="hasFilter"
       @more="loadMore" @csv="downloadCSV" @clear-filter="clearFilters"
    />
-   <UTable :data="searchStore.components.hits" :columns="columns">
+   <UTable :data="searchStore.components.hits" :columns="columns" sticky class="border-b border-brand-grey h-175"> 
       <template #id-cell="{ row }">
          <router-link :to="`/components/${row.original.id}`">{{row.original.id}}</router-link>
       </template>

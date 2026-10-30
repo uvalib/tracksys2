@@ -5,7 +5,7 @@
          <div v-if="searchStore.similarImages.total > 0" class="summary">
             {{searchStore.similarImages.total}} matche(s) found    
          </div>
-         <UTable :data="searchStore.similarImages.hits" :columns="columns">
+         <UTable :data="searchStore.similarImages.hits" :columns="columns" sticky class="border-b border-brand-grey h-175">
             <template #empty><h4>No matching images found</h4></template>
             <template #id-cell="{ row }">
                 <router-link :to="`/masterfiles/${row.original.id}`">{{row.original.id}}</router-link>

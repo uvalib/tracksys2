@@ -2,7 +2,7 @@
    <ResultsToolbar :count="searchStore.metadata.hits.length" :total="searchStore.metadata.total" :hasFilter="hasFilter"
       @more="loadMore" @csv="downloadCSV" @clear-filter="clearFilters"
    />
-   <UTable :data="searchStore.metadata.hits" :columns="columns">
+   <UTable :data="searchStore.metadata.hits" :columns="columns" sticky class="border-b border-brand-grey h-175">
       <template #id-cell="{ row }">
          <router-link :to="`/metadata/${row.original.id}`">{{row.original.id}}</router-link>
       </template>

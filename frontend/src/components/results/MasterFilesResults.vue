@@ -2,7 +2,7 @@
    <ResultsToolbar :count="searchStore.masterFiles.hits.length" :total="searchStore.masterFiles.total" :hasFilter="hasFilter"
       @more="loadMore" @csv="downloadCSV" @clear-filter="clearFilters"
    />
-   <UTable :data="searchStore.masterFiles.hits" :columns="columns">
+   <UTable :data="searchStore.masterFiles.hits" :columns="columns" sticky class="border-b border-brand-grey h-175">
       <template #id-cell="{ row }">
          <router-link :to="`/masterfiles/${row.original.id}`">{{row.original.id}}</router-link>
       </template>
