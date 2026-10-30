@@ -10,7 +10,7 @@
          <USelect v-model="ordersStore.searchOpts.limit" :items="[15,30,100]" @change="perPageChanged" />
          <span>Total Orders: {{ ordersStore.total }}</span>
       </div>
-      <div class="row-left items-center">
+      <div class="row-left items-center gap-4">
          <div class="row-left gap-2! items-center">
             <label for="orders-filter">Filter:</label>
             <USelect id="orders-filter" v-model="statusFilter" @change="getOrders" :items="statuses" />
@@ -19,7 +19,7 @@
             <label>Assigned to me:</label>
             <USwitch v-model="assignedToMe" @update:modelValue="ownerToggled"/>
          </div>
-         <UInput v-model="ordersStore.searchOpts.query" placeholder="Search Job Status" @update:modelValue="queryOrders"/>
+         <UInput v-model="ordersStore.searchOpts.query" placeholder="Search orders..." @update:modelValue="queryOrders"/>
       </div>
    </div>
     <UTable :data="ordersStore.orders" :columns="columns" v-model:sorting="sorting" sticky class="h-[calc(100vh-185px)]" >

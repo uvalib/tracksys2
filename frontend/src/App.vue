@@ -1,7 +1,4 @@
 <template>
-
-<ConfirmDialog position="top" :closable="false"/> <!-- FIXME use composable nuxt -->
-
    <UApp :toaster="toaster">
 
       <UHeader mode="slideover" id="uva-header" title="UVA Library" to="https://library.virginia.edu">

@@ -62,7 +62,7 @@
                   </div>
                </template>
             </UTabs>
-            <div class="row-right gap-2">
+            <div class="row-right gap-2 pt-4">
                <UButton label="Cancel" color="secondary" @click="emit('close', false)"/>
                <UButton label="Save" type="submit" /> 
             </div>

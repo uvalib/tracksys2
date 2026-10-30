@@ -18,7 +18,7 @@
                </dl>
             </UCard>
          </div>
-         <UForm v-else :state="state" class="column" @submit="submitChanges">
+         <UForm v-else :state="state" class="column gap-4" @submit="submitChanges">
             <div class="row-left gap-4">
                <UFormField name="feeAmountPaid" label="Fee Amount Paid" class="grow">   
                   <UInputNumber v-model="state.feeAmountPaid" class="w-full" :step="0.01" :increment="false" :decrement="false"
