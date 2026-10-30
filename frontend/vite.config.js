@@ -265,6 +265,15 @@ export default defineConfig({
                      }
                   }
                }
+            },
+            tree: {
+               variants: {
+                  selected: {
+                     true: {
+                        link: 'before:bg-brand-blue-alt-300! text-black!'
+                     }
+                  }
+               }
             }
          }
       })

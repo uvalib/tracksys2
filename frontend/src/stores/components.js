@@ -20,8 +20,10 @@ function getNodeData(node) {
 }
 
 function getLabel( data )  {
-   // label is concatenated data for all to facilitate filtering. the label is not displayed.
-   return `${data.title} ${data.label} ${data.description} ${data.pid} ${data.date} ${data.eadID}`
+   if (data.title.length > 0 ) return data.title
+   if (data.label.length > 0 ) return data.label
+   if (data.description.length > 0 ) return data.description
+   return data.pid
 }
 
 function getNodeChildren( parentNode, children ) {

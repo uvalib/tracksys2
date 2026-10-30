@@ -1,36 +1,34 @@
 <template>
    <h2>{{componentsStore.title}}</h2>
    <div class="column gap-6 p-6" v-if="systemStore.working==false">
-      <UCard>
-         <template #header>
-            <div class="row-between items-center">
-               <span>Component Hierarchy</span>
-               <UButton label="Export JSON" color="secondary" @click="exportJSON()"/>
-            </div>
-         </template>
-         <UTree :items="componentsStore.nodes" virtualize class="h-75" :get-key="i => i.key" v-model="selectedItem" v-model:expanded="expandedKeys"/>
-         <!-- <Tree :value="componentsStore.nodes" :expandedKeys="expandedKeys"
-            :filter="true" filterMode="lenient" scrollHeight="450px"
-            selectionMode="single" v-model:selectionKeys="selectedKey" @node-select="componentSelected"
-         >
-            <template #default="slotProps">
-               <dl :id="`node-${slotProps.node.data.id}`">
-                  <DataDisplay label="ID" :value="slotProps.node.data.id" />
-                  <DataDisplay label="PID" :value="slotProps.node.data.pid" />
-                  <DataDisplay label="Type" :value="slotProps.node.data.componentType" />
-                  <DataDisplay v-if="slotProps.node.data.title"  label="Title" :value="slotProps.node.data.title.trim()" />
-                  <DataDisplay v-if="slotProps.node.data.label"  label="Label" :value="slotProps.node.data.label.trim()" />
-                  <DataDisplay v-if="slotProps.node.data.description"  label="Description" :value="slotProps.node.data.description.trim()" />
-                  <DataDisplay v-if="slotProps.node.data.date" label="Date" :value="slotProps.node.data.date" />
-                  <DataDisplay v-if="slotProps.node.data.level" label="Level" :value="slotProps.node.data.level" />
-                  <DataDisplay v-if="slotProps.node.data.eadID" label="EAD ID" :value="slotProps.node.data.eadID" />
-                  <DataDisplay v-if="slotProps.node.data.barcode" label="Barcode" :value="slotProps.node.data.barcode" />
-                  <DataDisplay label="Master Files" :value="slotProps.node.data.masterFileCount" blankValue="0" />
-               </dl>
+      <div class="row-left gap-6 items-start">
+         <UCard class="basis-2/3 text-sm">
+            <template #header>
+               <div class="row-between items-center">
+                  <span>Component Hierarchy</span>
+                  <UButton label="Export JSON" size="sm" color="secondary" @click="exportJSON()"/>
+               </div>
             </template>
-         </Tree> -->
-      </UCard>
-      <div class="master-files" id="master-files" v-if="selected">
+            <UTree :items="componentsStore.nodes" class="h-75" :get-key="i => i.key" virtualize
+               v-model="selectedItem" v-model:expanded="expandedKeys" @update:modelValue="nodeSelected" />
+         </UCard>
+         <UCard title="Details" class="basis-1/3 text-sm" >
+            <dl v-if="selectedItem">
+               <DataDisplay label="ID" :value="selectedItem.data.id" />
+               <DataDisplay label="PID" :value="selectedItem.data.pid" />
+               <DataDisplay label="Type" :value="selectedItem.data.componentType" />
+               <DataDisplay v-if="selectedItem.data.title"  label="Title" :value="selectedItem.data.title.trim()" />
+               <DataDisplay v-if="selectedItem.data.label"  label="Label" :value="selectedItem.data.label.trim()" />
+               <DataDisplay v-if="selectedItem.data.description"  label="Description" :value="selectedItem.data.description.trim()" />
+               <DataDisplay v-if="selectedItem.data.date" label="Date" :value="selectedItem.data.date" />
+               <DataDisplay v-if="selectedItem.data.level" label="Level" :value="selectedItem.data.level" />
+               <DataDisplay v-if="selectedItem.data.eadID" label="EAD ID" :value="selectedItem.data.eadID" />
+               <DataDisplay v-if="selectedItem.data.barcode" label="Barcode" :value="selectedItem.data.barcode" />
+               <DataDisplay label="Master Files" :value="selectedItem.data.masterFileCount" blankValue="0" />
+            </dl>
+         </UCard>
+      </div>
+      <div class="master-files" id="master-files" v-if="selectedItem">
          <MasterFiles />
       </div>
    </div>
@@ -41,9 +39,6 @@ import { onBeforeMount, ref, nextTick } from 'vue'
 import { useRoute, onBeforeRouteUpdate } from 'vue-router'
 import { useSystemStore } from '@/stores/system'
 import { useComponentsStore } from '@/stores/components'
-import Tree from 'primevue/tree'
-import Panel from 'primevue/panel'
-import DataDisplay from '../components/DataDisplay.vue'
 import MasterFiles from '../components/component/MasterFiles.vue'
 
 const route = useRoute()
@@ -51,10 +46,7 @@ const systemStore = useSystemStore()
 const componentsStore = useComponentsStore()
 
 const selectedItem = ref()
-
 const expandedKeys = ref([])
-const selectedKey = ref({})
-const selected = ref(false)
 
 onBeforeRouteUpdate(async (to) => {
    let cID = to.params.id
@@ -64,10 +56,8 @@ onBeforeRouteUpdate(async (to) => {
 
 onBeforeMount( async () => {
    let cID = route.params.id
-   console.log("GET "+cID)
    document.title = componentsStore.title
    await componentsStore.getComponentTree(cID)
-   console.log("SELECED "+componentsStore.selectedComponent)
    if (componentsStore.selectedComponent > -1) {
       expandSelectedComponent( cID )
    }
@@ -83,17 +73,10 @@ const exportJSON = (() => {
    window.URL.revokeObjectURL(fileURL)
 })
 
-const componentSelected = (( tgtComponent ) => {
-   let cID = parseInt(tgtComponent.key, 10)
-   componentsStore.loadRelatedMasterFiles(cID)
-   let mfEle = document.getElementById("master-files")
-   var headerOffset = 40
-   var elementPosition = mfEle.getBoundingClientRect().top
-   var offsetPosition = elementPosition - headerOffset
-   window.scrollBy({
-      top: offsetPosition,
-      behavior: "smooth"
-   })
+const nodeSelected = ((node) => {
+   if ( node ) {
+      componentsStore.loadRelatedMasterFiles(node.key)
+   }
 })
 
 const expandSelectedComponent = (( cID ) => {
@@ -101,43 +84,53 @@ const expandSelectedComponent = (( cID ) => {
    let nodes = componentsStore.nodes
    if ( cID != nodes[0].key) {
       expandedKeys.value.push( nodes[0].key )
-      console.log("FIND KEY "+cID)
-      findNode(nodes[0], cID)
+      selectedItem.value = findNode(nodes[0], cID)
    }
 
-   nextTick( () =>{
-      let el = document.querySelector('[aria-selected="true"]')
-      el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+   
+   
+   nextTick( () => {
+     scrollToTarget()
    })
+})
+
+const scrollToTarget = (async () => {
+   let found = false 
+   while ( found == false ) {
+      let el = document.querySelector('[aria-selected="true"]')
+      if (el) {
+         await el.scrollIntoView({ block: 'nearest', behavior: 'instant' })
+         found = true
+      } else {
+         let eles = document.querySelectorAll("li:nth-last-of-type(1)")
+         await eles[1]?.scrollIntoView({ block: 'nearest', behavior: 'instant' }) 
+      }
+   }
+})
+
+const addExpandKey = ((key) => {
+   if ( expandedKeys.value.includes(key) == false ) {
+      expandedKeys.value.push(key)
+   }
 })
 
 const findNode = (( currNode, tgtKey) => {
    if ( currNode.key == tgtKey) {
-      selectedItem.value = currNode
-      return currNode //true
+      return currNode 
    }
 
-   let found = null //false
+   let found = null 
    currNode.children.some( n => {
       if (n.key == tgtKey) {
-         // found = true
          found = n
-         selectedItem.value = n
-         expandedKeys.value.push(currNode.key)
+         addExpandKey(currNode.key)
       } else {
          found = findNode(n, tgtKey)
          if (found) {
-            selectedItem.value = found
-            expandedKeys.value.push(n.key) 
+            addExpandKey(n.key)
          }
-         // if (findNode(n, tgtKey)) {
-         //    found = true
-         //    console.log("SEL "+n.key)
-         //    selectedItem.value = n
-         //    expandedKeys.value.push(n.key) 
-         // }
       }
-      return found != null //found == true
+      return found != null 
    })
 
    return found
