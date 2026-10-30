@@ -1,46 +1,58 @@
 <template>
-   <UCard :title="props.title">
-      <DataTable :value="component.relatedMasterFiles" ref="componentMasterFilesTable" dataKey="id"
-         showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
-         :lazy="false" :paginator="true" :alwaysShowPaginator="true" :rows="15"
-         :rowsPerPageOptions="[15,30,50,100]" paginatorPosition="top"
-         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         currentPageReportTemplate="{first} - {last} of {totalRecords}"
-         v-model:selection="selectedMasterFiles" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
-      >
-         <template #empty><p class="none">No master files are associated with this component</p></template>
-         <template #paginatorstart>
-            <div class="master-file-acts">
-               <DPGButton label="PDF" @click="pdfClicked()" severity="secondary" :disabled="!filesSelected" />
-               <DPGButton label="Download" @click="downloadClicked()" severity="secondary" :disabled="!filesSelected" />
-               <template  v-if="userStore.isAdmin || userStore.isSupervisor">
-                  <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
-               </template>
-            </div>
+   <UCard :title="props.title" :ui="{body: 'pt-0!'}">
+      <div class="row-between bg-white border-b border-brand-grey-100 py-3 px-2 items-center">
+         <div class="row-left gap-2">
+            <UButton label="PDF" @click="pdfClicked()" color="secondary" :disabled="!filesSelected" />
+            <UButton label="Download" @click="downloadClicked()" color="secondary" :disabled="!filesSelected" />
+            <template  v-if="userStore.isAdmin || userStore.isSupervisor">
+               <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selected="assignMetadata" target="metadata" :create="true"/>
+            </template>
+         </div>
+         <span>{{ table?.tableApi?.getFilteredRowModel().rows.length }} Master Files<span v-if="filters.length > 0"> (filtered)</span></span>
+      </div>
+      <UTable ref="table" :data="component.relatedMasterFiles" :columns="columns" v-model:column-filters="filters"  sticky virtualize class="h-150">
+         <template #select-header="{ table }">
+            <UCheckbox size="lg" :modelValue="table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected()" @update:modelValue="table.toggleAllRowsSelected()"/>
          </template>
-         <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
-         <Column field="id" header="ID">
-            <template #body="slotProps">
-               <router-link :to="`/masterfiles/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
-            </template>
-         </Column>
-         <Column field="pid" header="PID"/>
-         <Column field="filename" header="File Name"/>
-         <Column field="title" header="Title"/>
-         <Column field="description" header="Description"/>
-         <Column field="metadata.tiitle" header="Metadata">
-            <template #body="slotProps">
-               <router-link :to="`/metadata/${slotProps.data.metadata.id}`">{{slotProps.data.metadata.title}}</router-link>
-            </template>
-         </Column>
-         <Column field="thumbnailURL" header="Thumb" class="thumb">
-            <template #body="slotProps">
-               <a :href="slotProps.data.viewerURL" target="_blank">
-                  <img :src="slotProps.data.thumbnailURL" :class="{exemplar: slotProps.data.exemplar}"/>
-               </a>
-            </template>
-         </Column>
-      </DataTable>
+         <template #select-cell="{ row }">
+            <UCheckbox size="lg" :modelValue="row.getIsSelected()" @update:modelValue="row.toggleSelected($event)"/>
+         </template>
+         <template #id-cell="{ row }">
+            <router-link :to="`/masterfiles/${row.original.id}`">{{row.original.id}}</router-link>
+         </template>  
+         <template #filename-header="{ column }">
+            <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @opened="filterOpened(column)"
+               @clear="clearFilter(column)" @apply="applyFilter(column)">
+               <UInput v-model="pendingFilter" placeholder="File name..." />
+            </FilterPopover>
+         </template> 
+         <template #title-header="{ column }">
+            <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @opened="filterOpened(column)"
+               @clear="clearFilter(column)" @apply="applyFilter(column)">
+               <UInput v-model="pendingFilter" placeholder="Title..." />
+            </FilterPopover>
+         </template> 
+         <template #description-header="{ column }">
+            <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @opened="filterOpened(column)"
+               @clear="clearFilter(column)" @apply="applyFilter(column)">
+               <UInput v-model="pendingFilter" placeholder="Description..." />
+            </FilterPopover>
+         </template> 
+         <template #metadata-header="{ column }">
+            <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @opened="filterOpened(column)"
+               @clear="clearFilter(column)" @apply="applyFilter(column)">
+               <UInput v-model="pendingFilter" placeholder="Metadata..." />
+            </FilterPopover>
+         </template> 
+         <template #metadata-cell="{ row }">
+            <router-link :to="`/metadata/${row.original.metadata?.id}`">{{row.original.metadata?.title}}</router-link>
+         </template>
+         <template #thumbnailURL-cell="{ row }">
+            <a :href="row.original.viewerURL" target="_blank">
+               <img :src="row.original.thumbnailURL" :class="{exemplar: row.original.exemplar}"/>
+            </a>
+         </template>
+      </UTable>
    </UCard>
 
    <UModal v-model:open="pdfStore.downloading" :modal="true" :dismissible="false" title="Generating PDF">
@@ -55,10 +67,9 @@
 import { useComponentsStore } from '@/stores/components'
 import { useUserStore } from '@/stores/user'
 import { usePDFStore } from '@/stores/pdf'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import { ref, computed, watch } from 'vue'
 import LookupDialog from '@/components/LookupDialog.vue'
+import FilterPopover from '@/components/FilterPopover.vue'
 
 const props = defineProps({
    title: {
@@ -67,109 +78,86 @@ const props = defineProps({
    },
 })
 
+const columns = [
+   { accessorKey: "select", header: ""},
+   { accessorKey: 'id', header: 'ID'},
+   { accessorKey: 'pid', header: 'PID'},
+   { accessorKey: 'filename', header: 'File Name'},
+   { accessorKey: 'title', header: 'Title'},
+   { accessorKey: 'description', header: 'Description'},
+   { 
+      id: 'metadata', 
+      header: 'Metadata',
+      accessorFn: (row) => row.metadata?.title
+   },
+   { accessorKey: 'thumbnailURL', header: 'Thumb'},
+]
 
 const component = useComponentsStore()
 const userStore = useUserStore()
 const pdfStore = usePDFStore()
 
-const selectedMasterFiles = ref([])
-const selectAll = ref(false)
+const table = ref()
+const filters = ref([])
+const pendingFilter = ref()
 
 const filesSelected = computed(() => {
-   return selectedMasterFiles.value.length > 0
+   return table.value?.tableApi?.getIsSomePageRowsSelected()
 })
 const selectedFileNames = computed(() => {
-   let filenames = []
-   selectedMasterFiles.value.forEach( s => {
-      filenames.push(s.filename)
-   })
-   return filenames
+   let out = table.value?.tableApi?.getSelectedRowModel().rows.map( r => r.original.filename )
+   if (!out) return [] 
+   return out
 })
 const selectedIDs = computed(() => {
-   let ids = []
-   selectedMasterFiles.value.forEach( s => {
-      ids.push(s.id)
-   })
-   return ids
+   let out = table.value.tableApi.getSelectedRowModel().rows.map( r => r.original.id )
+   if (!out) return [] 
+   return out
 })
 
 watch(() => component.loadingMasterFiles, (newVal) => {
    if ( newVal == false) {
-      selectedMasterFiles.value = []
-      selectAll.value = false
+      table.value?.tableApi.resetRowSelection()
    }
 })
 
 const downloadClicked = (() => {
-   component.downloadFromArchive(userStore.computeID, selectedMasterFiles.value[0].unitID, selectedFileNames.value)
+   const unitID = table.value.tableApi.getSelectedRowModel().rows[0].original.unitID
+   component.downloadFromArchive(userStore.computeID, unitID, selectedFileNames.value)
    clearSelections()
 })
 
 const pdfClicked = (() => {
-   let ids = []
-   let unitID = 0
-   selectedMasterFiles.value.forEach( s => {
-      ids.push(s.id)
-      if (unitID == 0) {
-         unitID = s.unitID
-      }
-   })
-   pdfStore.requestPDF( unitID, ids )
+   const unitID = table.value.tableApi.getSelectedRowModel().rows[0].original.unitID
+   pdfStore.requestPDF( unitID, selectedIDs.value )
 })
 
 const assignMetadata = ( async ( metadataID ) => {
-   await component.assignMetadata(metadataID, selectedMasterFiles.value[0].unitID, selectedIDs.value)
+   const unitID = table.value.tableApi.getSelectedRowModel().rows[0].original.unitID
+   await component.assignMetadata(metadataID, unitID, selectedIDs.value)
    clearSelections()
 })
 
-const onRowSelect = (() => {
-   selectAll.value = selectedMasterFiles.value < component.relatedMasterFiles.length
-})
-
-const onRowUnselect = (() => {
-   selectAll.value  = false
-})
-
-const onSelectAllChange = ((event) => {
-   selectAll.value = event.checked
-   if (selectAll.value) {
-      selectedMasterFiles.value = component.relatedMasterFiles
-   }
-   else {
-      selectedMasterFiles.value = []
-   }
-})
-
 const clearSelections = (() => {
-   selectAll.value = false
-   selectedMasterFiles.value = []
+   table.value?.tableApi.resetRowSelection()
 })
 
+const isFilterApplied = ((name) => {
+   return filters.value.findIndex( f => f.id == name) > -1
+})
+const filterOpened = ((column) => {
+   pendingFilter.value = column.getFilterValue()  
+})
+const clearFilter = ((column) => {
+   column.setFilterValue(null)
+})
+const applyFilter = ((column) => {
+   column.setFilterValue(pendingFilter.value)
+})
 </script>
 
 <style scoped lang="scss">
-:deep(div.p-panel-content) {
-   padding-top: 0;
-}
-p.none {
-   text-align:center;
-}
-.p-datatable-sm {
-   font-size: 0.9em;
-}
-.master-file-acts {
-   font-size: 0.85em;
-   text-align: right;
-   button.p-button {
-      margin-left: 5px;
-   }
-}
-:deep(td.thumb) {
-   width: 160px !important;
-   text-align: center !important;
-}
 img.exemplar {
    border: 5px solid var(--uvalib-teal);
 }
-
 </style>

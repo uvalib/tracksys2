@@ -90,15 +90,6 @@ const clearFilter = ((column) => {
 const applyFilter = ((column) => {
    column.setFilterValue(pendingFilter.value)
 })
-
-
-// const filters = ref( {
-//    'agency.id': {value: null, matchMode: FilterMatchMode.EQUALS},
-//    'customer.lastName': {value: null, matchMode: FilterMatchMode.STARTS_WITH},
-//    'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
-//    'specialInstructions': {value: null, matchMode: FilterMatchMode.CONTAINS},
-//    'staffNotes': {value: null, matchMode: FilterMatchMode.CONTAINS},
-// })
 </script>
 
 <style scoped lang="scss">
