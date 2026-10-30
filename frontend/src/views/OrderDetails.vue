@@ -13,7 +13,7 @@
    </h2>
    <div class="row-left gap-4 pt-8 px-8">
       <div class="column flex-1">
-         <UCard title="General Information" class="w-full">
+         <UCard title="General Information" class="text-sm w-full">
             <dl>
                <DataDisplay label="Status" :value="detail.status">
                   <div class="status">
@@ -35,7 +35,7 @@
                </DataDisplay>
             </dl>
          </UCard>
-         <UCard class="messages w-full" title="Messages" v-if="hasMessages" >
+         <UCard class="text-sm w-full" title="Messages" v-if="hasMessages" >
             <div class="msg" v-if="detail.status== 'requested'">Order is not yet approved. Units must be added and approved before order can be approved.</div>
             <div class="msg" v-if="detail.status== 'deferred'">Order has been deferred.</div>
             <div class="msg" v-if="detail.customer.academicStatusID==1 && !detail.fee && !detail.feeWaived">Either enter a fee, defer or cancel this order.</div>
@@ -46,7 +46,7 @@
             </template>
          </UCard>
       </div>
-      <UCard title="Workflow"  class="flex-1">
+      <UCard title="Workflow"  class="text-sm flex-1">
          <dl>
             <DataDisplay label="Date Submitted" :value="$formatDate(detail.dateSubmitted)"/>
             <DataDisplay label="Date Due" :value="$formatDate(detail.dateDue)"/>
@@ -102,15 +102,15 @@
          </div>
       </UCard>
    </div>
-   <div class="details" v-if="ordersStore.items.length> 0">
-      <UCard title="Order Details" class="w-full">
+
+   <div class="column gap-6 px-8 pt-8">
+      <UCard title="Order Details" class="text-sm w-full"  v-if="ordersStore.items.length> 0">
          <p>The following is all of the raw data submitted by the patron. Use it to create units or discard it. Once all units have been created and the order approved, this data will be deleted.</p>
          <dl class="item-intended-use">
             <DataDisplay label="Intended Use" :value="ordersStore.items[0].intendedUse.name"/>
             <DataDisplay label="Format" :value="ordersStore.items[0].intendedUse.deliverableFormat"/>
             <DataDisplay label="Resolution" :value="ordersStore.items[0].intendedUse.deliverableResolution"/>
          </dl>
-         <Divider />
          <div class="items">
             <div class="item" v-for="item in ordersStore.items" :key="item.id">
                <i v-if="item.converted" class="used fas fa-check-circle"></i>
@@ -131,9 +131,8 @@
             </div>
          </div>
       </UCard>
-   </div>
-   <div class="details" v-if="systemStore.working==false"style="margin-bottom: 60px;" >
-      <UCard title="Units" class="w-full"  :ui="{body: 'pt-0!'}">
+
+      <UCard v-if="systemStore.working==false" title="Units" class="w-full" :ui="{body: 'pt-0!'}">
          <RelatedUnits :orderID="detail.id" :units="ordersStore.units" :hathiTrust="canUpdateHathiTrust" :canAdd="canAddUnit"/>
       </UCard>
    </div>
