@@ -32,6 +32,9 @@
          <span v-if="row.original.barcode">{{ row.original.barcode }}</span>
          <span v-else>N/A</span>
       </template>
+       <template #remove-cell="{ row }">
+         <UButton @click="deleteItem(row.original)" icon="i-lucide-trash" color="secondary" class="rounded-full"/>
+      </template>
    </UTable>
 </template>
 
@@ -53,6 +56,7 @@ const columns = [
    { accessorKey: "title", header: "Title" },
    { accessorKey: "callNumber", header: "Call Number" },
    { accessorKey: "barcode", header: "Barcode" },
+   { accessorKey: "remove", header: "" },
 ]
 
 const props = defineProps({
@@ -68,15 +72,6 @@ const externalSystemName = ( (id) => {
       return sys.name
    }
    return "Unknown"
-})
-
-const onSort = ((event) => {
-   collectionStore.searchOpts.sortField = event.sortField
-   collectionStore.searchOpts.sortOrder = "asc"
-   if (event.sortOrder == -1) {
-      collectionStore.searchOpts.sortOrder = "desc"
-   }
-   collectionStore.getItems()
 })
 
 const perPageChanged = (() => {

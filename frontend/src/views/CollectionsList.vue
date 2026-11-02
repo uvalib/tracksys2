@@ -32,7 +32,6 @@ const userStore = useUserStore()
 const systemStore = useSystemStore()
 const metadataStore = useMetadataStore()
 
-const table = ref()
 const showCreateCollection = ref(false)
 
 const columns = [
@@ -44,7 +43,7 @@ const columns = [
    { accessorKey: 'callNumber', header: 'Call NumberD'},
    { accessorKey: 'catalogKey', header: 'Catalog Key'},
    { accessorKey: 'collectionID', header: 'ID'},
-   { accessorKey: 'recordCount', header: 'Items'}
+   { accessorKey: 'recordCount', header: 'Items'},
 ]
 
 onMounted(() => {
