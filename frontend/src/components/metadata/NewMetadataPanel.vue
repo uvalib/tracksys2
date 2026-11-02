@@ -1,5 +1,5 @@
 <template>
-   <UForm :schema="schema" :state="state" class="flex flex-col gap-4" @submit="createMetadata">
+   <UForm  ref="form" :schema="schema" :state="state" class="flex flex-col gap-4" @submit="createMetadata">
       <UCard title="General Information">
          <div class="column-close">
             <UFormField label="Metadata Type" name="type">
@@ -86,7 +86,7 @@
                       <USelect v-model="state.ocrHint" :items="ocrHints" class="w-full" placeholder="Select a hint"/>   
                   </UFormField>
                   <UFormField name="ocrLanguageHint" label="OCR Language" class="grow">   
-                      <USelectMenu v-model="state.ocrLanguageHint" :items="ocrLanguages" class="w-full" 
+                      <USelectMenu v-model="state.ocrLanguageHint" :items="ocrLanguages" valueKey="value" class="w-full" 
                         :disabled="isLanguageDisabled" placeholder="Select a language"/>   
                   </UFormField>
                </div>
@@ -166,6 +166,7 @@ const schema = yup.object({
 
 // this indicates that extURI has changed and need to be validated
 const needsValidation = ref(false) 
+const form = ref()
 
 // form state
 const state = ref({
@@ -329,6 +330,7 @@ const sirsiLookup = (async () => {
       state.value.author = metadataStore.sirsiMatch.creatorName
       state.value.catalogKey = metadataStore.sirsiMatch.catalogKey
       state.value.barcode = metadataStore.sirsiMatch.barcode
+      form.value.validate()
    }
 })
 

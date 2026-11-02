@@ -61,7 +61,7 @@
                   </label>
                </div>
             </UCard>
-            <div class="row-right gap_2">
+            <div class="row-right gap-2">
                <UButton @click="isOpen=false" label="Cancel" color="secondary"/>
                <UButton label="Add Unit" type="submit" />
             </div>
@@ -182,7 +182,7 @@ const metadataSelected = (( _e, row) => {
       state.value.metadataID = selID       
    }
    row.toggleSelected(!row.getIsSelected())
-   form.value.validate({name: 'metadataID'})
+   form.value.validate()
 })
 
 const createMetadata = (() => {
@@ -194,11 +194,10 @@ const metadataCreateCanceled = (() => {
 })
 
 const metadataCreated = (() => {
-   console.log(metadataStore.searchHits[0])
    metadataSearch.value = metadataStore.detail.pid
    searched.value = true
    selectedMetadata.value = metadataStore.searchHits[0]
-   setValues({metadataID: metadataStore.searchHits[0].id})
+   state.metadataID = metadataStore.searchHits[0].id
    mode.value = "unit"
 })
 

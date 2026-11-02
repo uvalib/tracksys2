@@ -332,10 +332,8 @@ const validateASMetadata = ( async () => {
    await metadataStore.validateArchivesSpaceURI(state.value.externalURI)
    if (metadataStore.asMatch.error == "") {
       needsValidation.value = false
-      setValues({
-         externalURI: metadataStore.asMatch.validatedURL,
-         title: metadataStore.asMatch.title
-      })
+      state.externalURI = metadataStore.asMatch.validatedURL,
+      state.title = metadataStore.asMatch.title
    }
 })
 

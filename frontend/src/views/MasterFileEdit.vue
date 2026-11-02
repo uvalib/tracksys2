@@ -23,7 +23,7 @@
                   <LookupDialog target="metadata" @selected="metadataSelected"/>
                </div>
             
-               <template v-if="updateLocation">
+               <template v-if="state.updateLocation">
                   <UFormField name="containerTypeID" label="Container Type" class="grow">   
                      <USelect v-model="state.containerTypeID" :items="containerTypes" class="w-full"/>   
                   </UFormField>
@@ -38,12 +38,12 @@
                   </UFormField>
                </template>
                <div v-else>
-                  <UButton label="Add Location" color="secondary" @click="updateLocation = true"/>
+                  <UButton label="Add Location" color="secondary" @click="state.updateLocation = true"/>
                </div>
             </div>
          </UCard>
       </div>
-      <div class="row-right gap-2">
+      <div class="row-right gap-2 pt-4">
          <UButton label="Cancel" color="secondary" @click="cancelEdit()"/>
          <UButton label="Save" type="submit" />
       </div>
@@ -58,16 +58,16 @@ import { useSystemStore } from '@/stores/system'
 import LookupDialog from '@/components/LookupDialog.vue'
 
 const state = ref({
+   metadataID: null,
    orientation: 0,
    title: "",
    description: "",
-   updateLocation: "",
+   updateLocation: false,
    containerTypeID: null,
    containerID: null,
    folderID: null,
    notes: "",
 })
-const updateLocation = ref(false)
 
 const route = useRoute()
 const router = useRouter()
@@ -119,7 +119,6 @@ onMounted( async () =>{
       state.value.orientation = 0
    }
 
-    updateLocation.value = false
    if (masterFiles.details.locations.length > 0) {
       state.value.containerTypeID = masterFiles.details.locations[0].containerType.id
       state.value.containerID = masterFiles.details.locations[0].containerID
@@ -130,7 +129,7 @@ onMounted( async () =>{
 })
 
 const metadataSelected = (( metadataID ) => {
-   setValues({ metadataID: metadataID})
+   state.value.metadataID = metadataID
 })
 
 const cancelEdit = (() => {
