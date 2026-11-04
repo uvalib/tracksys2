@@ -97,7 +97,7 @@ func (svc *serviceContext) addOrUpdateCustomer(c *gin.Context) {
 
 func (svc *serviceContext) getCustomers(c *gin.Context) {
 	var customers []customer
-	q := "select c.*, count(o.id) as orders from customers c inner join orders o on o.customer_id=c.id group by c.id order by last_name asc"
+	q := "select c.*, count(o.id) as orders from customers c left outer join orders o on o.customer_id=c.id group by c.id order by last_name asc"
 	err := svc.DB.Preload("Addresses").Preload("AcademicStatus").Raw(q).Find(&customers).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get customers: %s", err.Error())

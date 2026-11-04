@@ -2,6 +2,7 @@
    <h2>Customers</h2>
    <div class="row-between p-2 bg-white border-b border-brand-grey-100">
       <UButton v-if="(userStore.isAdmin || userStore.isSupervisor)" label="Add Customer" color="secondary" @click="addCustomer" />
+      <span>{{ customersStore.customers.length }} Customers</span>
       <UInput v-model="filter" placeholder="Search customers..." />
    </div>
    <UTable :data="customersStore.customers" :columns="columns" v-model:sorting="sort" v-model:global-filter="filter" v-model:expanded="expanded"
