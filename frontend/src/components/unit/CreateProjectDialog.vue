@@ -31,7 +31,6 @@
 import { ref, computed } from 'vue'
 import { useUnitsStore } from '@/stores/units'
 import { useSystemStore } from '@/stores/system'
-import { toCalendarDate, parseAbsolute } from '@internationalized/date'
 import axios from 'axios'
 import * as yup from 'yup'
 
@@ -41,7 +40,8 @@ const schema = yup.object({
    condition: yup.bool().required("Condition is required"),
    containerTypeID: yup.number().when('workflowID', {
       is: (value) => value == 6,
-      then: (schema) => schema.min(1,"Container type is required").required("Container type is required"),
+      then: (schema) => schema.min(1).required("Use right is required"),
+      otherwise: (schema) => schema.notRequired()
    }),
 })
 
@@ -87,10 +87,10 @@ const conditions = computed( () => {
 })
 
 const createProject = ( async () => {
-   axios.post(`${systemStore.projectsURL}/api/projects/create`, values).then(response => {
+   axios.post(`${systemStore.projectsURL}/api/projects/create`, state.value).then(response => {
       unitsStore.detail.projectID = parseInt(response.data, 10)
       systemStore.toastMessage("Project Created", "A new project has been created for this unit")
-      hide()
+      isOpen.value = false
    }).catch( err => {
       systemStore.setError(err)
    })
@@ -111,7 +111,7 @@ const show = (() => {
       notes: "",
    }
    if ( unitsStore.detail.order.dateDue ) {
-      state.value.dateDue = toCalendarDate( parseAbsolute(unitsStore.detail.order.dateDue) )
+      state.value.dateDue = unitsStore.detail.order.dateDue
    }
    if ( unitsStore.detail.order.agency ) {
        state.value.agencyID = unitsStore.detail.order.agency.id

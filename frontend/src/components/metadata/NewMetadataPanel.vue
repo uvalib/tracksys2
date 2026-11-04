@@ -141,26 +141,32 @@ const schema = yup.object({
    callNumber:  yup.string().when('type', {
       is: (value) => value == 'SirsiMetadata',
       then: (schema) => schema.required("Call number is required"),
+      otherwise: (schema) => schema.notRequired()
    }),
    catalogKey:  yup.string().when('type', {
       is: (value) => value == 'SirsiMetadata',
       then: (schema) => schema.required("CatKey is required"),
+      otherwise: (schema) => schema.notRequired()
    }),
    barcode:  yup.string().when('type', {
       is: (value) => value == 'SirsiMetadata',
       then: (schema) => schema.required("Barcode is required"),
+      otherwise: (schema) => schema.notRequired()
    }),
    availabilityPolicy:  yup.number().when('type', {
       is: (value) => value == 'SirsiMetadata',
       then: (schema) => schema.min(1).required("Availability is required"),
+      otherwise: (schema) => schema.notRequired()
    }),
    useRight:  yup.number().when('type', {
       is: (value) => value == 'SirsiMetadata',
       then: (schema) => schema.min(1).required("Use right is required"),
+      otherwise: (schema) => schema.notRequired()
    }),
    externalURI: yup.string().when('type', {
       is: (value) => value == 'ExternalMetadata',
       then: (schema) => schema.required("External URI is required"),
+      otherwise: (schema) => schema.notRequired()
    })
 })
 

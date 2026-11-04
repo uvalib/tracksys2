@@ -140,7 +140,6 @@ const state = ref({
 })
 
 const rowSelection = ref({})
-const hideCheckbox = ref({select: false})
 
 const title = computed(() => {
    if (mode.value == "unit") return "Add Unit"
@@ -197,8 +196,9 @@ const metadataCreated = (() => {
    metadataSearch.value = metadataStore.detail.pid
    searched.value = true
    selectedMetadata.value = metadataStore.searchHits[0]
-   state.metadataID = metadataStore.searchHits[0].id
+   state.value.metadataID = metadataStore.searchHits[0].id
    mode.value = "unit"
+   rowSelection.value = { "0": true }
 })
 
 const lookupMetadata = ( async () => {
