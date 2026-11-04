@@ -38,6 +38,7 @@ type customer struct {
 	AcademicStatus   academicStatus `gorm:"foreignKey:AcademicStatusID" json:"academicStatus"`
 	Addresses        []address      `gorm:"foreignKey:AddressableID" json:"addresses"`
 	CreatedAt        time.Time      `json:"createdAt"`
+	Orders           uint           `json:"orders"`
 }
 
 func (svc *serviceContext) addOrUpdateCustomer(c *gin.Context) {
@@ -96,7 +97,8 @@ func (svc *serviceContext) addOrUpdateCustomer(c *gin.Context) {
 
 func (svc *serviceContext) getCustomers(c *gin.Context) {
 	var customers []customer
-	err := svc.DB.Preload("Addresses").Preload("AcademicStatus").Order("last_name asc").Find(&customers).Error
+	q := "select c.*, count(o.id) as orders from customers c inner join orders o on o.customer_id=c.id group by c.id order by last_name asc"
+	err := svc.DB.Preload("Addresses").Preload("AcademicStatus").Raw(q).Find(&customers).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get customers: %s", err.Error())
 		c.String(http.StatusInternalServerError, err.Error())

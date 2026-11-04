@@ -4,7 +4,7 @@
       <UButton v-if="(userStore.isAdmin || userStore.isSupervisor)" label="Add Customer" color="secondary" @click="addCustomer" />
       <UInput v-model="filter" placeholder="Search customers..." />
    </div>
-   <UTable :data="customersStore.customers" :columns="columns" v-model:global-filter="filter" v-model:expanded="expanded"
+   <UTable :data="customersStore.customers" :columns="columns" v-model:sorting="sort" v-model:global-filter="filter" v-model:expanded="expanded"
       sticky virtualize class="h-[calc(100vh-185px)]">
       <template #expand-cell  ="{ row }">
          <UButton color='neutral' variant='ghost' icon='i-lucide-chevron-right' aria-label='Expand' 
@@ -21,6 +21,9 @@
                   <div>{{address.phone}}</div>
             </div>
          </div>   
+      </template>
+      <template #orders-header="{ column }">
+         <UButton color="neutral" variant="ghost" label="Orders" :icon="sortIcon(column)"  @click="sortClicked(column)"/>
       </template>
       <template #acts-cell="{ row }">
          <UButton label="Edit" color="secondary" size="xs" @click="edit(row.original)" />
@@ -39,6 +42,7 @@ const userStore = useUserStore()
 const customerModal = useOverlay().create(CustomerEditModal)
 
 const filter = ref("")
+const sort = ref([])
 const expanded = ref({})
 
 const columns = [
@@ -47,12 +51,25 @@ const columns = [
    { accessorKey: 'firstName', header: "First Name"},
    { accessorKey: 'email', header: "Email"},
    { accessorKey: 'academicStatus.name', id: "academicStatus", header: "Academic Status"},
+   { accessorKey: 'orders', header: "Orders",  enableSorting: true},
    { accessorKey: 'acts', header: ""}
 ]
 
 onBeforeMount(() => {
    customersStore.getCustomers()
    document.title = `Customers`
+})
+
+const sortIcon = ((column) => {
+   const isSorted = column.getIsSorted()
+   if (isSorted) {
+      if (isSorted === 'asc') return 'i-lucide-arrow-up-narrow-wide'
+      return 'i-lucide-arrow-down-wide-narrow'
+   }
+   return 'i-lucide-arrow-up-down'
+})
+const sortClicked = (async (column) => {
+   column.toggleSorting(column.getIsSorted() === 'asc')
 })
 
 const formattedAddress = ((data) => {
