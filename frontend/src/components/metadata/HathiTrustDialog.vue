@@ -5,7 +5,7 @@
          <UForm :state="state" @submit="submitChanges" class="column gap-4 w-full">
             <div class="row-left gap-4">
                <UFormField name="requestedAt" label="Date Requested" class="grow">  
-                  <UInput v-model="state.requestedAt" :readonly="true" variant="outline" class="w-full"/>   
+                  <UInput v-model="state.requestedAt" class="w-full" :readonly="true" :disabled="true" variant="ghost"/> 
                </UFormField>
                <UFormField name="finishedAt" label="Date Finished" class="grow">  
                   <DatePicker v-model="state.finishedAt" class="w-full"/>   

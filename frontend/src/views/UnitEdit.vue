@@ -23,13 +23,13 @@
                <div class="row-between">
                   <div class="row-left gap-2 items-end">
                      <UFormField name="orderID" label="Order ID" :required="true">   
-                        <UInput v-model="state.orderID" :readonly="true"/>   
+                        <UInput v-model="state.orderID" :readonly="true" :disabled="true" variant="ghost"/>   
                      </UFormField>
                      <LookupDialog target="orders" @selected="orderSelected" />
                   </div>
                   <div class="row-left gap-2 items-end">
                      <UFormField name="metadataID" label="Metadata ID" :required="true">   
-                        <UInput v-model="state.metadataID" :readonly="true"/>   
+                        <UInput v-model="state.metadataID" :readonly="true" :disabled="true" variant="ghost"/>   
                      </UFormField>  
                      <LookupDialog target="metadata" @selected="metadataSelected" :create="true"  /> 
                   </div>
