@@ -12,12 +12,15 @@
          <UButton label="Delete" @click="deleteUnit()" v-if="canDelete"/>
       </div>
    </h2>
-   <div v-if="detail.lastError" class="row-between border-t border-b border-brand-red-B items-center bg-brand-red-100 p-2">
+   <div v-if="detail.lastError" class="row-between border-t-2 border-b-2 border-brand-red-B items-center bg-brand-red-100 p-2">
       <div>
          <div>Recent Error:</div>
          <div>{{detail.lastError.error}}</div>
       </div>
-      <UButton :to="`/jobs/${detail.lastError.jobID}`" size="lg" icon="i-lucide-bug" color="error" class="rounded-full text-white!"/>
+      <div class="row-right gap-1">
+         <UButton :to="`/jobs/${detail.lastError.jobID}`" size="lg" icon="i-lucide-bug" class="rounded-full text-black! border-b-0!" variant="ghost"/>
+         <UButton size="lg" icon="i-lucide-trash" class="rounded-full text-black! " variant="ghost" @click="deleteFailedJob"/>
+      </div>
    </div>
    <div class="column gap-6 p-6 flex-1" v-if="systemStore.working==false">
       <div class="row-left gap-6">
@@ -202,6 +205,7 @@ import { useSystemStore } from '@/stores/system'
 import { useUnitsStore } from '@/stores/units'
 import { useUserStore } from '@/stores/user'
 import { usePDFStore } from '@/stores/pdf'
+import { useJobsStore } from '@/stores/jobs'
 import { storeToRefs } from "pinia"
 import DataDisplay from '../components/DataDisplay.vue'
 import CreateProjectDialog from '../components/unit/CreateProjectDialog.vue'
@@ -217,6 +221,7 @@ const systemStore = useSystemStore()
 const unitsStore = useUnitsStore()
 const userStore = useUserStore()
 const pdfStore = usePDFStore()
+const jobsStore = useJobsStore()
 const cloneStore = useCloneStore()
 
 const attachmentCols = [
@@ -264,6 +269,15 @@ onBeforeMount( async () => {
    await unitsStore.getDetails( uID )
    unitsStore.getMasterFiles(uID)
    document.title = `Unit #${uID}`
+})
+
+const deleteFailedJob = ( async () => {
+   const msg = `Are you sure you want delete this job log? All data will be lost. This cannot be reversed.`
+   const resp = await useConfirm("Confirm Delete", msg, "Delete")
+   if (resp) {
+      jobsStore.deleteJobs( [ unitsStore.detail.lastError.jobID ] )
+      delete unitsStore.detail.lastError
+   } 
 })
 
 const flagString = (( flag ) => {

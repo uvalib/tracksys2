@@ -97,7 +97,8 @@ const deleteJobLog = ( async () => {
    const msg = `Are you sure you want delete this job log? All data will be lost. This cannot be reversed.`
    const resp = await useConfirm("Confirm Delete", msg, "Delete")
    if (resp) {
-      jobsStore.deleteJobs( [iparseInt(route.params.id,10)] )
+      jobsStore.deleteJobs( [parseInt(route.params.id,10)] )
+      router.push("/jobs")
    } 
 })
 </script>

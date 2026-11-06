@@ -19,6 +19,9 @@
             </li>
          </ul>
          <div>
+            All matching rules also apply when you filter search results by column.
+         </div>
+         <div>
             Full documentation on searching can be found
             <a href="https://manual.manticoresearch.com/Searching/Full_text_matching/Operators?client=CONFIG#Full-text-operators" target="_blank">here</a>.</div>
       </div>
@@ -51,7 +54,7 @@
    div {
       text-align: center;
       border-top: 1px solid var(--uvalib-grey-light);
-      padding-top: 10px;
+      padding: 10px 0;
    }
    a {
       color: var(--uvalib-blue-alt);
