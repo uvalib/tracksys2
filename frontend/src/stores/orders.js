@@ -14,7 +14,6 @@ export const useOrdersStore = defineStore('orders', {
          filters: [],
          sortField: "id",
          sortOrder: "desc",
-         query: "",
          ownerID: -1
       },
       detail: {
@@ -195,9 +194,6 @@ export const useOrdersStore = defineStore('orders', {
          system.working = true
          let so = this.searchOpts
          let url = `/api/orders?filters=${this.filtersAsQueryParam}&start=${so.start}&limit=${so.limit}&by=${so.sortField}&order=${so.sortOrder}`
-         if ( so.query != "") {
-            url += `&q=${encodeURIComponent(so.query)}`
-         }
          if ( this.ownerID > -1) {
             url += `&owner=${this.ownerID}`
          }
@@ -217,16 +213,6 @@ export const useOrdersStore = defineStore('orders', {
             })
             this.total = response.data.total
             system.working = false
-         }).catch( e => {
-            system.setError(e)
-         })
-      },
-      async lookup( query ) {
-         const system = useSystemStore()
-         let url = `/api/search?scope=orders&q=${encodeURIComponent(query)}&start=0&limit=30`
-         return axios.get(url).then(response => {
-            this.lookupHits = response.data.orders.hits
-            this.totalLookupHits = response.data.orders.total
          }).catch( e => {
             system.setError(e)
          })

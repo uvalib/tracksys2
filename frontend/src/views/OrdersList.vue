@@ -13,13 +13,12 @@
       <div class="row-left items-center gap-4">
          <div class="row-left gap-2! items-center">
             <label for="orders-filter">Filter:</label>
-            <USelect id="orders-filter" v-model="statusFilter" @change="getOrders" :items="statuses" />
+            <USelect id="orders-filter" v-model="filters.status.value" @change="getOrders" :items="statuses" />
          </div>
          <div class="row-left gap-2! items-center">
             <label>Assigned to me:</label>
             <USwitch v-model="assignedToMe" @update:modelValue="ownerToggled"/>
          </div>
-         <UInput v-model="ordersStore.searchOpts.query" placeholder="Search orders..." @update:modelValue="queryOrders"/>
       </div>
    </div>
     <UTable :data="ordersStore.orders" :columns="columns" v-model:sorting="sorting" sticky class="h-[calc(100vh-185px)]" >
@@ -43,7 +42,14 @@
          </UButton>
       </template>
       <template #title-header="{ column }">
-         <UButton color="neutral" variant="ghost" label="Title" :icon="sortIcon(column)"  @click="sortClicked(column)"/>
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @clear="clearFilter(column.id)" @apply="applyFilters">
+            <UInput v-model="filters.title.value" class="w-full" placeholder="Title..." />   
+         </FilterPopover>
+      </template>
+      <template #specialInstructions-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @clear="clearFilter(column.id)" @apply="applyFilters">
+            <UInput v-model="filters.specialInstructions.value" class="w-full" placeholder="Instructions..." />   
+         </FilterPopover>
       </template>
       <template #unitCount-header="{ column }">
          <UButton color="neutral" variant="ghost" label="Units" :icon="sortIcon(column)"  @click="sortClicked(column)"/>
@@ -60,26 +66,29 @@
          <span class="fee-waived" v-if="row.original.feeWaived">Waived</span>
          <span class="fee" v-else-if="row.original.fee !== undefined">${{parseFloat(row.original.fee).toFixed(2)}}</span>
       </template>
-      <template #customer-header>
-         <FilterPopover label="Customer"  :applied="isFilterApplied('customer')" @clear="clearFilter('customer')" @apply="applyFilters">
-            <UInput v-model="filters.customer.value" placeholder="Last name..." />
+      <template #customer-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @clear="clearFilter(column.id)" @apply="applyFilters">
+            <USelectMenu v-model="filters.customer.value" :items="customers" class="w-full" 
+               valueKey="value" labelKey="label" placeholder="Select customer..." virtualize/>   
          </FilterPopover>
       </template>
       <template #customer-cell="{ row }">
          <div class="nowrap">{{row.original.customer.lastName}}, {{row.original.customer.firstName}}</div>
          <div class="dimmed" v-if="row.original.customer.academicStatus">({{row.original.customer.academicStatus.name}})</div>
       </template>
-      <template #agency-header>
-         <FilterPopover label="Agency" :applied="isFilterApplied('agency')" @clear="clearFilter('agency')" @apply="applyFilters">
-            <UInput v-model="filters.agency.value" placeholder="Agency name..." />
+      <template #agency-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @clear="clearFilter(column.id)" @apply="applyFilters">
+             <USelectMenu v-model="filters.agency.value" :items="system.agencies" class="w-full" 
+               valueKey="id" labelKey="name" descriptionKey="" placeholder="Select an agency..." virtualize/>   
          </FilterPopover>
       </template>
       <template #agency-cell="{ row }">
          <div v-if="row.original.agency">{{ row.original.agency.name }}</div>
       </template>
-      <template #processor-header>
-         <FilterPopover label="Processor" :applied="isFilterApplied('processor')" @clear="clearFilter('processor')" @apply="applyFilters">
-            <UInput v-model="filters.processor.value" placeholder="Last name..." />
+      <template #processor-header="{ column }">
+         <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @clear="clearFilter(column.id)" @apply="applyFilters">
+            <USelectMenu v-model="filters.processor.value" :items="staff" class="w-full" 
+               valueKey="value" labelKey="label" placeholder="Select staff..." virtualize/>   
          </FilterPopover>
       </template>
       <template #processor-cell="{ row }">
@@ -89,8 +98,11 @@
 </template>
 
 <script setup>
-import { onBeforeMount, onMounted, ref } from 'vue'
+import { onBeforeMount, onMounted, ref, computed } from 'vue'
 import { useOrdersStore } from '@/stores/orders'
+import { useSystemStore } from '@/stores/system'
+import { useStaffStore } from '@/stores/staff'
+import { useCustomersStore } from '@/stores/customers'
 import { useUserStore } from '@/stores/user'
 import { useRoute, useRouter } from 'vue-router'
 import FilterPopover from '@/components/FilterPopover.vue'
@@ -99,6 +111,9 @@ const route = useRoute()
 const router = useRouter()
 const ordersStore = useOrdersStore()
 const userStore = useUserStore()
+const customersStore = useCustomersStore()
+const staffStore = useStaffStore()
+const system = useSystemStore()
 
 const sorting = ref([
   {
@@ -107,54 +122,18 @@ const sorting = ref([
   }
 ])
 const columns = [
-   {
-      accessorKey: 'id',
-      header: 'ID',
-   },
-   {
-      accessorKey: 'status',
-      header: 'Status'
-   },
-   {
-      accessorKey: 'dateSubmitted',
-      header: 'Request Submitted',
-   },
-   {
-      accessorKey: 'dateDue',
-      header: 'Date Due',
-   },
-   {
-      accessorKey: 'title',
-      header: 'Title',
-   },
-   {
-      accessorKey: 'specialInstructions',
-      header: 'Special Instructions',
-   },
-   {
-      accessorKey: 'unitCount',
-      header: 'Units',
-   },
-   {
-      accessorKey: 'masterFileCount',
-      header: 'Master Files',
-   },
-   {
-      accessorKey: 'fee',
-      header: 'Fee',
-   },
-   {
-      accessorKey: 'customer',
-      header: 'Customer'
-   },
-   {
-      accessorKey: 'agency',
-      header: 'Agency'
-   },
-   {
-      accessorKey: 'processor',
-      header: 'Processor'
-   },
+   { accessorKey: 'id',header: 'ID' },
+   { accessorKey: 'status', header: 'Status' },
+   { accessorKey: 'dateSubmitted', header: 'Request Submitted' },
+   { accessorKey: 'dateDue', header: 'Date Due' },
+   { accessorKey: 'title', header: 'Title' },
+   { accessorKey: 'specialInstructions', header: 'Special Instructions' },
+   { accessorKey: 'unitCount', header: 'Units' },
+   { accessorKey: 'masterFileCount', header: 'Master Files' },
+   { accessorKey: 'fee', header: 'Fee' },
+   { accessorKey: 'customer', header: 'Customer' },
+   { accessorKey: 'agency', header: 'Agency' },
+   { accessorKey: 'processor', header: 'Processor' },
 ]
 
 const statuses = ref([
@@ -169,12 +148,14 @@ const statuses = ref([
 ])
 
 const filters = ref({
-   customer: {value: null, mode: "contains"},
-   processor: {value: null, mode: "contains"},
-   agency: {value: null, mode: "contains"},
+   status: {value: "active", mode: "equals"},
+   title: {value: null, mode: "contains"},
+   specialInstructions: {value: null, mode: "contains"},
+   customer: {value: null, mode: "equals"},
+   processor: {value: null, mode: "equals"},
+   agency: {value: null, mode: "equals"},
 })
 
-const statusFilter = ref("active")
 const assignedToMe = ref(false)
 
 const sortIcon = ((column) => {
@@ -198,35 +179,48 @@ const sortClicked = (async (column) => {
    column.toggleSorting(column.getIsSorted() === 'asc')
 })
 
+const customers = computed(() => {
+   let out = []
+   customersStore.customers.forEach( a => {
+      out.push( {label: `${a.lastName}, ${a.firstName}`, value: a.id} )
+   })
+   return out
+})
+const staff = computed(() => {
+   let out = []
+   staffStore.staff.forEach( a => {
+      out.push( {label: `${a.lastName}, ${a.firstName}`, value: a.id} )
+   })
+   return out
+})
+
 onBeforeMount( () => {
-   if ( route.query.q ) {
-      ordersStore.searchOpts.query = route.query.q
-   }
    ordersStore.searchOpts.filters = []
    if ( route.query.filters ) {
-      let filters = JSON.parse(route.query.filters)
-      filters.forEach( filter => {
+      let qpFilters = JSON.parse(route.query.filters)
+      qpFilters.forEach( filter => {
          let bits = filter.split("|")
          ordersStore.searchOpts.filters.push( {field: bits[0], match: bits[1], value: bits[2]} )
          if ( bits[0] == "status") {
-            statusFilter.value = bits[2]
+            filters.value.status.value = bits[2]
          } else if ( bits[0] == "customer") {
             filters.value.customer.value = bits[2]
          } else if ( bits[0] == "processor") {
             filters.value.processor.value = bits[2]
          } else if ( bits[0] == "agency") {
             filters.value.agency.value = bits[2]
+         }  else if ( bits[0] == "title") {
+            filters.value.title.value = bits[2]
+         } else if ( bits[0] == "specialInstructions") {
+            filters.value.specialInstructions.value = bits[2]
          }
       })
    }
-   if ( route.query.sort  ) {
-      let bits = route.query.sort.split(" ")
-      ordersStore.searchOpts.sortField = bits[0].trim()
-      ordersStore.searchOpts.sortOrder = bits[1].trim()
-   }
 })
 
-onMounted(() => {
+onMounted( () => {
+   customersStore.getCustomers()
+   staffStore.getStaff()
    ordersStore.getOrders()
    document.title = `Orders`
 })
@@ -242,10 +236,6 @@ const displayStatus = ( (id) => {
    return id.charAt(0).toUpperCase() + id.slice(1)
 })
 
-const queryOrders = (() => {
-   getOrders()
-})
-
 const ownerToggled = (() => {
    if ( assignedToMe.value == true) {
       ordersStore.setTargetOwner( userStore.ID )
@@ -257,17 +247,13 @@ const ownerToggled = (() => {
 
 const setQueryParams = (() => {
    let query = Object.assign({}, route.query)
-   delete query.q
-   if (ordersStore.searchOpts.query) {
-      query.q = ordersStore.searchOpts.query
-   }
    query.filters = ordersStore.filtersAsQueryParam
    query.sort = `${ordersStore.searchOpts.sortField} ${ordersStore.searchOpts.sortOrder}`
    router.push({query})
 })
 
 const getOrders = (async () => {
-   ordersStore.searchOpts.filters = [{field: "status", value: statusFilter.value, match: 'equals'}]
+   ordersStore.searchOpts.filters = []
    Object.entries(filters.value).forEach(([key, data]) => {
       if (data.value && data.value != "") {
          ordersStore.searchOpts.filters.push({field: key, match: data.mode, value: data.value})

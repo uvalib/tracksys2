@@ -26,6 +26,9 @@
       <template #orders-header="{ column }">
          <UButton color="neutral" variant="ghost" label="Orders" :icon="sortIcon(column)"  @click="sortClicked(column)"/>
       </template>
+      <template #orders-cell="{ row }">
+         <router-link :to="ordersURL(row.original)">{{row.original.orders}}</router-link>
+      </template> 
       <template #acts-cell="{ row }">
          <UButton label="Edit" color="secondary" size="xs" @click="edit(row.original)" />
       </template>  
@@ -72,6 +75,11 @@ const sortIcon = ((column) => {
 const sortClicked = (async (column) => {
    column.toggleSorting(column.getIsSorted() === 'asc')
 })
+
+const ordersURL = ( (customer) => {
+   return `/orders?filters=["customer|equals|${customer.id}"]`
+})
+
 
 const formattedAddress = ((data) => {
    let out = data.address1

@@ -187,6 +187,7 @@ input[type=checkbox] {
    }
    span.status.await_fee {
       background: var(--uvalib-grey-dark);
+      white-space: nowrap;
    }
    span.status.completed {
       background: var( --uvalib-brand-blue-light);
