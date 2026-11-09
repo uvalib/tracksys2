@@ -73,20 +73,19 @@ func (svc *serviceContext) getCollectionUnits(collectionID int64) ([]*unit, erro
 	}
 	// NOTE: Manually calculate the master files count and return it as num_master_files instead of using the inaccurate cache
 	mfCnt := "(select count(*) from master_files m inner join units u on u.id=m.unit_id where u.id=units.id) as num_master_files"
-	err := svc.DB.
+	err := svc.DB.Preload("IntendedUse").Preload("Metadata").
 		Where("metadata_id in ? and (intended_use_id=? or intended_use_id=?) and unit_status != ?", inCollectionIDs, 110, 101, "canceled").
-		Select("units.*", mfCnt).Find(&out).Error
+		Select("*", mfCnt).Find(&out).Error
 	if err != nil {
 		return nil, fmt.Errorf("unable to get related units for %d: %s", collectionID, err.Error())
 	}
 
 	if len(out) == 0 {
 		log.Printf("INFO: no units directly found for collection metadata %d; searching master files...", collectionID)
-		q := "select  u.*,count(m.id) as num_master_files from master_files m "
-		q += " inner join units u on u.id = m.unit_id"
-		q += " where (intended_use_id=? or intended_use_id=?) and unit_status != ?"
-		q += " and m.metadata_id in ? group by u.id"
-		if err := svc.DB.Raw(q, 110, 101, "canceled", inCollectionIDs).Scan(&out).Error; err != nil {
+		if err := svc.DB.Preload("IntendedUse").Preload("Metadata").
+			Joins("inner join master_files mf on mf.unit_id = units.id").
+			Where("mf.metadata_id in ? and (intended_use_id=? or intended_use_id=?) and unit_status != ?", inCollectionIDs, 110, 101, "canceled").
+			Select("units.*", "count(mf.id) as num_master_files").Group("units.id").Find(&out).Error; err != nil {
 			return nil, fmt.Errorf("unable to get related units for %d: %s", collectionID, err.Error())
 		}
 	}
