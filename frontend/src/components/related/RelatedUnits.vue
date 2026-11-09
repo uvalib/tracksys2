@@ -106,7 +106,6 @@ const columns = [
       accessorFn: (row) => row.metadata ? row.metadata.title : '',
       id: 'title',
       header: 'Title',
-      enableSorting: true,
    },
    {
       accessorKey: 'status',
@@ -179,22 +178,34 @@ const yesNo = computed(() => {
 
 const downloadCSV = (() => {
    const header = columns.map( c => `"${c.header}"`)
-   const fields = columns.map( c => c.accessorKey )
 
    let csv = "data:text/csv;charset=utf-8,"
    csv += (header.join(",")+"\n")
    props.units.forEach( r => {
-      fields.forEach( fieldName => {
+      columns.forEach( col => {
          let val = ""
-         if (fieldName.includes(".")) {
-            let bits = fieldName.split(".")
-            let child = r[bits[0]]
-            val = child[bits[1]]
-         } else {
-            val = `${r[fieldName]}`
+         if ( col.accessorKey ) {
+            val = `${r[col.accessorKey]}`   
+         } else if ( col.id == 'title' ) {
+            if (r.metadata ) {
+               val = r.metadata.title
+            } else {
+               val = "N/A"
+            }
+         } else if ( col.id == 'callNumber' ) {
+            if (  r.metadata ) {
+               val = r.metadata.callNumber
+            } else {
+               val = "N/A"
+            }
+         } else if ( col.id == 'intendedUse' ) {
+            val = r.intendedUse.name
          }
-         val = val.replaceAll("\"", "'")
-         csv += `"${val}",`
+
+         if (val != "" ) {
+            val = val.replaceAll("\"", "'")
+            csv += `"${val}",`    
+         }
       })
       csv += "\n"
    })
