@@ -40,8 +40,13 @@ export const useCloneStore = defineStore('clone', {
      async  getMasterFiles( unitID ) {
          const system = useSystemStore()
          this.masterFiles = []
+         this.status = "loading"
          return axios.get( `/api/units/${unitID}/masterfiles` ).then(response => {
-            this.masterFiles = response.data
+            this.masterFiles = response.data.map((mf, idx) => ({
+               id: mf.id, title: mf.title, unitID: mf.unitID, filename: mf.filename,
+               thumbnailURL: mf.thumbnailURL, selected: false, index: idx
+            }))
+            this.status = "loaded"
          }).catch( e => {
             system.setError(e)
          })

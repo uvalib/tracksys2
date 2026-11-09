@@ -1,20 +1,20 @@
 <template>
-   <DPGButton @click="show" severity="secondary" label="Renumber" :disabled="props.disabled"/>
-   <Dialog v-model:visible="isOpen" :modal="true" header="Renumber Master Files" :style="{width: '400px'}" :closable="false">
-      <label for="start">Starting page number:</label>
-      <InputNumber id="start" v-model="startPage" :useGrouping="false" fluid/>  
-      <template #footer>
-         <DPGButton @click="hide" label="Cancel" severity="secondary"/>
-         <DPGButton @click="renumberPages" label="Renumber"  />
+   <UModal v-model:open="isOpen" :modal="true" :dismissible="false" :close="false" title="Renumber Master Files">
+      <UButton @click="show()" label="Renumber" :disabled="props.disabled" size="sm" color="secondary"/>
+      <template #body>
+         <label for="start">Starting page number:</label>
+         <UInputNumber v-model="startPage" class="w-full"/>
       </template>
-   </Dialog>
+      <template #footer>
+         <UButton @click="hide" label="Cancel" color="secondary"/>
+         <UButton @click="renumberPages" label="Renumber"  />
+      </template>
+   </UModal>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import Dialog from 'primevue/dialog'
 import { useUnitsStore } from '@/stores/units'
-import InputNumber from 'primevue/inputnumber'
 
 const props = defineProps({
    disabled: {

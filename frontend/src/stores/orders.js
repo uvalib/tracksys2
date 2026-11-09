@@ -8,12 +8,12 @@ export const useOrdersStore = defineStore('orders', {
       orders: [],
       total: 0,
       searchOpts: {
+         currPage: 1,
          start: 0,
          limit: 30,
          filters: [],
          sortField: "id",
          sortOrder: "desc",
-         query: "",
          ownerID: -1
       },
       detail: {
@@ -183,18 +183,21 @@ export const useOrdersStore = defineStore('orders', {
       }
    },
 	actions: {
-      getOrders() {
+      resetSearch() {
+         this.searchOpts.currPage = 1
+         this.searchOpts.start = 0
+         this.orders = []
+         this.total = 0
+      },
+      async getOrders() {
          const system = useSystemStore()
          system.working = true
          let so = this.searchOpts
          let url = `/api/orders?filters=${this.filtersAsQueryParam}&start=${so.start}&limit=${so.limit}&by=${so.sortField}&order=${so.sortOrder}`
-         if ( so.query != "") {
-            url += `&q=${encodeURIComponent(so.query)}`
-         }
          if ( this.ownerID > -1) {
             url += `&owner=${this.ownerID}`
          }
-         axios.get( url ).then(response => {
+         return axios.get( url ).then(response => {
             this.orders = []
             response.data.orders.forEach( js => {
                js.dateDue = js.dateDue.split("T")[0]

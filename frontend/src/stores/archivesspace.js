@@ -61,12 +61,12 @@ export const useArchivesSpaceStore = defineStore('archivesspace', {
           })
       },
 
-      async reject( userID, item, notes ) {
+      async reject( userID, metadataID, notes ) {
          const system = useSystemStore()
          this.working = true
          var data = { userID: userID, notes: notes}
-         await axios.post(`/api/metadata/${item.id}/archivesspace/reject`, data).then( () => {
-            let tgtIdx = this.reviews.findIndex( r => r.metadataID == item.id)
+         await axios.post(`/api/metadata/${metadataID}/archivesspace/reject`, data).then( () => {
+            let tgtIdx = this.reviews.findIndex( r => r.metadataID == metadataID)
             if ( tgtIdx > -1 ) {
                this.reviews[tgtIdx].notes = notes
                this.reviews[tgtIdx].status = "rejected"
@@ -82,17 +82,17 @@ export const useArchivesSpaceStore = defineStore('archivesspace', {
          })
       },
 
-      async updateNotes( review, notes ) {
+      async updateNotes( asMetadataID, notes ) {
          const system = useSystemStore()
          this.working = true
-         await axios.post(`/api/metadata/${review.metadata.id}/archivesspace/notes`, {notes: notes}).then( () => {
-            let tgtIdx = this.reviews.findIndex( r => r.id == review.id)
+         await axios.post(`/api/metadata/${asMetadataID}/archivesspace/notes`, {notes: notes}).then( () => {
+            let tgtIdx = this.reviews.findIndex( r => r.metadataID == asMetadataID)
             if ( tgtIdx > -1 ) {
                this.reviews[tgtIdx].notes = notes
                system.toastMessage('Notes Updated', 'You have successfully update the notes for the selected item')
             }
          }).catch( e => {
-            system.toastError('Review Failed', e)
+            system.toastError('Note update failed', e)
          }).finally( () => {
            this.working = false
          })

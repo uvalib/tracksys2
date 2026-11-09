@@ -10,6 +10,7 @@ export const useCollectionsStore = defineStore('collections', {
       totalRecords: 0,
       collectionID: -1,
       searchOpts: {
+         currPage: 1,
          start: 0,
          limit: 30,
          query: "",
@@ -47,16 +48,17 @@ export const useCollectionsStore = defineStore('collections', {
          this.collections.push(rec)
       },
       getCollections() {
-         const system = useSystemStore()
-         system.working = true
+         this.working = true
          this.collections = []
          this.metadataHits = []
          this.totalCollections = 0
+         console.log("GET COLLECTIONS...")
          axios.get( "/api/collections" ).then(response => {
             this.totalCollections = response.data.total
             this.collections = response.data.collections
-            system.working = false
+            this.working = false
          }).catch( e => {
+            const system = useSystemStore()
             system.setError(e)
          })
       },
@@ -108,7 +110,6 @@ export const useCollectionsStore = defineStore('collections', {
          })
       },
       exportCSV() {
-         const system = useSystemStore()
          axios.get(`/api/collections/${this.collectionID}/csv`, null, {responseType: "blob"}).then((response) => {
             const fileURL = window.URL.createObjectURL(new Blob([response.data], { type: 'application/vnd.ms-excel' }))
             const fileLink = document.createElement('a')
@@ -123,7 +124,6 @@ export const useCollectionsStore = defineStore('collections', {
          })
       },
        masterFilesReport() {
-         const system = useSystemStore()
          axios.get(`/api/collections/${this.collectionID}/masterfiles`, null, {responseType: "blob"}).then((response) => {
             const fileURL = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }))
             const fileLink = document.createElement('a')

@@ -5,28 +5,15 @@ import axios from 'axios'
 export const useStaffStore = defineStore('staff', {
 	state: () => ({
       staff: [],
-      total: 0,
-      searchOpts: {
-         start: 0,
-         limit: 30,
-         sortField: "lastName",
-         sortOrder: "asc",
-      }
 	}),
 	getters: {
 	},
 	actions: {
-      getStaff( queryStr ) {
+      getStaff() {
          const system = useSystemStore()
          system.working = true
-         let so = this.searchOpts
-         let url = `/api/staff?start=${so.start}&limit=${so.limit}&by=${so.sortField}&order=${so.sortOrder}`
-         if (queryStr != "") {
-            url += `&q=${encodeURIComponent(queryStr)}`
-         }
-         axios.get( url ).then(response => {
-            this.staff = response.data.staff
-            this.total = response.data.total
+         axios.get( '/api/staff' ).then(response => {
+            this.staff = response.data
             system.working = false
          }).catch( e => {
             system.setError(e)
@@ -38,7 +25,6 @@ export const useStaffStore = defineStore('staff', {
          let url = `/api/staff?admins=1`
          axios.get( url ).then(response => {
             this.staff = response.data
-            this.total = response.data.length
          }).catch( e => {
             system.setError(e)
          })

@@ -1,0 +1,49 @@
+<template>
+<UPopover v-model:open="open">
+   <UButton variant="link" class="text-black" :trailing-icon="icon" :label="props.label" @click="emit('opened')">
+      <span class="text-left">{{ props.label }}</span>
+   </UButton>
+   <template #content>
+      <div class="p-4 column-close">
+         <slot></slot>
+         <div class="row-right gap-2">
+            <UButton color="secondary" label="Clear" size="xs" @click="clearClicked"/>
+            <UButton label="Apply" size="xs" @click="applyClicked"/>
+         </div>
+      </div>
+   </template>
+</UPopover>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+
+const open = ref(false)
+
+const emit = defineEmits( ['opened', 'clear', 'apply'])
+const props = defineProps({
+   label: {
+      type: String,
+      required: true
+   },
+   applied: {
+      type: Boolean,
+      default: false
+   },
+})
+
+const icon = computed(() => {
+   if ( props.applied) return  'lucide-extended:funnel-filled'
+   return "i-lucide-funnel"
+})
+
+const applyClicked = (() => {
+   open.value=false
+   emit('apply')
+})
+
+const clearClicked = (() => {
+   open.value=false
+   emit('clear')
+})
+</script>

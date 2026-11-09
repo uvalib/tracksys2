@@ -20,8 +20,10 @@ function getNodeData(node) {
 }
 
 function getLabel( data )  {
-   // label is concatenated data for all to facilitate filtering. the label is not displayed.
-   return `${data.title} ${data.label} ${data.description} ${data.pid} ${data.date} ${data.eadID}`
+   if (data.title.length > 0 ) return data.title
+   if (data.label.length > 0 ) return data.label
+   if (data.description.length > 0 ) return data.description
+   return data.pid
 }
 
 function getNodeChildren( parentNode, children ) {
@@ -63,6 +65,7 @@ export const useComponentsStore = defineStore('components', {
          this.nodes = []
          system.working = true
          this.selectedComponent = parseInt(id,10)
+         console.log("GET TREE") 
          return axios.get( `/api/components/${id}` ).then(response => {
             let component = response.data.component
             let root = {
@@ -77,6 +80,7 @@ export const useComponentsStore = defineStore('components', {
 
             this.nodes = [root]
             this.relatedMasterFiles = []
+            console.log("GET TREE DONE")
             if (response.data.masterFiles) {
                this.relatedMasterFiles = response.data.masterFiles
             }

@@ -2,87 +2,137 @@
    <ResultsToolbar :count="searchStore.orders.hits.length" :total="searchStore.orders.total" :hasFilter="hasFilter"
       @more="loadMore" @csv="downloadCSV" @clear-filter="clearFilters"
    />
-   <DataTable :value="searchStore.orders.hits" ref="orderHitsTable" dataKey="id" :lazy="true" 
-      stripedRows showGridlines size="small" v-model:filters="filters" filterDisplay="menu" @filter="onFilter($event)"
-   >
-      <template #empty><h3>No matching orders found</h3></template>
-      <Column field="id" header="ID">
-         <template #body="slotProps">
-            <router-link :to="`/orders/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
-         </template>
-      </Column>
-      <Column field="status" header="Status" class="nowrap" filterField="status" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <Select v-model="filterModel.value" :options="orderStatuses" optionLabel="name" optionValue="code" placeholder="Select a status" />
-         </template>
-         <template #body="slotProps">
-            <span :class="`status ${slotProps.data.status}`">{{displayStatus(slotProps.data.status)}}</span>
-         </template>
-      </Column>
-      <Column field="customer" header="Customer" class="nowrap" filterField="customer" :showFilterMatchModes="false">
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Customer"/>
-         </template>
-      </Column>
-      <Column field="agency" header="Agency" class="nowrap"  filterField="agency" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Agency name"/>
-         </template>
-      </Column>
-      <Column field="title" header="Order Title" filterField="title" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
-         </template>
-      </Column>
-      <Column field="staff_notes" header="Staff Notes" filterField="staff_notes" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Notes"/>
-         </template>
-      </Column>
-      <Column field="special_instructions" header="Special Instructions" filterField="special_instructions" :showFilterMatchModes="false" >
-         <template #filter="{filterModel}">
-            <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
-         </template>
-      </Column>
-   </DataTable>
+   <UTable :data="searchStore.orders.hits" :columns="columns" sticky class="border-b border-brand-grey h-175">
+      <template #id-cell="{ row }">
+         <router-link :to="`/orders/${row.original.id}`">{{row.original.id}}</router-link>
+      </template>
+      <template #status-header>
+         <FilterPopover label="Status" :applied="filterApplied('status')" @clear="clearFilter('status')" @apply="applyFilter()">
+            <USelect v-model="filters.status.value" :items="orderStatuses" placeholder="Select a status" />
+         </FilterPopover>
+      </template>
+      <template #status-cell="{ row }">
+         <span :class="`status ${row.original.status}`">{{displayStatus(row.original.status)}}</span>
+      </template>
+      <template #customer-header>
+         <FilterPopover label="Customer"  :applied="filterApplied('customer')" @clear="clearFilter('customer')" @apply="applyFilter()">
+            <UInput v-model="filters.customer.value" placeholder="Customer name..." />
+         </FilterPopover>
+      </template>
+      <template #agency-header>
+         <FilterPopover label="Agency"  :applied="filterApplied('agency')" @clear="clearFilter('agency')" @apply="applyFilter()">
+            <UInput v-model="filters.agency.value" placeholder="Agency name..." />
+         </FilterPopover>
+      </template>
+      <template #title-header>
+         <FilterPopover label="Title"  :applied="filterApplied('title')" @clear="clearFilter('title')" @apply="applyFilter()">
+            <UInput v-model="filters.title.value" placeholder="Title..." />
+         </FilterPopover>
+      </template>
+      <template #title-cell="{ row }">
+         <div class="max-width: 150px; white-space: break-spaces;">{{ row.original.title   }}</div>
+      </template>
+      <template #staff_notes-header>
+         <FilterPopover label="Staff Notes"  :applied="filterApplied('staff_notes')" @clear="clearFilter('staff_notes')" @apply="applyFilter()">
+            <UInput v-model="filters.staff_notes.value" placeholder="Staff notes..." />
+         </FilterPopover>
+      </template>
+      <template #special_instructions-header>
+         <FilterPopover label="Special Instructions" :applied="filterApplied('special_instructions')" @clear="clearFilter('special_instructions')" @apply="applyFilter()">
+            <UInput v-model="filters.special_instructions.value" placeholder="Special instructions..." />
+         </FilterPopover>
+      </template>
+   </UTable>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { FilterMatchMode } from '@primevue/core/api'
 import { useSearchStore } from '../../stores/search'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Select from 'primevue/select'
-import InputText from 'primevue/inputtext'
 import { useRoute, useRouter } from 'vue-router'
-import { usePinnable } from '@/composables/pin'
+import FilterPopover from '@/components/FilterPopover.vue'
 import ResultsToolbar from './ResultsToolbar.vue'
-
-usePinnable("results-toolbar")
 
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
 
-const orderHitsTable = ref()
+const columns = [
+   {
+      accessorKey: 'id',
+      header: 'ID'
+   },
+   {
+      accessorKey: 'status',
+      header: 'Status',
+      meta: {
+         class: {
+            td: 'w-fit'
+         }
+      }
+   },  
+   {
+      accessorKey: 'customer',
+      header: 'Customer',
+      meta: {
+         class: {
+            td: 'w-fit'
+         }
+      }
+   }, 
+   {
+      accessorKey: 'agency',
+      header: 'Agency',
+      meta: {
+         class: {
+            td: 'w-1/8 whitespace-break-spaces'
+         }
+      }
+   }, 
+   {
+      accessorKey: 'title',
+      header: 'Order Title',
+      meta: {
+         class: {
+            td: 'w-1/4 whitespace-break-spaces'
+         }
+      }
+   }, 
+   {
+      accessorKey: 'staff_notes',
+      header: 'Staff Notes',
+      meta: {
+         class: {
+            td: 'w-1/4 whitespace-break-spaces'
+         }
+      }
+   },
+   {
+      accessorKey: 'special_instructions',
+      header: 'Special Instructions',
+      meta: {
+         class: {
+            td: 'w-1/4 whitespace-break-spaces'
+         }
+      }
+   },
+]
 
-const filters = ref( {
-   'status': {value: null, matchMode: FilterMatchMode.EQUALS},
-   'customer': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'agency': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'staff_notes': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'special_instructions': {value: null, matchMode: FilterMatchMode.CONTAINS},
+const filters = ref({
+   status: {value: null, mode: "equals"},
+   customer: {value: null, mode: "contains"},
+   agency: {value: null, mode: "contains"},
+   title: {value: null, mode: "contains"},
+   staff_notes: {value: null, mode: "contains"},
+   special_instructions: {value: null, mode: "contains"},
 })
 
 const orderStatuses = ref([
-   {name: "Requested", code: "requested"},
-   {name: "Approved", code: "approved"},
-   {name: "Await Fee", code: "await_fee"},
-   {name: "Completed", code: "completed"},
-   {name: "Canceled", code: "canceled"},
-   {name: "Deferred", code: "deferred"},
+   {label: "Requested", value: "requested"},
+   {label: "Approved", value: "approved"},
+   {label: "Await Fee", value: "await_fee"},
+   {label: "Completed", value: "completed"},
+   {label: "Canceled", value: "canceled"},
+   {label: "Deferred", value: "deferred"},
 ])
 
 const hasFilter = computed(() => {
@@ -96,32 +146,47 @@ onMounted(() =>{
    })
 })
 
-function downloadCSV() {
-   orderHitsTable.value.exportCSV()
-}
+const downloadCSV = (() => {
+   searchStore.downloadCSV('orders', columns )
+})
 
-function displayStatus( id) {
+const displayStatus = (( id ) => {
    if (id == "await_fee") {
       return "Await Fee"
    }
    return id.charAt(0).toUpperCase() + id.slice(1)
-}
+})
 
-function clearFilters() {
-   Object.values(filters.value).forEach( fv => fv.value = null )
+const clearFilters = (() => {
+   filters.value = {
+      status: {value: null, mode: "equals"},
+      customer: {value: null, mode: "contains"},
+      agency: {value: null, mode: "contains"},
+      title: {value: null, mode: "contains"},
+      staff_notes: {value: null, mode: "contains"},
+      special_instructions: {value: null, mode: "contains"},
+   }
    searchStore.orders.filters = []
    let query = Object.assign({}, route.query)
    delete query.filters
    router.push({query})
    searchStore.resetSearch("orders")
    searchStore.executeSearch("orders")
-}
+})
 
-function onFilter(event) {
+const filterApplied = ((name) => {
+   return filters.value[name].value != null 
+})
+const clearFilter = ((name) => {
+   filters.value[name].value = null 
+   applyFilter()
+}) 
+
+const applyFilter =(() => {
    searchStore.orders.filters = []
-   Object.entries(event.filters).forEach(([key, data]) => {
+   Object.entries(filters.value).forEach(([filterName, data]) => {
       if (data.value && data.value != "") {
-         searchStore.orders.filters.push({field: key, match: data.matchMode, value: data.value})
+         searchStore.orders.filters.push({field: filterName, match: data.mode, value: data.value})
       }
    })
    let query = Object.assign({}, route.query)
@@ -133,11 +198,11 @@ function onFilter(event) {
    router.push({query})
    searchStore.resetSearch("orders")
    searchStore.executeSearch("orders")
-}
+})
 
-function loadMore() {
+const loadMore = (() => {
    searchStore.executeSearch("orders")
-}
+})
 
 </script>
 

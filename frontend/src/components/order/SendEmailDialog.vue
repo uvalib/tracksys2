@@ -1,35 +1,34 @@
 <template>
-   <DPGButton @click="show" :label="buttonLabel" severity="secondary"/>
-   <Dialog v-model:visible="isOpen" :modal="true" :header="buttonLabel">
-      <div class="email">
-         <div class="choice">
-            <Checkbox id="tocustomer" v-model="sendToCustomer" binary />
-            <label for="tocustomer">Send to customer email: {{ordersStore.detail.customer.email}}</label>
+   <UModal v-model:open="isOpen" :modal="true" :dismissible="false" :close="false" :title="buttonLabel">
+      <UButton @click="show" :label="buttonLabel" color="secondary"/>
+      <template #body>
+         <div class="email">
+            <div class="row-left">
+               <UCheckbox id="tocustomer" size="lg" v-model="sendToCustomer" binary />
+               <label for="tocustomer">Send to customer email: {{ordersStore.detail.customer.email}}</label>
+            </div>
+            <div class="row-left">
+               <UCheckbox id="usealtemail" v-model="sendToAlt" binary />
+               <label for="usealtemail">Send to alternate email</label>
+            </div>
+            <div class="row-left">
+               <label for="altemail">Alternate email:</label>
+               <UInput id="altemail" class="flex-1" v-model="altEmail" fluid/>
+            </div>
+            <p class="error">{{error}}</p>
          </div>
-         <div class="choice">
-            <Checkbox id="usealtemail" v-model="sendToAlt" binary />
-            <label for="usealtemail">Send to alternate email</label>
-         </div>
-         <div class="choice leftpad">
-            <label for="altemail">Alternate email:</label>
-            <InputText id="altemail"  v-model="altEmail" fluid/>
-         </div>
-         <p class="error">{{error}}</p>
-      </div>
-      <template #footer>
-         <DPGButton @click="hide" label="Cancel" severity="secondary"/>
-         <DPGButton autofocus @click="sendClicked" label="Send"/>
       </template>
-   </Dialog>
+      <template #footer>
+         <UButton @click="hide" label="Cancel" color="secondary"/>
+         <UButton autofocus @click="sendClicked" label="Send"/>
+      </template>
+   </UModal>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 import {useOrdersStore} from '@/stores/orders'
 import {useUserStore} from '@/stores/user'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Checkbox from 'primevue/checkbox'
 
 const ordersStore = useOrdersStore()
 const user = useUserStore()
@@ -83,21 +82,6 @@ function show() {
    flex-direction: column;
    gap: 15px;
 }
-.choice {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-start;
-   align-items: center;
-   gap: 10px;
-   label {
-      white-space: nowrap;
-      flex-grow: 1;
-   }
-}
-.leftpad {
-   margin-left: 30px;
-}
-
 .error {
    padding: 0;
    margin: 0;

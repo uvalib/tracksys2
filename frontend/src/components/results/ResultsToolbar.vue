@@ -1,10 +1,9 @@
 <template>
-   <div class="acts results-toolbar" style="padding: 5px 0 15px 0;">
-      <div class="acts">
-         <DPGButton label="Download Results CSV" severity="secondary" @click="emit('csv')" v-if="total>0" />
-         <DPGButton v-if="hasFilter" label="Clear All Filters" severity="secondary" @click="emit('clear-filter')"/>
-         <DPGButton v-if="count < total" 
-            label="Load More Results" @click="emit('more')"/>
+   <div class="row-between z-5 bg-white border-b border-brand-grey-100 pt-1 pb-3 px-2 items-center">
+      <div class="row-between gap-2">
+         <UButton label="Download Results CSV" color="secondary" @click="emit('csv')" v-if="total>0" />
+         <UButton v-if="hasFilter" label="Clear All Filters" color="secondary" @click="emit('clear-filter')"/>
+         <UButton v-if="count < total" label="Load More Results" @click="emit('more')"/>
       </div>
       <div>Showing results 1 - {{ count }}</div>
    </div>
@@ -29,11 +28,4 @@ const props = defineProps({
 </script>
 
 <style scoped lang="scss">
-.acts {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: space-between;
-   align-items: center;
-   gap: 10px;
-}
 </style>

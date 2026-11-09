@@ -91,9 +91,9 @@ export const useSearchStore = defineStore('search', {
             this.components.total = 0
             this.components.hits = []
          } else if (scope == "masterfiles") {
-            this.masterfiles.scroll = ""
-            this.masterfiles.total = 0
-            this.masterfiles.hits = []
+            this.masterFiles.scroll = ""
+            this.masterFiles.total = 0
+            this.masterFiles.hits = []
          } else if (scope == "metadata") {
             this.metadata.scroll = ""
             this.metadata.total = 0
@@ -129,21 +129,48 @@ export const useSearchStore = defineStore('search', {
          }
       },
 
-      imageSearch( pHash ) {
+      async uploadSearchImage( file ) {
          const system = useSystemStore()
          system.working = true
-         this.searchPHash = pHash
+
+         let formData = new FormData()
+         formData.append('imageSearch', file)
+         await axios.post(`/upload_search_image`, formData, {
+            headers: {
+               'Content-Type': 'multipart/form-data',
+            }
+         }).then(( resp ) => {
+            this.searchPHash = resp.data
+            this.imageSearch()
+         }).catch( e => {
+            system.setError(e)
+            system.working = false
+         })
+      },
+
+      resetImageSearch() {
+         this.similarImages = {
+            total: 0,
+            hits: [],
+         }
+         this.searchPHash = 0
+      },
+
+      imageSearch( ) {
+         const system = useSystemStore()
+         system.working = true
          this.similarSearch = true
          this.similarImages = {
             total: 0,
             hits: [],
          }
-         axios.get(`/api/search/images?phash=${pHash}&distance=${this.distance}`).then(response => {
+         axios.get(`/api/search/images?phash=${ this.searchPHash }&distance=${this.distance}`).then(response => {
             this.similarImages.hits = response.data.hits
-            this,this.similarImages.total = response.data.total
+            this.similarImages.total = response.data.total
             system.working = false
          }).catch( e => {
             system.setError(e)
+            system.working = false
          })
       },
 
@@ -254,6 +281,47 @@ export const useSearchStore = defineStore('search', {
          }).catch( e => {
             system.setError(e)
          })
+      },
+
+      downloadCSV( data, columns ) {
+         let target = null 
+         if ( data == "orders" ) {
+            target = this.orders.hits
+         } else if  ( data == "metadata" ) {
+            target = this.metadata.hits
+         } else if  ( data == "masterfiles" ) {
+            target = this.masterFiles.hits
+         } else if  ( data == "components" ) {
+            target = this.components.hits
+         } else if  ( data == "units" ) {
+            target = this.units.hits
+         }
+
+         // columns is an array of objects that defines the table columns
+         // extract the data necessary to generate the CSV export: 
+         //    column name and order of data fields
+         const header = columns.map( c => `"${c.header}"`)
+         const sequence = columns.map( c => c.accessorKey )
+
+         let csv = "data:text/csv;charset=utf-8,"
+         csv += (header.join(",")+"\n")
+         target.forEach( r => {
+            sequence.forEach( fieldName => {
+               let val = `${r[fieldName]}`
+               val = val.replaceAll("\"", "'")
+               csv += `"${val}",`
+            })
+            csv += "\n"
+         })
+
+         // create a link for the data and download it
+         var encodedUri = encodeURI(csv)
+         var link = document.createElement("a")
+         link.setAttribute("href", encodedUri)
+         link.setAttribute("download", "oders.csv")
+         document.body.appendChild(link)
+         link.click()
+         document.body.removeChild(link)
       },
 
       setActiveView( viewName ) {

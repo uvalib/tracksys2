@@ -57,6 +57,14 @@ func (svc *serviceContext) getPublished(c *gin.Context, typeQuery string) {
 	for _, filter := range filters {
 		bits := strings.Split(filter, "|") // target | comparison | value
 		tgtField := bits[0]
+		switch tgtField {
+		case "creatorName":
+			tgtField = "creator_name"
+		case "callNumber":
+			tgtField = "call_number"
+		case "catalogKey":
+			tgtField = "catalog_key"
+		}
 		comparison := bits[1]
 		tgtVal, _ := url.QueryUnescape(bits[2])
 		log.Printf("INFO: filter %s %s %s", tgtField, comparison, tgtVal)

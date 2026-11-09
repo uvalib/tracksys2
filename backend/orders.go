@@ -205,7 +205,7 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 
 	type oResp struct {
 		Order *order      `json:"order"`
-		Units []unit      `json:"units"`
+		Units []*unit     `json:"units"`
 		Items []orderItem `json:"items"`
 	}
 	out := oResp{Order: oDetail}
@@ -217,6 +217,14 @@ func (svc *serviceContext) getOrderDetails(c *gin.Context) {
 	if err != nil {
 		log.Printf("ERROR: unable to get units for order %s: %s", oID, err.Error())
 	}
+	// for _, u := range out.Units {
+	// 	if u.DateDLDeliverablesReady != nil {
+	// 		u.DLDateString = u.DateDLDeliverablesReady.Format("2006-01-02")
+	// 	}
+	// 	if u.DatePatronDeliverablesReady != nil {
+	// 		u.PatronDateString = u.DatePatronDeliverablesReady.Format("2006-01-02")
+	// 	}
+	// }
 	err = svc.DB.Where("order_id=?", oID).Preload("IntendedUse").Find(&out.Items).Error
 	if err != nil {
 		log.Printf("ERROR: unable to get items for order %s: %s", oID, err.Error())
@@ -267,9 +275,7 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 		return
 	}
 
-	filterQ := svc.DB.Table("orders").Joins("inner join customers c on c.id=orders.customer_id").
-		Joins("left outer join staff_members p on p.id = processor_id").
-		Joins("left outer join agencies a on a.id = orders.agency_id")
+	filterQ := svc.DB.Table("orders")
 	dateNow := time.Now().Format("2006-01-02")
 	ownerID := c.Query("owner")
 	if ownerID != "" {
@@ -313,24 +319,17 @@ func (svc *serviceContext) getOrders(c *gin.Context) {
 					Where("orders.email is not null and orders.email != ? and date_customer_notified is null", "").
 					Where("order_status != ? and order_status != ?", "canceled", "completed").Distinct("orders.id")
 			}
+		case "title":
+			filterQ = filterQ.Where("order_title like ?", fmt.Sprintf("%%%s%%", tgtVal))
+		case "specialInstructions":
+			filterQ = filterQ.Where("special_instructions like ?", fmt.Sprintf("%%%s%%", tgtVal))
 		case "customer":
-			filterQ = filterQ.Where("c.last_name like ?", fmt.Sprintf("%s%%", tgtVal))
+			filterQ = filterQ.Where("customer_id = ?", fmt.Sprintf("%s%%", tgtVal))
 		case "agency":
-			filterQ = filterQ.Where("orders.agency_id = ?", tgtVal)
+			filterQ = filterQ.Where("agency_id = ?", tgtVal)
 		case "processor":
-			filterQ = filterQ.Where("p.last_name like ?", fmt.Sprintf("%s%%", tgtVal))
+			filterQ = filterQ.Where("processor_id = ?", tgtVal)
 		}
-	}
-
-	// set up query...
-	queryStr := c.Query("q")
-	var qObj *gorm.DB
-	if queryStr != "" {
-		queryAny := fmt.Sprintf("%%%s%%", queryStr)
-		queryStart := fmt.Sprintf("%s%%", queryStr)
-		qObj = svc.DB.Where("order_title like ?", queryAny).Or("orders.staff_notes like ?", queryAny).
-			Or("orders.special_instructions like ?", queryAny).Or("orders.id like ?", queryStart)
-		filterQ = filterQ.Where(qObj)
 	}
 
 	var total int64

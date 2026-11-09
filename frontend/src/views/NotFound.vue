@@ -2,7 +2,7 @@
    <h2>Not Found</h2>
    <div class="notfound">
       <div>Sorry, the item you requested could not be found!</div>
-      <DPGButton label="Return to Home Page"  @click="homeClicked()" />
+      <UButton label="Return to Home Page" @click="homeClicked" />
    </div>
 </template>
 
@@ -17,14 +17,11 @@ function homeClicked() {
 
 <style scoped lang="scss">
 .notfound {
-   min-height: 600px;
    font-size: 1.25em;
-   margin: 0;
-   padding-top: 50px;
-   .p-button {
-      margin-top: 25px;
-      font-size: 0.8em;
-   }
-
+   padding: 25px;
+   align-items: center; 
+   display: flex;
+   flex-direction: column;
+   gap: 20px;
 }
 </style>

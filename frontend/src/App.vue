@@ -1,67 +1,116 @@
 <template>
-   <Toast position="top-center" />
-   <ConfirmDialog position="top" :closable="false"/>
-   <div class="header" role="banner" id="uva-header">
-      <div class="main-header">
-         <div class="library-link">
-            <a target="_blank" href="https://library.virginia.edu">
+   <UApp :toaster="toaster">
+
+      <UHeader mode="slideover" id="uva-header" title="UVA Library" to="https://library.virginia.edu">
+         <template #title>
+            <div class="library-link">
                <UvaLibraryLogo />
-            </a>
+            </div>
+         </template>
+
+         <!-- this is the main menu. shows up in the center of the header if size allows -->
+         <UNavigationMenu v-if="userStore.isSignedIn" highlight content-orientation="vertical" :items="menuItems" />
+
+          <template #right>
+            <div class="site-link">
+               <RouterLink to="/">Tracksys</RouterLink>
+               <p class="version">{{ systemStore.version }}</p>
+            </div>
+         </template>
+      </UHeader>
+
+      <UMain>
+         <div class="content" v-if="configuring==false">
+            <router-view />
          </div>
-         <div class="site-link">
-            <router-link @click="homeClicked" to="/">Tracksys</router-link>
-            <p class="version">v{{ systemStore.version }}</p>
-         </div>
-      </div>
-      <MenuBar v-if="userStore.jwt" />
-   </div>
-   <div class="content" v-if="configuring==false">
-      <router-view />
-   </div>
-   <Dialog v-model:visible="systemStore.showError" :modal="true" header="System Error" @hide="errorClosed()" class="error">
-      {{systemStore.error}}
-   </Dialog>
-   <WaitSpinner v-if="systemStore.working" :overlay="true" message="Please wait..." />
-   <ScrollTop />
+      </UMain>
+
+      <WaitSpinner v-if="systemStore.working" :overlay="true" message="Please wait..." />
+
+      <UModal v-model:open="systemStore.showError" :modal="true" :dismissible="false" title="System Error">
+         <template #body>
+            <div style="text-align: left" v-html="systemStore.error"></div>
+         </template>
+      </UModal>
+   </UApp>
 </template>
 
 <script setup>
 import UvaLibraryLogo from "@/components/UvaLibraryLogo.vue"
-import MenuBar from "@/components/MenuBar.vue"
 import WaitSpinner from "@/components/WaitSpinner.vue"
 import { useSystemStore } from "@/stores/system"
 import { useUserStore } from "@/stores/user"
 import { useSearchStore } from "@/stores/search"
-import { onBeforeMount, watch, ref } from 'vue'
-import Dialog from 'primevue/dialog'
-import Toast from 'primevue/toast'
-import { useToast } from "primevue/usetoast"
-import ScrollTop from 'primevue/scrolltop'
+import { onBeforeMount, onMounted, nextTick, watch, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 const systemStore = useSystemStore()
 const userStore = useUserStore()
 const searchStore = useSearchStore()
 const toast = useToast()
+const router = useRouter()
+
+const toaster = { duration: 5000, position: "top-center" }
 
 const configuring = ref(true)
+const menuItems = computed(()=> {
+   let misc = {
+      label: "Miscellaneous", children: [
+         {label: "ArchivesSpace Reviews", to: "/archivesspace"},
+         {label: "HathiTrust Submissions", to: "/hathitrust"},
+         {label: "Master File Audit", to: "/audit-report"},
+         {label: "Customers", to: "/customers"},
+         {label: "Staff Members", to: "/staff"},
+      ]
+   }
+   if (userStore.isAdmin) {
+      misc.children.push({label: "Search Images", to: "/imagesearch"})
+   }
+   return [ 
+      {label: "Home", onSelect: () => homeClicked()}, 
+      {label: "Orders", to: "/orders"},  
+      {label: "Collections", to: "/collections"}, 
+      {label: "Published", children: [
+         {label: "Virgo", to: "/published/virgo"},    
+         {label: "ArchivesSpace", to: "/published/archivesspace"},
+         {label: "DPLA", to: "/published/dpla"}
+      ]},
+      {label: "Job Statuses", to: "/jobs"},
+      {label: "Digitization", children: [
+         {label: "Equipment", to: `${systemStore.projectsURL}/equipment`, target: "_blank"},
+         {label: "Projects", to: `${systemStore.projectsURL}`, target: "_blank"},
+         {label: "Reports", to: `${systemStore.projectsURL}/reports`, target: "_blank"},
+         {label: "Statistics", to: "/statistics"},
+      ]},
+      misc,
+      {label: userStore.signedInUser, children: [
+         {label: "Sign Out", icon: 'i-lucide-log-out',  onSelect: () => signOut()}    
+      ]},
+   ]
+})
 
 watch(() => systemStore.toast.show, (newShow) => {
    if ( newShow == true) {
+      let color = "primary"
       if ( systemStore.toast.error) {
-         toast.add({severity:'error', summary:  systemStore.toast.summary, detail:  systemStore.toast.message, life: 10000})
-      } else {
-         toast.add({severity:'success', summary:  systemStore.toast.summary, detail:  systemStore.toast.message, life: 5000})
+        color = "error"
       }
+      toast.add({
+         title: systemStore.toast.summary,
+         description: systemStore.toast.message,
+         color: color
+      })
       systemStore.clearToastMessage()
    }
 })
 
 const homeClicked = (() => {
    searchStore.resetSearch()
+   router.push("/")
 })
-
-const errorClosed = (() => {
-   systemStore.clearError()
+const signOut = (() => {
+   userStore.signout()
+   router.push("/signedout")
 })
 
 onBeforeMount( async () => {
@@ -70,60 +119,36 @@ onBeforeMount( async () => {
    configuring.value = false
 })
 
+onMounted(() => {
+   nextTick(() => {
+      let hdr = document.getElementById('uva-header')
+      systemStore.headerHeight = `${hdr.clientHeight}px`
+   })
+})
+
 </script>
 
 <style scoped lang="scss">
-div.header {
-   background-color: var(--uvalib-brand-blue);
-   color: white;
-   text-align: left;
-   position: relative;
-   box-sizing: border-box;
-
-   .main-header {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: nowrap;
-      justify-content: space-between;
-      align-content: stretch;
-      align-items: center;
-      padding: 1vw 20px 5px 10px;
-      a {
-         color: white !important;
-      }
-   }
-}
-// a {
-//    color: var(--uvalib-blue-alt-dark);
-//    font-weight: 500;
-//    text-decoration: none;
-//    &:hover {
-//       text-decoration: underline;
-//    }
-// }
-p.version {
-   margin: 5px 0 0 0;
-   font-size: 0.5em;
-   text-align: right;
-}
 div.library-link {
    width: 220px;
-   order: 0;
-   flex: 0 1 auto;
-   align-self: flex-start;
 }
 div.site-link {
-   order: 0;
    font-size: 1.5em;
    a {
-      color: white;
-      text-decoration: none;
+      color: white !important;
+      padding: 3px 6px;
+      border-radius: 0.3rem;
       &:hover {
-         text-decoration: underline;
+         background: var(--uvalib-blue-alt);
+         text-decoration: none !important;
       }
    }
+   p.version {
+      margin: 0;
+      font-size: 0.5em;
+      text-align: right;
+      padding: 0;
+   }
 }
-div.content {
-   position: relative;
-}
+
 </style>

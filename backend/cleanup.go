@@ -215,12 +215,26 @@ func (svc *serviceContext) cleanupCanceledOrders(c *gin.Context) {
 			}
 			time.Sleep(50 * time.Millisecond)
 		}
-		log.Printf("INFO: oder cleanup done. %d orders deleted", delCnt)
+		log.Printf("INFO: order cleanup done. %d orders deleted", delCnt)
 		if len(failed) > 0 {
 			log.Printf("INFO: %d failed: %v", len(failed), failed)
 		}
 		if len(hasUnits) > 0 {
 			log.Printf("INFO: %d orders with units: %v", len(hasUnits), hasUnits)
+		}
+
+		log.Printf("INFO: delete orphaned customers")
+		var cIDs []int64
+		q := "select c.id from customers c where not exists (select c.id from orders o where o.customer_id = c.id)"
+		if err := svc.DB.Raw(q).Scan(&cIDs).Error; err != nil {
+			log.Printf("ERROR: unable to get customer list: %s", err.Error())
+		} else {
+			log.Printf("INFO: found %d customers to delete", len(cIDs))
+			dQ := "delete from customers where id in ?"
+			if err := svc.DB.Exec(dQ, cIDs).Error; err != nil {
+				log.Printf("ERROR: unable to delete customers: %s", err.Error())
+			}
+			log.Printf("INFO: %d customers deleted", len(cIDs))
 		}
 	}()
 

@@ -1,141 +1,137 @@
 <template>
    <h2>HathiTrust Submissions</h2>
-   <div class="submissions">
-      <DataTable :value="hathiTrust.submissions" ref="hathiTrustTable" dataKey="id" v-model:selection="selections"
-         stripedRows showGridlines responsiveLayout="scroll"
-         :sortField="hathiTrust.searchOpts.sortField" :sortOrder="sortOrder" @sort="onSort($event)"
-         :lazy="true" :paginator="true" @page="onPage($event)"  paginatorPosition="top"
-         :rows="hathiTrust.searchOpts.limit" :totalRecords="hathiTrust.total"
-         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         :rowsPerPageOptions="[30,50,100]" :first="hathiTrust.searchOpts.start"
-         currentPageReportTemplate="{first} - {last} of {totalRecords}"
-         :loading="hathiTrust.working"
-         v-model:filters="columnFilters" filterDisplay="menu" @filter="getSubmissions()"
-      >
-         <template #paginatorstart>
-            <HathiTrustUpdateDialog :ids="selectedIDs"/>
-         </template>
-         <template #paginatorend>
-            <IconField iconPosition="left">
-               <InputIcon class="pi pi-search" />
-               <InputText v-model="hathiTrust.searchOpts.query" placeholder="Search Submissions" @input="hathiTrust.getSubmissions(false)"/>
-            </IconField>
-         </template>
-         <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
-         <Column field="pid" header="PID" :sortable="true"  class="nowrap">
-            <template #body="slotProps">
-               <router-link :to="`/metadata/${slotProps.data.metadataID}`">{{slotProps.data.metadata.pid}}</router-link>
-            </template>
-         </Column>
-         <Column field="title" header="Title" :sortable="true">
-            <template #body="slotProps">{{ slotProps.data.metadata.title }}</template>
-         </Column>
-         <Column field="barcode" header="Barcode" :sortable="true">
-            <template #body="slotProps">{{ slotProps.data.metadata.barcode }}</template>
-         </Column>
-         <Column field="requested_at" header="Requested" :sortable="true" class="nowrap" >
-            <template #body="slotProps">{{ $formatDate(slotProps.data.requestedAt) }}</template>
-         </Column>
-         <Column field="metadata_submitted_at" header="Metadata Submitted" :sortable="true" class="nowrap" >
-            <template #body="slotProps">
-               <span v-if="slotProps.data.metadataSubmittedAt">{{ $formatDate(slotProps.data.metadataSubmittedAt) }}</span>
-               <span v-else class="none">N/A</span>
-            </template>
-         </Column>
-         <Column field="metadataStatus" header="Metadata Status" class="nowrap" filterField="metadataStatus" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <Select v-model="filterModel.value" :options="statuses" optionLabel="name" optionValue="value" placeholder="Select status" />
-            </template>
-         </Column>
-
-         <Column field="package_created_at" header="Package Created" :sortable="true" class="nowrap" >
-            <template #body="slotProps">
-               <span v-if="slotProps.data.packageCreatedAt">{{ $formatDate(slotProps.data.packageCreatedAt) }}</span>
-               <span v-else class="none">N/A</span>
-            </template>
-         </Column>
-         <Column field="package_submitted_at" header="Package Submitted" :sortable="true" class="nowrap" >
-            <template #body="slotProps">
-               <span v-if="slotProps.data.packageSubmittedAt">{{ $formatDate(slotProps.data.packageSubmittedAt) }}</span>
-               <span v-else class="none">N/A</span>
-            </template>
-         </Column>
-         <Column field="packageStatus" header="Package Status" class="nowrap" filterField="packageStatus" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <Select v-model="filterModel.value" :options="statuses" optionLabel="name" optionValue="value" placeholder="Select status" />
-            </template>
-         </Column>
-
-         <Column field="finished_at" header="Finished" :sortable="true" class="nowrap" >
-            <template #body="slotProps">
-               <span v-if="slotProps.data.finishedAt">{{ $formatDate(slotProps.data.finishedAt) }}</span>
-               <span v-else class="none">N/A</span>
-            </template>
-         </Column>
-         <Column field="notes" header="Notes" >
-            <template #body="slotProps">
-               <DPGButton v-if="slotProps.data.notes"  class="notes" label="View" severity="secondary" @click="notesClicked(slotProps.data)"/>
-               <span v-else class="none">N/A</span>
-            </template>
-         </Column>
-      </DataTable>
+   <div class="row-between bg-white border-b border-t border-brand-grey-100 py-3 px-2 items-center">
+      <div>{{ hathiTrust.total }} Submissions</div>
+      <div class="row-left">
+         <UPagination color="neutral" variant="ghost"
+            v-model:page="hathiTrust.searchOpts.currPage" :items-per-page="hathiTrust.searchOpts.limit" 
+            :total="hathiTrust.total" @update:page="pageChanged"
+         />
+         <USelect v-model="hathiTrust.searchOpts.limit" :items="[30,50,100]" @update:modelValue="perPageChanged" />
+      </div>
+      <UInput v-model="hathiTrust.searchOpts.query" placeholder="Search submissions..." @update:modelValue="hathiTrust.getSubmissions(false)"/>
    </div>
-   <Dialog v-model:visible="showNotes" :modal="true" header="Submission Notes">
-      <div>{{ tgtSubmission.metadata.pid }} - {{ tgtSubmission.metadata.title }}</div>
-      <div class="note-text">{{ tgtSubmission.notes }}</div>
-   </Dialog>
+   <UTable :data="hathiTrust.submissions" :columns="columns" v-model:sorting="sorting" sticky virtualize class="h-[calc(100vh-185px)]">
+      <template #pid-cell="{ row }">
+         <router-link :to="`/metadata/${row.original.metadataID}`">{{row.original.metadata.pid}}</router-link>
+      </template>
+       <template #requestedAt-header="{ column }">
+         <UButton color="neutral" variant="ghost" :icon="sortIcon(column)" @click="sortClicked(column)"> 
+            <span class="text-start">{{ column.columnDef.header }}</span>
+         </UButton>
+      </template>
+      <template #requestedAt-cell="{ row }">
+         <span class="text-nowrap">{{ toCalendarDate(parseAbsolute(row.original.requestedAt)).toString() }}</span>
+      </template>
+      <template #metadataSubmittedAt-header="{ column }">
+         <UButton color="neutral" variant="ghost" :icon="sortIcon(column)" @click="sortClicked(column)"> 
+            <span class="text-start">{{ column.columnDef.header }}</span>
+         </UButton>
+      </template>
+      <template #metadataSubmittedAt-cell="{ row }">
+         <span v-if="row.original.metadataSubmittedAt" class="text-nowrap">{{ toCalendarDate(parseAbsolute(row.original.metadataSubmittedAt)).toString() }}</span>
+      </template>
+      <template #metadataStatus-header>
+         <FilterPopover label="Metadata Status"  :applied="isFilterApplied('metadataStatus')" @clear="clearFilter('metadataStatus')" @apply="getSubmissions">
+            <USelect v-model="columnFilters.metadataStatus.value" :items="statuses" placeholder="Status..." />
+         </FilterPopover>
+      </template>
+      <template #packageCreatedAt-header="{ column }">
+         <UButton color="neutral" variant="ghost" :icon="sortIcon(column)" @click="sortClicked(column)"> 
+            <span class="text-start">{{ column.columnDef.header }}</span>
+         </UButton>
+      </template>
+      <template #packageCreatedAt-cell="{ row }">
+         <span v-if="row.original.packageCreatedAt" class="text-nowrap">{{ toCalendarDate(parseAbsolute(row.original.packageCreatedAt)).toString() }}</span>
+      </template>
+      <template #packageSubmittedAt-header="{ column }">
+         <UButton color="neutral" variant="ghost" :icon="sortIcon(column)" @click="sortClicked(column)"> 
+            <span class="text-start">{{ column.columnDef.header }}</span>
+         </UButton>
+      </template>
+      <template #packageSubmittedAt-cell="{ row }">
+         <span v-if="row.original.packageSubmittedAt" class="text-nowrap">{{ toCalendarDate(parseAbsolute(row.original.packageSubmittedAt)).toString() }}</span>
+      </template>
+      <template #packageStatus-header>
+         <FilterPopover label="Package Status"  :applied="isFilterApplied('packageStatus')" @clear="clearFilter('packageStatus')" @apply="getSubmissions">
+            <USelect v-model="columnFilters.packageStatus.value" :items="statuses" placeholder="Status..." />
+         </FilterPopover>
+      </template>
+      <template #finishedAt-header="{ column }">
+         <UButton color="neutral" variant="ghost" :icon="sortIcon(column)" @click="sortClicked(column)"> 
+            <span class="text-start">{{ column.columnDef.header }}</span>
+         </UButton>
+      </template>
+      <template #finishedAt-cell="{ row }">
+         <span v-if="row.original.finishedAt" class="text-nowrap">{{ toCalendarDate(parseAbsolute(row.original.finishedAt)).toString() }}</span>
+      </template>
+   </UTable>
 </template>
 
 <script setup>
 import { onMounted, ref, computed } from 'vue'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
-import InputText from 'primevue/inputtext'
-import Dialog from 'primevue/dialog'
-import Select from 'primevue/select'
-import { FilterMatchMode } from '@primevue/core/api'
 import { useHathiTrustStore } from '@/stores/hathitrust'
-import { usePinnable } from '@/composables/pin'
-import HathiTrustUpdateDialog from '@/components/HathiTrustUpdateDialog.vue'
-
-usePinnable("p-datatable-paginator-top")
+import { toCalendarDate, parseAbsolute } from '@internationalized/date'
 
 const hathiTrust = useHathiTrustStore()
 
-const showNotes = ref(false)
-const tgtSubmission = ref()
-const selections = ref([])
-
+const columns = [
+   { accessorKey: 'metadata.pid', id: 'pid', header: 'PID'},
+   { accessorKey: 'metadata.title', id: 'title', header: 'Title'},
+   { accessorKey: 'metadata.barcode', id: 'barcode', header: 'Barcode'},
+   { accessorKey: 'requestedAt', header: 'Requested'},
+   { accessorKey: 'metadataSubmittedAt', header: 'Metadata Submitted'},
+   { accessorKey: 'metadataStatus', header: 'Metadata Status'},
+   { accessorKey: 'packageCreatedAt', header: 'Package Created'},
+   { accessorKey: 'packageSubmittedAt', header: 'Package Submitted'},
+   { accessorKey: 'packageStatus', header: 'Package Status Status'},
+   { accessorKey: 'finishedAt', header: 'Finished'}
+]
+const sorting = ref([{id: 'requestedAt', desc: true}])
 const columnFilters = ref( {
-   'metadataStatus': {value: null, matchMode: FilterMatchMode.EQUALS},
-   'packageStatus': {value: null, matchMode: FilterMatchMode.EQUALS},
+   metadataStatus: {value: null, mode: "equals"},
+   packageStatus: {value: null, mode: "equals"},
 })
 
 const statuses = ref([
-   {name: "Pending", value: "pending"},
-   {name: "Submitted", value: "submitted"},
-   {name: "Accepted", value: "accepted"},
-   {name: "Failed", value: "failed"},
+   {label: "Pending", value: "pending"},
+   {label: "Submitted", value: "submitted"},
+   {label: "Accepted", value: "accepted"},
+   {label: "Failed", value: "failed"},
 ])
-
-const selectedIDs = computed(() =>{
-   return selections.value.map( s => s.id)
-})
-
-const sortOrder = computed(() => {
-   if (hathiTrust.searchOpts.sortOrder == "desc") {
-      return -1
-   }
-   return 1
-})
 
 onMounted(() => {
    getSubmissions()
    document.title = `HathiTrust Submissions`
 })
 
+const sortIcon = ((column) => {
+   const isSorted = column.getIsSorted()
+   if (isSorted) {
+      if (isSorted === 'asc') return 'i-lucide-arrow-up-narrow-wide'
+      return 'i-lucide-arrow-down-wide-narrow'
+   }
+   return 'i-lucide-arrow-up-down'
+})
+const sortClicked = (async (column) => {
+   const isSorted = column.getIsSorted()
+   hathiTrust.searchOpts.sortField = column.id
+   hathiTrust.searchOpts.sortOrder = "asc"
+   if (isSorted === "asc") {
+      hathiTrust.searchOpts.sortOrder = "desc"   
+   }
+   hathiTrust.resetSearch()
+   await hathiTrust.getSubmissions( )
+   column.toggleSorting(column.getIsSorted() === 'asc')
+})
+
+const isFilterApplied = ((name) => {
+   return columnFilters.value[name].value != null 
+})
+const clearFilter = ((name) => {
+   columnFilters.value[name].value = null 
+   getSubmissions()
+}) 
 const getSubmissions = (() => {
    hathiTrust.searchOpts.filters = []
    Object.entries(columnFilters.value).forEach(([key, data]) => {
@@ -146,25 +142,29 @@ const getSubmissions = (() => {
    hathiTrust.getSubmissions()
 })
 
-const notesClicked = ( (s) => {
-   tgtSubmission.value = s
-   showNotes.value = true
+const perPageChanged = (() => {
+   hathiTrust.searchOpts.currPage = 1
+   pageChanged()
+})
+const pageChanged = (() => {
+   hathiTrust.searchOpts.start = (hathiTrust.searchOpts.currPage-1) * hathiTrust.searchOpts.limit
+   hathiTrust.getSubmissions()
 })
 
-const onPage = ((event) => {
-   hathiTrust.searchOpts.start = event.first
-   hathiTrust.searchOpts.limit = event.rows
-   getSubmissions()
-})
+// const onPage = ((event) => {
+//    hathiTrust.searchOpts.start = event.first
+//    hathiTrust.searchOpts.limit = event.rows
+//    getSubmissions()
+// })
 
-const onSort = ((event) => {
-   hathiTrust.searchOpts.sortField = event.sortField
-   hathiTrust.searchOpts.sortOrder = "asc"
-   if (event.sortOrder == -1) {
-      hathiTrust.searchOpts.sortOrder = "desc"
-   }
-   getSubmissions()
-})
+// const onSort = ((event) => {
+//    hathiTrust.searchOpts.sortField = event.sortField
+//    hathiTrust.searchOpts.sortOrder = "asc"
+//    if (event.sortOrder == -1) {
+//       hathiTrust.searchOpts.sortOrder = "desc"
+//    }
+//    getSubmissions()
+// })
 
 </script>
 

@@ -9,10 +9,11 @@ export const useHathiTrustStore = defineStore('hathitrust', {
       submissions: [],
       total: 0,
       searchOpts: {
+         currPage: 1,
          start: 0,
          limit: 30,
          filters: [],
-         sortField: "pid",
+         sortField: "requested_at",
          sortOrder: "desc",
          query: "",
       },
@@ -25,6 +26,12 @@ export const useHathiTrustStore = defineStore('hathitrust', {
       }
    },
    actions: {
+      resetSearch() {
+         this.searchOpts.currPage = 1
+         this.searchOpts.start = 0
+         this.orders = []
+         this.total = 0
+      },
       getSubmissions(showWorking = true) {
          const system = useSystemStore()
          if ( showWorking == true ) this.working = true

@@ -1,83 +1,72 @@
 <template>
-   <Panel header="Master Files" class="masterfiles">
-      <DataTable :value="unitsStore.masterFiles" ref="unitMasterFilesTable" dataKey="id"
-         showGridlines stripedRows responsiveLayout="scroll" class="p-datatable-sm"
-         :lazy="false" :paginator="true" :alwaysShowPaginator="true" :rows="15"
-         :rowsPerPageOptions="[15,30,50,100]" paginatorPosition="top"
-         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-         currentPageReportTemplate="{first} - {last} of {totalRecords}"
-         v-model:selection="selectedMasterFiles" :selectAll="selectAll" @select-all-change="onSelectAllChange" @row-select="onRowSelect" @row-unselect="onRowUnselect"
-         v-model:filters="filters" filterDisplay="menu"
-      >
-         <template #paginatorstart>
-            <div class="master-file-acts">
-               <template v-if="detail.reorder==false && userStore.isAdmin">
-                  <DPGButton label="Add" @click="addClicked()" severity="secondary" :loading="unitsStore.updateInProgress" />
-                  <DPGButton label="Replace" @click="replaceClicked()" severity="secondary" :loading="unitsStore.updateInProgress" />
-               </template>
-               <template v-if="userStore.isAdmin && (detail.dateArchived==null || detail.reorder || detail.dateDLDeliverablesReady == null)">
-                  <DPGButton label="Delete" @click="deleteClicked()" severity="secondary" :disabled="!filesSelected" />
-               </template>
-               <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
-               <template v-if="unitsStore.canDownload && detail.throwAway == false">
-                  <DPGButton label="Download" @click="downloadClicked()" severity="secondary" :disabled="!filesSelected" />
-               </template>
-               <template v-if="unitsStore.canPDF">
-                  <DPGButton label="PDF" @click="pdfClicked()" severity="secondary" :disabled="filesSelected == false" />
-               </template>
-               <template  v-if="(userStore.isAdmin || userStore.isSupervisor) && detail.throwAway == false">
-                  <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selectedObject="assignMetadata" target="metadata" :create="true"/>
-                  <LookupDialog :disabled="!filesSelected" label="Assign Componment" @selected="assignComponent" target="component" />
-               </template>
-            </div>
+   <UCard title="Master Files" :ui="{body: 'pt-0!'}">
+      <div class="row-between bg-white border-b border-brand-grey-100 py-3 px-2 items-center">
+         <div class="row-left gap-2 items-baseline">
+            <template v-if="detail.reorder==false && userStore.isAdmin">
+               <UButton size="sm" label="Add" @click="addClicked()" color="secondary" :loading="unitsStore.updateInProgress" />
+               <UButton size="sm" label="Replace" @click="replaceClicked()" color="secondary" :loading="unitsStore.updateInProgress" />
+            </template>
+            <template v-if="userStore.isAdmin && (detail.dateArchived==null || detail.reorder || detail.dateDLDeliverablesReady == null)">
+               <UButton size="sm" label="Delete" @click="deleteClicked()" color="secondary" :disabled="!filesSelected" />
+            </template>
+            <RenumberDialog v-if="userStore.isAdmin || userStore.isSupervisor" :disabled="!filesSelected" :filenames="selectedFileNames" />
+            <template v-if="unitsStore.canDownload && detail.throwAway == false">
+               <UButton size="sm" label="Download" @click="downloadClicked()" color="secondary" :disabled="!filesSelected" />
+            </template>
+            <template v-if="unitsStore.canPDF">
+               <UButton size="sm" label="PDF" @click="pdfClicked()" color="secondary" :disabled="filesSelected == false" />
+            </template>
+            <template  v-if="(userStore.isAdmin || userStore.isSupervisor) && detail.throwAway == false">
+               <LookupDialog :disabled="!filesSelected" label="Assign Metadata" @selectedObject="assignMetadata" target="metadata" :create="true"/>
+               <LookupDialog :disabled="!filesSelected" label="Assign Componment" @selected="assignComponent" target="component" />
+            </template>    
+         </div>
+         <span>{{ table?.tableApi?.getFilteredRowModel().rows.length }} Master Files<span v-if="filters.length > 0"> (filtered)</span></span>
+      </div>
+      <UTable ref="table" :data="unitsStore.masterFiles" :columns="columns" v-model:column-filters="filters" sticky virtualize class="h-200">
+         <template #select-header="{ table }">
+            <UCheckbox size="lg" :modelValue="table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected()" @update:modelValue="table.toggleAllRowsSelected()"/>
          </template>
-         <Column selectionMode="multiple" headerStyle="width: 3em"></Column>
-         <Column field="id" header="ID">
-            <template #body="slotProps">
-               <router-link :to="`/masterfiles/${slotProps.data.id}`">{{slotProps.data.id}}</router-link>
-            </template>
-         </Column>
-         <Column field="metadata.title" header="Metadata" filterField="metadata.title" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <InputText type="text" v-model="filterModel.value" placeholder="Metadata title"/>
-            </template>
-            <template #body="slotProps">
-               <router-link v-if="slotProps.data.metadata" :to="`/metadata/${slotProps.data.metadata.id}`">{{slotProps.data.metadata.title}}</router-link>
-               <span v-else class="empty">N/A</span>
-            </template>
-         </Column>
-         <Column field="filename" header="File Name"/>
-         <Column field="title" header="Title" filterField="title" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <InputText type="text" v-model="filterModel.value" placeholder="Title"/>
-            </template>
-         </Column>
-         <Column field="description" header="Description" filterField="description" :showFilterMatchModes="false" >
-            <template #filter="{filterModel}">
-               <InputText type="text" v-model="filterModel.value" placeholder="Description"/>
-            </template>
-         </Column>
-         <Column field="thumbnailURL" header="Thumb" class="thumb">
-            <template #body="slotProps">
-               <a :href="slotProps.data.viewerURL" target="_blank">
-                  <img :src="slotProps.data.thumbnailURL" :class="{exemplar: slotProps.data.exemplar}"/>
-               </a>
-            </template>
-         </Column>
-         <Column header="Actions" class="row-acts">
-            <template #body="slotProps">
-               <DPGButton label="View" severity="secondary" @click="viewClicked(slotProps.data)" size="small"/>
-               <DPGButton v-if="detail.throwAway == false && unitsStore.canDownload" label="Download Image" severity="secondary" @click="downloadFile(slotProps.data)" size="small"/>
-               <DPGButton label="Download PDF" severity="secondary" @click="downloadPDF(slotProps.data)" v-if="unitsStore.canPDF" size="small"/>
-               <DPGButton v-if="slotProps.data.exemplar==false && (detail.intendedUse && detail.intendedUse.id == 110 || detail.includeInDL)"
-                  label="Set Exemplar" severity="secondary" @click="exemplarClicked(slotProps.data)" size="small"/>
-               <DPGButton label="Republish IIIF" severity="secondary" @click="republishIIIF(slotProps.data.id)"
-                  v-if="detail.throwAway == false && detail.reorder==false && userStore.isAdmin" size="small"
-               />
-            </template>
-         </Column>
-      </DataTable>
-   </Panel>
+         <template #select-cell="{ row }">
+            <UCheckbox size="lg" :modelValue="row.getIsSelected()" @update:modelValue="row.toggleSelected($event)"/>
+         </template>
+         <template #id-cell="{ row }">
+            <router-link :to="`/masterfiles/${row.original.id}`">{{row.original.id}}</router-link>
+         </template>
+         <template #metadata-header="{ column }">
+            <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @opened="filterOpened(column)"
+               @clear="clearFilter(column)" @apply="applyFilter(column)">
+               <UInput v-model="pendingFilter" placeholder="Metadata..." />
+            </FilterPopover>
+         </template>
+         <template #metadata-cell="{ row }">
+            <router-link v-if="row.original.metadata" :to="`/metadata/${row.original.metadata.id}`">{{row.original.metadata.title}}</router-link>
+            <span v-else class="empty">N/A</span>
+         </template>
+         <template #title-header="{ column }">
+            <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @opened="filterOpened(column)"
+               @clear="clearFilter(column)" @apply="applyFilter(column)">
+               <UInput v-model="pendingFilter" placeholder="Title..." />
+            </FilterPopover>
+         </template>
+         <template #description-header="{ column }">
+            <FilterPopover :label="column.columnDef.header" :applied="isFilterApplied(column.id)" @opened="filterOpened(column)"
+               @clear="clearFilter(column)" @apply="applyFilter(column)">
+               <UInput v-model="pendingFilter" placeholder="Description..." />
+            </FilterPopover>
+         </template>
+         <template #thumbnailURL-cell="{ row }">
+            <a :href="row.original.viewerURL" target="_blank">
+               <img :src="row.original.thumbnailURL" :class="{exemplar: row.original.exemplar}"/>
+            </a>
+         </template>
+         <template #actions-cell="{ row }">
+            <UDropdownMenu :items="getDropdownActions(row.original)">
+               <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" aria-label="Actions"/>
+            </UDropdownMenu>
+         </template>
+      </UTable>
+   </UCard>
 </template>
 
 <script setup>
@@ -85,149 +74,127 @@ import { ref, computed } from 'vue'
 import { useUnitsStore } from '@/stores/units'
 import { useUserStore } from '@/stores/user'
 import { usePDFStore } from '@/stores/pdf'
-import Panel from 'primevue/panel'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { useConfirm } from "primevue/useconfirm"
+import FilterPopover from '@/components/FilterPopover.vue'
+import { useConfirm } from "@/composables/useConfirm"
 import RenumberDialog from './RenumberDialog.vue'
 import LookupDialog from '@/components/LookupDialog.vue'
-import InputText from 'primevue/inputtext'
-import { FilterMatchMode } from '@primevue/core/api'
-import { usePinnable } from '@/composables/pin'
 
-usePinnable("p-datatable-paginator-top")
-
-const confirm = useConfirm()
 const unitsStore = useUnitsStore()
 const userStore = useUserStore()
 const pdfStore = usePDFStore()
 const router = useRouter()
 
-const selectedMasterFiles = ref([])
-const selectAll = ref(false)
+const columns = [
+   { accessorKey: "select", header: ""},
+   { accessorKey: 'id', header: 'ID'},
+   { accessorKey: 'metadata.title', id: 'metadata', header: 'Metadata'},
+   { accessorKey: 'filename', header: 'File Name'},
+   { accessorKey: 'title', header: 'Title'},
+   { accessorKey: 'description', header: 'Description'},
+   { accessorKey: 'thumbnailURL', header: 'Thumb'},
+   { id: 'actions', header: "" }
+]
 
+const table = ref()
+const filters = ref([])
+const pendingFilter = ref()
 const { detail } = storeToRefs(unitsStore)
 
-const filters = ref( {
-   'metadata.title': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'title': {value: null, matchMode: FilterMatchMode.CONTAINS},
-   'description': {value: null, matchMode: FilterMatchMode.CONTAINS},
+const getDropdownActions = ( (item) =>{
+   let out = [] 
+   out.push( [ {label: "Actions",  type: "label"} ] )
+   out.push( [ {label: "View",  onSelect: () => { viewClicked(item) }} ] )
+   if (detail.value.throwAway == false && unitsStore.canDownload) {
+      out.push( [ {label: "Download Image",  onSelect: () => { downloadFile(item) }} ] ) 
+   }
+   out.push( [ {label: "Download PDF",  onSelect: () => { downloadPDF(item) }} ] )
+   if (item.exemplar==false && (detail.value.intendedUse && detail.value.intendedUse.id == 110 || detail.value.includeInDL)) {
+      out.push( [ {label: "Set Exemplar",  onSelect: () => { exemplarClicked(item) }} ] ) 
+   }
+   if (detail.value.throwAway == false && detail.value.reorder==false && userStore.isAdmin) {
+      out.push( [ {label: "Republish IIIF",  onSelect: () => { republishIIIF(item) }} ] ) 
+   }
+   return out
+})
+
+const isFilterApplied = ((name) => {
+   return filters.value.findIndex( f => f.id == name) > -1
+})
+const filterOpened = ((column) => {
+   pendingFilter.value = column.getFilterValue()  
+})
+const clearFilter = ((column) => {
+   column.setFilterValue(null)
+})
+const applyFilter = ((column) => {
+   column.setFilterValue(pendingFilter.value)
 })
 
 const filesSelected = computed(() => {
-   return selectedMasterFiles.value.length > 0
+   return table.value?.tableApi?.getIsSomePageRowsSelected()
 })
 const selectedFileNames = computed(() => {
-   let filenames = []
-   selectedMasterFiles.value.forEach( s => {
-      filenames.push(s.filename)
-   })
-   return filenames
+   let out = table.value?.tableApi?.getSelectedRowModel().rows.map( r => r.original.filename )
+   if (!out) return [] 
+   return out
 })
 const selectedIDs = computed(() => {
-   let ids = []
-   selectedMasterFiles.value.forEach( s => {
-      ids.push(s.id)
-   })
-   return ids
+   let out = table.value.tableApi.getSelectedRowModel().rows.map( r => r.original.id )
+   if (!out) return [] 
+   return out
 })
 
 const downloadClicked = (() => {
    unitsStore.downloadFromArchive(userStore.computeID, selectedFileNames.value)
 })
 const pdfClicked = (() => {
-   let ids = []
-   selectedMasterFiles.value.forEach( s => {
-      ids.push(s.id)
-   })
-   requestPDF( ids )
+   requestPDF( selectedIDs.value )
 })
-const requestPDF = (( masterFileIDs ) => {
+const requestPDF = ( async ( masterFileIDs ) => {
    if (unitsStore.hasText == false ) {
       pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs, false, false )
    } else {
-      confirm.require({
-         message: `This unit has transcription or OCR text. Include it with the PDF?`,
-         header: 'Include Text',
-         icon: 'pi pi-question-circle',
-         rejectProps: {
-            label: 'Cancel',
-            severity: 'secondary'
-         },
-         acceptProps: {
-            label: 'Include'
-         },
-         accept: () => {
-            pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs, false, true )
-         },
-         reject: () => {
-            pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs, false, false )
-         }
-      })
+      const msg = 'This unit has transcription or OCR text. Include it with the PDF?'
+      const resp = await useConfirm("Include Text", msg, "Include")
+      if (resp) {
+         pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs, false, true )
+      } else {
+         pdfStore.requestPDF( unitsStore.detail.id, masterFileIDs, false, false )  
+      }
    }
 })
 const downloadPDF = ((info) => {
    requestPDF( [info.id] )
 })
 
-const replaceClicked = (() => {
+const replaceClicked = ( async () => {
    let unitDir = `${unitsStore.detail.id}`.padStart(9, '0')
-   confirm.require({
-      message: `Replace master files with .tif files from ./finalization/unit_update/${unitDir}?`,
-      header: 'Confirm Replace Master Files',
-      icon: 'pi pi-question-circle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Replace'
-      },
-      accept: async () => {
-         unitsStore.replaceMasterFiles()
-         clearSelections()
-      }
-   })
+   const msg = `Replace master files with .tif files from ./finalization/unit_update/${unitDir}?`
+   const resp = await useConfirm("Confirm Replace Master Files", msg, "Replace")
+   if (resp) {
+      unitsStore.replaceMasterFiles()
+      clearSelections()
+   } 
 })
 
-const addClicked = (() => {
+const addClicked = (async () => {
    let unitDir = `${unitsStore.detail.id}`.padStart(9, '0')
-   confirm.require({
-      message: `Add all .tif files from ./finalization/unit_update/${unitDir} to this unit?`,
-      header: 'Confirm Add Master Files',
-      icon: 'pi pi-question-circle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Add'
-      },
-      accept: async () => {
-         unitsStore.addMasterFiles()
-      }
-   })
+   const msg = `Add all .tif files from ./finalization/unit_update/${unitDir} to this unit?`
+   const resp = await useConfirm("Confirm Add Master Files", msg, "Add")
+   if (resp) {
+      unitsStore.addMasterFiles()
+   }  
 })
 
-const deleteClicked = (() => {
-   confirm.require({
-      message: 'Are you sure you want delete the selected master files? All data will be lost. This cannot be reversed.',
-      header: 'Confirm Delete Master Files',
-      icon: 'pi pi-exclamation-triangle',
-      rejectProps: {
-         label: 'Cancel',
-         severity: 'secondary'
-      },
-      acceptProps: {
-         label: 'Delete'
-      },
-      accept: async () => {
-         unitsStore.deleteMasterFiles(selectedFileNames.value)
-         clearSelections()
-      }
-   })
+const deleteClicked = (async () => {
+   const msg = 'Are you sure you want delete the selected master files? All data will be lost. This cannot be reversed.'
+   const resp = await useConfirm("Confirm Delete Master Files", msg, "Delete")
+   if (resp) {
+      unitsStore.deleteMasterFiles(selectedFileNames.value)
+      clearSelections()
+   }  
 })
 const downloadFile =(( info) => {
    unitsStore.downloadFromArchive(userStore.computeID, info.filename )
@@ -240,21 +207,6 @@ const exemplarClicked = (( info) => {
 })
 const republishIIIF =((masterFileID) => {
    unitsStore.regenerateMasterFileIIIF( masterFileID )
-})
-const onRowSelect = (() => {
-   selectAll.value = selectedMasterFiles.value < unitsStore.masterFiles.length
-})
-const onRowUnselect = (() => {
-   selectAll.value  = false
-})
-const onSelectAllChange = ((event) => {
-   selectAll.value = event.checked
-   if (selectAll.value) {
-      selectedMasterFiles.value = unitsStore.masterFiles
-   }
-   else {
-      selectedMasterFiles.value = []
-   }
 })
 
 const assignMetadata = ( async ( metadata ) => {
@@ -271,33 +223,7 @@ const clearSelections = (() => {
    selectAll.value = false
    selectedMasterFiles.value = []
 })
-
 </script>
 
 <style scoped lang="scss">
-div.masterfiles {
-   .master-file-acts {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-start;
-      align-items: flex-start;
-      gap: 5px;
-      font-size: 0.85em;
-   }
-   :deep(td.thumb) {
-      width: 160px !important;
-      text-align: center !important;
-   }
-   img.exemplar {
-      border: 5px solid var(--uvalib-teal);
-   }
-}
-:deep(td.row-acts) {
-   display: flex;
-   flex-direction: column;
-   gap: 5px;
-   button {
-      font-size: 0.85em;
-   }
-}
 </style>

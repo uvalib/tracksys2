@@ -31,6 +31,11 @@ const router = createRouter({
          name: 'hathitrust',
          component: () => import('../views/HathiTrustSubmissions.vue')
       },
+       {
+         path: '/imagesearch',
+         name: 'imagesearch',
+         component: () => import('../views/ImageSearch.vue')
+      },
       {
          path: '/jobs',
          name: 'jobs',
@@ -115,11 +120,6 @@ const router = createRouter({
          path: '/statistics',
          name: 'statistics',
          component: () => import('../views/reporting/Statistics.vue')
-      },
-      {
-         path: '/deliveries',
-         name: 'deliveries',
-         component: () => import('../views/reporting/PatronDeliveries.vue')
       },
       {
          path: '/audit-report',
