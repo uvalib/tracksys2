@@ -27,8 +27,7 @@ func (svc *serviceContext) getDashboardStats(c *gin.Context) {
 	// due in a week
 	oneWeek := now.AddDate(0, 0, 7)
 	baseQ := svc.DB.Table("orders").
-		Joins("inner join units u on u.order_id=orders.id").
-		Where("u.intended_use_id <> ?", 110).Where(inProcQ)
+		Joins("inner join units u on u.order_id=orders.id").Where(inProcQ)
 	err := baseQ.Where("date_due>=?", now.Format("2006-01-02")).
 		Where("date_due<=?", oneWeek.Format("2006-01-02")).
 		Distinct("orders.id").Count(&stats.DueInOneWeek).Error
@@ -39,8 +38,7 @@ func (svc *serviceContext) getDashboardStats(c *gin.Context) {
 	// overdue
 	oneYearAgo := now.AddDate(-1, 0, 0)
 	baseQ = svc.DB.Table("orders").
-		Joins("inner join units u on u.order_id=orders.id").
-		Where("u.intended_use_id <> ?", 110).Where(inProcQ)
+		Joins("inner join units u on u.order_id=orders.id").Where(inProcQ)
 	err = baseQ.Where("date_request_submitted>?", oneYearAgo.Format("2006-01-02")).
 		Where("date_due<?", now.Format("2006-01-02")).
 		Distinct("orders.id").Count(&stats.Overdue).Error
@@ -50,7 +48,6 @@ func (svc *serviceContext) getDashboardStats(c *gin.Context) {
 
 	// ready for delivery
 	err = svc.DB.Table("orders").Joins("inner join units u on u.order_id=orders.id").
-		Where("u.intended_use_id <> ?", 110).
 		Where("orders.email is not null and orders.email != ? and date_customer_notified is null", "").
 		Where("order_status != ? and order_status != ?", "canceled", "completed").
 		Distinct("orders.id").Count(&stats.ReadyForDelivery).Error
