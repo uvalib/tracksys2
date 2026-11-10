@@ -425,6 +425,7 @@ export const useMetadataStore = defineStore('metadata', {
       },
       async getDetails( metadataID ) {
          const system = useSystemStore()
+         this.$reset()
          system.working = true
          return axios.get( `/api/metadata/${metadataID}` ).then(response => {
             this.setMetadataDetails(response.data)

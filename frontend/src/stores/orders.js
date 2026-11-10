@@ -63,7 +63,7 @@ export const useOrdersStore = defineStore('orders', {
 
          let candidate = false
          state.units.some( u => {
-            if ( u.metadata.hathiTrust == true) {
+            if ( u.metadata?.hathiTrust == true) {
                const htStatus = u.metadata.hathiTrustStatus
                if ( htStatus.packageStatus == 'pending' || htStatus.packageStatus == 'failed') {
                   candidate = true
@@ -78,7 +78,7 @@ export const useOrdersStore = defineStore('orders', {
 
          let candidate = false
          state.units.some( u => {
-            if ( u.metadata.hathiTrust == true) {
+            if ( u.metadata?.hathiTrust == true) {
                const htStatus = u.metadata.hathiTrustStatus
                if ( htStatus.packageStatus == 'created' && htStatus.metadataStatus == 'accepted') {
                   candidate = true
@@ -95,7 +95,7 @@ export const useOrdersStore = defineStore('orders', {
          let hasDCBMetadata = false
          let hasSubmissions = false
          state.units.some( u => {
-            if ( u.metadata.hathiTrust == true) {
+            if ( u.metadata?.hathiTrust == true) {
                const htStatus = u.metadata.hathiTrustStatus
                if ( htStatus.metadataStatus == 'submitted') {
                   hasSubmissions = true
@@ -116,7 +116,7 @@ export const useOrdersStore = defineStore('orders', {
 
          let hasSubmissions = false
          state.units.some( u => {
-            if ( u.metadata.hathiTrust == true) {
+            if ( u.metadata?.hathiTrust == true) {
                const htStatus = u.metadata.hathiTrustStatus
                if ( htStatus.metadataStatus == 'submitted') {
                   hasSubmissions = true
@@ -132,7 +132,7 @@ export const useOrdersStore = defineStore('orders', {
 
          let hasDCBUnits = false
          state.units.some( u => {
-            if ( u.intendedUse && u.intendedUse.id==110 && u.masterFilesCount > 0 && u.metadata.hathiTrust == false) {
+            if ( u.intendedUse && u.intendedUse.id==110 && u.masterFilesCount > 0 && u.metadata?.hathiTrust == false) {
                hasDCBUnits = true
             }
             return hasDCBUnits==true

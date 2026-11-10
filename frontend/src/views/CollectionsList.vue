@@ -12,6 +12,7 @@
       <span v-else></span>
       <span>{{ collectionStore.collections.length }} Collections</span>
    </div>
+   <WaitSpinner v-if="collectionStore.working" :overlay="true" message="Please wait..." />
    <UTable ref="table" :data="collectionStore.collections" :columns="columns" sticky virtualize class="h-[calc(100vh-185px)]">
       <template #id-cell="{ row }">
          <router-link :to="`/metadata/${row.original.id}`">{{row.original.id}}</router-link>

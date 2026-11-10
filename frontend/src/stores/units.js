@@ -67,6 +67,7 @@ export const useUnitsStore = defineStore('units', {
 	actions: {
       async getDetails( unitID ) {
          if ( this.detail.id == unitID ) return
+         this.$reset()
 
          const system = useSystemStore()
          system.working = true
