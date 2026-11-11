@@ -7,26 +7,26 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@iconify-json/lucide": "^1.2.152",
+    "@iconify-json/lucide": "^1.2.153",
     "@internationalized/date": "^3.12.4",
     "@nuxt/ui": "^4.12.0",
     "@vueuse/core": "^15.0.0",
     "@vueuse/integrations": "^15.0.0",
-    "axios": "^1.21.0",
+    "axios": "^1.21.1",
     "chart.js": "^4.6.1",
     "jwt-decode": "^4.0.0",
     "pinia": "^4.1.0",
     "tailwindcss": "^4.3.5",
     "vue": "^3.5.45",
     "vue-chartjs": "^5.3.4",
-    "vue-router": "^5.4.0",
+    "vue-router": "^5.5.0",
     "vue3-cookies": "^1.0.6",
     "yup": "^1.7.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.10",
-    "sass-embedded": "^1.108.1",
-    "vite": "^8.3.7"
+    "sass-embedded": "^1.108.2",
+    "vite": "^8.3.8"
   },
   "allowScripts": {
     "@parcel/watcher@2.6.0": true,
