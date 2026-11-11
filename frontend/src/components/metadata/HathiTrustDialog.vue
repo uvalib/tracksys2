@@ -100,14 +100,14 @@ const closeDialog = (() => {
 
 const submitChanges = ( async () => {
    let update = {
-      requestedAt: state.requestedAt.toString(),
-      packageCreatedAt: state.packageCreatedAt.toString(),
-      packageSubmittedAt: state.packageSubmittedAt.toString(),
-      packageStatus: state.packageStatus,
-      metadataSubmittedAt: state.metadataSubmittedAt.toString(),
-      metadataStatus: state.metadataStatus,
-      finishedAt: state.finishedAt.toString(),
-      notes: state.notes
+      requestedAt: state.value.requestedAt.toString(),
+      packageCreatedAt: state.value.packageCreatedAt.toString(),
+      packageSubmittedAt: state.value.packageSubmittedAt.toString(),
+      packageStatus: state.value.packageStatus,
+      metadataSubmittedAt: state.value.metadataSubmittedAt.toString(),
+      metadataStatus: state.value.metadataStatus,
+      finishedAt: state.value.finishedAt.toString(),
+      notes: state.value.notes
    }
    await metadataStore.updateHathiTrustStatus( update )
    if ( metadataStore.error == "" ) {

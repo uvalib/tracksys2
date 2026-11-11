@@ -252,10 +252,10 @@ const show = (() => {
       if (props.item.description && props.item.description != "") {
          si += `\nDescription: ${props.item.description}`
       }
-      state.itemID = props.item.id
-      state.specialInstructions = si
-      state.sourceURL = props.item.sourceURL
-      state.intendedUseID = props.item.intendedUse.id
+      state.value.itemID = props.item.id
+      state.value.specialInstructions = si
+      state.value.sourceURL = props.item.sourceURL
+      state.value.intendedUseID = props.item.intendedUse.id
       lookupMetadata()
    }
 })
