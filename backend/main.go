@@ -11,7 +11,7 @@ import (
 )
 
 // Version of the service
-const Version = "2.4.0"
+const Version = "2.4.1"
 
 func main() {
 	// Load cfg
@@ -107,6 +107,7 @@ func main() {
 		api.GET("/published/dpla", svc.getPublishedDPLA)
 		api.GET("/published/virgo", svc.getPublishedVirgo)
 		api.GET("/published/archivesspace", svc.getPublishedArchivesSpace)
+		api.GET("/published/:type/csv", svc.getPublishedReport)
 
 		api.POST("/jobs/search", svc.searchJobStatuses)
 		api.GET("/jobs", svc.getJobStatuses)

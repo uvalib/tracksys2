@@ -1,6 +1,7 @@
 <template>
    <h2>{{ title }}</h2>
-   <div class="row-between gap-2! items-center bg-white border-b border-brand-grey-100">
+   <div class="row-between gap-2! items-center bg-white border-b border-brand-grey-100 pl-4">
+      <UButton label="Download Report" @click="publishedStore.exportCSV(route.params.type)" color="secondary" size="sm"/>
       <span class="px-4">Total: {{ publishedStore.total }}</span>
       <div class="p-4 flex flex-row flex-nowrap justify-center items-center">
          <UPagination color="neutral" variant="ghost" show-edges

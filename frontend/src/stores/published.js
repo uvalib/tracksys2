@@ -37,6 +37,20 @@ export const usePublishedStore = defineStore('published', {
             system.working = false
          })
       },
+      exportCSV( pubType ) {
+         axios.get(`/api/published/${pubType}/csv`, null, {responseType: "blob"}).then((response) => {
+            const fileURL = window.URL.createObjectURL(new Blob([response.data], { type: 'application/vnd.ms-excel' }))
+            const fileLink = document.createElement('a')
+            fileLink.href =  fileURL
+            fileLink.setAttribute('download', `published-${pubType}.csv`)
+            document.body.appendChild(fileLink)
+            fileLink.click()
+            window.URL.revokeObjectURL(fileURL)
+         }).catch((error) => {
+            const system = useSystemStore()
+            system.setError(error)
+         })
+      },
       resetSearch() {
          this.searchOpts.currPage = 1
          this.searchOpts.start = 0
