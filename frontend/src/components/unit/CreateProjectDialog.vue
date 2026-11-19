@@ -18,6 +18,9 @@
             <UFormField name="notes" label="Notes">
                <UTextarea v-model="state.notes" class="w-full" />   
             </UFormField>
+            <div v-if="createDisabled" class="bg-brand-blue-alt-300 p-2 text-center border border-brand-blue-alt-100 rounded-sm">
+               Please approve the associated order to enable project creation.
+            </div>
             <div class="row-right gap-2">
                <UButton @click="isOpen = false" label="Cancel" color="secondary"/>
                <UButton label="Create Project" type="submit" :disabled="createDisabled"/>  
